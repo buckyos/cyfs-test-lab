@@ -1,0 +1,2 @@
+in2 = { action = "in-put", group = { location = "outer",dec="9tGpLNnGfMgXZ2xqmVmqFhh91PQXLkaXbccyw2nkdDMM"}, access = "accept" }
+out2 = { action = "out-put", group = { location = "outer",dec="9tGpLNnGfMgXZ2xqmVmqFhh91PQXLkaXbccyw2nkdDMM"}, access = "accept" }

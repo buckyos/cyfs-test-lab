@@ -1,0 +1,2 @@
+in2 = { action = "in-put",res = "/dec_app/5aSixgMBVJ1si45iL3REGqZG51pPWA65drBV4rfQkr4L/55666", group = { location = "outer" }, access = "reject" }
+out2 = { action = "out-put", group = { location = "outer"}, access = "accept" }

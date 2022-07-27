@@ -1,0 +1,40 @@
+{
+    "newPackage": {
+        "version": "1.52",
+        "host": "106.75.175.123",
+        "port": 80,
+        "path": "/update/script.zip",
+        "type": "update",
+        "MD5": "bf05654a97df8eca5571cb3b642a155f"
+    },
+    "projectsList": [
+		{
+            "name": "bdt_echo",
+            "packageInfo": {
+                "version": "271",
+                "host": "106.75.175.123",
+                "port": 80,
+                "path": "/update/bdt_echo.zip",
+                "MD5": "d37a39b3224b1ffe2bf8d71d3f7410af"
+            },
+            "params": {
+                "seedPeers": [
+                    {
+                        "peerid": "SEED_DHT_PEER_10000",
+                        "eplist": [
+                            "4@106.75.175.123@10000@u",
+                            "4@106.75.175.123@10010@t"
+                        ]
+                    },
+                    {
+                        "peerid": "SEED_DHT_PEER_10000_IPV6",
+                        "eplist": [
+                            "6@240e:fa:1143:bd00::16e@10000@u",
+                            "6@240e:fa:1143:bd00::16e@10010@t"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,45 @@
+nohup /opt/pypy/bin/gunicorn -b 127.0.0.1:12000 api:app -k gevent > server.log &
+nohup gunicorn -b 127.0.0.1:12000 api:app -k gevent > server.log &
+
+bdt2_echo:
+nohup /opt/pypy/bin/gunicorn -b 127.0.0.1:11002 api:app -k gevent > bdt2_server.log &
+
+统计连接数：
+ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+
+统计文件夹中包含的文件数（包括子文件夹）
+ls -lR|grep "^-"| wc -l
+
+SCP:
+
+scp root@ip:/sourcepath root@ip:/destpath
+
+106.75.175.123	<------>	10.13.187.14
+106.75.175.167(bdt-api) <------->	10.13.94.172
+
+排队页面
+http://bdttest.tinyappcloud.com/index.html#/
+
+$grep -5 'parttern' inputfile //打印匹配行的前后5行
+ 
+$grep -C 5 'parttern' inputfile //打印匹配行的前后5行
+ 
+$grep -A 5 'parttern' inputfile //打印匹配行的后5行
+ 
+$grep -B 5 'parttern' inputfile //打印匹配行的前5行
+
+
+
+查找某个peer上报的queryCmd
+cat report_log/2018-07-02.log | grep queryCmd | grep "}}, \"peerid\": \"15232783589-TZpJdFer" | grep "Jul 2 00"
+
+bdt_echo 命令行参数
+"13794462011_xxx" "1.1" "{\"seedPeers\": [{\"peerid\":\"SEED_DHT_PEER_10000\", \"eplist\":[\"4@106.75.175.123@10000@u\", \"4@106.75.175.123@10010@t\"]},{\"peerid\": \"SEED_DHT_PEER_10000_IPV6\", \"eplist\": [\"6@240e:fa:1143:bd00::16e@10000@u\", \"6@240e:fa:1143:bd00::16e@10010@t\"]}]}"
+
+blockchain NPM：
+username:buckychain
+password:EAR6bXKlLP
+email:blockchain@buckyos.com
+
+活动页面地址：
+http://www.gct.one/Ch/bdt-2/

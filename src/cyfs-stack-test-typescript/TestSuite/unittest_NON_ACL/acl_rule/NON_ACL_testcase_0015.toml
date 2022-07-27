@@ -1,0 +1,3 @@
+in2 = { action = "in-select-object", group = { location = "inner" }, access = "reject" }
+out2 = { action = "out-select-object", group = { location = "inner" }, access = "reject" }
+out3 = { action = "out-select-object", group = { location = "outer" }, access = "reject" }

@@ -1,0 +1,24 @@
+{
+    "name": "bdt2_echo",
+    "packageInfo": {
+        "version": "2.10",
+        "host": "106.75.175.123",
+        "port": 80,
+        "path": "/update/bdt2_echo.zip",
+        "MD5": "ab1e5e6cf28d10039a777e318027853d"
+    },
+    "params": {
+        "snPeer": {
+            "areaCode": {
+                "continent": 0, 
+                "country": 0, 
+                "carrier": 0, 
+                "city": 0, 
+                "inner": 0
+            }, 
+            "deviceId": "bucky-sn-server", 
+            "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDGrBQ/++X3zdgpl5nVDrof0xm9OGQZ6vodADC0MCrGAeKzG3k9FpJksHfgVbBWTadoTNPFr275/wXG3rhrrSj4SMGFAGOWSwBAocp5CLzUdKFepP5MRZhUhaYNYtmgLh0DM8EsoEvu6/rTcY6D+k9V/PsuJEmCXpwZOMj8HOxvHQIDAQAB", 
+            "eplist": ["udp@106.75.175.123@10020","tcp@106.75.175.123@10030"]
+        }
+    }
+}

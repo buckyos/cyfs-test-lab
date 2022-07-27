@@ -1,0 +1,2 @@
+relation1 = { action = "in-*", group = { location = "outer", relation = "your-device-device"  }, access = "reject" }
+in = { action = "out-*", group = { location = "outer"},access = "accept" }

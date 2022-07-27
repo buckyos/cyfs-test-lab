@@ -1,0 +1,2 @@
+in2 = { action = "in-get", group = { location = "outer" }, access = "reject" }
+out2 = { action = "out-get", group = { location = "outer" }, access = "accept" }

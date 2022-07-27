@@ -1,0 +1,1 @@
+ npx mocha .\testcase_demo\unittest_demo\testcase_runner.ts  --reporter mochawesome --require ts-node/register

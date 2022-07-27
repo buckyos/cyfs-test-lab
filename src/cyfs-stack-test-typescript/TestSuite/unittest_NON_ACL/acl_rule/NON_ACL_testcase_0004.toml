@@ -1,0 +1,4 @@
+in = { action = "in-*", group = { location = "inner" }, access = "drop" }
+out = { action = "out-*", group = { location = "inner" }, access = "drop" }
+in2 = { action = "in-*", group = { location = "outer" }, access = "drop" }
+out2 = { action = "out-*", group = { location = "outer" }, access = "drop" }

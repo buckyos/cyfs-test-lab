@@ -1,0 +1,22 @@
+{
+    "name": "chainsdk",
+    "packageInfo": {
+        "version": "1.34",
+        "host": "106.75.175.123",
+        "port": 80,
+        "path": "/update/blockchain-sdk.zip",
+        "MD5": "7ac1cad01a9035aa0a9b40929ae48383"
+    },
+    "params": {
+        "action":"peer",
+        "genesis":"genesis/",
+        "dataDir":"storage/",
+        "loggerLevel":"info",
+        "net":"bdt",
+        "host":"0.0.0.0",
+        "port":"30051|30055",
+        "sn":"SN_PEER@106.75.173.166@24405@24406",
+        "bdt_log_level":"info",
+        "ignoreBan": true
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "name": "chainsdk",
+    "packageInfo": {
+        "version": "1.1",
+        "host": "127.0.0.1",
+        "port": 8000,
+        "path": "/update/chainsdk.zip",
+        "MD5": "xxxx"
+    },
+    "params": {
+        "seedPeers": [{"peerid": "SEED_DHT_PEER_10000", "eplist": ["4@106.75.175.123@10000@u", "4@106.75.175.123@10010@t"]}, {"peerid": "SEED_DHT_PEER_10000_IPV6", "eplist": ["6@240e:fa:1143:bd00::16e@10000@u", "6@240e:fa:1143:bd00::16e@10010@t"]}]
+    }
+}

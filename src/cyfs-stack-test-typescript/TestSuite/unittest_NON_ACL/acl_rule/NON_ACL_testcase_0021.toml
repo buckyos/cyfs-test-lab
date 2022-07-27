@@ -1,0 +1,2 @@
+in2 = { action = "in-delete-object", group = { location = "outer" }, access = "reject" }
+out2 = { action = "out-delete-object", group = { location = "outer" }, access = "accept" }

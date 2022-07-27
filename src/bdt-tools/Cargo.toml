@@ -1,0 +1,25 @@
+[package]
+name = "bdt-tools"
+version = "0.1.0"
+authors = ["lizhihong <lizhihong@buckyos.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-std = { version = "*", features = ["unstable", "attributes"] }
+async-trait="*"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "*"
+cyfs-base = {path = "../../CYFS/src/component/cyfs-base"}
+cyfs-debug = { path = "../../CYFS/src/component/cyfs-debug"}
+cyfs-util = { path="../../CYFS/src/component/cyfs-util"}
+cyfs-bdt = {path = "../../CYFS/src/component/cyfs-bdt"}
+log = "0.4"
+rand = "0.7.3"
+futures = "0.3.5"
+hex = "*"
+walkdir = "*"
+byteorder = "1.3.4"
+backtrace = "0.3.50"
+sha2 = "0.8.1"

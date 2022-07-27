@@ -1,0 +1,4 @@
+in = { action = "in-*", group = { location = "inner" }, access = "accept" }
+out = { action = "out-*", group = { location = "inner" }, access = "accept" }
+in2 = { action = "in-put-object", group = { location = "outer" }, access = "reject" }
+out2 = { action = "out-put-object", group = { location = "outer" }, access = "accept" }

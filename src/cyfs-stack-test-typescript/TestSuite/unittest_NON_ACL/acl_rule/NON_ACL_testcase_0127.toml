@@ -1,0 +1,3 @@
+relation1 = { action = "out-*", group = { location = "outer", relation = "source-friend-device"  }, access = "accept" }
+relation2 = { action = "in-*", group = { location = "outer", relation = "source-friend-device"  }, access = "accept" }
+in = { action = "in-*", group = { location = "outer"},access = "accept" }
