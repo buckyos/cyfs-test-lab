@@ -4,7 +4,6 @@ resolver = "2"
 members=[
     "bdt-tools",
     "cyfs-tools",
-    "cyfs-stack-test-rust",
     "test-simulator"
 ]
 
