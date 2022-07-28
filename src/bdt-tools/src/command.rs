@@ -35,6 +35,8 @@ pub struct CreateLpcCommandReq {
     pub local: Option<String>, 
     pub chunk_cache: String,
     pub ep_type :  Option<String>,
+    pub ndn_event : Option<String>,
+    pub ndn_event_target : Option<DeviceId>,
 }
 
 impl TryFrom<LpcCommand> for CreateLpcCommandReq {
@@ -47,6 +49,41 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
                 serde_json::Value::String(s) => {
                     if s.len() > 0 {
                         Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+        let ndn_event = match json.get("ndn_event") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+        let ndn_event_target = match json.get("ndn_event_target") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        let deviceId = match cyfs_base::DeviceId::from_str(&s){
+                            Ok(d) => {
+                                Some(d)
+                            },
+                            Err(e)=>{
+                                let errInfo = format!("CreateLpcCommandReq ndn_event_target decode to Device Id failed,err= {}", e);
+                                return Err(BuckyError::new(BuckyErrorCode::OutOfLimit, errInfo.as_str()));
+                            }
+                        };
+                        deviceId
                     } else {
                         None
                     }
@@ -242,7 +279,9 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             local,
             addrs,
             chunk_cache,
-            ep_type
+            ep_type,
+            ndn_event,
+            ndn_event_target,
         })
     }
 }

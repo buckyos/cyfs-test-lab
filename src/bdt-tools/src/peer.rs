@@ -1487,31 +1487,97 @@ impl Peer {
                 let s = format!("{}.desc", v.as_str());
                 let local_desc_path = exe_folder.join(s.as_str());
                 let path = format!("{:?}", &local_desc_path);
-                let mut file = std::fs::File::open(local_desc_path).map_err(|e| {
-                    log::error!("open peer desc failed on create, path={:?}, e={}", path.as_str(), &e);
-                    e
-                })?;
-                let mut buf = Vec::<u8>::new();
-                let _ = file.read_to_end(&mut buf)?;
-                let (device, _) = Device::raw_decode(buf.as_slice())?;
+                
+                let (device, key) = match std::path::Path::new(&path).exists(){
+                    true =>{
+                        let mut file = std::fs::File::open(local_desc_path).map_err(|e| {
+                            log::error!("open peer desc failed on create, path={:?}, e={}", path.as_str(), &e);
+                            e
+                        })?;
+                        let mut buf = Vec::<u8>::new();
+                        let _ = file.read_to_end(&mut buf)?;
+                        let (device, _) = Device::raw_decode(buf.as_slice())?;
+        
+                        let s = format!("{}.key", v.as_str());
+                        let private_key_path = exe_folder.join(s.as_str());
+                        let path = format!("{:?}", &private_key_path);
+                        let mut file = std::fs::File::open(private_key_path).map_err(|e| {
+                            log::error!("open key file failed on create, path={:?}, e={}", path.as_str(), &e);
+                            e
+                        })?;
+                        let mut buf = Vec::<u8>::new();
+                        let _ = file.read_to_end(&mut buf)?;
+                        let (key, _) = PrivateKey::raw_decode(buf.as_slice()).map_err(|e| {
+                            log::error!("decode key file failed on create, path={:?}, e={}", path.as_str(), &e);
+                            e
+                        })?;
+                        log::debug!("create-peer exist, local: {:?}", device.to_vec());
+                        (device, key)
+                    },
+                    false => {
+                        let mut eps = Vec::new();
+                        for addr in c.addrs.iter() {
+                            let ep = {
+                                let port: u16 = rand::thread_rng().gen_range(10000, 60000) as u16;
+                                let s = format!("{}:{}", addr, port);
+                                Endpoint::from_str(s.as_str()).map_err(|e| {
+                                    log::error!("parse ep failed, s={}, e={}",s, &e);
+                                    e
+                                })?
+                            };
 
-                let s = format!("{}.key", v.as_str());
-                let private_key_path = exe_folder.join(s.as_str());
-                let path = format!("{:?}", &private_key_path);
-                let mut file = std::fs::File::open(private_key_path).map_err(|e| {
-                    log::error!("open key file failed on create, path={:?}, e={}", path.as_str(), &e);
-                    e
-                })?;
-                let mut buf = Vec::<u8>::new();
-                let _ = file.read_to_end(&mut buf)?;
-                let (key, _) = PrivateKey::raw_decode(buf.as_slice()).map_err(|e| {
-                    log::error!("decode key file failed on create, path={:?}, e={}", path.as_str(), &e);
-                    e
-                })?;
+                            log::debug!("ep={} on create", &ep);
+                            eps.push(ep);
+                        }
+                        let mut sn_list = Vec::new();
+                        for sn in sns.iter() {
+                            sn_list.push(sn.desc().device_id());
+                        }
 
-                log::debug!("create-peer exist, local: {:?}", device.to_vec());
+                        let private_key = PrivateKey::generate_rsa(1024).unwrap();
+                        let public_key = private_key.public();
 
+                        let device = Device::new(
+                            None,
+                            UniqueId::default(),
+                            eps,
+                            sn_list,
+                            vec![],
+                            public_key,
+                            Area::default(),
+                            DeviceCategory::OOD
+                        ).build();
+                        let id = device.desc().device_id();
+                        let mut buffer = [0u8; 4096];
+                        // let exe_folder = std::path::Path::new(&self.0.temp_dir);
+                        let s = format!("{}.desc", id);
+                        let file_path = self.temp_dir().join(s.as_str());
+                        let path = format!("{:?}", &file_path);
+                        let other = device.raw_encode(buffer.as_mut(), &None)?;
+                        let mut file = std::fs::File::create(file_path).map_err(|e| {
+                            log::error!("create new desc file failed on create, path={:?}, e={}", path.as_str(), &e);
+                            e
+                        })?;
+                        let len = 4096-other.len();
+                        file.write_all(&buffer[0..len])?;
+
+                        let s = format!("{}.key", id);
+                        let file_path = self.temp_dir().join(s.as_str());
+                        let path = format!("{:?}", &file_path);
+                        let other = private_key.raw_encode(buffer.as_mut(), &None)?;
+                        let mut file = std::fs::File::create(file_path).map_err(|e| {
+                            log::error!("create private key file failed on create, path={:?}, e={}", path.as_str(), &e);
+                            e
+                        })?;
+                        let len = 4096-other.len();
+                        file.write_all(&buffer[0..len])?;
+                        log::debug!("create-peer new, local: {:?}", device.to_vec());
+                        (device, private_key)
+                    }
+                };
+        
                 (device, key)
+                
             },
             None => {
                 let mut eps = Vec::new();
@@ -1599,6 +1665,30 @@ impl Peer {
         params.known_sn = Some(sns);
         params.active_pn = Some(active_pn);
         params.passive_pn = Some(passive_pn);
+
+        let _ = match &c.ndn_event{
+            Some(s) =>{
+                let _ = match &c.ndn_event_target{
+                    Some(d) =>{
+                        if s.clone() == "Redirect" {
+                            log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
+                            // params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
+                        }else if s.clone() == "Forward"{
+                            log::info!("set ndn_event handler = Forward,target = {}",d.clone());
+                            params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));
+                        }
+                    },
+                    None => {
+                        params.ndn_event = None;
+                    }
+            
+                };
+                
+            },  
+            None => {
+                params.ndn_event = None;
+            }
+        };
 
         let stack = Stack::open(
             local, 
