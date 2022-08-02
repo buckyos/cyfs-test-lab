@@ -2,28 +2,18 @@
 
 # BDT网络协议测试用例
 
-## 功能模块划分
+## 白盒测试
++  BDT实现单元测试Examples：  CYFS/src/component/cyfs-bdt/examples
++  [BDT单元测试用例脚本](../../../../CYFS/src/component/cyfs-bdt/examples)
 
-功能测试：
+## 集成测试
 
-+ 协议编解码
-+ Stream 连接流程 
-+ Stream 数据收发
-+ Stream 拥塞控制
-+ NDN 流程
-+ NDN 拥塞控制  
++ [BDT Stream模块： Tunnel连接流程、Stream数据发送、拥塞控制用例设计](./stream/BDT_Stream测试用例设计.md)
++ [BDT NDN模块：Chunk/Chunk List/File/File Range/Dir 文件传输、ndn_event、多源传输、拥塞控制用例设计](./NDN/BDT_NDN传输数据测试用例.md)  
++ BDT SN Server : SN Server 功能测试用例、性能测试用例
++ BDT PN Server : SN Server 功能测试用例、性能测试用例  
 
-
-## CYFS中实际使用场景
-
-+ NON对象发送
-
-+ NDN chunk发送
-
-+ Trans 传输文件
-
-
-## 常见应用场景
+## 常见应用场景模拟
 
 + IM即时通讯场景-群聊
 
