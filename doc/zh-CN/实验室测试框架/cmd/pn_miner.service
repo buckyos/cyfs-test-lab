@@ -1,0 +1,12 @@
+[Unit]
+Description=PN miner
+
+[Service]
+ExecStart=/bin/bash /cyfs_server/pn_miner_start.sh
+ExecStop=/bin/bash /cyfs_server/pn_miner_stop.sh
+Restart = always
+Type=forking
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
