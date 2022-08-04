@@ -35,6 +35,11 @@ make install
 wget https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
 ```
++ rust 安装
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
 + 安装其他软件依赖
 ```sh
 apt-get install zip 
@@ -79,9 +84,9 @@ pip install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple/
 ```
 cd /opt/bdt_test_server/node_tester/server
 // 直接启动
-gunicorn -b 127.0.0.1:12000 api:app  >> server.log &
+gunicorn -b 127.0.0.1:11000 api:app  >> server.log &
 // 后台启动
-nohup gunicorn -b 127.0.0.1:12000 api:app  >> server.log 2>&1&
+nohup gunicorn -b 127.0.0.1:11000 api:app  >> server.log 2>&1&
 ```
 ### agent_master
 nodejs + sqlite3 + socket + koa ： 测试框架后台接口、sokect请求转发
@@ -199,6 +204,13 @@ cargo build -p sn-miner-rust --release
 cp /node_test/cyfs-test-lab/CYFS/src/target/release/sn-miner-rust /cyfs_server
 cp /node_test/cyfs-test-lab/doc/zh-CN/实验室测试框架/cmd/* /cyfs_server
 ```
++ 修改sn-miner desc endpoint 配置：desc文件生成在/cyfs/data/app/sn-miner/sn-miner.desc
+```
+// 编译修改工具desc-tool
+cargo build -p desc-tool --release
+// 进行修改
+./desc-tool modify ./sn-miner.desc -e "W4udp192.168.100.22:8060;W4tcp192.168.100.22:8060;W6udp[240e:3b3:30ca:b990:62d9:2736:9e88:2c48]:8061;W6tcp[240e:3b3:30ca:b990:62d9:2736:9e88:2c48]:8061"
+```
 + 配置sn-miner 服务systemctl
 ```
 cp /cyfs_server/sn_miner.service /etc/systemd/system
@@ -218,6 +230,12 @@ git checkout master / 切换分支操作，选择指定分支进行编译
 cd src
 cargo build -p pn-miner --release
 ```
++ 创建pn-miner 公私钥
+```
+./desc-tool create device -c server -e "W4udp192.168.100.151:8060;W4tcp192.168.100.151:8060;W6udp[240e:3b3:30ca:b990:2e0:4cff:fe6f:269d]:8061;W6tcp[240e:3b3:30ca:b990:2e0:4cff:fe6f:269d]:8061" -d pn-miner
+// 将生成的desc/sec 文件保存到 /cyfs/data/app/pn-miner ,重命名为pn-miner.desc/pn-miner.sec
+```
+
 + 部署pn-miner 服务
 ```
 // 复制编译后二进制文件到指定目录
