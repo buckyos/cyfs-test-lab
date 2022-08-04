@@ -1,7 +1,8 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {labAgent,LabSnList,PNType,NAT_Type,AgentData,InitAgentData,} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Agent,Task,taskType,Resp_ep_type} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR } from '../../taskTools/rust-bdt/testCode';
+import {labAgent,LabSnList,InitAgentData,PNType} from '../../taskTools/rust-bdt/labAgent';
+import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
+import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
+
 
 
 
@@ -10,18 +11,20 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agentList:Array<Agent> = [];
     let taskList : Array<Task> = [];
     let testAgent:Array<AgentData> =[
-        labAgent.WIN7_0001,
-        labAgent.WIN7_0002,
-        labAgent.WIN7_0005,
-        labAgent.WIN10_0025,
-        labAgent.WIN7_0026,
-        labAgent.WIN7_0027,
-        labAgent.CentOS8_0030,
-        labAgent.Ubuntu20_0018,
-        labAgent.Ubuntu20_0019,
-        labAgent.Ubuntu20_0020,
-        labAgent.Ubuntu20_0021,
-        labAgent.Ubuntu20_0022,
+        labAgent.PC_0005,
+        labAgent.PC_0006,
+        labAgent.PC_0007,
+        labAgent.PC_0008,
+        labAgent.PC_0009,
+        labAgent.PC_0010,
+        labAgent.PC_0011,
+        labAgent.PC_0012,
+        labAgent.PC_0013,
+        labAgent.PC_0014,
+        labAgent.PC_0015,
+        labAgent.PC_0016,
+        labAgent.PC_0017,
+        labAgent.PC_0018,
     ]
     let firstQA_answer= "";
     agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{udp:true}},"info",1,[],{},firstQA_answer,Resp_ep_type.effectiveEP_WAN))

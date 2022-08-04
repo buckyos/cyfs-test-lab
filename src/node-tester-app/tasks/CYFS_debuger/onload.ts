@@ -1,7 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {labAgent,LabSnList,PNType,NAT_Type,AgentData,InitAgentData,} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Agent,Task,taskType,Resp_ep_type} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR } from '../../taskTools/rust-bdt/testCode';
+import {labAgent,LabSnList,InitAgentData,PNType} from '../../taskTools/rust-bdt/labAgent';
+import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
+import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
 
 
 
@@ -10,8 +10,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agentList:Array<Agent> = [];
     let taskList : Array<Task> = [];
     let testAgent:Array<AgentData> =[
-        labAgent.WIN7_0002,
-        labAgent.WIN10_0025,
+        labAgent.PC_0005,
+        labAgent.PC_0006,
 
     ]
     let firstQA_answer= "";

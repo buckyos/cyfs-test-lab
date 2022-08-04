@@ -6,7 +6,7 @@ import { fstat } from 'fs';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as SysProcess from 'process';
-const top = require("./top_bdt2_unix.js")
+
 import {request,ContentType}  from './request'
 enum ProtocolType {
     udp = 0,
@@ -32,7 +32,7 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
     })
     
 
-    _interface.registerApi('startPeer', async (from: Namespace, bytes: Buffer, param: {addrInfo: string[], snFiles: string[], local: string ,RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string}): Promise<any> => {
+    _interface.registerApi('startPeer', async (from: Namespace, bytes: Buffer, param: {addrInfo: string[], snFiles: string[], local: string ,RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string,ndn_event?:string,ndn_event_target?:string}): Promise<any> => {
         _interface.getLogger().debug(`remote call startPeer`);
 
         let startInfo = await manager.startPeer(param.RUST_LOG);
@@ -60,7 +60,45 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
             param.chunk_cache = "mem"
         }
 
-        let info = await ret.peer!.create(param.addrInfo, bytes, param.snFiles, param.local,param.activePnFiles,param.passivePnFiles,param.knownPeerFiles,param.chunk_cache,param.ep_type);
+        let info = await ret.peer!.create(param.addrInfo, bytes, param.snFiles, param.local,param.activePnFiles,param.passivePnFiles,param.knownPeerFiles,param.chunk_cache,param.ep_type,param.ndn_event,param.ndn_event_target);
+        _interface.getLogger().info(`err:${info.err},peerInfo:${String(info.peerinfo!)},peerName = ${startInfo.peerName},peerid = ${info.peerid}`)
+        if (info.err || info.err == undefined) {
+            if(info.err == undefined){
+                return {err: ErrorCode.unknownCommand, bytes: Buffer.from(''), value: {}};
+            }
+            return {err: info.err, bytes: Buffer.from(''), value: {}};
+        }
+        return {err: info.err, bytes: info.peerinfo!, value: {peerName: startInfo.peerName, peerid: info.peerid,ep_info:info.ep_info,ep_resp:info.ep_resp}};
+    });
+    _interface.registerApi('restartPeer', async (from: Namespace, bytes: Buffer, param: {addrInfo: string[], snFiles: string[], local: string ,RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string,ndn_event?:string,ndn_event_target?:string}): Promise<any> => {
+        _interface.getLogger().debug(`remote call restartPeer`);
+
+        let startInfo = await manager.startPeer(param.RUST_LOG);
+        if (startInfo.err) {
+            return {err: startInfo.err, bytes: Buffer.from(''), value: {}};
+        }
+
+        let ret = await new Promise<{err: ErrorCode, peer: BdtPeer}>((v) => {
+            let newPeer = (p: BdtPeer) => {
+                if (p.name === startInfo.peerName!) {
+                    manager.removeListener('peer', newPeer);
+                    v({err: ErrorCode.succ, peer: p});
+                }
+            }
+
+            manager.on('peer', newPeer);
+        });
+
+        _interface.getLogger().info(`create stack addrinfo=${JSON.stringify(param.addrInfo)}`);
+        if (!param.addrInfo.length) {
+            _interface.getLogger().error(`addrInfo is null`);
+            return {err: ErrorCode.invalidParam, bytes: Buffer.from(''), value: {}};
+        }
+        if(!param.chunk_cache){
+            param.chunk_cache = "mem"
+        }
+
+        let info = await ret.peer!.create(param.addrInfo, bytes, param.snFiles, param.local,param.activePnFiles,param.passivePnFiles,param.knownPeerFiles,param.chunk_cache,param.ep_type,param.ndn_event,param.ndn_event_target);
         _interface.getLogger().info(`err:${info.err},peerInfo:${String(info.peerinfo!)},peerName = ${startInfo.peerName},peerid = ${info.peerid}`)
         if (info.err || info.err == undefined) {
             if(info.err == undefined){
@@ -271,55 +309,7 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let info = await manager.stopReport();
         return {err: info.err, bytes: Buffer.from(''), value: info};
     });
-    _interface.registerApi('get_bdt_cpu_mem', async (from: Namespace, bytes: Buffer, param: {sum: number,wait:number}): Promise<any> => {
-        _interface.getLogger().debug(`remote call get_bdt_cpu_mem `);
-        let recordList :Array<any> = [];
-        let count = 1;
-        performanceSwitch = 1;
-        performanceWait = 3*param.wait;
-        while(performanceSwitch && count<param.sum){
-            top.fetch().then(function(data:any){
-                _interface.getLogger().debug(`check cpu mem ${new Date().toLocaleString('zh-CN')} : ${data}`)
-                recordList.push({checkTime:new Date().toLocaleString('zh-CN'),data:data});
-            }); 
-            count = count + 1;
-            await sleep(param.wait)
-        }
-        return {err: ErrorCode.succ, bytes: Buffer.from(''), value: {recordList:recordList}};
-    });
-    _interface.registerApi('stop_bdt_cpu_mem', async (from: Namespace, bytes: Buffer, param: {sum: number,wait:number}): Promise<any> => {
-        await sleep(performanceWait);
-        performanceSwitch = 0;
-        _interface.getLogger().debug(`remote call stop get_bdt_cpu_mem performanceSwitch = ${performanceSwitch} `);
-        return {err: ErrorCode.succ, bytes: Buffer.from(''), value: {info:"stop"}};
-    });
-    _interface.registerApi('report_cpu_mem', async (from: Namespace, bytes: Buffer, param: {sum: number,wait:number,agent:string,testcaseId:string}): Promise<any> => {
-        _interface.getLogger().debug(`remote call get_bdt_cpu_mem `);
-        let count = 1;
-        performanceSwitch = 1;
-        while(performanceSwitch && count<param.sum){
-            top.fetch().then(async function(data:any){
-                _interface.getLogger().debug(`check cpu mem ${new Date().toLocaleString('zh-CN')} : ${data.procs}`)
-                let runtime =  Date.now();
-                for(let i in data.procs){
-                    let postData = {
-                        testcaseId:param.testcaseId,
-                        agent:param.agent,
-                        pid:data.procs[i].pid,
-                        time:runtime,
-                        cpu:data.procs[i].cpu,
-                        mem:data.procs[i].mem
-                    }
-                    let info = await request("POST","performance",JSON.stringify(postData),ContentType.json)
-                    _interface.getLogger().debug(`${info}`)
-                }
-            }); 
-            count = count + 1;
-            await sleep(param.wait)
-        }
-        return {err: ErrorCode.succ, bytes: Buffer.from(''), value: {agent:param.agent,testcaseId:param.testcaseId}};
-    });
-
+    
 
 
     _interface.registerApi('removeBdtCache', async (from: Namespace, bytes: Buffer, param: {}): Promise<any> => {
@@ -346,65 +336,6 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
             
         return {err: ErrorCode.succ,bytes: Buffer.from(''),value:{}};
     });
-
-    _interface.registerApi('createLocalPeer', async (from: Namespace, bytes: Buffer, param: {addrInfo: string[], snFiles: string[], local: string ,RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type:string}): Promise<any> => {
-        _interface.getLogger().debug(`remote call startPeer and create local peer desc sec file`);
-
-        let startInfo = await manager.startPeer(param.RUST_LOG);
-        if (startInfo.err) {
-            return {err: startInfo.err, bytes: Buffer.from(''), value: {}};
-        }
-
-        let ret = await new Promise<{err: ErrorCode, peer: BdtPeer}>((v) => {
-            let newPeer = (p: BdtPeer) => {
-                if (p.name === startInfo.peerName!) {
-                    manager.removeListener('peer', newPeer);
-                    v({err: ErrorCode.succ, peer: p});
-                }
-            }
-
-            manager.on('peer', newPeer);
-        });
-
-        _interface.getLogger().info(`create stack addrinfo=${JSON.stringify(param.addrInfo)}`);
-        if (!param.addrInfo.length) {
-            _interface.getLogger().error(`addrInfo is null`);
-            return {err: ErrorCode.invalidParam, bytes: Buffer.from(''), value: {}};
-        }
-
-        let info = await ret.peer!.create(param.addrInfo, bytes, param.snFiles,'',param.activePnFiles,param.passivePnFiles,param.knownPeerFiles,param.chunk_cache,param.ep_type);
-        if (info.err) {
-            return {err: info.err, bytes: Buffer.from(''), value: {}};
-        }
-        let logPath = _interface.getLogger().dir();
-        let fileList = fs.readdirSync(logPath);
-        for(let i in fileList){
-            if(fileList[i].indexOf('.desc')!=-1){
-                fs.copyFileSync(path.join(logPath,fileList[i]),path.join(__dirname,`${param.local}.desc`))
-            }
-            if(fileList[i].indexOf('.key')!=-1){
-                fs.copyFileSync(path.join(logPath,fileList[i]),path.join(__dirname,`${param.local}.key`))
-            }
-        }
-
-        return {err: info.err, bytes: info.peerinfo!, value: {peerName: startInfo.peerName, peerid: info.peerid}};
-    });
-
-
     
 
-
-
-
-    // _interface.registerApi('getStat', async (from: Namespace, bytes: Buffer, param: {peerName: string, connName: string}): Promise<any> => {
-    //     _interface.getLogger().debug(`remote call getStat`);
-    //     let statinfo = await manager.getStat(param.peerName, param.connName);
-    //     return {err: ErrorCode.succ, bytes: Buffer.from(''), value: {stat: statinfo.err ? {} : statinfo.stat}};
-    // });
-
-    // _interface.registerApi('resUsage', async (from: Namespace, bytes: Buffer, param: {peerName: string}): Promise<any> => {
-    //     _interface.getLogger().debug(`remote call resUsage`);
-    //     let usage = await manager.resUsage(param.peerName);
-    //     return {err: usage.err, bytes: Buffer.from(''), value: {mem: usage.mem, vmem: usage.vmem, handle: usage.handle}};
-    // });
 }

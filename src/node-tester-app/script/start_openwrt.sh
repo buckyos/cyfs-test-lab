@@ -1,4 +1,4 @@
 # /bin/bash
 ./stop.sh
 
-nohup node ./script/daemon.js openwrt &
+nohup node /node_tester_app/script/daemon.js openwrt Agnet &

@@ -14,16 +14,16 @@ async function main() {
     let agentName = SysProcess.argv[3];
     console.info(`agentName:${agentName},os type ${platform}`);
     // 特定节点上报在线状态
-    if(agentName){
-        let online = () => {
-            let process = ChildProcess.fork(path.join(dir, 'script','online.js'), [agentName], { silent: true });
-            process.on('exit', (code: number, signal: string) => {
-                console.log('online process exit');
-                online();
-            });
-        }
-        online();
-    }
+    // if(agentName){
+    //     let online = () => {
+    //         let process = ChildProcess.fork(path.join(dir, 'script','online.js'), [agentName], { silent: true });
+    //         process.on('exit', (code: number, signal: string) => {
+    //             console.log('online process exit');
+    //             online();
+    //         });
+    //     }
+    //     online();
+    // }
     DirHelper.setRootDir(dir);
     
     let deviceConfig = path.join(DirHelper.getConfigDir(), 'deviceId.json');

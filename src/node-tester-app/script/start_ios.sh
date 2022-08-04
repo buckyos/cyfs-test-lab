@@ -1,4 +1,4 @@
 # /bin/bash
 ./stop.sh
-
-nohup node ./script/daemon.js ios &
+nohup node /node_tester_app/script/daemon.js ios Agnet &
+echo "start finish!"

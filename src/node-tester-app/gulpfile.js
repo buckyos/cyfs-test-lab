@@ -14,7 +14,7 @@ gulp.task("compile", function() {
 
 gulp.task("cpoy_file", async () => {
     [
-        gulp.src(["./**/*.js", "./**/*.json"])
+        gulp.src(["./**/*.js", "./**/*.json","./**/*.bat","./**/*.sh","./**/*.service"])
             .pipe(gulp.dest("../../deploy/node_tester_app")),
     ];
 

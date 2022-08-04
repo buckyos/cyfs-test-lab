@@ -1,0 +1,12 @@
+[Unit]
+Description=node tester app
+
+[Service]
+ExecStart=/bin/bash /node_tester_app/script/start_linux.sh
+ExecStop=/bin/bash /node_tester_app/script/stop.sh
+Restart = no
+Type=forking
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

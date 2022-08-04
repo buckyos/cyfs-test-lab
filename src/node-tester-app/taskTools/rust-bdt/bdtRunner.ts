@@ -1,130 +1,70 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader,RandomGenerator, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep} from '../../base';
-import {EventEmitter} from 'events';
-import {BdtProxy,BdtPeer,BdtConnection} from './bdtTool'
-import {BDTERROR,HubInfo,HubDeviceInfo,AgentInfo, Hub} from './testCode'
+import {ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode, sleep} from '../../base';
+import {BdtProxy,BdtPeer} from './bdtTool'
+import {BDTERROR,taskType,Agent} from './type'
 import {request,ContentType} from "./request"
 var date = require("silly-datetime");
-
-export const enum  taskType {
-    connect = "connect",
-    shutdown = "shutdown",
-    exit = "exit",
-    connect_second = "connect-second",  
-    connect_reverse = "connect-reverse",  
-    connect_mult = "connect-mult", 
-    connect_send_stream = "connect_send-stream",
-    send_stream = "send-stream",
-    send_stream_just_send = "send-stream-just-send",
-    send_stream_reverse = "send-stream-reverse",
-    send_stream_mult = "send-stream-mult",
-    send_stream_all = "send-stream-all",
-    send_chunk = "send-chunk",
-    send_file = "send-file" ,
-    send_file_mult = "send-file-mult",
-    send_dir= "send-dir",
-    send_chunk_list = "send-chunk-list",
-    send_file_range = "send-file-range" ,
-    send_file_object = "send-file-object" ,
-    send_dir_object = "send-dir-object" ,
-    Always_Run_IM = "Always_Run_IM" ,
-    Always_Run_Web = "Always_Run_Web" ,
-    Always_Run_NFT = "Always_Run_NFT" ,
-    Always_Run_Video = "Always_Run_Video" ,
- };
- export const enum Resp_ep_type {
-    Empty = "Empty",
-    effectiveEP_LAN = "effectiveEP_LAN",  
-    effectiveEP_WAN = "effectiveEP_WAN",  
-    default = "default", 
-    all = "SN_Resp",
- }
- export type Agent= {
-     name : string, //名称
-     NAT:number,
-     router?:string,//路由器编号
-     eps : Array<string>, //EP配置
-     SN : Array<string>, //SN
-     agentMult:number,  //节点运行的协议栈数量 ${Agent.name}_0 、${Agent.name}_1 这样编号
-     resp_ep_type?:Resp_ep_type,
-     device_eps? : Array<string> ,
-     SNResp_eps? : Array<string> ,
-     agentid?:string, //节点对应的自动化测试框架节点
-     logType? : string, //BDT 日志级别控制
-     report_time?:number, //间隔时间
-     chunk_cache?:string, //节点的chunk缓存模式
-     firstQA_answer?:string, //firstQA_answer 字符串长度
-     PN?:{ //节点的PN数据配置
-         activePnFiles:Array<string>, //主动PN列表
-         passivePnFiles:Array<string>, //被动PN列表
-         knownPeerFiles:Array<string> //已知的PN节点列表
-     };
-    //  bdt_conn? : Array<{
-    //      target?:string,
-    //      conn : BdtConnection,
-    //  }>
- 
- }
+const timeout = 300*1000;
  //
  export type PeerInfo = {
-     name:string, //${Agent.name}_0 、${Agent.name}_1 这样编号
-     peer?:BdtPeer, //实例化的BDT对象
-     type?:number,
-     endpoints? : Array<string>
- }
- export type Action ={
-     // 输入数据
-     action_id?:string, //action id
-     parent_action?:string,//父任务
-     LN : PeerInfo, //LN 设备
-     RN? : PeerInfo,  // RN 设备
-     Users? : Array<PeerInfo>, 
-     type : taskType, //操作类型
-     config : {
-        timeout : number, //超时时间
-        known_eps?:number,
-        range?:Array<{begin:number,end:number}>
-        firstQA_question? :string,
-        firstQA_answer? :string,
-        accept_answer?:number, //是否接收FristQA answer 
-        conn_tag?: string, //连接标记   
-    },
-     info? : {
-        LN_NAT?:string,
-        RN_NAT?:string,
-        Users_NAT?:Array<{name:string,NAT:string}>, 
-        fileName?:string, // 文件名称
-        conn?:Array<string>,
-        conn_name?:string, //连接名称
-        hash_LN? : string, //文件hash值
-        hash_RN? : string, //文件hash值
-        record?:Array<{  //下载进度记录
-            time: number;
-            speed: string;
-            progress: string;}>,
-    },
-     fileSize? : number, //数据大小
-     chunkSize?:number,  //chunk 大小
-     fileNum?:number, // 文件数量
-     connect_time?: number, //连接时间
-     send_time? : number, //传输时间
-     set_time?:number, // 本地set 时间
-     expect?:{err:number,log?:string}; //预期结果
-     result?:{err:number,log:string}; //实际结果   
- }
- 
- export type Task ={
-    task_id?:string,
-    timeout? : number, //超时时间
+    name:string, //${Agent.name}_0 、${Agent.name}_1 这样编号
+    peer?:BdtPeer, //实例化的BDT对象
+    type?:number,
+    endpoints? : Array<string>
+}
+export type Action ={
+    // 输入数据
+    action_id?:string, //action id
+    parent_action?:string,//父任务
     LN : PeerInfo, //LN 设备
-    RN : PeerInfo,  // RN 设备
+    RN? : PeerInfo,  // RN 设备
     Users? : Array<PeerInfo>, 
-    action:Array<Action>, // 操作集合
-    child_action?:Array<Action>, //子操作集合
-    result?:{err:number,log:string}; //实际结果 
-    state?:string; 
-    expect_status? : number,
+    type : taskType, //操作类型
+    config : {
+       timeout : number, //超时时间
+       known_eps?:number,
+       range?:Array<{begin:number,end:number}>
+       firstQA_question? :string,
+       firstQA_answer? :string,
+       accept_answer?:number, //是否接收FristQA answer 
+       conn_tag?: string, //连接标记   
+       agent_info? : Agent //节点信息
+   },
+    info? : {
+       LN_NAT?:string,
+       RN_NAT?:string,
+       Users_NAT?:Array<{name:string,NAT:string}>, 
+       fileName?:string, // 文件名称
+       conn?:Array<string>,
+       conn_name?:string, //连接名称
+       hash_LN? : string, //文件hash值
+       hash_RN? : string, //文件hash值
+       record?:Array<{  //下载进度记录
+           time: number;
+           speed: string;
+           progress: string;}>,
+   },
+    fileSize? : number, //数据大小
+    chunkSize?:number,  //chunk 大小
+    fileNum?:number, // 文件数量
+    connect_time?: number, //连接时间
+    send_time? : number, //传输时间
+    set_time?:number, // 本地set 时间
+    expect?:{err:number,log?:string}; //预期结果
+    result?:{err:number,log:string}; //实际结果   
 }
 
+export type Task ={
+   task_id?:string,
+   timeout? : number, //超时时间
+   LN : PeerInfo, //LN 设备
+   RN : PeerInfo,  // RN 设备
+   Users? : Array<PeerInfo>, 
+   action:Array<Action>, // 操作集合
+   child_action?:Array<Action>, //子操作集合
+   result?:{err:number,log:string}; //实际结果 
+   state?:string; 
+   expect_status? : number,
+}
  export type Testcase ={
     TestcaseName:string, //用例名称
     testcaseId : string, //用例ID
@@ -141,8 +81,22 @@ export const enum  taskType {
         err? : number,
         log?: string}>
 }
+/**
+ * 
+ *  将测试用例集合乱序排序
+ */
+export async function shuffle(agentList:Array<Task>) : Promise<Array<Task>>  {
+    let len = agentList.length;
+    while(len){
+        let i = RandomGenerator.integer(len);
+        len = len - 1;
+        let t  = agentList[len]
+        agentList[len] = agentList[i]
+        agentList[i]  =t
+    }
+    return agentList;
+}
 
-const timeout = 300*1000;
 
 export class TestRunner{
     private Testcase? : Testcase;// 测试用例
@@ -241,23 +195,12 @@ export class TestRunner{
                     this.log.info(`${this.agentList![i].name!} begin initStartBDTpeer  ${i} ,EP = ${JSON.stringify(this.agentList![i].eps)}`)
                     let peer = await this.m_bdtProxy.newPeer(this.agentList![i].agentid!,`${this.agentList![i].name!}_${j}`,this.agentList![i].NAT);
                     await peer.init();
-                    if(this.agentList![i].PN){
-                        let info = await peer.start(this.agentList![i].eps,'',this.agentList![i].SN,[],this.agentList![i].logType,this.agentList![i].PN!.activePnFiles,this.agentList![i].PN!.passivePnFiles,this.agentList![i].PN!.knownPeerFiles,this.agentList![i].chunk_cache,this.agentList![i].firstQA_answer,this.agentList![i].resp_ep_type);
-                        this.agentList![i].SNResp_eps!.push(info.ep_info!);
-                        this.agentList![i].device_eps!.push(info.ep_resp!);
-                        if(info.err){
-                            this.log.error(`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`);
-                            V({err:BDTERROR.initPeerFailed,log:`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`});
-                        }
-                    }else{
-                        let info = await peer.start(this.agentList![i].eps,'',this.agentList![i].SN,[],this.agentList![i].logType,[],[],[],this.agentList![i].chunk_cache,this.agentList![i].firstQA_answer,this.agentList![i].resp_ep_type);
-                        this.agentList![i].SNResp_eps!.push(info.ep_info!);
-                        this.agentList![i].device_eps!.push(info.ep_resp!);
-                        if(info.err){
-                            //初始化协议栈失败退出
-                            this.log.error(`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`);
-                            V({err:BDTERROR.initPeerFailed,log:`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`});
-                        }
+                    let info = await peer.start(this.agentList![i].eps,'',this.agentList![i].SN,[],this.agentList![i].logType,this.agentList![i].PN!.activePnFiles,this.agentList![i].PN!.passivePnFiles,this.agentList![i].PN!.knownPeerFiles,this.agentList![i].chunk_cache,this.agentList![i].firstQA_answer,this.agentList![i].resp_ep_type);
+                    this.agentList![i].SNResp_eps!.push(info.ep_info!);
+                    this.agentList![i].device_eps!.push(info.ep_resp!);
+                    if(info.err){
+                        this.log.error(`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`);
+                        V({err:BDTERROR.initPeerFailed,log:`${this.agentList![i].name} 初始化BDT协议栈 ${j} 失败`});
                     }
                     V({err:BDTERROR.success,log:`${this.agentList![i].name} 初始化BDT协议栈 ${j}成功`})
                 }
@@ -418,6 +361,28 @@ export class TestRunner{
         return 
     }
 
+    async restart(action:Action){
+        action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
+        if(!action.LN!.peer){
+            return {err:BDTERROR.success,log:`restart peer ${action.LN.name} not exist`}
+        }
+        if(!action.config.agent_info){
+            return {err:BDTERROR.success,log:`restart peer ${action.LN.name} need agent info`}
+        }
+        let info = await action.LN!.peer.restart(action.config.agent_info!.eps,
+                                                action.LN!.peer!.peerid,
+                                                action.config.agent_info!.SN,
+                                                [],
+                                                action.config.agent_info!.logType,
+                                                action.config.agent_info!.PN!.activePnFiles,
+                                                action.config.agent_info!.PN!.passivePnFiles,
+                                                action.config.agent_info!.PN!.knownPeerFiles,
+                                                action.config.agent_info!.chunk_cache,
+                                                action.config.agent_info!.firstQA_answer,
+                                                action.config.agent_info!.resp_ep_type);
+        
+        return {err:BDTERROR.success,log:"连接成功"}
+    }
     async connect(action:Action){
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
         action.RN!.peer = this.m_bdtProxy.getPeer(action.RN!.name).peer
@@ -810,6 +775,14 @@ export class TestRunner{
                         }
                     },this.Testcase!.taskList[i].action[j].config.timeout)
                     switch(this.Testcase!.taskList[i].action[j].type){
+                        case taskType.restart : {
+                            this.Testcase!.taskList[i].action[j].result =  await this.restart(this.Testcase!.taskList[i].action[j]);
+                            break;
+                        }
+                        case taskType.exit : {
+                            this.Testcase!.taskList[i].action[j].result =  await this.destory(this.Testcase!.taskList[i].action[j]);
+                            break;
+                        }
                         case taskType.connect : {
                             this.Testcase!.taskList[i].action[j].result =  await this.connect(this.Testcase!.taskList[i].action[j]);
                             break;

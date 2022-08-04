@@ -174,13 +174,13 @@ export class BdtPeerManager extends EventEmitter{
         let bdt_tools;
         if (this.m_platform === 'win32') {
             //await this.stopBdtWin32();
-            exefile = 'bdt_tools.exe';
-            bdt_tools = path.join(SysProcess.cwd(), `bdt_tools.exe`)
+            exefile = 'bdt-tools.exe';
+            bdt_tools = path.join(SysProcess.cwd(), `bdt-tools.exe`)
         } else if (this.m_platform === 'linux') {
-            exefile = 'bdt_tools';
+            exefile = 'bdt-tools';
             //添加执行权限
             //await this.stopBdtLinux();
-            bdt_tools = path.join(SysProcess.cwd(), `bdt_tools`)
+            bdt_tools = path.join(SysProcess.cwd(), `bdt-tools`)
             await ChildProcess.exec(`chmod +x ${bdt_tools}`, { cwd: path.dirname(bdt_tools)})
         } else if (this.m_platform === 'hiwifi') {
             exefile = 'bdt2_hiwifi';
@@ -195,7 +195,7 @@ export class BdtPeerManager extends EventEmitter{
             bdt_tools = path.join(SysProcess.cwd(), `bdt2_android64`)
             await ChildProcess.exec(`chmod +x ${bdt_tools}`, { cwd: path.dirname(bdt_tools)})
         } else {
-            exefile = 'bdt_tools';
+            exefile = 'bdt-tools';
             //添加执行权限
             bdt_tools = path.join(SysProcess.cwd(), `bdt_tools`)
             await ChildProcess.exec(`chmod +x ${bdt_tools}`, { cwd: path.dirname(bdt_tools)})
@@ -206,7 +206,7 @@ export class BdtPeerManager extends EventEmitter{
         this.m_logger.info(`bdt path ${bdt_tools}`)
         let peerName: string = `${RandomGenerator.string(32)}`;
         if(this.m_platform != 'localhost'){
-            let sub = ChildProcess.spawn(`${path.join(SysProcess.cwd(), exefile)}`, [this.m_localServerPort.toString(), peerName, this.m_logger.dir()], {stdio: 'ignore', cwd: SysProcess.cwd(), detached: true, windowsHide: true,env:{CYFS_CONSOLE_LOG_LEVEL:`${logType}`,CYFS_FILE_LOG_LEVEL_KEY:`${logType}`,RUST_LOG:`${logType}`,rust_bdt:`${logType}`}});
+            let sub = ChildProcess.spawn(`${path.join(SysProcess.cwd(), exefile)}`, [this.m_localServerPort.toString(), peerName, this.m_logger.dir()], {stdio: 'ignore', cwd: SysProcess.cwd(), detached: true, windowsHide: true,env:{CYFS_CONSOLE_LOG_LEVEL:`${logType}`,CYFS_FILE_LOG_LEVEL_KEY:`${logType}`,RUST_LOG:`${logType}`}});
             //let sub = ChildProcess.spawn(`${path.join(SysProcess.cwd(), exefile)}`, [this.m_localServerPort.toString(), peerName, this.m_logger.dir()], {stdio: 'ignore', cwd: SysProcess.cwd(), detached: false, windowsHide: false,env:{CYFS_CONSOLE_LOG_LEVEL:`${logType}`,CYFS_FILE_LOG_LEVEL_KEY:`${logType}`,RUST_LOG:`${logType}`}});
             sub.unref();
         }else{

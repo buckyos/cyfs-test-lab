@@ -91,7 +91,7 @@ export class BdtPeer extends EventEmitter  {
         this.m_lpc!.send(command);
     }
     
-    async create(addrInfo: string[], known_peer_info: Buffer, snFiles: string[], local: string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string): Promise<{err: ErrorCode, peerinfo?: Buffer, peerid?: string,ep_info?:string,ep_resp?:string}> {
+    async create(addrInfo: string[], known_peer_info: Buffer, snFiles: string[], local: string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string,ndn_event?:string,ndn_event_target?:string): Promise<{err: ErrorCode, peerinfo?: Buffer, peerid?: string,ep_info?:string,ep_resp?:string}> {
         let command: BdtLpcCommand = {
             bytes: known_peer_info,
             json: {
@@ -103,7 +103,9 @@ export class BdtPeer extends EventEmitter  {
                 known_peer_files:knownPeerFiles, 
                 local,
                 chunk_cache,
-                ep_type
+                ep_type,
+                ndn_event,
+                ndn_event_target,
             }
         };
         let lpc = this.m_lpc!;

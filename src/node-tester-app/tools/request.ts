@@ -15,8 +15,8 @@ export async function request(method:string,route:string,postData?:any,psotType?
         header = {'Content-Type': psotType,'Content-Length': Buffer.byteLength(postData)}
     }
     let options = {
-        host:"10.8.0.1",//远端服务器域名
-        port:9011,//远端服务器端口号
+        host:"192.168.100.254",//远端服务器域名
+        port:11081,//远端服务器端口号
         path: '/' + route,
         method: method,
         headers: header
@@ -52,7 +52,7 @@ export async function upload(filePath:string,filename:string){
     
     var boundaryKey = '----WebKitFormBoundary' + new Date().getTime();
     var options = {
-        host:"106.75.175.123",//远端服务器域名
+        host:"192.168.100.254",//远端服务器域名
         port:11000,//远端服务器端口号
         method:'POST',
         path:'/uploadFile/taskspackage',//上传服务路径

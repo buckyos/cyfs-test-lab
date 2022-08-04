@@ -243,6 +243,7 @@ export class BdtPeer extends EventEmitter{
     private m_timeout: number;
     public FristQA_answer?:string;
     public conn_tag?:string;
+    private cache_peer_info? :string;
     private m_establishCookie?: number;
     private m_sendedCookie?: number;
     private m_recvedCookie?: number;
@@ -359,7 +360,7 @@ export class BdtPeer extends EventEmitter{
         return {err:true};
     }
     //第二次创建的时候，可以指定前一次创建的peerid，这个时候bdt会以同一个device去创建
-    async start(addrInfo: string[], local: string, snFiles: string[], knownPeer?: Buffer[],RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,FristQA_answer?:string,resp_ep_type?:string): Promise<{err:ErrorCode,ep_info?:string,ep_resp?:string}> {
+    async start(addrInfo: string[], local: string, snFiles: string[], knownPeer?: Buffer[],RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,FristQA_answer?:string,resp_ep_type?:string,ndn_event?:string,ndn_event_target?:string): Promise<{err:ErrorCode,ep_info?:string,ep_resp?:string}> {
         let param: any = {
             addrInfo,
             snFiles,
@@ -370,6 +371,8 @@ export class BdtPeer extends EventEmitter{
             knownPeerFiles,
             chunk_cache,
             ep_type:resp_ep_type,
+            ndn_event,
+            ndn_event_target
 
         };
 
@@ -384,6 +387,59 @@ export class BdtPeer extends EventEmitter{
         
         let info = await this.m_interface.callApi('startPeer', writer.render(), param, this.m_agentid, 0);
         this.m_interface.getLogger().debug(`startPeer, err=${info.err}, jsonvalue=${JSON.stringify(info.value)}`);
+
+        
+        if (info.err) {
+            return {
+                err : info.err
+            };
+        }
+
+        if (!info.bytes || info.bytes!.length === 0 || !info.value || !info.value.peerName) {
+            this.m_interface.getLogger().error(`startPeer, service return invalid param`);
+            return {
+                err : ErrorCode.invalidParam
+            };
+        }
+        this.m_peerName = info.value.peerName;
+        this.FristQA_answer = FristQA_answer ;
+        this.m_peerinfo = info.bytes!;
+        this.m_peerid = info.value.peerid;
+        this.state = 1;
+        return {
+            err : ErrorCode.succ,
+            ep_info : info.value.ep_info,
+            ep_resp : info.value.ep_info,
+        };
+        
+    }
+    async restart(addrInfo: string[], local: string, snFiles: string[], knownPeer?: Buffer[],RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,FristQA_answer?:string,resp_ep_type?:string,ndn_event?:string,ndn_event_target?:string): Promise<{err:ErrorCode,ep_info?:string,ep_resp?:string}> {
+        let param: any = {
+            addrInfo,
+            snFiles,
+            local,
+            RUST_LOG,
+            activePnFiles,
+            passivePnFiles,
+            knownPeerFiles,
+            chunk_cache,
+            ep_type:resp_ep_type,
+            ndn_event,
+            ndn_event_target
+
+        };
+
+        let writer: BufferWriter = new BufferWriter()
+        if (knownPeer) {
+            for (let index = 0; index < knownPeer.length; index++) {
+                writer.writeU16(knownPeer[index].length);
+                writer.writeBytes(knownPeer[index]);
+            }
+        }
+        
+        
+        let info = await this.m_interface.callApi('restart', writer.render(), param, this.m_agentid, 0);
+        this.m_interface.getLogger().debug(`restart, err=${info.err}, jsonvalue=${JSON.stringify(info.value)}`);
 
         
         if (info.err) {

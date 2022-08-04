@@ -1,8 +1,5 @@
-
-#!/bin/bash
-
-pid_array=($(ps aux|grep "node ./script/daemon.js" | grep -v "grep" | awk -F " " '{print $2}'))
-
+# /bin/bash
+pid_array=($(ps aux|grep "node /node_tester_app/script/daemon.js" | grep -v "grep" | awk -F " " '{print $2}'))
 for pid in ${pid_array[@]}
 do
 {
@@ -11,9 +8,7 @@ do
 } &
 done
 wait
-
-pid_array=($(ps aux|grep "/script/master_main.js" | grep -v "grep" | awk -F " " '{print $2}'))
-
+pid_array=($(ps aux|grep "node /node_tester_app/script/master_main.js" | grep -v "grep" | awk -F " " '{print $2}'))
 for pid in ${pid_array[@]}
 do
 {
@@ -22,9 +17,7 @@ do
 } &
 done
 wait
-
-pid_array=($(ps aux|grep "/script/startup.js" | grep -v "grep" | awk -F " " '{print $2}'))
-
+pid_array=($(ps aux|grep "node /node_tester_app/script/startup.js" | grep -v "grep" | awk -F " " '{print $2}'))
 for pid in ${pid_array[@]}
 do
 {
@@ -33,6 +26,4 @@ do
 } &
 done
 wait
-
-
 echo "stop finish!"
