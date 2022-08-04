@@ -2311,7 +2311,7 @@ function select_url(url, agentInfo) {
     if (agentInfo && agentInfo.agent && agentInfo.agent.tags) {
         for (const tag of agentInfo.agent.tags) {
             if (tag == "LAB") {
-                let fields = url.split("106.75.175.123");
+                let fields = url.split("192.168.100.254");
                 fields.splice(1, 0, "192.168.100.2");
                 let new_url = "";
                 fields.forEach(f => new_url += f);

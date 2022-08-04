@@ -4,42 +4,42 @@ nohup gunicorn -b 127.0.0.1:12000 api:app -k gevent > server.log &
 bdt2_echo:
 nohup /opt/pypy/bin/gunicorn -b 127.0.0.1:11002 api:app -k gevent > bdt2_server.log &
 
-Í³¼ÆÁ¬½ÓÊý£º
+Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 
-Í³¼ÆÎÄ¼þ¼ÐÖÐ°üº¬µÄÎÄ¼þÊý£¨°üÀ¨×ÓÎÄ¼þ¼Ð£©
+Í³ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ð°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð£ï¿½
 ls -lR|grep "^-"| wc -l
 
 SCP:
 
 scp root@ip:/sourcepath root@ip:/destpath
 
-106.75.175.123	<------>	10.13.187.14
+192.168.100.254	<------>	10.13.187.14
 106.75.175.167(bdt-api) <------->	10.13.94.172
 
-ÅÅ¶ÓÒ³Ãæ
+ï¿½Å¶ï¿½Ò³ï¿½ï¿½
 http://bdttest.tinyappcloud.com/index.html#/
 
-$grep -5 'parttern' inputfile //´òÓ¡Æ¥ÅäÐÐµÄÇ°ºó5ÐÐ
+$grep -5 'parttern' inputfile //ï¿½ï¿½Ó¡Æ¥ï¿½ï¿½ï¿½Ðµï¿½Ç°ï¿½ï¿½5ï¿½ï¿½
  
-$grep -C 5 'parttern' inputfile //´òÓ¡Æ¥ÅäÐÐµÄÇ°ºó5ÐÐ
+$grep -C 5 'parttern' inputfile //ï¿½ï¿½Ó¡Æ¥ï¿½ï¿½ï¿½Ðµï¿½Ç°ï¿½ï¿½5ï¿½ï¿½
  
-$grep -A 5 'parttern' inputfile //´òÓ¡Æ¥ÅäÐÐµÄºó5ÐÐ
+$grep -A 5 'parttern' inputfile //ï¿½ï¿½Ó¡Æ¥ï¿½ï¿½ï¿½ÐµÄºï¿½5ï¿½ï¿½
  
-$grep -B 5 'parttern' inputfile //´òÓ¡Æ¥ÅäÐÐµÄÇ°5ÐÐ
+$grep -B 5 'parttern' inputfile //ï¿½ï¿½Ó¡Æ¥ï¿½ï¿½ï¿½Ðµï¿½Ç°5ï¿½ï¿½
 
 
 
-²éÕÒÄ³¸öpeerÉÏ±¨µÄqueryCmd
+ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½peerï¿½Ï±ï¿½ï¿½ï¿½queryCmd
 cat report_log/2018-07-02.log | grep queryCmd | grep "}}, \"peerid\": \"15232783589-TZpJdFer" | grep "Jul 2 00"
 
-bdt_echo ÃüÁîÐÐ²ÎÊý
-"13794462011_xxx" "1.1" "{\"seedPeers\": [{\"peerid\":\"SEED_DHT_PEER_10000\", \"eplist\":[\"4@106.75.175.123@10000@u\", \"4@106.75.175.123@10010@t\"]},{\"peerid\": \"SEED_DHT_PEER_10000_IPV6\", \"eplist\": [\"6@240e:fa:1143:bd00::16e@10000@u\", \"6@240e:fa:1143:bd00::16e@10010@t\"]}]}"
+bdt_echo ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ï¿½
+"13794462011_xxx" "1.1" "{\"seedPeers\": [{\"peerid\":\"SEED_DHT_PEER_10000\", \"eplist\":[\"4@192.168.100.254@10000@u\", \"4@192.168.100.254@10010@t\"]},{\"peerid\": \"SEED_DHT_PEER_10000_IPV6\", \"eplist\": [\"6@240e:fa:1143:bd00::16e@10000@u\", \"6@240e:fa:1143:bd00::16e@10010@t\"]}]}"
 
-blockchain NPM£º
+blockchain NPMï¿½ï¿½
 username:buckychain
 password:EAR6bXKlLP
 email:blockchain@buckyos.com
 
-»î¶¯Ò³ÃæµØÖ·£º
+ï¿½î¶¯Ò³ï¿½ï¿½ï¿½Ö·ï¿½ï¿½
 http://www.gct.one/Ch/bdt-2/

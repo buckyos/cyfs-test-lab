@@ -2,7 +2,7 @@
     "name": "bdt2_echo",
     "packageInfo": {
         "version": "2.10",
-        "host": "106.75.175.123",
+        "host": "192.168.100.254",
         "port": 80,
         "path": "/update/bdt2_echo.zip",
         "MD5": "ab1e5e6cf28d10039a777e318027853d"
@@ -18,7 +18,7 @@
             }, 
             "deviceId": "bucky-sn-server", 
             "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDGrBQ/++X3zdgpl5nVDrof0xm9OGQZ6vodADC0MCrGAeKzG3k9FpJksHfgVbBWTadoTNPFr275/wXG3rhrrSj4SMGFAGOWSwBAocp5CLzUdKFepP5MRZhUhaYNYtmgLh0DM8EsoEvu6/rTcY6D+k9V/PsuJEmCXpwZOMj8HOxvHQIDAQAB", 
-            "eplist": ["udp@106.75.175.123@10020","tcp@106.75.175.123@10030"]
+            "eplist": ["udp@192.168.100.254@10020","tcp@192.168.100.254@10030"]
         }
     }
 }

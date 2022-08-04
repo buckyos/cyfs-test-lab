@@ -14,7 +14,7 @@ SUPPORT_QQ_ADDRESS = "（官方QQ群:777179682）"
 
 NEW_FRAMEWORK_PACKAGE = {
     "version": "1.98",
-    "host": "106.75.175.123",
+    "host": "192.168.100.254",
     "port": 80,
     "path": "/syspackage/chainsdk-2020_01_02_082919.zip",
     "type": "update",

@@ -2,7 +2,7 @@
     "name": "chainsdk",
     "packageInfo": {
         "version": "1.34",
-        "host": "106.75.175.123",
+        "host": "192.168.100.254",
         "port": 80,
         "path": "/update/blockchain-sdk.zip",
         "MD5": "7ac1cad01a9035aa0a9b40929ae48383"

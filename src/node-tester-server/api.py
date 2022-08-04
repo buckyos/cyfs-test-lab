@@ -33,7 +33,7 @@ from project_mgr import prjMgr
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
 
-HTTP_FILE_SERVER = 'http://106.75.175.123/';
+HTTP_FILE_SERVER = 'http://192.168.100.254/';
 
 def getClientIP(request):
     ip = '127.0.0.1'
