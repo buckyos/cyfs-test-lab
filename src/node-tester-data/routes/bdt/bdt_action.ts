@@ -35,3 +35,25 @@ router.post('/add',
         return res.json(result)
     }
 );
+
+
+router.post('/addList',
+    async (req, res) => {
+        console.info(`#receive bdt_action addList request,body = ${JSON.stringify(req.body)} `)
+        let actionList:Array<ActionModel> 
+        try {
+            actionList = req.body
+        } catch (error) {
+            return res.json({err:1,log:"error testcase action data"})
+        }
+        let model = new BdtAction();
+        for(let i in actionList){
+            let result =await  model.add(actionList[i]);
+            console.info(`bdt_action add resp ${JSON.stringify(result)}`)
+            if(result.err){
+                return res.json(result)
+            }
+        }
+        return res.json({err:0,log:"add action list success"})
+    }
+);
