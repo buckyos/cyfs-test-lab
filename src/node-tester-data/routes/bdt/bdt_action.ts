@@ -42,7 +42,7 @@ router.post('/addList',
         console.info(`#receive bdt_action addList request,body = ${JSON.stringify(req.body)} `)
         let actionList:Array<ActionModel> 
         try {
-            actionList = req.body
+            actionList = req.body.list
         } catch (error) {
             return res.json({err:1,log:"error testcase action data"})
         }
