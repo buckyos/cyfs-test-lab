@@ -798,7 +798,7 @@ class ServiceStorage {
         stmt.run(jobId, jobTask.taskInfo.task.taskId, runStatus.timesLimit, runStatus.status, runStatus.successTimes, runStatus.failedTimes);
     }
 
-    resetJobTask(jobTask, jobId) {
+    async resetJobTask(jobTask, jobId) {
         let stmt = this.m_stmts.get('resetJobTask');
         assert(stmt);
 

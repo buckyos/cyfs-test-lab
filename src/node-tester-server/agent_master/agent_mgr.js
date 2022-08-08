@@ -1857,17 +1857,17 @@ class AgentMgr {
         if (this._getJobStatus(jobInfo) === ServiceStorage.JobStatus.finish) {
             // 重启
             jobInfo.job.runningId++;
-            jobInfo.jobTaskInfos.forEach(jobTaskInfo => {
+            jobInfo.jobTaskInfos.forEach( async jobTaskInfo => {
                 jobTaskInfo.runStatus.status = ServiceStorage.TaskStatus.running;
                 jobTaskInfo.runStatus.failedTimes = 0;
                 jobTaskInfo.runStatus.successTimes = 0;
                 jobTaskInfo.runStatus.runningTimes = 0;
-                this.m_serviceStorage.resetJobTask(jobTaskInfo, request.jobid);
+                await this.m_serviceStorage.resetJobTask(jobTaskInfo, request.jobid);
             });
             this.m_serviceStorage.resetJob(jobInfo.job, ServiceStorage.TaskStatus.running);
         } else {
             // 继续
-            jobInfo.jobTaskInfos.forEach(jobTaskInfo => {
+            jobInfo.jobTaskInfos.forEach( jobTaskInfo => {
                 if (jobTaskInfo.runStatus.status === ServiceStorage.TaskStatus.stop) {
                     jobTaskInfo.runStatus.status = ServiceStorage.TaskStatus.running;
                     this.m_serviceStorage.updateJobTaskStatus(jobTaskInfo, request.jobid);
