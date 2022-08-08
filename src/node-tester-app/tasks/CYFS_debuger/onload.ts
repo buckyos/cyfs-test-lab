@@ -1,169 +1,68 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
 
+import {TestRunner,Testcase,Task,Agent} from '../../taskTools/cyfs_stack/stackRunner';
+import { CustumObjectType} from '../../taskTools/cyfs_stack/ws_params';
+var date = require("silly-datetime");
 
 
 export async function TaskMain(_interface: TaskClientInterface) {
-    let testcaseName = "BDT_debuger"
-    let agentList:Array<Agent> = [];
-    let taskList : Array<Task> = [];
-    let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0006,
-
-    ]
-    let firstQA_answer= "";
-    agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{udp:true,tcp:true},ipv6:{udp:true,tcp:true}},"info",1,[],{},firstQA_answer,Resp_ep_type.all))
-    for(let i in agentList){
-        for(let j in agentList){
-            if(i != j){
-                // NAT穿透
-                if(agentList[i].NAT + agentList[j].NAT < 5 || agentList[i].router == agentList[j].router ){
-                    taskList.push(
-                        {
-                            LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                            RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                            expect_status : BDTERROR.success,
-                            action:[
-                                //一、首次建立连接
-                                //(1) 建立连接
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.connect,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 0,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(2) 正向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                // (3)反向发送1M数据
-                                {
-                                    LN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    RN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    type : taskType.send_stream_reverse,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 30*1000, 
-                                    }, 
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //二、二次建立连接
-                                //(1) 建立连接
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.connect_second,
-                                    config : {
-                                        conn_tag : "connect_second" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 0,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(2) 正向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_second" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(3) 反向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    RN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    type : taskType.send_stream_reverse,
-                                    config : {
-                                        conn_tag : "connect_second" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //二、二次建立连接-反连
-                                //(1) 建立连接
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.connect_reverse,
-                                    config : {
-                                        conn_tag : "connect_reverse" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 0,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(2) 正向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_reverse" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(3) 反向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    RN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    type : taskType.send_stream_reverse,
-                                    config : {
-                                        conn_tag : "connect_reverse" ,
-                                        timeout : 30*1000, 
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                            ]
-                        }
-                    )
-                }else{
-
-                }
-            }
-        }
-    }
+    // 测试用例demo说明: NFT2 机器使用CYFS协议栈ts_client 进行put_object 并且 get_object 检查数据操作，共执行100次，同时并发执行任务数10；
     
+    // 测试节点
+    let agentList:Array<Agent> = [
+        {
+            name : "NFT2", //名称标签
+            cyfs_clients : [{
+                name:"NFT2_ts_client", //   模拟协议栈 ${Agent.name}_0 、${Agent.name}_1 这样编号
+                type:"runtime", //协议栈client 连接类型 runtime 、ood 、port
+                SDK_type:"typescript",
+            }],
+            logType : "info", // 日志级别控制
+            report : true, //报错cyfs库的性能数据
+            report_time:10*1000, //间隔时间
 
+        }
+    ]
+    // 测试用例执行的任务集合Task 和单个操作Action
+    let taskList:Array<Task> = []
+    for(let i =0;i<100;i++){
+        taskList.push({
+            LN : {name:"NFT2_ts_client"}, 
+            RN : {name:"NFT2_ts_client"},  // remote
+            clients : [],
+            timeout : 100*1000, //超时时间
+            action:[{
+                type : "put_object_check",
+                source : "NFT2_ts_client",
+                target : "NFT2_ts_client",
+                timeout : 100*1000,
+                input_data : {
+                    obj_type : CustumObjectType.MyText,
+                    common : {
+                        level: "router",
+                        target: "NFT2_ts_client",
+                        flags : 0
+        
+                    }
+                },
+                expect:{err:0,log:"run success"},
+            }],
+            expect:{err:0,log:"run success"},
+        })
+    }
     let testRunner = new TestRunner(_interface);
+    //测试用例数据
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
-        remark : `# 操作流程：\n
-        + （1）LN/RN 初始化本地BDT协议栈\n
-        + （2）LN 向 RN 发起首次连接，LN->RN 发送1M大小stream 数据，RN->LN发送1M大小stream 数据\n
-        + （3）LN 向 RN 发起二次连接，LN->RN 发送1M大小stream 数据，RN->LN发送1M大小stream 数据\n
-        + （4）RN 向 LN 发起反向连接，LN->RN 发送1M大小stream 数据，RN->LN发送1M大小stream 数据\n
-        +  (5) 关闭所有连接\n`,
+        TestcaseName:'NON_put_object',
+        testcaseId : `NON_put_object_${Date.now()}`,
+        remark : "测试NON put_object操作100次，并发数10 操作流程 （1）A put object B (2)B get object Noc check",
         environment : "lab",
+        test_date :  date.format(new Date(),'YYYY/MM/DD'),
         agentList,
         taskList,
         taskMult:10
     }
-    
+    _interface.getLogger().info(JSON.stringify(testcase))
+    //测试用例执行
     await testRunner.testCaseRunner(testcase);
 }
