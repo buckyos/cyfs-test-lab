@@ -61,20 +61,26 @@ export type InputInfo = {
     skip?: boolean;
     ext? : Array<{key:string,value:string}>;
 }
+
 export type ResultInfo = {
-    err:boolean;
-    log?:string;
-    code?:number
+    err:    boolean;
+    log?:   string;
+    code?:  number
 }
 
-
+export enum StackType {
+    Sim       = "sim",
+    Runtime   = "runtime",
+    Ood       = "ood",
+}
 
 export type testSuiteJson = {
-    system:string
-    module : string;
+    system:     string
+    module:     string;
+    stack_type: StackType;
     testcaseList : Array<{
-            name : string,
-            id : string,
+        name : string,
+        id : string,
     }>
 }
 

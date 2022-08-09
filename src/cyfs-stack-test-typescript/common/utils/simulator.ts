@@ -8,7 +8,7 @@ import * as os from 'os';
 import assert = require('assert'); 
 import * as cyfs from '../../cyfs_node/cyfs_node';
 import JSBI from 'jsbi';
-import {DEC_ID} from "../../config/decApp"
+import {TEST_DEC_ID} from "../../config/decApp"
 
 export class ZoneSimulator{
    static  pid :number;
@@ -52,7 +52,7 @@ export class ZoneSimulator{
         await cyfs.sleep(5000);
         // (2) 读取模拟器的peerId 数据
         await this.getPeerId();
-        ZoneSimulator.APPID = DEC_ID;
+        ZoneSimulator.APPID = TEST_DEC_ID;
         // (3)连接协议栈
         console.info(`###连接协议栈`)
         await this.connecStimulator();

@@ -184,17 +184,10 @@ async function main() {
         platform: os.platform(),
     });
     await runner.start();
-    const serviceid = "4402";
+    const serviceid = "4";
     const taskList = [
-        "Connect_FristQA_TCP_direct",
-        "Connect_FristQA_TCP_SN",
-        "Connect_FristQA_TCP_PackageSize_answer",
-        "Connect_FristQA_TCP_PackageSize_quesyion",
-        "Connect_FristQA_UDP_direct",
-        "Connect_FristQA_UDP_SN",
-        "Connect_FristQA_UDP_PackageSize_answer",
-        "Connect_FristQA_UDP_PackageSize_question",
-    ]
+        "CYFS_debuger",
+    ];
     for(let i in taskList){
         let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
         if(!fs.existsSync(runConfig)){
