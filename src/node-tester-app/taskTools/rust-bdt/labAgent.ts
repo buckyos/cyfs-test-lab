@@ -142,7 +142,18 @@ export const PNType = {
     }
 }
 
-
+export function SameRouter(routerA:string,routerB:string){
+    let listA = routerA.split("&")
+    let listB = routerB.split("&")
+    for(let i in listA){
+        for(let j in listB){
+            if(listA[i]==listB[j]){
+                return true;
+            }
+        }
+    }
+    return false
+}
 
 export async function InitAgentData(testAgent:Array<AgentData>,eps:{ipv4?:{udp?:Boolean,tcp?:Boolean},ipv6?:{udp?:boolean,tcp?:boolean},},logType:string,agentMult:number,SN:Array<string>, config?:{tcpReserve?:boolean,report?:boolean,report_time?:number,PN?:{ activePnFiles: Array<string>,passivePnFiles: Array<string>,knownPeerFiles: Array<string>}} ,firstQA_answer?:string,resp_ep_type?:Resp_ep_type ) {
     let agentList:Array<Agent> = [];

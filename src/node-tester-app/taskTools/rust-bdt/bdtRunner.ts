@@ -27,7 +27,14 @@ export type Action ={
        firstQA_answer? :string,
        accept_answer?:number, //是否接收FristQA answer 
        conn_tag?: string, //连接标记   
-       agent_info? : Agent //节点信息
+       restart? : {
+            ndn_event : string,
+            ndn_event_target : string,
+       },
+       ndn_event_config? :{
+            is_connect : Boolean,
+            is_cache_data : Boolean,
+        }
    },
     info? : {
        LN_NAT?:string,
@@ -366,21 +373,13 @@ export class TestRunner{
         if(!action.LN!.peer){
             return {err:BDTERROR.success,log:`restart peer ${action.LN.name} not exist`}
         }
-        if(!action.config.agent_info){
-            return {err:BDTERROR.success,log:`restart peer ${action.LN.name} need agent info`}
+        let stop = await action.LN!.peer!.destory(); 
+        let target = this.m_bdtProxy.getPeer(action.config.restart!.ndn_event_target).peer!.peerid
+
+        let info = await action.LN!.peer.restart(action.config.restart?.ndn_event,target);
+        if(info.err){
+            return {err:BDTERROR.LNAgentError,log:`restart peer ${action.LN.name} failed`}
         }
-        let info = await action.LN!.peer.restart(action.config.agent_info!.eps,
-                                                action.LN!.peer!.peerid,
-                                                action.config.agent_info!.SN,
-                                                [],
-                                                action.config.agent_info!.logType,
-                                                action.config.agent_info!.PN!.activePnFiles,
-                                                action.config.agent_info!.PN!.passivePnFiles,
-                                                action.config.agent_info!.PN!.knownPeerFiles,
-                                                action.config.agent_info!.chunk_cache,
-                                                action.config.agent_info!.firstQA_answer,
-                                                action.config.agent_info!.resp_ep_type);
-        
         return {err:BDTERROR.success,log:"连接成功"}
     }
     async connect(action:Action){
@@ -551,6 +550,23 @@ export class TestRunner{
     }
 
     async send_file(action:Action){
+        action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
+        action.RN!.peer = this.m_bdtProxy.getPeer(action.RN!.name).peer
+        let setFile =  await action.RN!.peer!.startSendFile(action.fileSize!,"",action.chunkSize)
+        if(setFile.err){
+            return{err:BDTERROR.sendFileByChunkFailed,log:`${action.RN!.peer!.tags} set chunk failed,err=${setFile.err}`}
+        }
+        let recvFile = await action.LN!.peer!.startDownloadFile(setFile.fileName!,setFile.fileObject!,action.RN!.peer!.peerid,action.config.timeout);
+        if(recvFile.err){
+            return{err:BDTERROR.sendFileByChunkFailed,log:`${action.LN!.peer!.tags} recv file failed,err=${recvFile.err}`}
+        }
+        action.set_time = setFile.time;
+        action.send_time=recvFile.time;
+        action.info!.hash_LN=recvFile.md5!;
+        action.info!.hash_RN= setFile.md5!;
+        return {err:BDTERROR.success,log:"连接发送数据成功"}
+    }
+    async send_file_send_file_redirect(action:Action,taskIndex:number){
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
         action.RN!.peer = this.m_bdtProxy.getPeer(action.RN!.name).peer
         let setFile =  await action.RN!.peer!.startSendFile(action.fileSize!,"",action.chunkSize)
@@ -825,6 +841,10 @@ export class TestRunner{
                         }
                         case taskType.send_file : {
                             this.Testcase!.taskList[i].action[j].result = await this.send_file(this.Testcase!.taskList[i].action[j]);
+                            break;
+                        }
+                        case taskType.send_file_redirect : {
+                            this.Testcase!.taskList[i].action[j].result = await this.send_file_send_file_redirect(this.Testcase!.taskList[i].action[j],Number(i));
                             break;
                         }
                         case taskType.send_file_range : {

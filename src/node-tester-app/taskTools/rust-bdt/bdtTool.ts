@@ -243,13 +243,27 @@ export class BdtPeer extends EventEmitter{
     private m_timeout: number;
     public FristQA_answer?:string;
     public conn_tag?:string;
-    private cache_peer_info? :string;
     private m_establishCookie?: number;
     private m_sendedCookie?: number;
     private m_recvedCookie?: number;
     private m_connectionCookie?: number;
     private m_unliveCookie?: number;
     private m_acceptCookie?: number;
+    public cache_peer_info? : {
+        addrInfo: string[], 
+        local: string, 
+        snFiles: string[], 
+        knownPeer?: Buffer[],
+        RUST_LOG?:string,
+        activePnFiles?:Array<string>, 
+        passivePnFiles?:Array<string>,
+        knownPeerFiles?:Array<string>,
+        chunk_cache?:string,
+        FristQA_answer?:string,
+        resp_ep_type?:string,
+        ndn_event?:string,
+        ndn_event_target?:string
+    };
     public tags?:string;
     public state : number;
     public NAT? : number;
@@ -375,7 +389,7 @@ export class BdtPeer extends EventEmitter{
             ndn_event_target
 
         };
-
+        this.cache_peer_info = param;
         let writer: BufferWriter = new BufferWriter()
         if (knownPeer) {
             for (let index = 0; index < knownPeer.length; index++) {
@@ -413,35 +427,18 @@ export class BdtPeer extends EventEmitter{
         };
         
     }
-    async restart(addrInfo: string[], local: string, snFiles: string[], knownPeer?: Buffer[],RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,FristQA_answer?:string,resp_ep_type?:string,ndn_event?:string,ndn_event_target?:string): Promise<{err:ErrorCode,ep_info?:string,ep_resp?:string}> {
-        let param: any = {
-            addrInfo,
-            snFiles,
-            local,
-            RUST_LOG,
-            activePnFiles,
-            passivePnFiles,
-            knownPeerFiles,
-            chunk_cache,
-            ep_type:resp_ep_type,
-            ndn_event,
-            ndn_event_target
-
-        };
-
+    async restart(ndn_event?:string,ndn_event_target?:string): Promise<{err:ErrorCode,ep_info?:string,ep_resp?:string}> {
+        this.cache_peer_info!.ndn_event =  ndn_event;
+        this.cache_peer_info!.ndn_event_target =  ndn_event_target;
         let writer: BufferWriter = new BufferWriter()
-        if (knownPeer) {
-            for (let index = 0; index < knownPeer.length; index++) {
-                writer.writeU16(knownPeer[index].length);
-                writer.writeBytes(knownPeer[index]);
+        if (this.cache_peer_info!.knownPeer) {
+            for (let index = 0; index < this.cache_peer_info!.knownPeer.length; index++) {
+                writer.writeU16(this.cache_peer_info!.knownPeer[index].length);
+                writer.writeBytes(this.cache_peer_info!.knownPeer[index]);
             }
         }
-        
-        
-        let info = await this.m_interface.callApi('restart', writer.render(), param, this.m_agentid, 0);
-        this.m_interface.getLogger().debug(`restart, err=${info.err}, jsonvalue=${JSON.stringify(info.value)}`);
-
-        
+        let info = await this.m_interface.callApi('restartPeer', writer.render(), this.cache_peer_info, this.m_agentid, 0);
+        this.m_interface.getLogger().debug(`restartPeer, err=${info.err}, jsonvalue=${JSON.stringify(info.value)}`);
         if (info.err) {
             return {
                 err : info.err
@@ -455,10 +452,12 @@ export class BdtPeer extends EventEmitter{
             };
         }
         this.m_peerName = info.value.peerName;
-        this.FristQA_answer = FristQA_answer ;
         this.m_peerinfo = info.bytes!;
         this.m_peerid = info.value.peerid;
         this.state = 1;
+        await this.init();
+        await this.autoAccept();
+        
         return {
             err : ErrorCode.succ,
             ep_info : info.value.ep_info,

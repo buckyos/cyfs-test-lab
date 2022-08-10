@@ -58,6 +58,7 @@ export const enum  taskType {
     send_stream_all = "send-stream-all",
     send_chunk = "send-chunk",
     send_file = "send-file" ,
+    send_file_redirect = "send-file-redirect",
     send_file_mult = "send-file-mult",
     send_dir= "send-dir",
     send_chunk_list = "send-chunk-list",
