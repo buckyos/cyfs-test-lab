@@ -1,5 +1,5 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType} from '../../taskTools/rust-bdt/labAgent';
+import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
 import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
 import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
 
@@ -32,7 +32,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         for(let j in agentList){
             if(i != j){
                 // NAT穿透
-                if(agentList[j].NAT==0  || agentList[i].router == agentList[j].router ){
+                if(agentList[j].NAT==0  || SameRouter(agentList[i].router!,agentList[j].router!) ){
                     let task : Task = {
                         LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
                         RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
