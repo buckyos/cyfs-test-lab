@@ -1018,7 +1018,7 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1372,7 +1372,7 @@ impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1478,6 +1478,7 @@ pub struct StartDownloadFileCommandReq {
     pub seq: u32,
     pub peer_id: DeviceId,
     pub second_peer_id: Option<DeviceId>,
+    pub remote: Device,
     pub path: PathBuf,
     pub file: Option<File>,
 }
@@ -1486,7 +1487,8 @@ impl TryFrom<LpcCommand> for StartDownloadFileCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
+        let buffer = value.as_buffer();
+        let (remote, _other) = Device::raw_decode(&buffer)?;
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -1548,6 +1550,7 @@ impl TryFrom<LpcCommand> for StartDownloadFileCommandReq {
             seq: value.seq(),
             peer_id,
             second_peer_id,
+            remote,
             path,
             file,
         })
@@ -1627,7 +1630,7 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1645,6 +1648,7 @@ pub struct StartDownloadFileQWithRangesCommandReq {
     pub seq: u32,
     pub peer_id: DeviceId,
     pub second_peer_id: Option<DeviceId>,
+    pub remote: Device,
     pub path: PathBuf,
     pub ranges: Option<Vec<Range<u64>>>,
     pub file: Option<File>,
@@ -1654,7 +1658,8 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
+        let buffer = value.as_buffer();
+        let (remote, _other) = Device::raw_decode(&buffer)?;
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -1776,6 +1781,7 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
             seq: value.seq(),
             peer_id,
             second_peer_id,
+            remote,
             path,
             ranges:ranges_opt,
             file,
@@ -1819,6 +1825,7 @@ impl TryFrom<StartDownloadFileWithRangesCommandResp> for LpcCommand {
 
 pub struct StartSendDirCommandReq {
     pub seq: u32,
+    
     pub path: PathBuf,
     pub dir_object_path : PathBuf,
     pub chunk_size_mb: usize,
@@ -1828,7 +1835,6 @@ impl TryFrom<LpcCommand> for StartSendDirCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -1928,6 +1934,7 @@ pub struct StartDownloadDirCommandReq {
     pub seq: u32,
     pub peer_id: DeviceId,
     pub second_peer_id: Option<DeviceId>,
+    pub remote: Device,
     pub path: PathBuf,
     pub dir_object_path: PathBuf,
     pub dir: Option<cyfs_base::Dir>,
@@ -1940,6 +1947,8 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
+        let buffer = value.as_buffer();
+        let (remote, _other) = Device::raw_decode(&buffer)?;
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -2070,6 +2079,7 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
             seq: value.seq(),
             peer_id,
             second_peer_id,
+            remote,
             path,
             dir_object_path,
             dir,
@@ -2158,7 +2168,7 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }

@@ -1165,7 +1165,7 @@ impl Peer {
                         Some(state) => {
                             let state_str = match state {
                                 TaskControlState::Downloading(_,_) => "downloading",
-                                TaskControlState::Finished => "finished",
+                                TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
                             };
@@ -1352,7 +1352,7 @@ impl Peer {
                         Some(state) => {
                             let state_str = match state {
                                 TaskControlState::Downloading(_,_) => "downloading",
-                                TaskControlState::Finished => "finished",
+                                TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
                             };
@@ -1795,6 +1795,9 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    // 缓存对端设置Device
+                    let remote_id = c.remote.desc().device_id();
+                    stack.device_cache().add(&remote_id, &c.remote);
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
@@ -1853,6 +1856,8 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    let remote_id = c.remote.desc().device_id();
+                    stack.device_cache().add(&remote_id, &c.remote);
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
@@ -1938,7 +1943,7 @@ impl Peer {
                         Some(state) => {
                             let state_str = match state {
                                 TaskControlState::Downloading(_,_) => "downloading",
-                                TaskControlState::Finished => "finished",
+                                TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
                             };
@@ -1980,6 +1985,7 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    
                     let ret = if c.path.as_path().exists() {
                         //let mut down_file_path : Vec<()>  = vec![];
                         let mut file_obj_map = HashMap::new();
@@ -2113,6 +2119,8 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    let remote_id = c.remote.desc().device_id();
+                    stack.device_cache().add(&remote_id, &c.remote);
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
@@ -2228,7 +2236,7 @@ impl Peer {
                                     }
                                     "downloading"
                                 },
-                                TaskControlState::Finished => {
+                                TaskControlState::Finished(_) => {
                                     "finished"
                                 },
 
