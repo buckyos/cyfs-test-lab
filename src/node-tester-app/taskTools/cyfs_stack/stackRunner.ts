@@ -67,8 +67,8 @@ export type Testcase ={
     failed?:number,  //task 成功数量
     result?:number,  //执行结果
     errorList?:Array<{task_id?:string,
-        err? : number,
-        log?: string}>
+    err? : number,
+    log?: string}>
 }
 
 

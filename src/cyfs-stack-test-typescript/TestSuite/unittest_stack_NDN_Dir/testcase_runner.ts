@@ -5,7 +5,7 @@ import {TestcaseManger,testcaseInfo} from "../../common/models/testcaseInfo";
 import {AclManager,Acl,} from '../../common/utils/acl_manager'
 import {RandomGenerator,NDNTestManager,InputInfo,ResultInfo} from '../../common'
 import {ZoneSimulator} from '../../common'
-import {DEC_ID_BASE58,DEC_ID} from "../../config/decApp"
+import {DEC_ID_BASE58,TEST_DEC_ID} from "../../config/decApp"
 import * as fs from "fs-extra"
 import * as path from "path"
 import{getStack,getPeerId} from "../../common/utils/oodFunc"
@@ -173,7 +173,7 @@ async function initHandlerList(inputData:InputInfo) {
 async function get_data_chunk(inputData:InputInfo,expect:ResultInfo) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname,"test_cache_file","source")
-    if(fs.pathExists(filePath)){ 
+    if(fs.existsSync(filePath)){ 
         fs.removeSync(filePath)
     }
     //(2)生成测试文件
@@ -207,7 +207,7 @@ async function get_data_chunk(inputData:InputInfo,expect:ResultInfo) {
 async function get_data_chunk_second(inputData:InputInfo,expect:ResultInfo) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname,"test_cache_file","source")
-    if(fs.pathExists(filePath)){ 
+    if(fs.existsSync(filePath)){ 
         fs.removeSync(filePath)
     }
     //(2)生成测试文件
@@ -259,7 +259,7 @@ async function get_data_chunk_second(inputData:InputInfo,expect:ResultInfo) {
 async function put_data_chunk(inputData:InputInfo,expect:ResultInfo) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname,"test_cache_file","source")
-    if(fs.pathExists(filePath)){ 
+    if(fs.existsSync(filePath)){ 
         fs.removeSync(filePath)
     }
     //(2)生成测试文件
@@ -293,7 +293,7 @@ async function put_data_chunk(inputData:InputInfo,expect:ResultInfo) {
 async function trans_file(inputData:InputInfo,expect:ResultInfo) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname,"test_cache_file","source")
-    if(fs.pathExists(filePath)){ 
+    if(fs.existsSync(filePath)){ 
         fs.removeSync(filePath)
     }
     //(2)生成测试文件
@@ -322,7 +322,7 @@ async function trans_file(inputData:InputInfo,expect:ResultInfo) {
 async function trans_file_second(inputData:InputInfo,expect:ResultInfo) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname,"test_cache_file","source")
-    if(fs.pathExists(filePath)){ 
+    if(fs.existsSync(filePath)){ 
         fs.removeSync(filePath)
     }
     //(2)生成测试文件
@@ -362,11 +362,11 @@ async function trans_dir(inputData:InputInfo,expect:ResultInfo) {
     //创建要测试的文件
     let dirName = `${RandomGenerator.string(10)}`
     let dirPath = path.join(__dirname,"test_cache_file","source",dirName)
-    if(fs.pathExists(dirPath)){ 
+    if(fs.existsSync(dirPath)){ 
         fs.removeSync(dirPath)
     }
     let targetPath = path.join(__dirname,'./test_cache_file/target/',dirName)
-    if(fs.pathExists(targetPath)){ 
+    if(fs.existsSync(targetPath)){ 
         fs.removeSync(targetPath)
     }
     fs.mkdirpSync(targetPath);
@@ -385,7 +385,7 @@ async function put_object(inputData:InputInfo,expect:ResultInfo) {
     //(1) put object
     // 创建一个测试对象 
     const owner_id = cyfs.ObjectId.from_base_58(ZoneSimulator.getPeerIdByName(inputData.opt.source)).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
     const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const object_id = obj.desc().calculate_id();
     await cyfs.sleep(10000);
@@ -448,7 +448,7 @@ async function get_object(inputData:InputInfo,expect:ResultInfo) {
     const info = await createTestObject(target,targetPeerId);
     //await cyfs.sleep(2000)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
     //开始监听是否运行handler 
     let check =  handlerManager.startHandlerCheck(10*1000);
     
@@ -504,7 +504,7 @@ async function select_object(inputData:InputInfo,expect:ResultInfo) {
     let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
     let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
     //开始监听是否运行handler 
     let check =  handlerManager.startHandlerCheck(10*1000);
 
@@ -550,7 +550,7 @@ async function select_object(inputData:InputInfo,expect:ResultInfo) {
 }
 
 async function getTestObject(stack:cyfs.SharedCyfsStack,peerId:string,objectId:cyfs.ObjectId) {
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
     const req1: cyfs.NONGetObjectOutputRequest = {
         object_id: objectId,
         common: {
@@ -581,7 +581,7 @@ async function delect_object(inputData:InputInfo,expect:ResultInfo) {
     let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
     const info = await createTestObject(target,targetPeerId)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
 
     //开始监听是否运行handler 
     let check =  handlerManager.startHandlerCheck(10*1000);
@@ -620,7 +620,7 @@ async function post_object(inputData:InputInfo,expect:ResultInfo) {
     let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
     const info = await createTestObject(target,targetPeerId)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
 
     //开始监听是否运行handler 
     let check =  handlerManager.startHandlerCheck(10*1000);
@@ -654,7 +654,7 @@ async function sign_verify_object(inputData:InputInfo,expect:ResultInfo)  {
     let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
     let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = DEC_ID;
+    const dec_id = TEST_DEC_ID;
     console.log(`new app id: ${dec_id}`);
     const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const object_id = obj.desc().calculate_id();

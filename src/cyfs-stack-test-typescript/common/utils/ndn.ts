@@ -7,13 +7,12 @@ import * as crypto from 'crypto';
 
 
 import { ZoneSimulator } from "./simulator"
-import { TEST_DEC_ID } from '../../config/decApp';
 
 export class NDNTestManager {
 
-    static async transChunksByGetData(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
+    static async transChunksByGetData(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
         console.info('开始chunk 传输流程 get_data')
-        console.info(`source:${source.local_device_id()} target:${target}`)
+        console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
         let owner = source.local_device().desc().owner()!.unwrap()
         let publish_file_time = Date.now();
@@ -21,8 +20,8 @@ export class NDNTestManager {
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
-                target,
+                dec_id: ZoneSimulator.APPID,
+                target: target.local_device_id().object_id,
                 req_path: "",
                 referer_object: []
 
@@ -61,7 +60,7 @@ export class NDNTestManager {
         let put_file_object = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: file_obj_resp.object
@@ -76,7 +75,7 @@ export class NDNTestManager {
         let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
 
         let chunkRecvPromise: Array<any> = []
-        /*
+
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
                 setTimeout(() => {
@@ -107,7 +106,7 @@ export class NDNTestManager {
                 console.info(`下载chunk 成功： ${JSON.stringify(resp)}，耗时：${time}`)
                 v({ err: false, time: time, chunkId: chunkId.calculate_id().to_base_58() })
             }))
-        } */
+        }
         let download = []
         for (let i in chunkRecvPromise) {
             let result = await chunkRecvPromise[i]
@@ -119,17 +118,17 @@ export class NDNTestManager {
         return { err: false, log: `chunk 下载成功`, download };
     }
 
-    static async transChunksByPutData(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
+    static async transChunksByPutData(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
         console.info('开始chunk 传输流程 put_data')
-        console.info(`source:${source.local_device_id()} target:${target}`)
+        console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
         let owner = source.local_device().desc().owner()!.unwrap()
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
-                target,
+                dec_id: ZoneSimulator.APPID,
+                target: target.local_device_id().object_id,
                 req_path: "",
                 referer_object: []
 
@@ -164,7 +163,7 @@ export class NDNTestManager {
         let put_file_object = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: file_obj_resp.object
@@ -177,7 +176,6 @@ export class NDNTestManager {
         let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
 
         let chunkRecvPromise: Array<any> = []
-        /*
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
                 let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
@@ -206,7 +204,7 @@ export class NDNTestManager {
                 console.info(JSON.stringify(resp))
                 v({ err: false, time: time, chunkId: chunkId.calculate_id().to_base_58() })
             }))
-        }*/
+        }
         let download = []
         for (let i in chunkRecvPromise) {
             let result = await chunkRecvPromise[i]
@@ -217,17 +215,17 @@ export class NDNTestManager {
         }
         return { err: false, log: `chunk 下载成功`, download };
     }
-    static async transChunkSerialBy(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
+    static async transChunkSerialBy(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, filePath: string, chunkSize: number, chunkNumber: number, level: cyfs.NDNAPILevel, timeout: number = 60 * 1000) {
         console.info('开始chunk 串行传输流程')
-        console.info(`source:${source.local_device_id()} target:${target}`)
+        console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
         let owner = source.local_device().desc().owner()!.unwrap()
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
-                target,
+                dec_id: ZoneSimulator.APPID,
+                target: target.local_device_id().object_id,
                 req_path: "",
                 referer_object: []
 
@@ -256,7 +254,7 @@ export class NDNTestManager {
         let put_file_object = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: file_obj_resp.object
@@ -267,7 +265,6 @@ export class NDNTestManager {
 
         let chunkRecvPromise: Array<any> = []
         let download = []
-        /*
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
                 let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
@@ -296,11 +293,10 @@ export class NDNTestManager {
             }
             download.push(result)
         }
-        */
         return download;
     }
 
-    static async transFile(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, filePath: string, chunkSize: number, savePath: string, level: cyfs.NDNAPILevel, timeout: number = 600 * 1000): Promise<{ err: boolean, log: string, time?: number, fileId?: string, totalTime?: number } | undefined> {
+    static async transFile(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, filePath: string, chunkSize: number, savePath: string, level: cyfs.NDNAPILevel, timeout: number = 600 * 1000): Promise<{ err: boolean, log: string, time?: number, fileId?: string, totalTime?: number }> {
         //1. source 设备 publish_file 将文件存放到本地NDC 
         let totalTime = 0;
         let begin = Date.now();
@@ -310,7 +306,7 @@ export class NDNTestManager {
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
+                dec_id: ZoneSimulator.APPID,
                 req_path: "",
                 referer_object: []
 
@@ -343,7 +339,7 @@ export class NDNTestManager {
         let put_object_resp = await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: file_obj_resp.object
@@ -352,7 +348,6 @@ export class NDNTestManager {
             return { err: file_obj_resp_0.err, log: `transFile non_service put file object failed` }
         }
 
-        /*
         //4. target 设备 start_task 开始下载文件
         let time = 0;
         let start = Date.now();
@@ -360,8 +355,8 @@ export class NDNTestManager {
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
-                target,
+                dec_id: ZoneSimulator.APPID,
+                target: target.local_device_id().object_id,
                 referer_object: [new cyfs.NDNDataRefererObject(file_resp.file_id)]
             },
             object_id: file_resp.file_id,
@@ -370,7 +365,6 @@ export class NDNTestManager {
             auto_start: true
         })).unwrap()
         let sleepTime = 50;
-
         //5. target 设备 get_task_state 检查下载状态
         let check: Promise<{ err: boolean, log: string, time?: number, fileId?: string, totalTime?: number }> = new Promise(async (v) => {
             setTimeout(() => {
@@ -383,8 +377,8 @@ export class NDNTestManager {
                     common: {
                         level: level,
                         flags: 0,
-                        dec_id: TEST_DEC_ID,
-                        target,
+                        dec_id: ZoneSimulator.APPID,
+                        target: target.local_device_id().object_id,
                         req_path: "",
                         referer_object: []
 
@@ -407,14 +401,12 @@ export class NDNTestManager {
 
             }
             v({ err: false, time: time, totalTime: totalTime, log: `下载文件成功：${file_resp.file_id.to_base_58()}` })
-        }) 
+        })
         let result = await check;
         return result;
-        */
-       return undefined;
     }
 
-    static async addDirToCyfs(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, dirPath: string, savePath: string, chunkSize: number, level: cyfs.NDNAPILevel) {
+    static async addDirToCyfs(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, dirPath: string, savePath: string, chunkSize: number, level: cyfs.NDNAPILevel) {
         let outputDir = path.join(savePath, `dirInfo${RandomGenerator.string(10)}.txt`)
         fs.createFileSync(outputDir);
         //判断输入参数是否正确
@@ -428,8 +420,8 @@ export class NDNTestManager {
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
-                target,
+                dec_id: ZoneSimulator.APPID,
+                target: target.local_device_id().object_id,
                 req_path: "",
                 referer_object: []
 
@@ -462,7 +454,7 @@ export class NDNTestManager {
         let put_object_resp = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: dir_obj_resp.object
@@ -563,7 +555,7 @@ export class NDNTestManager {
 
     }
 
-    static async transDir(source: cyfs.SharedCyfsStack, target: cyfs.ObjectId, dirPath: string, chunkSize: number, savePath: string, level: cyfs.NDNAPILevel, timeout: number = 600 * 1000) {
+    static async transDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, dirPath: string, chunkSize: number, savePath: string, level: cyfs.NDNAPILevel, timeout: number = 600 * 1000) {
         //判断输入参数是否正确
         if (!fs.pathExistsSync(dirPath)) {
             return { err: true, log: `下载文件夹不存在` }
@@ -579,7 +571,7 @@ export class NDNTestManager {
             common: {
                 level: level,
                 flags: 0,
-                dec_id: TEST_DEC_ID,
+                dec_id: ZoneSimulator.APPID,
                 req_path: "",
                 referer_object: []
 
@@ -615,7 +607,7 @@ export class NDNTestManager {
         let dir_build = await source.util().build_dir_from_object_map({
             common: {
                 req_path: "",
-                dec_id: TEST_DEC_ID,
+                dec_id: ZoneSimulator.APPID,
                 flags: 0,
             },
             object_map_id: dir_map.object.object_id,
@@ -659,7 +651,7 @@ export class NDNTestManager {
         let put_map_resp = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: dir_map.object
@@ -672,7 +664,7 @@ export class NDNTestManager {
         let put_object_resp = (await source.non_service().put_object({
             common: {
                 level: cyfs.NONAPILevel.Router,
-                target,
+                target: target.local_device_id().object_id,
                 flags: 0
             },
             object: dir_obj.object
@@ -681,8 +673,9 @@ export class NDNTestManager {
         if (put_object_resp.err) {
             return { err: true, log: `transDir non_service put_object_resp failed ` }
         }
-        /*
         //4. target 设备 本地重构dir对象文件目录结构，获取下载文件任务列表
+
+
         //let [dir_map,dir_map_raw] = new cyfs.ObjectMapDecoder().raw_decode(dir_obj_resp.object.object_raw).unwrap();
         const dir_obj_resp = (await target.non_service().get_object({
             common: {
@@ -740,7 +733,7 @@ export class NDNTestManager {
                     await source.non_service().put_object({
                         common: {
                             level: cyfs.NONAPILevel.Router,
-                            target,
+                            target: target.local_device_id().object_id,
                             flags: 0
                         },
                         object: file_obj_resp.object
@@ -749,7 +742,6 @@ export class NDNTestManager {
                 }
             }
         });
-        
         let sendObjectPromise: any = new Promise(async (v) => {
             dir.desc().content().obj_list().match({
                 Chunk: (chunk_id: cyfs.ChunkId) => {
@@ -774,7 +766,7 @@ export class NDNTestManager {
                         let get_file = await source.non_service().put_object({
                             common: {
                                 level: cyfs.NONAPILevel.Router,
-                                target,
+                                target: target.local_device_id().object_id,
                                 flags: 0
                             },
                             object: file_obj_resp.object
@@ -848,7 +840,7 @@ export class NDNTestManager {
                 let create_task_resp = await target.trans().create_task({
                     common: {
                         level: level,
-                        dec_id: TEST_DEC_ID,
+                        dec_id: ZoneSimulator.APPID,
                         flags: 0,
                         referer_object: [new cyfs.NDNDataRefererObject(dir_obj_target.object.object_id)]
                     },
@@ -866,8 +858,8 @@ export class NDNTestManager {
                         common: {
                             level: level,
                             flags: 0,
-                            dec_id: TEST_DEC_ID,
-                            target,
+                            dec_id: ZoneSimulator.APPID,
+                            target: target.local_device_id().object_id,
                             req_path: "",
                             referer_object: []
 
@@ -896,7 +888,7 @@ export class NDNTestManager {
         time = Date.now() - time;
         console.info(`transDir 下载dir 所有文件总耗时：${time}`)
         return { err: false, taskList, time, log: "下载dir成功" }
-       */
+
     }
 
 }

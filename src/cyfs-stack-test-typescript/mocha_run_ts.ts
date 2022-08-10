@@ -8,7 +8,7 @@ import { sleep } from './cyfs_node/cyfs_node';
 
 async function main() {
 
-    let TestSuite = ".\\TestSuite\\unittest_NON_nameobject\\test*.ts"
+    let TestSuite = ".\\TestSuite\\TestSuiteTool\\unittest-with_real_stack_xxx\\test_xxx.ts"
     let report_path = path.join(__dirname,"./mochawesome-report")
     //清空日志
     //fs.removeSync(path.join(__dirname,"../log"));
@@ -24,8 +24,8 @@ async function main() {
     currenttime = currenttime.replace(/\D/g,"_");
     console.log(currenttime)
 
-    console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register > ${logpath}/mocha_run_${currenttime}.log `)
-    let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register > ${logpath}/mocha_run_${currenttime}.log `)
+    console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
+    let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
 
     run.on('exit', async (code: number, signal: string) => {
         console.info(`######运行结束`)

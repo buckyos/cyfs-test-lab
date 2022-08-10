@@ -10,6 +10,7 @@ import * as fs from "fs-extra"
 import * as path from "path"
 import { getStack, getPeerId } from "../../common/utils/oodFunc"
 import { datas } from "./data"
+import { agent_init } from '../../common/utils/agent';
 //初始化日志
 cyfs.clog.enable_file_log({
     name: "test_main",
@@ -38,9 +39,9 @@ describe("cyfs协议栈测试", async function () {
                     let res = await tmg.findRecordById(datas.testcaseList[j].id);
                     assert.ok(!res.err, res.log)
                     let testcaseInfo: testcaseInfo = res.datas![0];
-                    inputData = JSON.parse(testcaseInfo.input_data!.toString());
-                    expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-
+                    //inputData = JSON.parse(testcaseInfo.input_data!.toString());
+                    //expectData = JSON.parse(testcaseInfo.expect_result!.toString());
+                    console.info(`123 Stack`);
                     if (datas.stack_type === StackType.Sim) {
                         //初始化ACL配置文件
                         await ZoneSimulator.getPeerId();
@@ -69,20 +70,24 @@ describe("cyfs协议栈测试", async function () {
                 it(`${datas.testcaseList[j].name}`, async () => {
                     // 异常用例阻塞暂时跳过
                     console.info(`开始执行测试用例：${datas.testcaseList[j].name}`)
-                    if (inputData.skip) {
-                        assert(false, "测试用例异常，暂时标记不执行")
-                    }
+                    // if (inputData.skip) {
+                    //     assert(false, "测试用例异常，暂时标记不执行")
+                    // }
                     //运行超时处理机制
                     let run = true;
                     let timeout = 120 * 1000
-                    if (inputData.timeout) {
-                        timeout = inputData.timeout
-                    }
+                    // if (inputData.timeout) {
+                    //     timeout = inputData.timeout
+                    // }
                     setTimeout(() => {
                         if (run) {
                             console.error(false, "测试用例运行超时")
                         }
                     }, timeout)
+
+                    await agent_init();
+                    console.log(`agent end----------`);
+                    /*
                     //运行测试用例
                     switch (inputData.opt.optType) {
                         case "put_data_chunk": {
@@ -145,7 +150,7 @@ describe("cyfs协议栈测试", async function () {
                             await sign_verify_object(inputData, expectData, stack_type);
                             break;
                         }
-                    }
+                    }*/
                     run = false;
                 })
 
@@ -180,6 +185,7 @@ async function initHandlerList(inputData: InputInfo, stack_type: StackType) {
     }
 }
 
+/*
 async function get_data_chunk(inputData: InputInfo, expect: ResultInfo, stack_type: StackType) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
@@ -766,4 +772,4 @@ async function sign_verify_object(inputData: InputInfo, expect: ResultInfo, stac
     assert(!handlerResult.err)
 }
 
-
+*/

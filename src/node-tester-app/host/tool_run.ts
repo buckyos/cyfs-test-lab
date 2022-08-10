@@ -94,7 +94,7 @@ class Runner {
         }
         let entryfile: string = path.join(path.dirname(process.argv[1]), '../script/master_main.js');
         let deviceID: string = await this.getDeviceID();
-        this.m_process = ChildProcess.fork(entryfile, [DirHelper.getRootDir(),deviceID, this.m_platform, '1'], { silent: true });
+        this.m_process = ChildProcess.fork(entryfile, [DirHelper.getRootDir(), deviceID, this.m_platform, '1'], { silent: true });
         this.state = "run"
         this.m_process.on('exit', (code: number, signal: string) => {
             this.state = "exit"
@@ -184,6 +184,7 @@ async function main() {
         platform: os.platform(),
     });
     await runner.start();
+    
     const serviceid = "4";
     const taskList = [
         "CYFS_debuger",
