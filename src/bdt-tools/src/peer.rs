@@ -1856,8 +1856,6 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    let remote_id = c.remote.desc().device_id();
-                    stack.device_cache().add(&remote_id, &c.remote);
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
@@ -2119,8 +2117,7 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    let remote_id = c.remote.desc().device_id();
-                    stack.device_cache().add(&remote_id, &c.remote);
+ 
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
