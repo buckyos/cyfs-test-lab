@@ -13,13 +13,14 @@ use async_std::{
     sync::Arc, 
     task, 
     fs::File, 
-    io::prelude::*
+    io::prelude::*,
+    future, 
 };
 use rand::{Rng};
 use futures::StreamExt;
 use sha2::Digest;
 use cyfs_base::*;
-
+use bytes::Bytes;
 
 //use cyfs_base::{self, *};
 use cyfs_bdt::{
@@ -875,6 +876,7 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
+    
 
     pub fn on_recv_object(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on recv, c={:?}", &c);
@@ -941,7 +943,127 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
+    pub fn on_send_datagram(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on send datagram, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let resp = match SendDatagramLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to SendDatagramLpcCommandReq failed, e={}", &e);
+                    SendDatagramLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        time: 0,
+                        hash: HashValue::default()
+                    }
+                },
+                Ok(c) => {
+                    let stack = peer.get_stack();
+                    let mut options = cyfs_bdt::DatagramOptions::default();
+                    // 要强转数据类型
+                    let _ = match c.sequence.clone() {
+                        Some(v) => {
+                            options.sequence = Some(cyfs_bdt::TempSeq::from(v as u32));
+                        },
+                        None => {
 
+                        }
+                    };
+                    options.create_time = c.create_time;
+                    options.send_time = c.send_time;
+                    options.author_id = c.author_id;
+                    options.plaintext = c.plaintext;
+                    let hash = hash_data(&c.content);
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
+                    let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
+                        Ok(c) =>{
+                            log::info!("Send Datagram succcess ");
+                            SendDatagramLpcCommandResp {
+                                seq, 
+                                result: 0,
+                                time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                hash:hash
+                            }
+                        },
+                        Err(e) =>{
+                            log::error!("Send Datagram error, e={}", &e);
+                            SendDatagramLpcCommandResp {
+                                seq, 
+                                result: 1,
+                                time: 0,
+                                hash: HashValue::default()
+                            }
+                        }
+                    };
+                    resp
+                    
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+    pub fn on_recv_datagram(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on send datagram, c={:?}", &c);
+        let seq = c.seq();
+        {
+            let peer = self.clone();
+            let mut lpc = lpc.clone();
+            let resp = match RecvDatagramMonitorLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to RecvDatagramMonitorLpcCommandReq failed, e={}", &e);
+                    RecvDatagramMonitorLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                    }
+                },
+                Ok(c) => {
+                    let stack = peer.get_stack();
+                    task::spawn(async move {
+                        let mut lpc1 = lpc.clone();
+                        let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
+                        loop {
+                            let datagrams  = datagram.recv_v().await.unwrap();
+                            for datagramData in datagrams {
+                                let sequence = datagramData.options.sequence.unwrap().value() as u64;
+                                let remote_id = Some(datagramData.source.remote);
+                                let content = datagramData.data;
+                                let hash = hash_data(&content);
+                                let notify = RecvDatagramLpcCommandResp {
+                                    seq, 
+                                    result: 0 as u16,
+                                    content,
+                                    remote_id,
+                                    sequence,
+                                    hash,
+                                };
+                                let _ = lpc1.send_command(LpcCommand::try_from(notify).unwrap()).await;
+                            }
+                            
+                        }
+                    });
+                    RecvDatagramMonitorLpcCommandResp{
+                        seq, 
+                        result: 0,
+                    }
+                    
+                }
+            };
+
+        }
+        let resp  = RecvDatagramMonitorLpcCommandResp{
+            seq, 
+            result: 0,
+        };
+        task::spawn(async move {
+            let mut lpc = lpc.clone();
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        }); 
+         
+    }
     pub fn on_set_chunk(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on set-chunk, c={:?}", &c);
         let seq = c.seq();
@@ -1483,23 +1605,20 @@ impl Peer {
 
         let (local, key) = match &c.local {
             Some(v) => {
-                let exe_folder = std::env::current_exe().unwrap().parent().unwrap().to_path_buf();
-                let s = format!("{}.desc", v.as_str());
-                let local_desc_path = exe_folder.join(s.as_str());
-                let path = format!("{:?}", &local_desc_path);
-                
-                let (device, key) = match std::path::Path::new(&path).exists(){
+        
+                let public_key_path = format!("{}.desc", v.as_str());                
+                let (device, key) = match std::path::Path::new(&public_key_path).exists(){
                     true =>{
-                        let mut file = std::fs::File::open(local_desc_path).map_err(|e| {
-                            log::error!("open peer desc failed on create, path={:?}, e={}", path.as_str(), &e);
+                        let mut file = std::fs::File::open(public_key_path.clone()).map_err(|e| {
+                            log::error!("open peer desc failed on create, path={:?}, e={}", public_key_path.as_str(), &e);
                             e
                         })?;
                         let mut buf = Vec::<u8>::new();
                         let _ = file.read_to_end(&mut buf)?;
                         let (device, _) = Device::raw_decode(buf.as_slice())?;
         
-                        let s = format!("{}.key", v.as_str());
-                        let private_key_path = exe_folder.join(s.as_str());
+                        let private_key_path = format!("{}.key", v.as_str());
+
                         let path = format!("{:?}", &private_key_path);
                         let mut file = std::fs::File::open(private_key_path).map_err(|e| {
                             log::error!("open key file failed on create, path={:?}, e={}", path.as_str(), &e);
@@ -1796,8 +1915,6 @@ impl Peer {
                 },
                 Ok(c) => {
                     // 缓存对端设置Device
-                    let remote_id = c.remote.desc().device_id();
-                    stack.device_cache().add(&remote_id, &c.remote);
                     let ret = {
                         let mut src = Vec::new();
                         src.push(c.peer_id);
