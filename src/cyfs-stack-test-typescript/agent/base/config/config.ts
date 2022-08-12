@@ -22,6 +22,12 @@ export class GlobalConfig {
         port: 11000
     };
 
+    static forwardServer: {host: string, port: number} = {
+        host: host,
+        port: 11080
+    }
+
+
     static reportCrash: boolean = false;
 
     static removeLog: boolean = false;

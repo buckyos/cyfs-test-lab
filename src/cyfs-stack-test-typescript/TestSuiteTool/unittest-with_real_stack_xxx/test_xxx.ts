@@ -11,6 +11,15 @@ import * as path from "path"
 import { getStack, getPeerId } from "../../common/utils/oodFunc"
 import { datas } from "./data"
 import { agent_init } from '../../common/utils/agent';
+
+
+import { TaskClientInterface } from '../../agent/base';
+import { Agent, Task, Testcase, TestRunner } from '../../agent/forward/test_runner';
+import { CustumObjectType } from '../../agent/forward/proto';
+
+var date = require("silly-datetime");
+
+
 //初始化日志
 cyfs.clog.enable_file_log({
     name: "test_main",
@@ -21,11 +30,9 @@ cyfs.clog.enable_file_log({
 //初始化测试工具
 const aclManager = new AclManager();
 const handlerManager = new myHandler.handlerManager();
-//读取json 测试数据
 
 describe("cyfs协议栈测试", async function () {
     this.timeout(0);
-
     describe(`${datas.module}`, async function () {
         for (let j in datas.testcaseList) {
             let inputData: InputInfo;
@@ -41,7 +48,6 @@ describe("cyfs协议栈测试", async function () {
                     let testcaseInfo: testcaseInfo = res.datas![0];
                     //inputData = JSON.parse(testcaseInfo.input_data!.toString());
                     //expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-                    console.info(`123 Stack`);
                     if (datas.stack_type === StackType.Sim) {
                         //初始化ACL配置文件
                         await ZoneSimulator.getPeerId();
@@ -70,12 +76,15 @@ describe("cyfs协议栈测试", async function () {
                 it(`${datas.testcaseList[j].name}`, async () => {
                     // 异常用例阻塞暂时跳过
                     console.info(`开始执行测试用例：${datas.testcaseList[j].name}`)
+                    // 临时测试用
                     // if (inputData.skip) {
                     //     assert(false, "测试用例异常，暂时标记不执行")
                     // }
                     //运行超时处理机制
                     let run = true;
                     let timeout = 120 * 1000
+                    // // 临时测试用
+                    // inputData.timeout = 0;
                     // if (inputData.timeout) {
                     //     timeout = inputData.timeout
                     // }
@@ -85,8 +94,8 @@ describe("cyfs协议栈测试", async function () {
                         }
                     }, timeout)
 
-                    await agent_init();
-                    console.log(`agent end----------`);
+                    await test_xxx(inputData);
+
                     /*
                     //运行测试用例
                     switch (inputData.opt.optType) {
@@ -183,6 +192,52 @@ async function initHandlerList(inputData: InputInfo, stack_type: StackType) {
             assert(!ret.err, `${inputData.stackCfgList[j].deviceName} 添加 ${inputData.stackCfgList[j].handlerList[m].id} 失败`)
         }
     }
+}
+
+
+
+async function test_xxx(inputData: InputInfo) {
+    // 测试用例demo说明: Zone2_Device1机器使用CYFS协议栈ts_client 进行put_object 并且 get_object 检查数据操作，共执行100次，
+    // 同时并发执行任务数10；
+
+    // 测试节点
+    let agentList: Array<Agent> = [
+        {
+            name: "Zone2_Device1",                  //名称标签
+            cyfs_clients: [{
+                name: "Zone2_Device1_ts_client",    //模拟协议栈 ${Agent.name}_0 、${Agent.name}_1 这样编号
+                type: "runtime",                    //协议栈client 连接类型 runtime 、ood 、port
+                SDK_type: "typescript",
+            }],
+            logType: "info",                        //日志级别控制
+            report: true,                           //报错cyfs库的性能数据
+            report_time: 10 * 1000,                 //间隔时间
+
+        }
+    ]
+    // 测试用例执行的任务集合Task 和单个操作Action
+    let taskList: Array<Task> = []
+
+    const owner_id = cyfs.ObjectId.from_base_58("5r4MYfFEZc3TMEmprxr1VX334z94ue9PaqVPY27rFSgD").unwrap();
+    const dec_id = TEST_DEC_ID;
+    const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+    const object_id = obj.desc().calculate_id();
+    console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+    const object_raw = obj.to_vec().unwrap();
+    const req: cyfs.NONPutObjectOutputRequest = {
+        common: {
+            dec_id,
+            flags: 0,
+            target: cyfs.ObjectId.from_base_58("5aSixgN99LDu76as3TurRCPkeDVKBehav7Cck43LxHE3").unwrap(),
+            level: cyfs.NONAPILevel.Router //设置路由类型
+        },
+        object: new cyfs.NONObjectInfo(object_id, object_raw)
+    };
+    
+    const put_ret = await stack.non_service().put_object(req);
+    //校验结果
+    //cyfs.BuckyError
+    console.info('put_object result:', put_ret);
 }
 
 /*

@@ -1,14 +1,14 @@
-import {ErrorCode, Logger, BufferReader, sleep,RandomGenerator} from '../../base';
+import { ErrorCode, Logger, BufferReader, sleep, RandomGenerator } from '../../base';
 import * as net from 'net';
-import {EventEmitter} from 'events';
-import {StackLpc, StackLpcCommand} from './lpc';
+import { EventEmitter } from 'events';
+import { StackLpc, StackLpcCommand } from './lpc';
 import * as WSParams from "./ws_params"
 export type StackPeerOptions = {
     logger: Logger;
     name: string
 };
 
-export class StackPeer extends EventEmitter  {
+export class StackPeer extends EventEmitter {
     private m_logger: Logger;
     private m_name: string;
     private m_lpc?: StackLpc;
@@ -18,7 +18,7 @@ export class StackPeer extends EventEmitter  {
     private m_keepliveTimer?: NodeJS.Timer;
     private m_latestCommandTimeFromStack: number = 0;
     private m_bDestory: boolean = false;
-    
+
     on(event: 'unlive', listener: () => void): this;
     on(event: string, listener: (...args: any[]) => void): this {
         super.on(event, listener);
@@ -50,7 +50,7 @@ export class StackPeer extends EventEmitter  {
         this.m_lpc = lpc;
         lpc.on('command', (lpc: StackLpc, c: StackLpcCommand) => {
             this.m_logger.info(`recv command from Stack peer, req = ${c.seq},name=${c.json.name}, info=${JSON.stringify(c.json)}`);
-            
+
             if (this.m_handler.get(c.json.name)) {
                 this.m_handler.get(c.json.name)!(lpc, c);
             }
@@ -67,7 +67,7 @@ export class StackPeer extends EventEmitter  {
         this.m_latestCommandTimeFromStack = Date.now();
         this.m_keepliveTimer = setInterval(() => {
             this._ping();
-            if (!this.m_bDestory && (Date.now() - this.m_latestCommandTimeFromStack > 5 * 60* 1000)) {
+            if (!this.m_bDestory && (Date.now() - this.m_latestCommandTimeFromStack > 5 * 60 * 1000)) {
                 clearInterval(this.m_keepliveTimer!);
                 this.m_keepliveTimer = undefined;
                 this.emit('unlive');
@@ -90,8 +90,8 @@ export class StackPeer extends EventEmitter  {
         };
         this.m_lpc!.send(command);
     }
-    
-    async open_stack(stack_type:string,dec_id?:string,http_port?:number,ws_port?:number): Promise<{err: ErrorCode, deviceId?: string,log?:string}> {
+
+    async open_stack(stack_type: string, dec_id?: string, http_port?: number, ws_port?: number): Promise<{ err: ErrorCode, deviceId?: string, log?: string }> {
         let command: StackLpcCommand = {
             bytes: Buffer.from(''),
             json: {
@@ -103,20 +103,20 @@ export class StackPeer extends EventEmitter  {
             }
         };
         let lpc = this.m_lpc!;
-        let {err, resp} = await lpc.wait_resp(command);
+        let { err, resp } = await lpc.wait_resp(command);
         this.m_logger.info(`open_stack err = ${err} , resp = ${JSON.stringify(resp)}`)
         if (resp) {
             if (resp.json.result != 0) {
-                return {err: resp.json.result};
+                return { err: resp.json.result };
             } else {
-                return {err: ErrorCode.succ , deviceId: resp.json.deviceId,log: resp.json.log};
+                return { err: ErrorCode.succ, deviceId: resp.json.deviceId, log: resp.json.log };
             }
         } else {
-            return {err};
+            return { err };
         }
     }
 
-    async put_obejct(obj_type:number,put_object_params:WSParams.PutObjectParmas): Promise<WSParams.PutObjectResp>{
+    async put_obejct(obj_type: number, put_object_params: WSParams.PutObjectParmas): Promise<WSParams.PutObjectResp> {
         let command: StackLpcCommand = {
             bytes: Buffer.from(''),
             json: {
@@ -126,20 +126,20 @@ export class StackPeer extends EventEmitter  {
             }
         };
         let lpc = this.m_lpc!;
-        let {err, resp} = await lpc.wait_resp(command);
+        let { err, resp } = await lpc.wait_resp(command);
         this.m_logger.info(`put_obejct err = ${err} , resp = ${JSON.stringify(resp)}`)
         if (resp) {
             if (resp.json.result != 0) {
-                return {err: resp.json.result};
+                return { err: resp.json.result };
             } else {
-                return {err: ErrorCode.succ ,log:resp.json.log, object_id: resp.json.object_id,object_raw:resp.bytes};
+                return { err: ErrorCode.succ, log: resp.json.log, object_id: resp.json.object_id, object_raw: resp.bytes };
             }
         } else {
-            return {err};
+            return { err };
         }
     }
 
-    async get_obejct(obj_type:number, get_object_params:WSParams.GetObjectParmas): Promise<WSParams.GetObjectResp>{
+    async get_obejct(obj_type: number, get_object_params: WSParams.GetObjectParmas): Promise<WSParams.GetObjectResp> {
         let command: StackLpcCommand = {
             bytes: Buffer.from(''),
             json: {
@@ -149,20 +149,43 @@ export class StackPeer extends EventEmitter  {
             }
         };
         let lpc = this.m_lpc!;
-        let {err, resp} = await lpc.wait_resp(command);
+        let { err, resp } = await lpc.wait_resp(command);
         this.m_logger.info(`get_obejct err = ${err} , resp = ${JSON.stringify(resp)}`)
         if (resp) {
             if (resp.json.result != 0) {
-                return {err: resp.json.result};
+                return { err: resp.json.result };
             } else {
-                return {err: ErrorCode.succ , object_raw: resp.json.object_raw,log:resp.json.log, object_id: resp.json.object_id};
+                return { err: ErrorCode.succ, object_raw: resp.json.object_raw, log: resp.json.log, object_id: resp.json.object_id };
             }
         } else {
-            return {err};
+            return { err };
         }
     }
 
-    async destory(): Promise<{err: ErrorCode}> {
+    async forward(obj_type: number, forward_params: WSParams.ForwardRequest): Promise<WSParams.ForwardResponse> {
+        let command: StackLpcCommand = {
+            bytes: Buffer.from(''),
+            json: {
+                name: forward_params.message_type,
+                obj_type,
+                forward_params,
+            }
+        };
+        let lpc = this.m_lpc!;
+        let { err, resp } = await lpc.wait_resp(command);
+        this.m_logger.info(`put_obejct err = ${err} , resp = ${JSON.stringify(resp)}`)
+        if (resp) {
+            if (resp.json.result != 0) {
+                return { err: resp.json.result };
+            } else {
+                return { err: ErrorCode.succ, log: resp.json.log, resp: resp.bytes };
+            }
+        } else {
+            return { err };
+        }
+    }
+
+    async destory(): Promise<{ err: ErrorCode }> {
         this.m_bDestory = true;
         let command: StackLpcCommand = {
             bytes: Buffer.from(''),
@@ -173,12 +196,12 @@ export class StackPeer extends EventEmitter  {
         let lpc = this.m_lpc!;
         let err = lpc.send(command);
         if (err) {
-            return {err};
+            return { err };
         }
 
-        return {err: ErrorCode.succ};
+        return { err: ErrorCode.succ };
     }
 
-    
+
 
 }

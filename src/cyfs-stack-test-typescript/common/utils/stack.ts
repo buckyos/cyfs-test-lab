@@ -83,7 +83,9 @@ export async function create_stack(endpoint: string, dec_id?: cyfs.ObjectId): Pr
             console.log('check cyfs-runtime running...')
             const [running, writable] = await check_runtime(endpoint);
             if (running) {
-                stack = cyfs.SharedCyfsStack.open_runtime(dec_id);
+                
+                let param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(19999, 20000, dec_id).unwrap();
+                stack = cyfs.SharedCyfsStack.open(param);
                 await stack.online();
                 // 获取本地数据
                 let result = await stack.util().get_device_static_info({common: {flags: 0}})
