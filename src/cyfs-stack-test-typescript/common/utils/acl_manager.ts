@@ -6,8 +6,6 @@ import * as ChildProcess from 'child_process';
 import  {ZoneSimulator} from './simulator'
 import {} from "../../config/zoneData"
 
-
-
 export class Acl{
     public peerName : string;
     public peerId : string;
