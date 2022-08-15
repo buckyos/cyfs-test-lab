@@ -2411,7 +2411,9 @@ pub struct SendDatagramLpcCommandResp {
     pub seq: u32,
     pub result: u16,
     pub hash: HashValue, //计算内容的hash
-    pub time : u32
+    pub time : u32,
+    pub create_time : Option<u64>, // local time now +  create_time
+    pub send_time : Option<u64>, // local time now +  send_time
 }
 
 impl TryFrom<SendDatagramLpcCommandResp> for LpcCommand {
@@ -2421,6 +2423,8 @@ impl TryFrom<SendDatagramLpcCommandResp> for LpcCommand {
             "name": "send_datagram_resp",
             "result": value.result,
             "time": value.time,
+            "create_time" : value.create_time,
+            "send_time" : value.send_time,
             "hash": hex::encode(value.hash.as_slice())
         });
 

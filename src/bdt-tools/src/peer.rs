@@ -955,7 +955,9 @@ impl Peer {
                         seq, 
                         result: e.code().as_u16(),
                         time: 0,
-                        hash: HashValue::default()
+                        hash: HashValue::default(),
+                        create_time : None,
+                        send_time : None,
                     }
                 },
                 Ok(c) => {
@@ -970,13 +972,15 @@ impl Peer {
 
                         }
                     };
-                    options.create_time = c.create_time;
-                    options.send_time = c.send_time;
+                    options.create_time = c.create_time.clone();
+                    options.send_time = c.send_time.clone();
                     options.author_id = c.author_id;
                     options.plaintext = c.plaintext;
                     let hash = hash_data(&c.content);
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
+                    let create_time = c.create_time;
+                    let send_time = c.send_time;
                     let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
                         Ok(c) =>{
                             log::info!("Send Datagram succcess ");
@@ -984,7 +988,9 @@ impl Peer {
                                 seq, 
                                 result: 0,
                                 time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
-                                hash:hash
+                                hash:hash,
+                                create_time,
+                                send_time,
                             }
                         },
                         Err(e) =>{
@@ -993,7 +999,9 @@ impl Peer {
                                 seq, 
                                 result: 1,
                                 time: 0,
-                                hash: HashValue::default()
+                                hash: HashValue::default(),
+                                create_time : None,
+                                send_time : None,
                             }
                         }
                     };
@@ -1286,7 +1294,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(_,_) => "downloading",
+                                TaskControlState::Downloading(speed,progress) => "downloading",
                                 TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
@@ -1473,7 +1481,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(_,_) => "downloading",
+                                TaskControlState::Downloading(speed, progress) => "downloading",
                                 TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
@@ -2057,7 +2065,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(_,_) => "downloading",
+                                TaskControlState::Downloading(speed, progress) => "downloading",
                                 TaskControlState::Finished(_) => "finished",
                                 TaskControlState::Paused => "paused",
                                 _ => "unkown",
