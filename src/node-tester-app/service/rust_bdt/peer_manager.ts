@@ -39,6 +39,7 @@ export class BdtPeerManager extends EventEmitter{
     on(event: 'peer', listener: (peer: BdtPeer) => void): this;
     on(event: 'unlive', listener: (peerName: string) => void): this;
     on(event: 'accept', listener: (connName:string,peerName: string,question:string) => void):this;
+    on(event: 'recv_datagram', listener: (name:string,remote_id: string,sequence:string,hash:string,content:Buffer) => void):this;
     on(event: string, listener: (...args: any[]) => void): this {
         super.on(event, listener);
         return this;
@@ -47,6 +48,7 @@ export class BdtPeerManager extends EventEmitter{
     once(event: 'peer', listener: (peer: BdtPeer) => void): this;
     once(event: 'unlive', listener: (peerName: string) => void): this;
     once(event: 'accept', listener: (connName:string,peerName: string,question:string) => void):this;
+    once(event: 'recv_datagram', listener: (name:string,remote_id: string,sequence:string,hash:string,content:Buffer) => void):this;
     once(event: string, listener: (...args: any[]) => void): this {
         super.once(event, listener);
         return this;
@@ -992,6 +994,30 @@ export class BdtPeerManager extends EventEmitter{
             this.m_logger.error(`===================peer unlive, in peer manager`);
             this.emit('unlive', peer.name);
         });
+    }
+
+    async sendDatagram(param:{peerName: string,contentSize: number,remote_id:string,plaintext:string,sequence?:string,create_time?:number,send_time?:number,author_id?:string,reservedVPort?:string}): Promise<{err: ErrorCode,hash?:string,time?:string,create_time?:string,send_time?:string,log?:string}>{
+        if(!this.m_peers.has(param.peerName)){ //|| this.m_lpcStatus === false
+            return {err: ErrorCode.notExist,log:'bdt节点异常'};
+        }
+        let content =  Buffer.from(RandomGenerator.string(param.contentSize)); 
+        return await this.m_peers.get(param.peerName)!.peer!.sendDatagram(content,param.remote_id,param.plaintext,param.sequence,param.create_time,param.send_time,param.author_id,param.reservedVPort);
+    }
+
+    async recvDatagram(peerName: string,timeout:number): Promise<{err: ErrorCode}> {
+        if (!this.m_peers.has(peerName)) {
+            return {err: ErrorCode.notExist};
+        }
+        this.m_peers.get(peerName)!.peer!.recvDatagram(async(name:string,remote_id: string,sequence:string,hash:string,content:Buffer)=>{
+            //this.m_logger.info(`${peerName} recv_datagram event emit`)
+            if(peerName == name){
+                this.m_logger.info(`${name} emit recv_datagram remote_id = ${remote_id},sequence = ${sequence}`)
+                this.emit('recv_datagram', name,remote_id,sequence,hash,content);
+                
+            }
+            
+        },timeout);
+        return {err: ErrorCode.succ}
     }
 }
 
