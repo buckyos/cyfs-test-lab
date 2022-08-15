@@ -76,7 +76,7 @@ export async function get_object(id: ObjectId|string, Decode: any, opt?: GetObje
 }
 
 export async function requestService(route: string, data: Object,target?:ObjectId) {
-    await create_stack("runtime");
+    await create_stack("runtime", 1322, 1323);
     if(!target){
         target= await cyfs.ObjectId.from_base_58(stackInfo.ood).unwrap();
     }

@@ -58,8 +58,8 @@ describe("cyfs协议栈测试", async function () {
                         //启动模拟器连接协议栈
                         await ZoneSimulator.init();
                     } else {
-                        // runtime/ood
-                        const [stack, writable] = await create_stack(datas.stack_type);
+                        // runtime/ood, 开两个端口, 1对1转发到目标协议栈
+                        const [stack, writable] = await create_stack(datas.stack_type, 19999, 20000);
                     }
                 })
                 after(async function () {
