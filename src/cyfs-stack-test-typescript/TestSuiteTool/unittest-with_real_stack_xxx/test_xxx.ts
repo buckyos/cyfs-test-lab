@@ -12,11 +12,6 @@ import { getStack, getPeerId } from "../../common/utils/oodFunc"
 import { datas } from "./data"
 import { agent_init } from '../../common/utils/agent';
 
-
-import { TaskClientInterface } from '../../agent/base';
-import { Agent, Task, Testcase, TestRunner } from '../../agent/forward/test_runner';
-import { CustumObjectType } from '../../agent/forward/proto';
-
 var date = require("silly-datetime");
 
 
@@ -197,27 +192,6 @@ async function initHandlerList(inputData: InputInfo, stack_type: StackType) {
 
 
 async function test_xxx(inputData: InputInfo) {
-    // 测试用例demo说明: Zone2_Device1机器使用CYFS协议栈ts_client 进行put_object 并且 get_object 检查数据操作，共执行100次，
-    // 同时并发执行任务数10；
-
-    // 测试节点
-    let agentList: Array<Agent> = [
-        {
-            name: "Zone2_Device1",                  //名称标签
-            cyfs_clients: [{
-                name: "Zone2_Device1_ts_client",    //模拟协议栈 ${Agent.name}_0 、${Agent.name}_1 这样编号
-                type: "runtime",                    //协议栈client 连接类型 runtime 、ood 、port
-                SDK_type: "typescript",
-            }],
-            logType: "info",                        //日志级别控制
-            report: true,                           //报错cyfs库的性能数据
-            report_time: 10 * 1000,                 //间隔时间
-
-        }
-    ]
-    // 测试用例执行的任务集合Task 和单个操作Action
-    let taskList: Array<Task> = []
-
     const owner_id = cyfs.ObjectId.from_base_58("5r4MYfFEZc3TMEmprxr1VX334z94ue9PaqVPY27rFSgD").unwrap();
     const dec_id = TEST_DEC_ID;
     const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
@@ -234,6 +208,9 @@ async function test_xxx(inputData: InputInfo) {
         object: new cyfs.NONObjectInfo(object_id, object_raw)
     };
     
+    // 这个stack 被19999/20000 透明代理到了目标协议栈了
+    // http_proxy_client/ws_proxy_client 脚本 开启本地代理, 里面的target 改下成目标机器的IP
+    // http_proxy_server/ws_proxy_server 脚本挂在目标机器上, 里面的1323 默认使用了协议栈
     const put_ret = await stack.non_service().put_object(req);
     //校验结果
     //cyfs.BuckyError
