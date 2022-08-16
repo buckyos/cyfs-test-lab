@@ -10,6 +10,11 @@ import * as fs from "fs-extra"
 import * as path from "path"
 import { getStack, getPeerId } from "../../common/utils/oodFunc"
 import { datas } from "./data"
+import { agent_init } from '../../common/utils/agent';
+
+var date = require("silly-datetime");
+
+
 //初始化日志
 cyfs.clog.enable_file_log({
     name: "test_main",
@@ -20,11 +25,9 @@ cyfs.clog.enable_file_log({
 //初始化测试工具
 const aclManager = new AclManager();
 const handlerManager = new myHandler.handlerManager();
-//读取json 测试数据
 
 describe("cyfs协议栈测试", async function () {
     this.timeout(0);
-
     describe(`${datas.module}`, async function () {
         for (let j in datas.testcaseList) {
             let inputData: InputInfo;
@@ -38,9 +41,8 @@ describe("cyfs协议栈测试", async function () {
                     let res = await tmg.findRecordById(datas.testcaseList[j].id);
                     assert.ok(!res.err, res.log)
                     let testcaseInfo: testcaseInfo = res.datas![0];
-                    inputData = JSON.parse(testcaseInfo.input_data!.toString());
-                    expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-
+                    //inputData = JSON.parse(testcaseInfo.input_data!.toString());
+                    //expectData = JSON.parse(testcaseInfo.expect_result!.toString());
                     if (datas.stack_type === StackType.Sim) {
                         //初始化ACL配置文件
                         await ZoneSimulator.getPeerId();
@@ -51,8 +53,8 @@ describe("cyfs协议栈测试", async function () {
                         //启动模拟器连接协议栈
                         await ZoneSimulator.init();
                     } else {
-                        // runtime/ood
-                        const [stack, writable] = await create_stack(datas.stack_type);
+                        // runtime/ood, 开两个端口, 1对1转发到目标协议栈
+                        const [stack, writable] = await create_stack(datas.stack_type, 19999, 20000);
                     }
                 })
                 after(async function () {
@@ -69,20 +71,27 @@ describe("cyfs协议栈测试", async function () {
                 it(`${datas.testcaseList[j].name}`, async () => {
                     // 异常用例阻塞暂时跳过
                     console.info(`开始执行测试用例：${datas.testcaseList[j].name}`)
-                    if (inputData.skip) {
-                        assert(false, "测试用例异常，暂时标记不执行")
-                    }
+                    // 临时测试用
+                    // if (inputData.skip) {
+                    //     assert(false, "测试用例异常，暂时标记不执行")
+                    // }
                     //运行超时处理机制
                     let run = true;
                     let timeout = 120 * 1000
-                    if (inputData.timeout) {
-                        timeout = inputData.timeout
-                    }
+                    // // 临时测试用
+                    // inputData.timeout = 0;
+                    // if (inputData.timeout) {
+                    //     timeout = inputData.timeout
+                    // }
                     setTimeout(() => {
                         if (run) {
                             console.error(false, "测试用例运行超时")
                         }
                     }, timeout)
+
+                    await test_xxx(inputData);
+
+                    /*
                     //运行测试用例
                     switch (inputData.opt.optType) {
                         case "put_data_chunk": {
@@ -145,7 +154,7 @@ describe("cyfs协议栈测试", async function () {
                             await sign_verify_object(inputData, expectData, stack_type);
                             break;
                         }
-                    }
+                    }*/
                     run = false;
                 })
 
@@ -180,6 +189,35 @@ async function initHandlerList(inputData: InputInfo, stack_type: StackType) {
     }
 }
 
+
+
+async function test_xxx(inputData: InputInfo) {
+    const owner_id = cyfs.ObjectId.from_base_58("5r4MYfFEZc3TMEmprxr1VX334z94ue9PaqVPY27rFSgD").unwrap();
+    const dec_id = TEST_DEC_ID;
+    const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+    const object_id = obj.desc().calculate_id();
+    console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+    const object_raw = obj.to_vec().unwrap();
+    const req: cyfs.NONPutObjectOutputRequest = {
+        common: {
+            dec_id,
+            flags: 0,
+            target: cyfs.ObjectId.from_base_58("5aSixgN99LDu76as3TurRCPkeDVKBehav7Cck43LxHE3").unwrap(),
+            level: cyfs.NONAPILevel.Router //设置路由类型
+        },
+        object: new cyfs.NONObjectInfo(object_id, object_raw)
+    };
+    
+    // 这个stack 被19999/20000 透明代理到了目标协议栈了
+    // http_proxy_client/ws_proxy_client 脚本 开启本地代理, 里面的target 改下成目标机器的IP
+    // http_proxy_server/ws_proxy_server 脚本挂在目标机器上, 里面的1323 默认使用了协议栈
+    const put_ret = await stack.non_service().put_object(req);
+    //校验结果
+    //cyfs.BuckyError
+    console.info('put_object result:', put_ret);
+}
+
+/*
 async function get_data_chunk(inputData: InputInfo, expect: ResultInfo, stack_type: StackType) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
@@ -766,4 +804,4 @@ async function sign_verify_object(inputData: InputInfo, expect: ResultInfo, stac
     assert(!handlerResult.err)
 }
 
-
+*/

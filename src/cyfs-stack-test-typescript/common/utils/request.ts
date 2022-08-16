@@ -9,7 +9,7 @@ import {
     // TextObject, TextObjectDecoder,
 } from '../../cyfs_node/cyfs_node'
 import * as cyfs from '../../cyfs_node/cyfs_node'
-import { stack, stackInfo ,init_stack} from './stack'
+import { stack, stackInfo , create_stack} from './stack'
 import {
     RequestTargetCommonResponse,
     GitTextObject,
@@ -75,17 +75,13 @@ export async function get_object(id: ObjectId|string, Decode: any, opt?: GetObje
     }
 }
 
-
 export async function requestService(route: string, data: Object,target?:ObjectId) {
-    await init_stack("runtime");
+    await create_stack("runtime", 1322, 1323);
     if(!target){
         target= await cyfs.ObjectId.from_base_58(stackInfo.ood).unwrap();
     }
     return generateRequest(target)(route, data)
 }
-
-
-
 
 export async function requestTarget(route: string, data: Object, owner: string, id: string) {
     const target: ObjectId = await cyfs.ObjectId.from_base_58(id).unwrap();

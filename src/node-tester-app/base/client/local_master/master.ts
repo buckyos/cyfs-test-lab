@@ -56,8 +56,8 @@ export class LocalMaster extends ClientStack {
 
     async start(): Promise<ErrorCode> {
         let err = await this.localStorage.load();
+        
         await this.m_localServiceStorage.init();
-
         this.m_server.on('connection', (socket: net.Socket) => {
             let rpc: Rpc = new Rpc({
                 logger: this.getLogger(),

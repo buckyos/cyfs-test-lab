@@ -4,7 +4,6 @@ import { InputInfo, ResultInfo } from "../common/types/type";
 import * as cyfs from "../cyfs_node/cyfs_node"
 
 
-
 let input_data: InputInfo = {
     // 测试用例ID
     id: "test_stack_001",

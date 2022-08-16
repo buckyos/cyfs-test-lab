@@ -30,7 +30,10 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         _interface.getLogger().debug(`###accept ${peerName} ${connName}`);
         _interface.fireEvent('accept', ErrorCode.succ, connName,peerName,question);
     })
-    
+    manager.on('recv_datagram',(name:string,remote_id: string,sequence:string,hash:string)=>{
+        _interface.getLogger().debug(`###recv_datagram remote_id = ${remote_id} sequence = ${sequence}`);
+        _interface.fireEvent('recv_datagram', ErrorCode.succ,name,remote_id,sequence,hash);
+    })
 
     _interface.registerApi('startPeer', async (from: Namespace, bytes: Buffer, param: {addrInfo: string[], snFiles: string[], local: string ,RUST_LOG?:string,activePnFiles?:Array<string>, passivePnFiles?:Array<string>,knownPeerFiles?:Array<string>,chunk_cache?:string,ep_type?:string,ndn_event?:string,ndn_event_target?:string}): Promise<any> => {
         _interface.getLogger().debug(`remote call startPeer`);
@@ -155,7 +158,17 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let info = await manager.recv(param.peerName, param.connName);
         return {err: info.err, bytes: Buffer.from(''), value: {size: info.size, hash: info.hash}};
     });
+    _interface.registerApi('sendDatagram', async (from: Namespace, bytes: Buffer, param: {peerName: string,contentSize: number,remote_id:string,plaintext:string,sequence?:string,create_time?:number,send_time?:number,author_id?:string,reservedVPort?:string}): Promise<any> => {
+        _interface.getLogger().debug(`remote call sendDatagram , peername=${param.peerName}`);
+        let info = await manager.sendDatagram(param);
+        return {err: info.err, bytes: Buffer.from(''), value: info};
+    });
 
+    _interface.registerApi('recvDatagram', async (from: Namespace, bytes: Buffer, param: {peerName: string,timeout:number}): Promise<any> => {
+        _interface.getLogger().debug(`remote call recvFile, peername=${param.peerName}`);
+        let info = await manager.recvDatagram(param.peerName, param.timeout);
+        return {err: info.err, bytes: Buffer.from(''), value: info};
+    });
     _interface.registerApi('sendObject', async (from: Namespace, bytes: Buffer, param: {peerName: string, connName: string, object_id: string,obj_type:number}): Promise<any> => {
         _interface.getLogger().debug(`remote call sendObject, peername=${param.peerName}, connname=${param.connName}, objPath=${param.object_id} ,obj_type = ${param.obj_type}`);
         let info = await manager.send_object(param.peerName, param.connName, param.object_id,param.obj_type);

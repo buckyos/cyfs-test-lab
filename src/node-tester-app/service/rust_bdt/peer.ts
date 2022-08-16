@@ -799,6 +799,60 @@ async downloadDirState(session: string): Promise<{err: ErrorCode, state?: string
     }
 }
 
+async sendDatagram(content: Buffer,remote_id:string,plaintext:string,sequence?:string,create_time?:number,send_time?:number,author_id?:string,reservedVPort?:string): Promise<{err: ErrorCode,hash?:string,time?:string,create_time?:string,send_time?:string}> {
+    let command: BdtLpcCommand = {
+        bytes: content ? content : Buffer.from(''),
+        json: {
+            name: 'send-datagram', 
+            remote_id,
+            sequence,
+            create_time,
+            send_time,
+            author_id,
+            plaintext,
+            reservedVPort,
+        }
+    };
+    let {err, resp: c} = await this.m_lpc!.wait_resp(command);
+    if (c) {
+        return {
+            err: ErrorCode.succ, 
+            hash: c.json.hash, 
+            time: c.json.time, 
+            create_time: c.json.time, 
+            send_time: c.json.time, 
+        };
+    } else {
+        return {err};
+    }
+}
+
+async recvDatagram(listener: (name:string,remote_id: string,sequence:string,hash:string,content:Buffer) => void,timeout:number): Promise<{err: ErrorCode}> {
+    let command: BdtLpcCommand = {
+        bytes: Buffer.from(''),
+        json: {
+            name: 'recv-datagram',
+            timeout,
+        }
+    };
+    let {err, resp} = await this.m_lpc!.wait_resp(command);
+    if (resp) {
+        if (resp.json.result) {
+            return {err: ErrorCode.fail};
+        } else {
+            let onRecv = (lpc: BdtLpc, notify: BdtLpcCommand) => {
+                if (notify.json.name === 'recv_datagram_resp' && resp!.seq! === notify.seq! ) {
+                    this.m_logger.info(`recv_datagram_resp = ${JSON.stringify(notify.json)}`);
+                    listener(this.name,notify.json.remote_id,notify.json.sequence,notify.json.hash,notify.bytes);
+                }
+            };
+            this.m_lpc!.on('command', onRecv);
+            return {err: ErrorCode.succ};
+        }
+    } else {
+        return {err};
+    }
+}
 
 
 }

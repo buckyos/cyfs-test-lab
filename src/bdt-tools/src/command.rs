@@ -8,7 +8,8 @@ use cyfs_base::{
 use std::{
     path::{Path, PathBuf}, 
     ops::Range,
-    collections::BTreeSet
+    collections::BTreeSet,
+    time::Duration,
 };
 use std::convert::TryFrom;
 
@@ -1018,7 +1019,7 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1372,7 +1373,7 @@ impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1486,7 +1487,6 @@ impl TryFrom<LpcCommand> for StartDownloadFileCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -1627,7 +1627,7 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -1654,7 +1654,6 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -1828,7 +1827,6 @@ impl TryFrom<LpcCommand> for StartSendDirCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-
         let path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
@@ -2158,7 +2156,7 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished => String::from("Ready"),
+                    TaskControlState::Finished(_) => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -2303,5 +2301,204 @@ impl TryFrom<RecvObjectLpcCommandResp> for LpcCommand {
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+
+pub struct SendDatagramLpcCommandReq {
+    pub seq: u32,
+    pub remote_id: cyfs_base::DeviceId,
+    pub content: Vec<u8>, //发送具体数据内容
+    pub sequence : Option<u64>, //sequence 如果为空，BDT会使用当前系统时间,local time now + sequence
+    pub create_time : Option<u64>, // local time now +  create_time
+    pub send_time : Option<u64>, // local time now +  send_time
+    pub author_id : Option<cyfs_base::DeviceId>,
+    pub plaintext : bool, // 是否加密 1加密 0不加密
+    pub reservedVPort : u64, // Channel = 1, Dht = 2, Debug = 3 。默认Debug
+
+}
+impl TryFrom<LpcCommand> for SendDatagramLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+        let buffer = value.as_buffer();
+        let remote_id = match json.get("remote_id") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => DeviceId::from_str(s.as_str()).map_err(|_err| {
+                    BuckyError::new(BuckyErrorCode::InvalidData, "remote_id format err")
+                }),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "remote_id format err",
+                )),
+            },
+            _ => Err(BuckyError::new(
+                BuckyErrorCode::NotFound,
+                "remote_id lost",
+            )),
+        }?;
+        let ts = cyfs_base::bucky_time_now();
+        let sequence = match json.get("sequence") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => Some(ts  + s.as_u64().unwrap()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let create_time = match json.get("create_time") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => Some(ts + s.as_u64().unwrap()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let send_time = match json.get("send_time") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => Some(ts + s.as_u64().unwrap()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let author_id = match json.get("author_id") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    let ret = DeviceId::from_str(s.as_str());
+                    if ret.is_err() {
+                        Err(BuckyError::new(
+                            BuckyErrorCode::InvalidData,
+                            "author_id format err",
+                        ))
+                    } else {
+                        Ok(Some(ret.unwrap()))
+                    }
+                },
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "author_id format err",
+                )),
+            },
+            _ => Ok(None),
+        }?;
+        let plaintext = match json.get("plaintext") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        let reservedVPort = match json.get("reservedVPort") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => s.as_u64().unwrap(),
+                _ => 3,
+            },
+            _ => 3,
+        };
+        Ok(Self {
+            seq: value.seq(),
+            remote_id,
+            content: Vec::from(buffer),
+            sequence,
+            create_time,
+            send_time,
+            author_id,
+            plaintext,
+            reservedVPort
+        })
+    }
+}
+
+pub struct SendDatagramLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub hash: HashValue, //计算内容的hash
+    pub time : u32,
+    pub create_time : Option<u64>, // local time now +  create_time
+    pub send_time : Option<u64>, // local time now +  send_time
+}
+
+impl TryFrom<SendDatagramLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: SendDatagramLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "send_datagram_resp",
+            "result": value.result,
+            "time": value.time,
+            "create_time" : value.create_time,
+            "send_time" : value.send_time,
+            "hash": hex::encode(value.hash.as_slice())
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+
+pub struct RecvDatagramMonitorLpcCommandReq {
+    pub seq: u32,
+    pub timeout : u64,// 监听接收数据，没收到退出
+}
+
+impl TryFrom<LpcCommand> for RecvDatagramMonitorLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+       
+        let timeout = match json.get("timeout") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => s.as_u64().unwrap(),
+                _ => 30*1000,
+            },
+            _ => 30*1000,
+        };
+        Ok(Self {
+            seq: value.seq(),
+            timeout
+        })
+    }
+}
+
+pub struct RecvDatagramMonitorLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+
+}
+
+
+impl TryFrom<RecvDatagramMonitorLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: RecvDatagramMonitorLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "recv_datagram_monitor_resp",
+            "result": value.result,
+        });
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+pub struct RecvDatagramLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub content: Vec<u8>, //接收具体数据内容
+    pub remote_id:  Option<cyfs_base::DeviceId>,//对端device Id
+    pub sequence : u64, //连接的id
+    pub hash: HashValue, //计算内容的hash
+}
+
+
+impl TryFrom<RecvDatagramLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: RecvDatagramLpcCommandResp) -> Result<Self, Self::Error> {
+        let device_id = match value.remote_id {
+            Some(v)=> v.to_string(),
+            None => "".to_string(),
+        };
+        let json = serde_json::json!({
+            "name": "recv_datagram_resp",
+            "result": value.result,
+            "hash": hex::encode(value.hash.as_slice()),
+            "sequence" : value.sequence,
+            "remote_id" : device_id,
+        });
+        Ok(LpcCommand::new(value.seq, value.content, json))
     }
 }

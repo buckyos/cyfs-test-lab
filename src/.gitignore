@@ -1,3 +1,7 @@
 /log/
 /target/
 /deploy/
+**/cyfs_node/
+**/cyfs_node/
+**/cyfs/
+**/cyfs/

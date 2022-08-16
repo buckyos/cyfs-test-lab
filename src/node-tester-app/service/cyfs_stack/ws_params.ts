@@ -1,5 +1,18 @@
 import * as cyfs from "./typescript/cyfs/cyfs_node"
 
+export type ForwardRequest = {
+    message_type: string;   //消息号,  如get_object/put_object/get_data 保持和接口一致
+    req: any;               //消息体, 如 cyfs.NDNGetDataOutputRequest 保持和请求包一致
+}
+
+export type ForwardResponse = {
+    err : number;
+    log? : string;
+    data_size?: number, //操作数据大小
+    opt_time?: number, //操作时间
+    resp?: any;      //对应的回包
+}
+
 export type  NONOutputRequestCommon = {
     req_path?: string;
     dec_id?: string;

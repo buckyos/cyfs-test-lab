@@ -10,7 +10,56 @@
 + StreamGuard::write_all ： StreamGuard 发送数据 
 + StreamGuard::read ：读取StreamGuard 接收数据
 + FristQA机制 : 连接过程中question、answer数据包发送
-
++ BDT Stream 和 Tunnel 配置
+```
+tunnel: tunnel::Config {
+    retain_timeout: Duration::from_secs(60),
+    connect_timeout: Duration::from_secs(5),
+    tcp: tunnel::tcp::Config {
+        connect_timeout: Duration::from_secs(5), 
+        confirm_timeout: Duration::from_secs(5), 
+        accept_timeout: Duration::from_secs(5), 
+        retain_connect_delay: Duration::from_secs(5), 
+        ping_interval: Duration::from_secs(30), 
+        ping_timeout: Duration::from_secs(60), 
+        package_buffer: 100, 
+        piece_buffer: 1000, 
+        piece_interval: Duration::from_millis(10), 
+    }, 
+    udp: tunnel::udp::Config {
+        holepunch_interval: Duration::from_millis(200),
+        connect_timeout: Duration::from_secs(5),
+        ping_interval: Duration::from_secs(30),
+        ping_timeout: Duration::from_secs(60 * 3),
+    },
+},
+stream: stream::Config {
+    listener: stream::listener::Config { backlog: 100 },
+    stream: stream::container::Config {
+        nagle: Duration::from_millis(0),
+        recv_buffer: 1024 * 256,
+        recv_timeout: Duration::from_millis(200),
+        drain: 0.5,
+        send_buffer: 1024 * 256, // 这个值不能小于下边的max_record
+        connect_timeout: Duration::from_secs(5),
+        tcp: stream::tcp::Config {
+            min_record: 1024,
+            max_record: 2048,
+        },
+        package: stream::package::Config {
+            connect_resend_interval: Duration::from_millis(100),
+            atomic_interval: Duration::from_millis(1),
+            break_overtime: Duration::from_secs(60),
+            msl: Duration::from_secs(60), 
+            cc: cc::Config {
+                init_rto: Duration::from_secs(1),
+                min_rto: Duration::from_millis(200),
+                cc_impl: cc::ImplConfig::BBR(Default::default()),
+            },
+        },
+    },
+},
+```
 #### 2. Tunnel 类型
 + cyfs_bdt::tunnel::tcp::Tunnel
 + cyfs_bdt::tunnel::udp::Tunnel
@@ -1069,4 +1118,10 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN 和 RN 建立1个BDT连接，每个连接LN/RN双向持续发送100*1Mb 大小的字节流数据
 预期结果：
     (1) 数据发送成功
+```
+
+
+### 测试接口工具封装
+```rust
+
 ```

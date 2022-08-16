@@ -485,6 +485,7 @@ dependencies = [
  "async-trait",
  "backtrace",
  "byteorder",
+ "bytes 1.2.0",
  "cyfs-base",
  "cyfs-bdt",
  "cyfs-debug",
@@ -1460,6 +1461,28 @@ dependencies = [
  "lazy_static",
  "log",
  "sqlx",
+]
+
+[[package]]
+name = "cyfs-tools"
+version = "0.1.0"
+dependencies = [
+ "async-std",
+ "async-trait",
+ "backtrace",
+ "byteorder",
+ "cyfs-base",
+ "cyfs-bdt",
+ "cyfs-debug",
+ "cyfs-util",
+ "futures",
+ "hex",
+ "log",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "sha2 0.8.2",
+ "walkdir",
 ]
 
 [[package]]
