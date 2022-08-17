@@ -11,22 +11,35 @@ import {EventEmitter} from 'events';
 import  http from "http";
 import fetch from 'node-fetch';
 
+export function Uint8ArrayToString(fileData:Uint8Array){
+    var dataString = "";
+    for (var i = 0; i < fileData.length; i++) {
+      dataString += String.fromCharCode(fileData[i]);
+    }
+   
+    return dataString
+}
+  
+
 class ProxyManager extends EventEmitter {
     private stack_type? : string;
     private logger: Logger;
     private stack_http_url? : string ;
     private stack_ws_url? : string;
     private local_ws? : WebSocket;
+    private local_ws1? : WebSocket;
     private local_http? :httpProxy;
     private local_http_ws? :WebSocket;
     private state: number; // 0 未初始 1 初始化中 2 可使用 -1 销毁
-    on(event: 'ws_message', listener: (msg:any) => void):this;
+    on(event: 'ws_message', listener: (msg:string) => void):this;
+    on(event: 'ws_message1', listener: (msg:string) => void):this;
     on(event: 'unlive', listener: (msg:string) => void):this;
     on(event: string, listener: (...args: any[]) => void): this {
         super.on(event, listener);
         return this;
     }
-    once(event: 'ws_message', listener: (msg:any) => void):this;
+    once(event: 'ws_message', listener: (msg:string) => void):this;
+    once(event: 'ws_message1', listener: (msg:string) => void):this;
     once(event: 'unlive', listener: (msg:string) => void):this;
     once(event: string, listener: (...args: any[]) => void): this {
         super.once(event, listener);
@@ -49,6 +62,7 @@ class ProxyManager extends EventEmitter {
         }
         this.start_http_proxy();
         this.start_ws_proxy();
+        this.start_ws_proxy1();
         return {err:ErrorCode.succ,log:"start success"}
     }
 
@@ -84,23 +98,7 @@ class ProxyManager extends EventEmitter {
         return {json:{response,header,status,statusText},arrayBuffer:Buffer.from(arrayBuffer)}
         //this.local_http!.once("proxyRes",)
     }
-    // start_http_proxy():{err: ErrorCode, log?: string}{
-    //     this.local_http_ws = new WebSocket(this.stack_http_url!)
-    //     this.local_http_ws!.on('close', () => {
-    //         this.emit('unlive', this.stack_type!);
-    //     })
-    
-    //     this.local_http_ws!.on('message', message => {
-    //         this.logger.info(`recv http message from stack`)
-    //         this.emit('http_message', message);
-    //     })
-    //     return {err:ErrorCode.succ,log:"start_http_proxy success"}
-        
-    // }
-    // async proxy_http_req(message:any){
-    //     this.logger.info(`proxy send ws request`)
-    //     this.local_http_ws!.send(message);
-    // }
+
     async start_ws_proxy(){
         this.local_ws = new WebSocket(this.stack_ws_url!);
         const checkAlive = setInterval(() => {
@@ -115,8 +113,10 @@ class ProxyManager extends EventEmitter {
         })
     
         this.local_ws!.on('message', message => {
-            this.logger.info(`recv message from stack`)
-            this.emit('ws_message', message);
+            let msg_buf = message.valueOf() as Uint8Array
+            let message_str= Uint8ArrayToString(msg_buf);
+            this.logger.info(`recv message from stack ${msg_buf} `)
+            this.emit('ws_message', message_str);
         })
         while(this.state!>=0){
             await sleep(5000);
@@ -129,6 +129,36 @@ class ProxyManager extends EventEmitter {
         this.logger.info(`proxy send ws request`)
         this.local_ws!.send(message);
     }
+    async start_ws_proxy1(){
+        this.local_ws1 = new WebSocket(this.stack_ws_url!);
+        const checkAlive = setInterval(() => {
+            this.logger.info(`send pong`);
+            this.local_ws1!.ping();
+        }, 5 * 1000)
+        this.local_ws1!.on('close', () => {
+            this.emit('unlive', this.stack_type!);
+        })
+        this.local_ws1!.on('pong', () => {
+            this.logger.info(`pong`);
+        })
+    
+        this.local_ws1!.on('message', message => {
+            let msg_buf = message.valueOf() as Uint8Array
+            let message_str= Uint8ArrayToString(msg_buf);
+            this.logger.info(`recv message from stack ${msg_buf} `)
+            this.emit('ws_message1', message_str);
+        })
+        while(this.state!>=0){
+            await sleep(5000);
+            this.logger.info(` 当前运行状态 ${this.state}`)
+        }
+        return {err:ErrorCode.succ,log:"start_ws_proxy success"}
+        
+    }
+    async proxy_ws_req1(message:any){
+        this.logger.info(`proxy send ws request`)
+        this.local_ws1!.send(message);
+    }
 
 }
 
@@ -139,8 +169,13 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
     manager.on('unlive', (msg: string) => {
         _interface.fireEvent('unlive', ErrorCode.fail, msg);
     });
-    manager.on('ws_message',(msg:any)=>{
-        _interface.fireEvent('accept', ErrorCode.succ,msg);
+    manager.on('ws_message',(msg:string)=>{
+        _interface.getLogger().info(`re send ws_message to ts-sdk ${msg} `)
+        _interface.fireEvent('ws_message', ErrorCode.succ,msg);
+    })
+    manager.on('ws_message1',(msg:string)=>{
+        _interface.getLogger().info(`re send ws_message to ts-sdk ${msg} `)
+        _interface.fireEvent('ws_message1', ErrorCode.succ,msg);
     })
     _interface.registerApi('start_client', async (from: Namespace, bytes: Buffer, param: { stack_type: string}): Promise<any> => {
         _interface.getLogger().debug(`remote call start_client,cyfs stack proxy will be inited`);
@@ -163,5 +198,9 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let startInfo = await manager.proxy_ws_req(param.message);
         return { err: ErrorCode.succ, bytes: Buffer.from(''), value: {log:"run successs"} };
     });
-
+    _interface.registerApi('proxy_ws1', async (from: Namespace, bytes: Buffer, param: { message:any}): Promise<any> => {
+        _interface.getLogger().debug(`remote call proxy_ws ${param.message}`);
+        let startInfo = await manager.proxy_ws_req1(param.message);
+        return { err: ErrorCode.succ, bytes: Buffer.from(''), value: {log:"run successs"} };
+    });
 }
