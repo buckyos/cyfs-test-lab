@@ -221,7 +221,7 @@ export async function InitAgentData(testAgent:Array<AgentData>,eps:{ipv4?:{udp?:
 
 /**
  * 
- *  将测试用例集合乱序排序
+ *  将测试用例集合乱序排序,并且设置运行数量
  */
 export async function shuffle(agentList:Array<Task>) : Promise<Array<Task>>  {
     let len = agentList.length;

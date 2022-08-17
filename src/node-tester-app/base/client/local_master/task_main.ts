@@ -120,16 +120,21 @@ async function main() {
         fs.writeFileSync(runConfig,`${process.pid}\n`);
     }
     let loadModule = require(filePath);
-    loadModule.TaskMain(task as TaskClientInterface);
+    try {
+        loadModule.TaskMain(task as TaskClientInterface);
+    } catch (error) {
+        Base.blog.error(`task run expection,err = ${JSON.stringify(error)}`);
+        task.runSum = 0;
+    }
+    
     let runSum = 0;
     while(true){
         if(task.runSum!=runSum){
             Base.blog.info(`===========task run finished`);
             if(param.localTest){
                 fs.removeSync(runConfig);
-                
-                break;
             }
+            break;
         }
         await sleep(5000)
     }

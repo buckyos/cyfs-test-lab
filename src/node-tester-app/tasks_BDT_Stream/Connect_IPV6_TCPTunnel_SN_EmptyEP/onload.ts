@@ -27,7 +27,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         labAgent.PC_0018,
     ]
     let firstQA_answer= "";
-    agentList = agentList.concat(await InitAgentData(testAgent,{ipv6:{tcp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.Empty))
+    agentList = agentList.concat(await InitAgentData(testAgent,{ipv6:{tcp:true,udp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.Empty))
     for(let i in agentList){
         for(let j in agentList){
             if(i != j){

@@ -62,7 +62,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         taskList,
         taskMult:10
     }
-    _interface.getLogger().info(JSON.stringify(testcase))
+    //_interface.getLogger().info(JSON.stringify(testcase))
     //测试用例执行
     await testRunner.testCaseRunner(testcase);
 }

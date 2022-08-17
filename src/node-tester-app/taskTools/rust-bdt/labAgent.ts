@@ -56,7 +56,7 @@ export const labAgent = {
     PC_0011:{
         tags:["PC_0011"],
         OS : "Ubuntu 20.04",
-        type :NAT_Type.FullCone,
+        type :NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
         ipv6: ['[::]'],
         router:"Router1",
@@ -72,7 +72,7 @@ export const labAgent = {
     PC_0013:{
         tags:["PC_0013"],
         OS : "CentOS8.5",
-        type :NAT_Type.FullCone,
+        type :NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.182','192.168.10.171'],
         ipv6: ['[::]'],
         router:"Router1&Router5",
@@ -104,7 +104,7 @@ export const labAgent = {
     PC_0017:{
         tags:["PC_0017"],
         OS : "Windows10",
-        type : NAT_Type.FullCone,
+        type : NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.177','192.168.1.178'],
         ipv6: ['[::]'],
         router:"Router1&Router6",
@@ -148,7 +148,8 @@ export function SameRouter(routerA:string,routerB:string){
     for(let i in listA){
         for(let j in listB){
             if(listA[i]==listB[j]){
-                return true;
+                // 暂时不支持同路由器通过Endpoint L 类型建立连接
+                return false;
             }
         }
     }

@@ -2,6 +2,7 @@ import {ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode,
 import {BdtProxy,BdtPeer} from './bdtTool'
 import {BDTERROR,taskType,Agent} from './type'
 import {request,ContentType} from "./request"
+import * as config from "./config"
 var date = require("silly-datetime");
 const timeout = 300*1000;
  //
@@ -80,6 +81,7 @@ export type Task ={
     taskList:Array<Task>, //用例执行任务列表
     environment : string; //环境
     taskMult:number, //任务的并发数量限制
+    MaxTaskNum?:number, // 运行最大任务数
     success?:number,
     failed?:number,
     result?:number,
@@ -88,20 +90,32 @@ export type Task ={
         err? : number,
         log?: string}>
 }
+
 /**
  * 
  *  将测试用例集合乱序排序
  */
-export async function shuffle(agentList:Array<Task>) : Promise<Array<Task>>  {
+export async function shuffle(agentList:Array<Task>,max:number=0) : Promise<Array<Task>>  {
     let len = agentList.length;
     while(len){
         let i = RandomGenerator.integer(len);
         len = len - 1;
         let t  = agentList[len]
         agentList[len] = agentList[i]
-        agentList[i]  =t
+        agentList[i]  = t
     }
-    return agentList;
+    if(max==0){
+        return agentList;
+    }else{
+        let list = [];
+        for(let i=0;i<max && i<agentList.length;i++){
+            list.push(agentList[i]);
+        }
+        return list;
+    }
+    
+    
+    
 }
 
 
@@ -291,15 +305,69 @@ export class TestRunner{
                     state : this.Testcase!.taskList[i]!.state,
                     
                 },ContentType.json)
+
                 this.log.info(`api/bdt/task/add resp:  ${JSON.stringify(run_task)}`)
+                let actionList = []
                 for(let j in this.Testcase!.taskList[i].action){
-                    if(this.Testcase!.taskList[i].action[j].action_id){
-                        await this.saveAction(this.Testcase!.taskList[i].action[j],this.Testcase!.taskList[i].task_id!)  
-                    }               
+                    let UserName = []
+                    for(let name in this.Testcase!.taskList[i].action![j]!.Users){
+                        UserName.push({agent:this.Testcase!.taskList[i].action![j]!.Users![Number(name)].name})
+                    }
+                    actionList.push({
+                        task_id:this.Testcase!.taskList[i].task_id ,
+                        testcaseId:this.Testcase!.testcaseId,
+                        type: this.Testcase!.taskList[i].action[j].type,
+                        action_id:this.Testcase!.taskList[i].action[j].action_id,
+                        parent_action :this.Testcase!.taskList[i].action[j].parent_action,
+                        LN:this.Testcase!.taskList[i].action[j].LN.name,
+                        RN:this.Testcase!.taskList[i].action[j].RN?.name,
+                        Users: JSON.stringify(UserName),
+                        config:JSON.stringify( this.Testcase!.taskList[i].action[j].config),
+                        info:JSON.stringify( this.Testcase!.taskList[i].action[j].info),
+                        fileSize : this.Testcase!.taskList[i].action[j].fileSize,
+                        chunkSize : this.Testcase!.taskList[i].action[j].chunkSize,
+                        connect_time : this.Testcase!.taskList[i].action[j].connect_time,
+                        set_time : this.Testcase!.taskList[i].action[j].set_time,
+                        send_time : this.Testcase!.taskList[i].action[j].send_time,
+                        result:JSON.stringify(this.Testcase!.taskList[i].action[j].result),
+                        expect:JSON.stringify(this.Testcase!.taskList[i].action[j].expect),
+                    })               
                 }
-                for(let j in this.Testcase!.taskList[i].child_action){
-                    await this.saveAction(this.Testcase!.taskList[i].child_action![Number(j)],this.Testcase!.taskList[i].task_id!)                   
+                if(this.Testcase!.taskList[i].child_action){
+                    for(let j = 0 ; j< this.Testcase!.taskList[i].child_action!.length;j++){
+                        let UserName = []
+                        for(let name in this.Testcase!.taskList[i].child_action![j]!.Users){
+                            UserName.push({agent:this.Testcase!.taskList[i].child_action![j]!.Users![Number(name)].name})
+                        }
+    
+                        actionList.push({
+                            task_id:this.Testcase!.taskList[i].task_id ,
+                            testcaseId:this.Testcase!.testcaseId,
+                            type: this.Testcase!.taskList[i].child_action![j]!.type,
+                            action_id:this.Testcase!.taskList[i].child_action![j].action_id,
+                            parent_action :this.Testcase!.taskList[i].child_action![j].parent_action,
+                            LN:this.Testcase!.taskList[i].child_action![j].LN.name,
+                            RN:this.Testcase!.taskList[i].child_action![j].RN?.name,
+                            Users: JSON.stringify(UserName),
+                            config:JSON.stringify( this.Testcase!.taskList[i].child_action![j].config),
+                            info:JSON.stringify( this.Testcase!.taskList[i].child_action![j].info),
+                            fileSize : this.Testcase!.taskList[i].child_action![j].fileSize,
+                            chunkSize : this.Testcase!.taskList[i].child_action![j].chunkSize,
+                            connect_time : this.Testcase!.taskList[i].child_action![j].connect_time,
+                            set_time : this.Testcase!.taskList[i].child_action![j].set_time,
+                            send_time : this.Testcase!.taskList[i].child_action![j].send_time,
+                            result:JSON.stringify(this.Testcase!.taskList[i].child_action![j].result),
+                            expect:JSON.stringify(this.Testcase!.taskList[i].child_action![j].expect),
+                        })                    
+                    }
                 }
+                
+                this.log.info(`api/bdt/action/addList req: ${this.Testcase!.testcaseId}_task${i}`)
+                let run_action =await request("POST","api/bdt/action/addList",{
+                    list : actionList
+                    
+                },ContentType.json)
+                this.log.info(`api/bdt/action/addList resp:  ${JSON.stringify(run_action)}`)
                 multRun = multRun -1;
                 V("")
             }))
@@ -440,6 +508,7 @@ export class TestRunner{
 
     async shutdown(action:Action){
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
+        action.RN!.peer = this.m_bdtProxy.getPeer(action.RN!.name).peer
         let connInfo =  action.LN!.peer!.getConnect(action.RN!.peer!.peerid,action.config!.conn_tag);
         if( connInfo.err ){
             return {err:BDTERROR.testDataError,log:`${action.LN.name} 连接不存在`}
@@ -453,7 +522,7 @@ export class TestRunner{
     }
     async destory(action:Action){
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
-        let destory = await action.LN!.peer!.destory();
+        let destory = await action.LN!.peer!.destory(-2);
         if(destory == ErrorCode.succ){
             return {err:BDTERROR.success,log:`${action.LN.name} 关闭BDT协议栈成功`}
         }else{
@@ -494,6 +563,7 @@ export class TestRunner{
     }
     async send_stream_just_send(action:Action){
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
+        action.RN!.peer = this.m_bdtProxy.getPeer(action.RN!.name).peer
         //利用现有的一个连接发送数据，默认使用第一个连接
         let connInfo =  action.LN!.peer!.getConnect(action.RN!.peer!.peerid,action.config!.conn_tag); 
        
@@ -697,10 +767,17 @@ export class TestRunner{
 
     async exitTestcase(result:number,log:string){
         //判断实际结果与预期结果差别
+        let exitState = false; 
+        setTimeout(async () => {
+            if(!exitState){
+                await this.m_interface.exit(ClientExitCode.failed,"运行超时",timeout);
+            }
+        }, 60*1000);
         this.log.error(`result = ${result},log =${log}`)
         await this.saveTestcaseToMysql();
         let exit =await this.m_bdtProxy.exit();
         //退出测试框架
+        exitState = true;
         if(result){
             await this.m_interface.exit(ClientExitCode.failed,log,timeout);
         }else{
@@ -712,6 +789,9 @@ export class TestRunner{
         this.state = "run";
         this.Testcase = testcase;
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
+        this.Testcase.MaxTaskNum = config.MaxTaskNum;
+        this.Testcase!.taskList = await shuffle(this.Testcase!.taskList,this.Testcase.MaxTaskNum);
+        this.log.info(`###### 测试用例运行任务数量：${this.Testcase!.taskList.length}`);
         this.agentList! = testcase.agentList;
         // (1) 测试环境初始化
         let startInfo = await this.connectAgent();
@@ -899,7 +979,7 @@ export class TestRunner{
                 await sleep(2000)
                 this.log.info(`当前task数量：${runNum}, 达运行上限，等待2s，运行总数：${i}`)
             }
-            await sleep(100);
+            await sleep(500);
             
         }
         let error = BDTERROR.success;

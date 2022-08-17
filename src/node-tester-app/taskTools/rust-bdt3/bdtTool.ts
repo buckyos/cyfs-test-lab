@@ -522,7 +522,11 @@ export class BdtPeer extends EventEmitter{
      * 销毁节点
      */
 
-    async destory(): Promise<ErrorCode> {
+    async destory(state?:number): Promise<ErrorCode> {
+
+        if(this.state == -2){
+            return ErrorCode.succ;
+        }
         for (let i = 0; i < this.m_conns.length; i++) {
             if(this.m_conns[i].state === 1){
                 await this.m_conns[i].close();
@@ -544,7 +548,13 @@ export class BdtPeer extends EventEmitter{
             peerName: this.m_peerName,
         };
         let info = await this.m_interface.callApi('destoryPeer', Buffer.from(''), param, this.m_agentid!, this.m_timeout);
-        this.state = -1;
+        if(!state){
+            this.state = -1;
+        }else{
+            // 测试离线时候使用
+            this.state = -2;
+        }
+        
         if (info.err) {
             return info.err;
         }
