@@ -18,7 +18,15 @@ export const StackError = {
     connect_cyfs_client_faild : 1001, 
 }
 
-
+export function stringToUint8Array(str:string){
+    var arr = [];
+    for (var i = 0, j = str.length; i < j; ++i) {
+      arr.push(str.charCodeAt(i));
+    }
+   
+    var tmpUint8Array = new Uint8Array(arr);
+    return tmpUint8Array
+}
 export class StackProxyClient extends EventEmitter{
     private peerName : string; // 测试节点标签
     private  stack_type : string;  // 测试节点协议栈类型
@@ -26,7 +34,7 @@ export class StackProxyClient extends EventEmitter{
     private m_agentid?: string;
     private ws_port :number;
     private http_port :number;
-    private local_ws? : WebSocket;
+    private local_ws? : Array<WebSocket> ;
     private local_http? :http.Server;
     private timeout : number;
     private log : Logger;
@@ -48,6 +56,7 @@ export class StackProxyClient extends EventEmitter{
         this.state  = 0;
         this.ws_port = options.ws_port;
         this.http_port = options.http_port;
+        this.local_ws = [];
     }
     async init():Promise<{err: ErrorCode, log?: string}> {
         // 连接测试节点
@@ -76,43 +85,80 @@ export class StackProxyClient extends EventEmitter{
 
     async start_ws_proxy():Promise<{err: ErrorCode, log?: string}>{
         
-        // const app = express()
-        // const server = http.createServer(app)
-        // const wss = new WebSocket.Server({ server })
-        // server.listen(this.ws_port)
+        const app = express()
+        const server = http.createServer(app)
+        const wss = new WebSocket.Server({ server })
+        server.listen(this.ws_port)
         this.log.info(`start ws listen ${this.ws_port}`)
         const checkAlive = setInterval(() => {
             if(this.local_ws){
-                this.local_ws.ping();
+                this.log.info(`###### ${this.peerName} send ping from sdk`)
+                for(let ws in this.local_ws){
+                    this.local_ws![ws].ping();
+                }
+                
             }         
         }, 5 * 1000)
+        
 
-        const wss = new Server({
-            port: this.ws_port,
-        });
         
         wss.on('connection', async ws_in => {
-            this.log.info(`### recv new ws connection`)
-            this.local_ws = ws_in;
-            this.local_ws!.on('pong', () => {
-                this.log.info(`${this.peerName} recv pong from sdk`)
-            })
-            this.local_ws!.on('close', () => {
-                this.log.info(`${this.peerName} ws connect close`)
-            })
-            // 接收sdk 转发 协议栈
-            this.local_ws!.on('message', async message => {
-                this.log.info(`${this.peerName} ws recv message from sdk,message = ${JSON.stringify(message)}`)
-                let param = {
-                    message:message
-                }
-                let info = await this.m_interface.callApi('proxy_ws', Buffer.from(''), param, this.m_agentid!, 0);
-                this.log.info(`${JSON.stringify(info)}`);
-            })
-            let rnAccept = await this.m_interface.attachEvent('ws_message', (err: ErrorCode,namespace: Namespace, message: string) => {
-                this.m_interface.getLogger().info(`${this.peerName} recv stack ws package,send to sdk`);
-                this.local_ws!.send(message);
-            }, this.m_agentid!, this.timeout);
+            this.log.info(`### recv new ws connection ${this.local_ws!.length}`)
+            this.local_ws!.push(ws_in);
+            if(this.local_ws!.length == 1){
+                let index = 0;
+                ws_in.on('pong', () => {
+                    this.log.info(`###### ${this.peerName} recv pong from sdk`)
+                })
+                ws_in.on('close', () => {
+                    this.log.info(`${this.peerName} ws connect close`)
+                })
+                // 接收sdk 转发 协议栈
+                ws_in.on('message', async message => {
+                    this.log.info(`###### ${this.peerName}  recv message from sdk,message = ${JSON.stringify(message)}`)
+                    let param = {
+                        message:message
+                    }
+                    let info = await this.m_interface.callApi('proxy_ws', Buffer.from(''), param, this.m_agentid!, 0);
+                    this.log.info(`${JSON.stringify(info)}`);
+                }) 
+                let rnAccept = await this.m_interface.attachEvent('ws_message', (err: ErrorCode,namespace: Namespace, msg: string) => {
+                    let buf_msg = stringToUint8Array(msg)
+                    
+                    this.m_interface.getLogger().info(`######### ${this.peerName} ${this.local_ws![Number(index)].url} ${index} recv ws_message from stack ,send to sdk,msg =${buf_msg}`);
+                    
+                    this.local_ws![index].send(buf_msg);
+                    
+                }, this.m_agentid!);   
+            }else if(this.local_ws!.length == 2){
+                let index = 1;
+                ws_in.on('pong', () => {
+                    this.log.info(`###### ${this.peerName} recv pong from sdk`)
+                })
+                ws_in.on('close', () => {
+                    this.log.info(`${this.peerName} ws connect close`)
+                })
+                // 接收sdk 转发 协议栈
+                ws_in.on('message', async message => {
+                    this.log.info(`###### ${this.peerName}  recv message from sdk,message = ${JSON.stringify(message)}`)
+                    let param = {
+                        message:message
+                    }
+                    let info = await this.m_interface.callApi('proxy_ws1', Buffer.from(''), param, this.m_agentid!, 0);
+                    this.log.info(`${JSON.stringify(info)}`);
+                })
+                let rnAccept = await this.m_interface.attachEvent('ws_message1', (err: ErrorCode,namespace: Namespace, msg: string) => {
+                    let buf_msg = stringToUint8Array(msg)
+                    this.m_interface.getLogger().info(`######### ${this.peerName} ${this.local_ws![Number(index)].url} ${index} recv ws_message1 from stack ,send to sdk,msg =${buf_msg}`);
+                    this.local_ws![index].send(buf_msg);
+                    
+                }, this.m_agentid!);    
+            }
+            
+            
+        })
+        wss.on('close', () => {
+            clearInterval(checkAlive)
         })
         while(this.state!>=0){
             await sleep(5000);
@@ -170,7 +216,7 @@ export class StackProxyClient extends EventEmitter{
             let method = req.method;
             let rawHeaders =  req.rawHeaders
             let headers = JSON.stringify(req.headers);
-            this.log.info(req);
+            //this.log.info(req);
             var postData = "";
             
             req.addListener('end', async ()=>{
