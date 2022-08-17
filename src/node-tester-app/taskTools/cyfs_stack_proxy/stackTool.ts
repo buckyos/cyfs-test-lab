@@ -194,12 +194,7 @@ export class StackProxyClient extends EventEmitter{
                 }
                 let resp = await this.m_interface.callApi('proxy_http', Buffer.from(""), param, this.m_agentid!, 0);
                 postData = "";
-                this.log.info(`${JSON.stringify(resp)}`);
-                // let res_headers = {};
-                // if(resp.value.headers != "{}"){
-                //     res_headers = ;
-                // }
-                
+                this.log.info(`${JSON.stringify(resp)}`);                
                 //res.write(resp.bytes!);
                 res.writeHead(resp.value.status,resp.value.statusText,JSON.parse(resp.value.header))
                 res.end(resp.bytes!);
