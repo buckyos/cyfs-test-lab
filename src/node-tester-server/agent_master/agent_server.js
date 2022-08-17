@@ -55,6 +55,8 @@ async function RunAgentServer(agentMgr, Config) {
 
         connection.once('close', removeConnection);
         connection.once('error', removeConnection);
+
+        // FIXME: Support multicomplex
         connection.on('packages', pkgs => {
             if (!pkgs || !pkgs.length) {
                 return;

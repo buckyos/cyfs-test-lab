@@ -185,6 +185,18 @@ async function main() {
     });
     await runner.start();
     
+    // const serviceid = "4402";
+    // const taskList = [
+    //     "Connect_FristQA_TCP_direct",
+    //     "Connect_FristQA_TCP_SN",
+    //     "Connect_FristQA_TCP_PackageSize_answer",
+    //     "Connect_FristQA_TCP_PackageSize_quesyion",
+    //     "Connect_FristQA_UDP_direct",
+    //     "Connect_FristQA_UDP_SN",
+    //     "Connect_FristQA_UDP_PackageSize_answer",
+    //     "Connect_FristQA_UDP_PackageSize_question",
+    // ]
+
     const serviceid = "4";
     const taskList = [
         "CYFS_debuger",
