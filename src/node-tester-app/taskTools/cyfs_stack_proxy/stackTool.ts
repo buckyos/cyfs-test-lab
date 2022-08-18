@@ -220,8 +220,11 @@ export class StackProxyClient extends EventEmitter{
             var postData = "";
             
             req.addListener('end', async ()=>{
+                //为了内存安全，将postData copy 后释放，避免两次请求 postData合并 ,暂时忽略性能
+                let sendData = postData;
+                postData = "";
                 //数据接收完毕
-                this.log.info(`send http data ${postData}`);
+                this.log.info(`send http data ${sendData}`);
                 let param
                 if(method=="GET"){
                     param =  {
@@ -235,11 +238,10 @@ export class StackProxyClient extends EventEmitter{
                         host,
                         method,
                         headers,
-                        postData,
+                        postData:sendData,
                     }
                 }
                 let resp = await this.m_interface.callApi('proxy_http', Buffer.from(""), param, this.m_agentid!, 0);
-                postData = "";
                 this.log.info(`${JSON.stringify(resp)}`);                
                 //res.write(resp.bytes!);
                 res.writeHead(resp.value.status,resp.value.statusText,JSON.parse(resp.value.header))
