@@ -75,6 +75,7 @@ class ProxyManager extends EventEmitter {
                     r_seq: 0,
                 })
                 let r_seq = 0;
+                client.setKeepAlive(true,2000)
                 client.on('data', async (buf) => {
                     r_seq = r_seq + 1;
                     this.log.info(` ${this.peerName} $ TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
