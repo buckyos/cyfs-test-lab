@@ -23,6 +23,7 @@ router.post('/add',
             chunk_cache: req.body.chunk_cache ,
             firstQA_answer: req.body.firstQA_answer,
             PN: req.body.PN,
+            logUrl : req.body.logUrl,
         };
         let model = new BdtAgent();
         let result =await  model.add(testcaseInfo);

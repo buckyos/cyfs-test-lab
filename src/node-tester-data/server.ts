@@ -13,12 +13,7 @@ import * as cyfs_action from "./routes/cyfs/cyfs_action";
 import * as cyfs_task from "./routes/cyfs/cyfs_task";
 import * as cyfs_testcase from "./routes/cyfs/cyfs_testcase";
 import * as cyfs_peer_info from "./routes/cyfs/cyfs_peer_info";
-import * as cyfs from "./cyfs"
 
-cyfs.clog.enable_file_log({
-	name: "node_tester_service",
-	dir: cyfs.get_app_log_dir("node_tester_service"),
-});
 const app = express();
 
 app.get('/', (req, res) => {

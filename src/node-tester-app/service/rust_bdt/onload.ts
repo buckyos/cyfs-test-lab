@@ -324,7 +324,12 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
     });
     
 
-
+    _interface.registerApi('reportLog', async (from: Namespace, bytes: Buffer, param: {logName:string}): Promise<any> => {
+        _interface.getLogger().debug(`remote call reportLog`);
+        let zip = await _interface.zip(_interface.getLogger().dir(),param.logName)
+        let upload = await _interface.uploadFile(zip.dstPath!,"logs");
+        return {err: ErrorCode.succ,bytes: Buffer.from(''),value:upload};
+    });
     _interface.registerApi('removeBdtCache', async (from: Namespace, bytes: Buffer, param: {}): Promise<any> => {
         _interface.getLogger().debug(`remote call removeBdtCache`);
         if(_interface.getPlatform() === 'win32'){
