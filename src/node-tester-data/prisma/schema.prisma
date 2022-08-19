@@ -146,7 +146,7 @@ model bdt_testcase {
   id           Int     @id @default(autoincrement())
   testcaseId   String? @db.VarChar(255)
   TestcaseName String? @db.VarChar(255)
-  remark       String? @db.VarChar(255)
+  remark       String? @db.Text
   agentList    String? @db.Text
   taskList     Int?
   success      Int?
@@ -288,6 +288,7 @@ model bdt_agent {
   chunk_cache    String? @db.VarChar(255)
   firstQA_answer String? @db.VarChar(255)
   PN             String? @db.VarChar(255)
+  logUrl         String? @db.VarChar(255)
 }
 
 model bdt_task {
