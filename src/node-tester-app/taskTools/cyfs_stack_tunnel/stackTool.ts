@@ -90,6 +90,8 @@ export class StackProxyClient extends EventEmitter {
             if (info.err) {
                 this.log.error(`build_tunnel`)
             }
+            // 添加保活探针
+            c.setKeepAlive(true,2000)
             // 监听测试框架事件，返回SDK 报文数据
             let recv_r_req = 0;
             let rnAccept = await this.m_interface.attachEvent(`${c.remoteAddress}_${c.remotePort}`, async (err: ErrorCode, namespace: Namespace, r_req: number, msg: string) => {
@@ -113,6 +115,7 @@ export class StackProxyClient extends EventEmitter {
                 let msg_u8 = buf as Uint8Array;
                 let info = await this.m_interface.callApi('proxy_data', Buffer.from(Uint8ArrayToString(msg_u8)), param, this.m_agentid!, 0);
             })
+
             c.on('error', async (err) => {
                 this.log.info(`${this.peerName} client ${port} proxy error ${err}`)
                 await this.m_interface.detachEvent(`${c.remoteAddress}_${c.remotePort}`, rnAccept.cookie!)
