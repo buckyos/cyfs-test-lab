@@ -33,10 +33,14 @@ export class ZoneSimulator{
    static  zone2_device1_peerId : string;
    static  zone2_device2_peerId : string;
    static APPID : cyfs.ObjectId;
+
+
 /**
  * 初始化模拟器测试程序
  * debug 要手动启动模拟器
  */
+
+
    static async init(debug:boolean=false ,clear:boolean=false){
         if(clear){
             //(0) 清理模拟器的数据
@@ -49,13 +53,13 @@ export class ZoneSimulator{
         if(debug){
             await cyfs.sleep(50000);
         }
-        await cyfs.sleep(5000);
+        await cyfs.sleep(15000);
         // (2) 读取模拟器的peerId 数据
         await this.getPeerId();
         ZoneSimulator.APPID = TEST_DEC_ID;
-        // (3)连接协议栈
+        // (3)连接协议栈,默认http方式
         console.info(`###连接协议栈`)
-        await this.connecStimulator();
+        await this.connecStimulator("http");
         
    }
    static async clearZoneSimulator(){
@@ -85,19 +89,53 @@ export class ZoneSimulator{
         this.zone2_people = strs[8].split(":")[1];
         this.zone2_ood_peerId = strs[9].split(":")[1];
         this.zone2_device1_peerId = strs[10].split(":")[1];
-        this.zone2_device2_peerId = strs[11].split(":")[1];    
     }
-    
-    static async connecStimulator() {
-        this.zone1_ood_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.ood.http_port, simulator.zone1.ood.ws_port,ZoneSimulator.APPID).unwrap());
-        this.zone1_standby_ood_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.standby_ood.http_port, simulator.zone1.standby_ood.ws_port,ZoneSimulator.APPID).unwrap());
-        this.zone1_device1_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port,ZoneSimulator.APPID).unwrap());
-        this.zone1_device2_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device2.http_port, simulator.zone1.device2.ws_port,ZoneSimulator.APPID).unwrap());
-        // ZOne2 设备协议栈
-        this.zone2_ood_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.ood.http_port, simulator.zone2.ood.ws_port,ZoneSimulator.APPID).unwrap());
-        this.zone2_device1_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device1.http_port, simulator.zone2.device1.ws_port,ZoneSimulator.APPID).unwrap());
-        this.zone2_device2_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device2.http_port, simulator.zone2.device2.ws_port,ZoneSimulator.APPID).unwrap());
-        
+    static async connecStimulator(RequestorType = "http") {
+        //zone 1 设备协议栈连接
+        let zone1_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.ood.http_port, simulator.zone1.ood.ws_port,ZoneSimulator.APPID).unwrap();
+        let zone1_standby_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.standby_ood.http_port, simulator.zone1.standby_ood.ws_port,ZoneSimulator.APPID).unwrap();
+        let zone1_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port,ZoneSimulator.APPID).unwrap()
+        let zone1_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device2.http_port, simulator.zone1.device2.ws_port,ZoneSimulator.APPID).unwrap()
+        //zone 2 设备协议栈连接
+        let zone2_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.ood.http_port, simulator.zone2.ood.ws_port,ZoneSimulator.APPID).unwrap()
+        let zone2_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device1.http_port, simulator.zone2.device1.ws_port,ZoneSimulator.APPID).unwrap()
+        let zone2_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device2.http_port, simulator.zone2.device2.ws_port,ZoneSimulator.APPID).unwrap()
+        console.log("RequestorType", RequestorType)
+        //以http方式连接
+        if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config(); 
+            //zone1 设置连接方式 
+            zone1_ood_stack_conn.requestor_config = http_param
+            zone1_standby_ood_stack_conn.requestor_config = http_param
+            zone1_device1_stack_conn.requestor_config = http_param
+            zone1_device2_stack_conn.requestor_config = http_param
+            //zone2 设置连接方式
+            zone2_ood_stack_conn.requestor_config = http_param
+            zone2_device1_stack_conn.requestor_config = http_param
+            zone2_device2_stack_conn.requestor_config = http_param
+        }
+        //以ws方式连接
+        else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            //zone1 设置连接方式 
+            zone1_ood_stack_conn.requestor_config = ws_param
+            zone1_standby_ood_stack_conn.requestor_config = ws_param
+            zone1_device1_stack_conn.requestor_config = ws_param
+            zone1_device2_stack_conn.requestor_config = ws_param
+            //zone2 设置连接方式
+            zone2_ood_stack_conn.requestor_config = ws_param
+            zone2_device1_stack_conn.requestor_config = ws_param
+            zone2_device2_stack_conn.requestor_config = ws_param
+        }
+        // zone1 设备协议栈
+        this.zone1_ood_stack = cyfs.SharedCyfsStack.open(zone1_ood_stack_conn);
+        this.zone1_standby_ood_stack = cyfs.SharedCyfsStack.open(zone1_standby_ood_stack_conn);
+        this.zone1_device1_stack = cyfs.SharedCyfsStack.open(zone1_device1_stack_conn);
+        this.zone1_device2_stack = cyfs.SharedCyfsStack.open(zone1_device2_stack_conn);    
+        // zone2 设备协议栈
+        this.zone2_ood_stack = cyfs.SharedCyfsStack.open(zone2_ood_stack_conn);
+        this.zone2_device1_stack = cyfs.SharedCyfsStack.open(zone2_device1_stack_conn);
+        this.zone2_device2_stack = cyfs.SharedCyfsStack.open(zone2_device2_stack_conn);
         //等待 zone1_ood_stack 连接成功
         let connect = 0;
         setTimeout(async()=>{
