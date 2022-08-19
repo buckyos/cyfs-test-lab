@@ -197,9 +197,9 @@ async function main() {
     //     "Connect_FristQA_UDP_PackageSize_question",
     // ]
 
-    const serviceid = "4";
+    const serviceid = "209";
     const taskList = [
-        "CYFS_debuger",
+        "CYFS_proxy_debuger",
     ];
     for(let i in taskList){
         let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
