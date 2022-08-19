@@ -415,11 +415,12 @@ export class TestRunner{
                 name:this.Testcase!.agentList[i].name,
                 NAT :this.Testcase!.agentList[i].NAT,
                 eps:JSON.stringify({input:this.Testcase!.agentList[i].eps,device_eps : this.Testcase!.agentList[i].device_eps,
-                    SNResp_eps : this.Testcase!.agentList[i].SNResp_eps ,}) ,
+                SNResp_eps : this.Testcase!.agentList[i].SNResp_eps ,}) ,
                 agentMult:this.Testcase!.agentList[i].agentMult,
                 resp_ep_type:this.Testcase!.agentList[i].resp_ep_type,
                 agentid:this.Testcase!.agentList[i].agentid,
                 logType:this.Testcase!.agentList[i].logType,
+                logUrl : this.Testcase!.agentList[i].logUrl,
                 report_time : this.Testcase!.agentList[i].report_time,
                 chunk_cache : this.Testcase!.agentList[i].chunk_cache,
                 firstQA_answer : this.Testcase!.agentList[i].firstQA_answer,
@@ -774,6 +775,11 @@ export class TestRunner{
             }
         }, 60*1000);
         this.log.error(`result = ${result},log =${log}`)
+        for(let i in this.agentList!){
+            let info = await this.m_interface.callApi('reportLog', Buffer.from(''), {logName:`${this.Testcase!.TestcaseName}_${this.agentList![i].name}.zip`},this.agentList![i].agentid!,timeout )
+            this.agentList![i].logUrl = info.value.url;
+        }
+
         await this.saveTestcaseToMysql();
         let exit =await this.m_bdtProxy.exit();
         //退出测试框架

@@ -89,6 +89,7 @@ export const enum  taskType {
      SNResp_eps? : Array<string> ,
      agentid?:string, //节点对应的自动化测试框架节点
      logType? : string, //BDT 日志级别控制
+     logUrl?:string, //日志下载
      report_time?:number, //间隔时间
      chunk_cache?:string, //节点的chunk缓存模式
      firstQA_answer?:string, //firstQA_answer 字符串长度
