@@ -1,8 +1,7 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator } from '../../base';
 
-import * as cyfs from "../../cyfs_node/cyfs_node"
 import { StackProxyClient } from "../../taskTools/cyfs_stack_tunnel/stackTool"
-
+import * as cyfs from "../../taskTools/cyfs_stack_tunnel/cyfs_node"
 export async function TaskMain(_interface: TaskClientInterface) {
 
     // cyfs.clog.enable_file_log({
