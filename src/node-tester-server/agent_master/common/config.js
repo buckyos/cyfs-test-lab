@@ -7,7 +7,7 @@ const os = require('os');
 const HOME_PATH = os.homedir();
 
 const Config = {
-    isDeveloping: true,
+    isDeveloping: false,
     logLevel: 'debug',
     
     server: {
