@@ -19,11 +19,11 @@ import {
     BuckyHashSet,BuckyHashSetDecoder,
     ObjectId,
     ObjectIdDecoder, BuckyNumber, BuckyNumberDecoder, CyfsChannel
-} from  "../cyfs/cyfs_node";
+} from  "../../../../cyfs_node/cyfs_node"
 import {
     CustumObjectType,
 } from './index'
-import * as cyfs from  "../cyfs/cyfs_node";
+import * as cyfs from  "../../../../cyfs_node/cyfs_node"
 
 // 1. 定义一个Desc类型信息
 export class MyTestDescTypeInfo extends DescTypeInfo{

@@ -3,7 +3,7 @@ import * as net from 'net';
 import { EventEmitter } from 'events';
 import { StackLpc, StackLpcCommand } from '../lpc';
 import * as WSParams from "../ws_params"
-import * as cyfs from "./cyfs/cyfs_node"
+import * as cyfs from "../../../cyfs_node/cyfs_node"
 import { CustumObjectType } from "./NamedObject"
 export type StackPeerOptions = {
     logger: Logger;

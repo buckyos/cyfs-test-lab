@@ -1,4 +1,4 @@
-import * as cyfs from "./typescript/cyfs/cyfs_node"
+import * as cyfs from "../../cyfs_node/cyfs_node"
 
 export type ForwardRequest = {
     message_type: string;   //消息号,  如get_object/put_object/get_data 保持和接口一致
