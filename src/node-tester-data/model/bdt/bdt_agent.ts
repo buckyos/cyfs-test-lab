@@ -14,6 +14,7 @@ export type BDTAgentModel = {
   chunk_cache?: string 
   firstQA_answer?: string
   PN?: string
+  logUrl?:string
   }
 
 export class BdtAgent{
@@ -37,6 +38,7 @@ export class BdtAgent{
             chunk_cache: String(agent.chunk_cache) ,
             firstQA_answer: agent.firstQA_answer,
             PN: agent.PN,
+            logUrl:agent.logUrl
         }})
         return {err:0,log:`${agent.testcaseId} ${agent.name} add record success`}
       } catch (error) {
