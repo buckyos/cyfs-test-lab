@@ -1,4 +1,4 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
+import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
 import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
 import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
 import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
@@ -30,7 +30,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{tcp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.all))
     for(let i in agentList){
         for(let j in agentList){
-            if(i != j && Number(i)+Number(j) == testAgent.length ){
+            if(i != j  ){
                 // NAT穿透
                 if(agentList[j].NAT==0  || SameRouter(agentList[i].router!,agentList[j].router!) ){
                     let task : Task = {
@@ -40,7 +40,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         action:[
                         ]
                     }
-                    for(let x=0;x<15;x++){
+                    for(let x=0;x<10;x++){
                         task.action.push({
                             LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
                             RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
@@ -56,6 +56,21 @@ export async function TaskMain(_interface: TaskClientInterface) {
                             expect:{err:BDTERROR.success} 
                         })
                     }
+                    // 发送数据超过1100字符出现报错
+                    task.action.push({
+                        LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
+                        RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
+                        type : taskType.connect_second,
+                        config:{
+                            conn_tag : `connnect_10` ,
+                            firstQA_answer :RandomGenerator.string(100 + 10*100),
+                            firstQA_question : RandomGenerator.string(100),
+                            accept_answer : 1,
+                            timeout : 30*1000, 
+                        },
+                        fileSize : 0,
+                        expect:{err:BDTERROR.connnetFailed} 
+                    })
                     taskList.push(task)
                 }
             }
@@ -63,6 +78,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     
 
+    await sleep(2000);
     let testRunner = new TestRunner(_interface);
     let testcase:Testcase = {
         TestcaseName:testcaseName,
