@@ -51,11 +51,15 @@ impl TestConnection {
         loop {
             let hash = hash_data(&send_buffer[0..gen_count]);
             hashs.push(hash);
-
-            let _ = self.stream.write_all(&send_buffer[0..gen_count]).await.map_err(|e| {
+            
+            let result_err = self.stream.write_all(&send_buffer[0..gen_count]).await.map_err(|e| {
                 log::error!("send file failed, e={}",&e);
                 e
             });
+            let _ = match result_err{
+                Err(_)=>{break},
+                Ok(_)=>{}
+            };
             size_need_to_send -= gen_count as u64;
 
             if size_need_to_send == 0 {
@@ -68,7 +72,9 @@ impl TestConnection {
             }
             Self::random_data(send_buffer[0..].as_mut());
         }
-
+        if size_need_to_send > 0 {
+            return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "remote close"));
+        }
         let mut total_hash = Vec::new();
         for h in hashs.iter() {
             total_hash.extend_from_slice(h.as_slice());

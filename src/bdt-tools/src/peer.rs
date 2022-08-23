@@ -452,16 +452,29 @@ impl Peer {
                             let pre_stream = incoming.next().await.unwrap().unwrap();
                             let question = pre_stream.question;
                             log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
-                            let _ = pre_stream.stream.confirm(&peer.get_answer()).await;
-                            let conn = peer.add_stream(pre_stream.stream);
-                            log::info!("confirm succ, name={}", conn.get_name());
-                            let notify = ConfirmStreamLpcCommandResp {
-                                seq, 
-                                result: 0 as u16,
-                                question,
-                                stream_name: conn.get_name().clone(),
+                            let resp = match pre_stream.stream.confirm(&peer.get_answer()).await{
+                                Err(e)=>{
+                                    log::error!("confirm err, err={}",e);
+                                    ConfirmStreamLpcCommandResp {
+                                        seq,
+                                        result: e.code().as_u16(),
+                                        question,
+                                        stream_name: "".to_string(),
+                                    }
+                                },
+                                Ok(_)=>{
+                                    let conn = peer.add_stream(pre_stream.stream);
+                                    log::info!("confirm succ, name={}", conn.get_name());
+                                    ConfirmStreamLpcCommandResp {
+                                        seq, 
+                                        result: 0 as u16,
+                                        question,
+                                        stream_name: conn.get_name().clone(),
+                                    }
+                                }
                             };
-                            let _ = lpc.send_command(LpcCommand::try_from(notify).unwrap()).await;
+                           
+                            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
                         }
                     });
                     AutoAcceptStreamLpcCommandResp {
