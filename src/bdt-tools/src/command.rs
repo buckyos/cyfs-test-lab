@@ -809,6 +809,8 @@ pub struct SetChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
     pub chunk_id: ChunkId,
+    pub set_time : u32,
+    pub calculate_time : u32,
 }
 
 impl TryFrom<SetChunkLpcCommandResp> for LpcCommand {
@@ -818,11 +820,36 @@ impl TryFrom<SetChunkLpcCommandResp> for LpcCommand {
             "name": "set-chunk-resp",
             "result": value.result,
             "chunk_id": hex::encode(value.chunk_id.as_slice()),
+            "set_time" : value.set_time,
+            "calculate_time" : value.calculate_time,
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
     }
 }
+
+pub struct CalculateChunkLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub chunk_id: ChunkId,
+    pub calculate_time : u32,
+}
+
+impl TryFrom<CalculateChunkLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: CalculateChunkLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "calculate-chunk-resp",
+            "result": value.result,
+            "chunk_id": hex::encode(value.chunk_id.as_slice()),
+            "calculate_time" : value.calculate_time,
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+
 
 pub struct InterestChunkLpcCommandReq {
     pub seq: u32,
@@ -1446,6 +1473,8 @@ impl TryFrom<LpcCommand> for StartSendFileCommandReq {
 pub struct StartSendFileCommandResp {
     pub seq: u32,
     pub result: BuckyResult<(String, File)>,
+    pub set_time : u32,
+    pub calculate_time : u32,
 }
 
 impl TryFrom<StartSendFileCommandResp> for LpcCommand {
@@ -1458,6 +1487,8 @@ impl TryFrom<StartSendFileCommandResp> for LpcCommand {
                     "name": "start-send-file-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
                     "session": session.to_string(),
+                    "set_time" : value.set_time,
+                    "calculate_time" : value.calculate_time,
                 });
                 let buf_len = file.raw_measure(&None)?;
                 let mut buf = vec![0u8; buf_len];
@@ -1472,6 +1503,78 @@ impl TryFrom<StartSendFileCommandResp> for LpcCommand {
                 Ok(LpcCommand::new(seq, vec![], json))
             }
         }
+    }
+}
+
+pub struct CalculateFileCommandResp {
+    pub seq: u32,
+    pub result: BuckyResult<(String, File)>,
+    pub calculate_time : u32,
+}
+
+impl TryFrom<CalculateFileCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: CalculateFileCommandResp) -> BuckyResult<Self> {
+        let seq = value.seq;
+        match value.result {
+            Ok((session, file)) => {
+                let json = serde_json::json!({
+                    "name": "start-send-file-resp",
+                    "result": BuckyErrorCode::Ok.as_u16(),
+                    "session": session.to_string(),
+                    "calculate_time" : value.calculate_time,
+                });
+                let buf_len = file.raw_measure(&None)?;
+                let mut buf = vec![0u8; buf_len];
+                let _ = file.raw_encode(buf.as_mut_slice(), &None)?;
+                Ok(LpcCommand::new(seq, buf, json))
+            }
+            Err(err) => {
+                let json = serde_json::json!({
+                    "name": "start-send-file-resp",
+                    "result": err.code().as_u16(),
+                });
+                Ok(LpcCommand::new(seq, vec![], json))
+            }
+        }
+    }
+}
+
+pub struct SendFileCommandReq {
+    pub seq: u32,
+    pub path: PathBuf,
+    pub file: Option<File>,
+}
+
+impl TryFrom<LpcCommand> for SendFileCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> BuckyResult<Self> {
+        let json = value.as_json_value();
+
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
+                    BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
+                }),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        let file = if value.as_buffer().len() > 0 {
+            let (file, _) = File::raw_decode(value.as_buffer())?;
+            Some(file)
+        } else {
+            None
+        };
+        
+        Ok(Self {
+            seq: value.seq(),
+            path,
+            file,
+        })
     }
 }
 
