@@ -91,7 +91,9 @@ async fn main()->Result<(), BuckyError> {
             peer.on_recv_object(c, lpc.clone());
         } else if name == String::from("ping") {
             last_recv_ping.store(bucky_time_now(), std::sync::atomic::Ordering::SeqCst);
-        } else if name == String::from("set-chunk") {
+        } else if name == String::from("calculate-chunk") {
+            peer.on_calculate_chunk(c, lpc.clone());
+        }else if name == String::from("set-chunk") {
             peer.on_set_chunk(c, lpc.clone());
         } else if name == String::from("interest-chunk") {
             peer.on_interest_chunk(c, lpc.clone());
@@ -111,6 +113,10 @@ async fn main()->Result<(), BuckyError> {
             peer.on_get_trans_session_state(c, lpc.clone());
         } else if name == String::from("start-send-file") {
             peer.on_start_send_file(c, lpc.clone());
+        }else if name == String::from("calculate-file") {
+            peer.on_calculate_file(c, lpc.clone());
+        }else if name == String::from("set-file") {
+            peer.on_set_file(c, lpc.clone());
         } else if name == String::from("start-download-file") {
             peer.on_start_download_file(c, lpc.clone());
         }else if name == String::from("start-download-file-range") {

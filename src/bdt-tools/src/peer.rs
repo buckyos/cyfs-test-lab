@@ -1093,9 +1093,9 @@ impl Peer {
         let peer = self.clone();
         async_std::task::spawn(async move {
             let stack = peer.get_stack();
-            let resp = match SetChunkLpcCommandReq::try_from(c) {
+            let resp = match CalculateChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
-                    log::error!("convert command to SetChunkLpcCommandReq failed, e={}", &e);
+                    log::error!("convert command to CalculateChunkLpcCommandReq failed, e={}", &e);
                     CalculateChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
@@ -1147,48 +1147,33 @@ impl Peer {
                         result: e.code().as_u16(),
                         chunk_id: Default::default(),
                         set_time:0,
-                        calculate_time:0,
+                        
                     }
                 },
                 Ok(c) => {
                     let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match ChunkId::calculate(c.content.as_slice()).await {
-                        Ok(chunk_id) => {
-                            let calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate_time) ) as u32;
-                            let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
-                            let path = dir.join(chunk_id.to_string().as_str());
-                            let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                            match cyfs_bdt::download::track_chunk_to_path(&*stack, &chunk_id, Arc::new(c.content), path.as_path()).await {
-                                Ok(_) => {
-                                    let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
-                                    SetChunkLpcCommandResp {
-                                        seq, 
-                                        result: 0 as u16,
-                                        chunk_id,
-                                        set_time,
-                                        calculate_time,
-                                    }
-                                },
-                                Err(e) => {
-                                    log::error!("set-chunk failed, e={}", &e);
-                                    SetChunkLpcCommandResp {
-                                        seq, 
-                                        result: e.code().as_u16(),
-                                        chunk_id,
-                                        set_time:0,
-                                        calculate_time,
-                                    }
-                                }
+                    let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                    let path = dir.join(c.chunk_id.clone().to_string().as_str());
+                    let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(c.content), path.as_path()).await {
+                        Ok(_) => {
+                            let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                            SetChunkLpcCommandResp {
+                                seq, 
+                                result: 0 as u16,
+                                chunk_id:c.chunk_id.clone(),
+                                set_time,
+                                
                             }
-                        }
+                        },
                         Err(e) => {
-                            log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
+                            log::error!("set-chunk failed, e={}", &e);
                             SetChunkLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
-                                chunk_id: Default::default(),
+                                chunk_id:c.chunk_id.clone(),
                                 set_time:0,
-                                calculate_time:0,
+                                
                             }
                         }
                     }
@@ -1915,9 +1900,9 @@ impl Peer {
 
         async_std::task::spawn(async move {
             let stack = peer.get_stack();
-            let resp = match StartSendFileCommandReq::try_from(c) {
+            let resp = match CalculateFileCommandReq::try_from(c) {
                 Err(e) => {
-                    log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
+                    log::error!("convert command to CalculateFileCommandReq failed, e={}", &e);
                     CalculateFileCommandResp {
                         seq, 
                         result: Err(e),
@@ -1980,25 +1965,23 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
-    pub fn on_send_file(&self, c: LpcCommand, lpc: Lpc) {
-        log::info!("on start-send-file, c={:?}", &c);
+    pub fn on_set_file(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on set-file, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
 
         async_std::task::spawn(async move {
             let stack = peer.get_stack();
-            let resp = match SendFileCommandReq::try_from(c) {
+            let resp = match SetFileCommandReq::try_from(c) {
                 Err(e) => {
-                    log::error!("convert command to SendFileCommandReq failed, e={}", &e);
-                    StartSendFileCommandResp {
+                    log::error!("convert command to SetFileCommandReq failed, e={}", &e);
+                    SetFileCommandResp {
                         seq, 
                         result: Err(e),
                         set_time:0,
-                        calculate_time:0,
                     }
                 },
                 Ok(c) => {
-                    let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let mut set_time : u32 =0;
                     let ret = if c.path.as_path().exists() {
                         let file = c.file.unwrap();
@@ -2015,11 +1998,10 @@ impl Peer {
                         Err(e)
                     };
 
-                    StartSendFileCommandResp {
+                    SetFileCommandResp {
                         seq, 
                         result: ret,
                         set_time,
-                        calculate_time:0,
                     }
                 }
             };
