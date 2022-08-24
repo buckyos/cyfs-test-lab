@@ -452,16 +452,29 @@ impl Peer {
                             let pre_stream = incoming.next().await.unwrap().unwrap();
                             let question = pre_stream.question;
                             log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
-                            let _ = pre_stream.stream.confirm(&peer.get_answer()).await;
-                            let conn = peer.add_stream(pre_stream.stream);
-                            log::info!("confirm succ, name={}", conn.get_name());
-                            let notify = ConfirmStreamLpcCommandResp {
-                                seq, 
-                                result: 0 as u16,
-                                question,
-                                stream_name: conn.get_name().clone(),
+                            let resp = match pre_stream.stream.confirm(&peer.get_answer()).await{
+                                Err(e)=>{
+                                    log::error!("confirm err, err={}",e);
+                                    ConfirmStreamLpcCommandResp {
+                                        seq,
+                                        result: e.code().as_u16(),
+                                        question,
+                                        stream_name: "".to_string(),
+                                    }
+                                },
+                                Ok(_)=>{
+                                    let conn = peer.add_stream(pre_stream.stream);
+                                    log::info!("confirm succ, name={}", conn.get_name());
+                                    ConfirmStreamLpcCommandResp {
+                                        seq, 
+                                        result: 0 as u16,
+                                        question,
+                                        stream_name: conn.get_name().clone(),
+                                    }
+                                }
                             };
-                            let _ = lpc.send_command(LpcCommand::try_from(notify).unwrap()).await;
+                           
+                            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
                         }
                     });
                     AutoAcceptStreamLpcCommandResp {
@@ -1072,6 +1085,54 @@ impl Peer {
         }); 
          
     }
+
+
+    pub fn on_calculate_chunk(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on calculate-chunk, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack();
+            let resp = match CalculateChunkLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to CalculateChunkLpcCommandReq failed, e={}", &e);
+                    CalculateChunkLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        chunk_id: Default::default(),
+                        calculate_time:0,
+                    }
+                },
+                Ok(c) => {
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    match ChunkId::calculate(c.content.as_slice()).await {
+                        Ok(chunk_id) => {
+                            let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                            let path = dir.join(chunk_id.to_string().as_str());
+                            CalculateChunkLpcCommandResp {
+                                seq, 
+                                result: 0 as u16,
+                                chunk_id,
+                                calculate_time:((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
+                            CalculateChunkLpcCommandResp {
+                                seq, 
+                                result: e.code().as_u16(),
+                                chunk_id: Default::default(),
+                                calculate_time:0,
+                            }
+                        }
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
     pub fn on_set_chunk(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on set-chunk, c={:?}", &c);
         let seq = c.seq();
@@ -1084,38 +1145,35 @@ impl Peer {
                     SetChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
-                        chunk_id: Default::default()
+                        chunk_id: Default::default(),
+                        set_time:0,
+                        
                     }
                 },
                 Ok(c) => {
-                    match ChunkId::calculate(c.content.as_slice()).await {
-                        Ok(chunk_id) => {
-                            let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
-                            let path = dir.join(chunk_id.to_string().as_str());
-                            match cyfs_bdt::download::track_chunk_to_path(&*stack, &chunk_id, Arc::new(c.content), path.as_path()).await {
-                                Ok(_) => {
-                                    SetChunkLpcCommandResp {
-                                        seq, 
-                                        result: 0 as u16,
-                                        chunk_id
-                                    }
-                                },
-                                Err(e) => {
-                                    log::error!("set-chunk failed, e={}", &e);
-                                    SetChunkLpcCommandResp {
-                                        seq, 
-                                        result: e.code().as_u16(),
-                                        chunk_id
-                                    }
-                                }
+                    let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                    let path = dir.join(c.chunk_id.clone().to_string().as_str());
+                    let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(c.content), path.as_path()).await {
+                        Ok(_) => {
+                            let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                            SetChunkLpcCommandResp {
+                                seq, 
+                                result: 0 as u16,
+                                chunk_id:c.chunk_id.clone(),
+                                set_time,
+                                
                             }
-                        }
+                        },
                         Err(e) => {
-                            log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
+                            log::error!("set-chunk failed, e={}", &e);
                             SetChunkLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
-                                chunk_id: Default::default()
+                                chunk_id:c.chunk_id.clone(),
+                                set_time:0,
+                                
                             }
                         }
                     }
@@ -1835,23 +1893,25 @@ impl Peer {
         Ok(())
     }
 
-    //
-    pub fn on_start_send_file(&self, c: LpcCommand, lpc: Lpc) {
-        log::info!("on start-send-file, c={:?}", &c);
+    pub fn on_calculate_file(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on calculate_file, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
 
         async_std::task::spawn(async move {
             let stack = peer.get_stack();
-            let resp = match StartSendFileCommandReq::try_from(c) {
+            let resp = match CalculateFileCommandReq::try_from(c) {
                 Err(e) => {
-                    log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
-                    StartSendFileCommandResp {
+                    log::error!("convert command to CalculateFileCommandReq failed, e={}", &e);
+                    CalculateFileCommandResp {
                         seq, 
                         result: Err(e),
+                        calculate_time:0,
                     }
                 },
                 Ok(c) => {
+                    let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let mut calculate_time : u32 = 0;
                     let ret = if c.path.as_path().exists() {
                         let chunkids = {
                             let chunk_size: usize = c.chunk_size_mb * 1024 * 1024;
@@ -1883,7 +1943,129 @@ impl Peer {
                             hash,
                             ChunkList::ChunkInList(chunkids)
                         ).no_create_time().build();
+                        calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate_time) ) as u32;
+                        let file_id = file.clone().desc().calculate_id();
+                        log::info!("sender: task_id {}", &file_id.clone());
+                        Ok((file_id.to_string(), file.clone()))
+                    } else {
+                        let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input the send file");
+                        log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
+                        Err(e)
+                    };
+
+                    CalculateFileCommandResp {
+                        seq, 
+                        result: ret,
+                        calculate_time,
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+    pub fn on_set_file(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on set-file, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack();
+            let resp = match SetFileCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to SetFileCommandReq failed, e={}", &e);
+                    SetFileCommandResp {
+                        seq, 
+                        result: Err(e),
+                        set_time:0,
+                    }
+                },
+                Ok(c) => {
+                    let mut set_time : u32 =0;
+                    let ret = if c.path.as_path().exists() {
+                        let file = c.file.unwrap();
+                        let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                         cyfs_bdt::download::track_file_in_path(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                        set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                        //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
+                        let file_id = file.clone().desc().calculate_id();
+                        log::info!("sender: task_id {}", &file_id.clone());
+                        Ok((file_id.to_string(), file.clone()))
+                    } else {
+                        let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input the send file");
+                        log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
+                        Err(e)
+                    };
+
+                    SetFileCommandResp {
+                        seq, 
+                        result: ret,
+                        set_time,
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+    pub fn on_start_send_file(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on start-send-file, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack();
+            let resp = match StartSendFileCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
+                    StartSendFileCommandResp {
+                        seq, 
+                        result: Err(e),
+                        set_time:0,
+                        calculate_time:0,
+                    }
+                },
+                Ok(c) => {
+                    let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let mut calculate_time : u32 = 0;
+                    let mut set_time : u32 =0;
+                    let ret = if c.path.as_path().exists() {
+                        let chunkids = {
+                            let chunk_size: usize = c.chunk_size_mb * 1024 * 1024;
+                            let mut chunkids = Vec::new();
+                            let mut file =  File::open(c.path.as_path()).await.unwrap();
+                            
+                            loop {
+                                let mut buf = vec![0u8; chunk_size];
+                                let len = file.read(&mut buf).await.unwrap();
+                                if len < chunk_size {
+                                    buf.truncate(len);    
+                                    let hash = hash_data(&buf[..]);
+                                    let chunkid = ChunkId::new(&hash, buf.len() as u32);
+                                    chunkids.push(chunkid);
+                                    break;
+                                } else {
+                                    let hash = hash_data(&buf[..]);
+                                    let chunkid = ChunkId::new(&hash, buf.len() as u32);
+                                    chunkids.push(chunkid);
+                                }
+                            }
+                            chunkids
+                        };
+
+                        let (hash, len) = hash_file(c.path.as_path()).await.unwrap();
+                        let file = cyfs_base::File::new(
+                            ObjectId::default(),
+                            len,
+                            hash,
+                            ChunkList::ChunkInList(chunkids)
+                        ).no_create_time().build();
+                        calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate_time) ) as u32;
+                        let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                        cyfs_bdt::download::track_file_in_path(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                        set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
                         //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                         let file_id = file.clone().desc().calculate_id();
                         log::info!("sender: task_id {}", &file_id.clone());
@@ -1897,6 +2079,8 @@ impl Peer {
                     StartSendFileCommandResp {
                         seq, 
                         result: ret,
+                        set_time,
+                        calculate_time,
                     }
                 }
             };

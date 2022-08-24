@@ -1,4 +1,4 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
+import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
 import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
 import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
 import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
@@ -40,7 +40,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         action:[
                         ]
                     }
-                    for(let x=0;x<15;x++){
+                    for(let x=0;x<14;x++){
                         task.action.push({
                             LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
                             RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
@@ -56,12 +56,27 @@ export async function TaskMain(_interface: TaskClientInterface) {
                             expect:{err:BDTERROR.success} 
                         })
                     }
+                    task.action.push({
+                        LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
+                        RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
+                        type : taskType.connect_second,
+                        config:{
+                            conn_tag : `connnect_14` ,
+                            firstQA_answer :RandomGenerator.string(100),
+                            firstQA_question : RandomGenerator.string(100 + 14*100),
+                            accept_answer : 1,
+                            timeout : 30*1000, 
+                        },
+                        fileSize : 0,
+                        expect:{err:BDTERROR.connnetFailed} 
+                    })
                     taskList.push(task) }
             }
         }
     }
     
 
+    await sleep(2000);
     let testRunner = new TestRunner(_interface);
     let testcase:Testcase = {
         TestcaseName:testcaseName,

@@ -228,4 +228,17 @@ export async function InitAgentData(testAgent:Array<AgentData>,eps:{ipv4?:{udp?:
     return agentList;
 }
 
+export async function AgentList_LAN_WAN(agentList:Array<Agent>){
+    let agentListLAN:Array<Agent> = [];
+    let agentListWAN:Array<Agent> = [];
+    for(let i in agentList){
+        if(agentList[i].NAT == 0){
+            agentListWAN.push(agentList[i]);
+        }else{
+            agentListLAN.push(agentList[i]);
+        }
+    }
+    return {LAN:agentListLAN,WAN:agentListWAN}
+}
+
 

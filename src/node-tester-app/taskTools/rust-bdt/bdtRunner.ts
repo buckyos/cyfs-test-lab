@@ -97,8 +97,12 @@ export type Task ={
  */
 export async function shuffle(agentList:Array<Task>,max:number=0) : Promise<Array<Task>>  {
     let len = agentList.length;
+    if(agentList.length<=max || agentList.length<5){
+        return agentList;
+    }
+
     while(len){
-        let i = RandomGenerator.integer(len);
+        let i = RandomGenerator.integer(agentList.length-1,0);
         len = len - 1;
         let t  = agentList[len]
         agentList[len] = agentList[i]
@@ -129,11 +133,13 @@ export class TestRunner{
     private state : string; //用例执行状态，用例做控制
     private begin_time?: number;
     private end_time?:number;
+    private is_perf:boolean;
     //private m_testcaseId : string;
-    constructor(_interface:TaskClientInterface){
+    constructor(_interface:TaskClientInterface,is_shuffle:boolean=false){
         this.m_interface = _interface;
         this.log = this.m_interface.getLogger();
         this.m_bdtProxy = new BdtProxy(_interface,timeout); 
+        this.is_perf = is_shuffle;
         this.state = "wait"; 
         
 
@@ -329,8 +335,8 @@ export class TestRunner{
                         connect_time : this.Testcase!.taskList[i].action[j].connect_time,
                         set_time : this.Testcase!.taskList[i].action[j].set_time,
                         send_time : this.Testcase!.taskList[i].action[j].send_time,
-                        result:JSON.stringify(this.Testcase!.taskList[i].action[j].result),
-                        expect:JSON.stringify(this.Testcase!.taskList[i].action[j].expect),
+                        result: String(this.Testcase!.taskList[i].action[j].result?.err),
+                        expect: String(this.Testcase!.taskList[i].action[j].expect!.err),
                     })               
                 }
                 if(this.Testcase!.taskList[i].child_action){
@@ -338,6 +344,9 @@ export class TestRunner{
                         let UserName = []
                         for(let name in this.Testcase!.taskList[i].child_action![j]!.Users){
                             UserName.push({agent:this.Testcase!.taskList[i].child_action![j]!.Users![Number(name)].name})
+                        }
+                        if(!this.Testcase!.taskList[i].action[j].result){
+                            this.Testcase!.taskList[i].action[j].result = {err:BDTERROR.testDataError,log:"not found"}
                         }
     
                         actionList.push({
@@ -356,8 +365,8 @@ export class TestRunner{
                             connect_time : this.Testcase!.taskList[i].child_action![j].connect_time,
                             set_time : this.Testcase!.taskList[i].child_action![j].set_time,
                             send_time : this.Testcase!.taskList[i].child_action![j].send_time,
-                            result:JSON.stringify(this.Testcase!.taskList[i].child_action![j].result),
-                            expect:JSON.stringify(this.Testcase!.taskList[i].child_action![j].expect),
+                            result: String(this.Testcase!.taskList[i].action[j].result!.err),
+                            expect:String(this.Testcase!.taskList[i].action[j].expect!.err),
                         })                    
                     }
                 }
@@ -516,6 +525,7 @@ export class TestRunner{
         }
         let close = await connInfo.conn!.close();
         if(close == ErrorCode.succ){
+            await sleep(2000);
             return {err:BDTERROR.success,log:`${action.LN.name} 关闭连接${connInfo.conn!.connName}成功`}
         }else{
             return {err:BDTERROR.CloseConnectionFailed,log:`${action.LN.name} 关闭连接${connInfo.conn!.connName}失败，err =${close}`}
@@ -525,6 +535,7 @@ export class TestRunner{
         action.LN!.peer = this.m_bdtProxy.getPeer(action.LN.name).peer
         let destory = await action.LN!.peer!.destory(-2);
         if(destory == ErrorCode.succ){
+            await sleep(2000);
             return {err:BDTERROR.success,log:`${action.LN.name} 关闭BDT协议栈成功`}
         }else{
             return {err:BDTERROR.DestoryStackFailed,log:`${action.LN.name} 关闭BDT协议栈失败 err = ${destory}`}
@@ -775,9 +786,10 @@ export class TestRunner{
             }
         }, 60*1000);
         this.log.error(`result = ${result},log =${log}`)
-        for(let i in this.agentList!){
-            let info = await this.m_interface.callApi('reportLog', Buffer.from(''), {logName:`${this.Testcase!.TestcaseName}_${this.agentList![i].name}.zip`},this.agentList![i].agentid!,timeout )
-            this.agentList![i].logUrl = info.value.url;
+        for(let i in this.Testcase!.agentList!){
+            let info = await this.m_interface.callApi('reportLog', Buffer.from(''), {logName:`${this.Testcase!.TestcaseName}_${this.Testcase!.agentList![i].name}.zip`},this.Testcase!.agentList![i].agentid!,timeout )
+            this.Testcase!.agentList![i].logUrl = info.value.url;
+            this.log.info(`**** ${this.Testcase!.TestcaseName} ${this.Testcase!.agentList![i].logUrl}`)
         }
 
         await this.saveTestcaseToMysql();
@@ -796,7 +808,12 @@ export class TestRunner{
         this.Testcase = testcase;
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
         this.Testcase.MaxTaskNum = config.MaxTaskNum;
-        this.Testcase!.taskList = await shuffle(this.Testcase!.taskList,this.Testcase.MaxTaskNum);
+        // 是否将测试用例打乱顺序，性能测试的时候不需要
+        if(!this.is_perf){
+            this.Testcase!.taskList = await shuffle(this.Testcase!.taskList,this.Testcase.MaxTaskNum);
+        }
+        
+        //this.log.info(`${JSON.stringify(this.Testcase!.taskList)}`);
         this.log.info(`###### 测试用例运行任务数量：${this.Testcase!.taskList.length}`);
         this.agentList! = testcase.agentList;
         // (1) 测试环境初始化
@@ -816,10 +833,15 @@ export class TestRunner{
         // (3) 进行操作
         
         let taskRun :Array<any> = []
-        for(let i in this.Testcase.taskList){
+        for(let i in this.Testcase!.taskList!){
             runNum = runNum + 1;
             taskRun.push(new Promise<{err:number,log:string}>(async(V)=>{
-                this.Testcase!.taskList[i].task_id = `${this.Testcase!.testcaseId}_task${i}`;
+                if(!this.Testcase!.taskList[i]){
+                    let info = await this.exitTestcase(BDTERROR.initPeerFailed,`测试用例数据异常`);
+                    return info;
+                }
+                //this.log.info(`${JSON.stringify(this.Testcase!.taskList)}`);
+                this.Testcase!.taskList[i]!.task_id = `${this.Testcase!.testcaseId!}_task${i}`;
                 // 判断机器状态是否正常，机器不正常
                 if(this.m_bdtProxy.getPeer(this.Testcase!.taskList[i].LN.name).err ){
                     runNum = runNum -1;
@@ -996,6 +1018,7 @@ export class TestRunner{
             let result =  await taskRun[i];
             this.log.info(`##### task ${i} 执行完成，result= ${JSON.stringify(result)}`)
             this.Testcase.taskList[i].result = result;
+            
             if(result.err){
                 error = result.err;
                 this.Testcase!.errorList!.push({
@@ -1004,6 +1027,9 @@ export class TestRunner{
                     log:`task ${i} ,${result.log}`
                 })
                 failed = failed + 1;
+                if(this.is_perf){
+                    this.exitTestcase(BDTERROR.optExpectError,"出现异常，性能测试退出")
+                }
             }else{
                 success = success + 1;
             }

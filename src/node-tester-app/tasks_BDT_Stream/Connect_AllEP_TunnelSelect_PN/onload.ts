@@ -1,4 +1,4 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
+import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
 import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
 import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
 import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
@@ -167,6 +167,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     
 
+    await sleep(2000);
     let testRunner = new TestRunner(_interface);
     let testcase:Testcase = {
         TestcaseName:testcaseName,

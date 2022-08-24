@@ -1,7 +1,7 @@
 
 
 import * as cyfs from '../../cyfs_node/cyfs_node';
-export let stack = cyfs.SharedCyfsStack.open_runtime();
+export let stack : cyfs.SharedCyfsStack;
 
 import child_process, { ChildProcess } from 'child_process';
 import path from 'path';

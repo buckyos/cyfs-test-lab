@@ -1,2 +1,2 @@
 
-export const MaxTaskNum = 10;
+export const MaxTaskNum = 1;
