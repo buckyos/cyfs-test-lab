@@ -10,7 +10,11 @@ import * as cyfs from '../../cyfs_node/cyfs_node';
 import JSBI from 'jsbi';
 import {TEST_DEC_ID} from "../../config/decApp"
 
+
+
 export class ZoneSimulator{
+
+
    static  pid :number;
    static  process : ChildProcess.ChildProcess;
    static  zone1_ood_stack :cyfs.SharedCyfsStack ;
@@ -39,8 +43,6 @@ export class ZoneSimulator{
  * 初始化模拟器测试程序
  * debug 要手动启动模拟器
  */
-
-
    static async init(debug:boolean=false ,clear:boolean=false){
         if(clear){
             //(0) 清理模拟器的数据
@@ -59,9 +61,10 @@ export class ZoneSimulator{
         ZoneSimulator.APPID = TEST_DEC_ID;
         // (3)连接协议栈,默认http方式
         console.info(`###连接协议栈`)
-        await this.connecStimulator("http");
+        await this.connecStimulator("ws");
         
    }
+
    static async clearZoneSimulator(){
        await this.stopZoneSimulator();
        await fs.emptyDirSync(DATA_PATH);
@@ -90,123 +93,190 @@ export class ZoneSimulator{
         this.zone2_ood_peerId = strs[9].split(":")[1];
         this.zone2_device1_peerId = strs[10].split(":")[1];
     }
-    static async connecStimulator(RequestorType = "http") {
-        //zone 1 设备协议栈连接
-        let zone1_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.ood.http_port, simulator.zone1.ood.ws_port,ZoneSimulator.APPID).unwrap();
-        let zone1_standby_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.standby_ood.http_port, simulator.zone1.standby_ood.ws_port,ZoneSimulator.APPID).unwrap();
-        let zone1_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port,ZoneSimulator.APPID).unwrap()
-        let zone1_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device2.http_port, simulator.zone1.device2.ws_port,ZoneSimulator.APPID).unwrap()
-        //zone 2 设备协议栈连接
-        let zone2_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.ood.http_port, simulator.zone2.ood.ws_port,ZoneSimulator.APPID).unwrap()
-        let zone2_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device1.http_port, simulator.zone2.device1.ws_port,ZoneSimulator.APPID).unwrap()
-        let zone2_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device2.http_port, simulator.zone2.device2.ws_port,ZoneSimulator.APPID).unwrap()
-        console.log("RequestorType", RequestorType)
-        //以http方式连接
-        if (RequestorType == "http" && RequestorType == undefined){
-            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config(); 
-            //zone1 设置连接方式 
+    //zone1_ood 设备协议栈连接
+    static async stack_conn_zone1_ood_stack(RequestorType = "http"){
+    let zone1_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.ood.http_port, simulator.zone1.ood.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
             zone1_ood_stack_conn.requestor_config = http_param
-            zone1_standby_ood_stack_conn.requestor_config = http_param
-            zone1_device1_stack_conn.requestor_config = http_param
-            zone1_device2_stack_conn.requestor_config = http_param
-            //zone2 设置连接方式
-            zone2_ood_stack_conn.requestor_config = http_param
-            zone2_device1_stack_conn.requestor_config = http_param
-            zone2_device2_stack_conn.requestor_config = http_param
-        }
-        //以ws方式连接
-        else if(RequestorType == "ws"){
-            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
-            //zone1 设置连接方式 
-            zone1_ood_stack_conn.requestor_config = ws_param
-            zone1_standby_ood_stack_conn.requestor_config = ws_param
-            zone1_device1_stack_conn.requestor_config = ws_param
-            zone1_device2_stack_conn.requestor_config = ws_param
-            //zone2 设置连接方式
-            zone2_ood_stack_conn.requestor_config = ws_param
-            zone2_device1_stack_conn.requestor_config = ws_param
-            zone2_device2_stack_conn.requestor_config = ws_param
-        }
-        // zone1 设备协议栈
-        this.zone1_ood_stack = cyfs.SharedCyfsStack.open(zone1_ood_stack_conn);
-        this.zone1_standby_ood_stack = cyfs.SharedCyfsStack.open(zone1_standby_ood_stack_conn);
-        this.zone1_device1_stack = cyfs.SharedCyfsStack.open(zone1_device1_stack_conn);
-        this.zone1_device2_stack = cyfs.SharedCyfsStack.open(zone1_device2_stack_conn);    
-        // zone2 设备协议栈
-        this.zone2_ood_stack = cyfs.SharedCyfsStack.open(zone2_ood_stack_conn);
-        this.zone2_device1_stack = cyfs.SharedCyfsStack.open(zone2_device1_stack_conn);
-        this.zone2_device2_stack = cyfs.SharedCyfsStack.open(zone2_device2_stack_conn);
-        //等待 zone1_ood_stack 连接成功
-        let connect = 0;
-        setTimeout(async()=>{
-            if(connect < 6){
-                console.info(`连接超时`)
-                assert(`连接超时`)
-            }
-        },20*1000)
-        let res1 = await this.zone1_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone1_ood_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败1：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        res1 = await this.zone1_standby_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone1_standby_ood_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败1：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        //等待 zone1_device1_stack 连接成功
-        res1 = await this.zone1_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone1_device1_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败2：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        //等待 zone1_device2_stack 连接成功
-        res1 = await this.zone1_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone1_device2_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败3：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        //等待 zone2_ood_stack 连接成功
-        res1 = await this.zone2_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone2_ood_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败4：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        //等待 zone2_device2_stack 连接成功
-        res1 = await this.zone2_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res1.ok){
-            connect = connect + 1;
-            console.info('zone2_device2_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败5：${res1.val?.msg}`)
-            //await cyfs.sleep(5000)
-        }
-        //等待 zone2_device1_stack 连接成功
-        let res2 = await this.zone2_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
-        if(res2.ok){
-            connect = connect + 1;
-            console.info('zone2_device1_stack 连接 wx http 成功')
-        }else{
-            console.info(`连接失败6：${res1.val?.msg}`)
-            assert.equal(res2.val!.code,"0")
-        }
-}
 
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone1_ood_stack_conn.requestor_config = ws_param
+    }
+    this.zone1_ood_stack = cyfs.SharedCyfsStack.open(zone1_ood_stack_conn);
+    let res1 = await this.zone1_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(20000)));
+    return res1
+    }
+    //zone1_standby_ood 设备协议栈连接
+    static async stack_conn_zone1_standby_ood(RequestorType = "http"){
+    let zone1_standby_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.standby_ood.http_port, simulator.zone1.standby_ood.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone1_standby_ood_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone1_standby_ood_stack_conn.requestor_config = ws_param
+    }
+    this.zone1_standby_ood_stack = cyfs.SharedCyfsStack.open(zone1_standby_ood_stack_conn);
+    let res1 = await this.zone1_standby_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+    //zone1_device1设备协议栈连接
+    static async stack_conn_zone1_device1_stack(RequestorType = "http"){
+    let zone1_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone1_device1_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone1_device1_stack_conn.requestor_config = ws_param
+    }
+    this.zone1_device1_stack = cyfs.SharedCyfsStack.open(zone1_device1_stack_conn);
+    let res1 = await this.zone1_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+    //zone1_device2设备协议栈连接
+    static async stack_conn_zone1_device2_stack(RequestorType = "http"){
+    let zone1_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device2.http_port, simulator.zone1.device2.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone1_device2_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone1_device2_stack_conn.requestor_config = ws_param
+    }
+    this.zone1_device2_stack = cyfs.SharedCyfsStack.open(zone1_device2_stack_conn);
+    let res1 = await this.zone1_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+    //zone2_ood设备协议栈连接
+    static async stack_conn_zone2_ood_stack(RequestorType = "http"){
+    let zone2_ood_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.ood.http_port, simulator.zone2.ood.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone2_ood_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone2_ood_stack_conn.requestor_config = ws_param
+    }
+    this.zone2_ood_stack = cyfs.SharedCyfsStack.open(zone2_ood_stack_conn);
+    let res1 = await this.zone2_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+    //zone2_device2设备协议栈连接
+    static async stack_conn_zone2_device2_stack(RequestorType = "http"){
+    let zone2_device2_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device2.http_port, simulator.zone2.device2.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone2_device2_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone2_device2_stack_conn.requestor_config = ws_param
+    }
+    this.zone2_device2_stack = cyfs.SharedCyfsStack.open(zone2_device2_stack_conn);
+    let res1 = await this.zone2_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+    //zone2_device1设备协议栈连接
+    static async stack_conn_zone2_device1_stack(RequestorType = "http"){
+    let zone2_device1_stack_conn = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone2.device1.http_port, simulator.zone2.device1.ws_port,ZoneSimulator.APPID).unwrap();
+    if (RequestorType == "http" && RequestorType == undefined){
+            let http_param = cyfs.SharedCyfsStackParam.default_requestor_config();
+            zone2_device1_stack_conn.requestor_config = http_param
+
+    }
+    else if(RequestorType == "ws"){
+            let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config(); 
+            zone2_device1_stack_conn.requestor_config = ws_param
+    }
+    this.zone2_device1_stack = cyfs.SharedCyfsStack.open(zone2_device1_stack_conn);
+    let res1 = await this.zone2_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    return res1
+    }
+static async connecStimulator(RequestorType = "http") {
+    let connect = 0;
+    setTimeout(async()=>{
+        if(connect < 6){
+            console.info(`连接超时`)
+            assert(`连接超时`)
+        }
+    },20*1000)
+    //let res1 = await this.zone1_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+    let res1 = await this.stack_conn_zone1_ood_stack(RequestorType);
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone1_ood_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败1：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    res1 = await this.stack_conn_zone1_standby_ood(RequestorType);
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone1_standby_ood_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败2：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    //等待 zone1_device1_stack 连接成功
+    res1 = await this.stack_conn_zone1_device1_stack(RequestorType)
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone1_device1_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败3：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    //等待 zone1_device2_stack 连接成功
+    res1 = await this.stack_conn_zone1_device2_stack(RequestorType)
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone1_device2_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败4：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    //等待 zone2_ood_stack 连接成功
+    res1 = await this.stack_conn_zone2_ood_stack(RequestorType)
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone2_ood_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败5：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    //等待 zone2_device2_stack 连接成功
+    res1 = await this.stack_conn_zone2_device2_stack(RequestorType)
+    if(res1.ok){
+        connect = connect + 1;
+        console.info(`zone2_device2_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败6：${res1.val?.msg}`)
+        //await cyfs.sleep(5000)
+    }
+    //等待 zone2_device1_stack 连接成功
+    let res2 = await this.stack_conn_zone2_device1_stack(RequestorType)
+    if(res2.ok){
+        connect = connect + 1;
+        console.info(`zone2_device1_stack 连接 ${ RequestorType } 成功`)
+    }else{
+        console.info(`连接失败7：${res1.val?.msg}`)
+        assert.equal(res2.val!.code,"0")
+    }
+        
+}
    static async removeAllConfig(){
        await this.getPeerId();
         let list = [
