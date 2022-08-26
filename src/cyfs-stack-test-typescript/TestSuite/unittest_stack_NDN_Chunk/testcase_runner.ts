@@ -3,7 +3,7 @@ import * as cyfs from '../../cyfs_node/cyfs_node';
 import * as myHandler from '../../common/utils/handler'
 import { TestcaseManger, testcaseInfo } from "../../common/models/testcaseInfo";
 import { AclManager, Acl, } from '../../common/utils/acl_manager'
-import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../common'
+import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo, StackType, create_stack, stackInfo } from '../../common'
 import { ZoneSimulator } from '../../common'
 import { DEC_ID_BASE58, TEST_DEC_ID } from "../../config/decApp"
 import * as fs from "fs-extra"
@@ -29,6 +29,9 @@ describe("cyfs协议栈测试", async function () {
         for (let j in datas.testcaseList) {
             let inputData: InputInfo;
             let expectData: ResultInfo;
+
+            let remote_proxy_stack: cyfs.SharedCyfsStack; // 目标协议栈
+            let local_stack: cyfs.SharedCyfsStack;        // 本地协议栈
             describe(`${datas.testcaseList[j].id}:${datas.testcaseList[j].name}`, async () => {
                 before(async function () {
                     //获取测试数据
@@ -39,14 +42,36 @@ describe("cyfs协议栈测试", async function () {
                     let testcaseInfo: testcaseInfo = res.datas![0];
                     inputData = JSON.parse(testcaseInfo.input_data!.toString());
                     expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-                    //初始化ACL配置文件
-                    await ZoneSimulator.getPeerId();
-                    await ZoneSimulator.removeAllConfig();
-                    for (let j in inputData.stackCfgList) {
-                        await aclManager.getdevice(inputData.stackCfgList[j].deviceName)!.initAcl({ configFile: path.join(__dirname, "acl", inputData.stackCfgList[j].ACL.configFile!) })
+                    if (datas.stack_type == StackType.Sim) {
+                        //初始化ACL配置文件
+                        await ZoneSimulator.getPeerId();
+                        await ZoneSimulator.removeAllConfig();
+                        for (let j in inputData.stackCfgList) {
+                            await aclManager.getdevice(inputData.stackCfgList[j].deviceName)!.initAcl({ configFile: path.join(__dirname, "acl", inputData.stackCfgList[j].ACL.configFile!) })
+                        }
+                        //启动模拟器连接协议栈
+                        await ZoneSimulator.init();
+                    } else {
+                        // runtime/ood, 开两个端口, 1对1转发到目标协议栈
+                        let proxy_target_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(20002, 20001).unwrap())
+                        //let stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(19999,20000).unwrap())
+                        let resp = await proxy_target_stack.wait_online(cyfs.Some(cyfs.JSBI.BigInt(10000000)));
+                        console.info(JSON.stringify(resp.unwrap()));
+                        await cyfs.sleep(5000)
+                        let res = await proxy_target_stack.util().get_zone({ common: { flags: 0 } });
+                        console.info(JSON.stringify(res.unwrap()))
+                        await cyfs.sleep(1000)
+
+                        // local stack 
+                        let local_ood_stack = cyfs.SharedCyfsStack.open_default();
+                        let resp2 = await local_ood_stack.wait_online(cyfs.Some(cyfs.JSBI.BigInt(10000000)));
+                        console.info(JSON.stringify(resp.unwrap()));
+                        await cyfs.sleep(5000)
+
+                        remote_proxy_stack = proxy_target_stack;
+                        local_stack = local_ood_stack;
                     }
-                    //启动模拟器连接协议栈
-                    await ZoneSimulator.init();
+
                 })
                 after(async function () {
                     //数据清理
@@ -77,63 +102,63 @@ describe("cyfs协议栈测试", async function () {
                     //运行测试用例
                     switch (inputData.opt.optType) {
                         case "put_data_chunk": {
-                            await initHandlerList(inputData);
-                            await put_data_chunk(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await put_data_chunk(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "get_data_chunk": {
-                            await initHandlerList(inputData);
-                            await get_data_chunk(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await get_data_chunk(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "get_data_chunk_second": {
-                            await initHandlerList(inputData);
-                            await get_data_chunk_second(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await get_data_chunk_second(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "trans_file": {
-                            await initHandlerList(inputData);
-                            await trans_file(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await trans_file(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "trans_file_second": {
-                            await initHandlerList(inputData);
-                            await trans_file_second(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await trans_file_second(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "trans_dir": {
-                            await initHandlerList(inputData);
-                            await trans_dir(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await trans_dir(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "put_object": {
-                            await initHandlerList(inputData);
-                            await put_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await put_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "get_object": {
-                            await initHandlerList(inputData);
-                            await get_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await get_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "select_object": {
-                            await initHandlerList(inputData);
-                            await select_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await select_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "delect_object": {
-                            await initHandlerList(inputData);
-                            await delect_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await delect_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "post_object": {
-                            await initHandlerList(inputData);
-                            await post_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await post_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                         case "sign_verify_object": {
-                            await initHandlerList(inputData);
-                            await sign_verify_object(inputData, expectData);
+                            await initHandlerList(inputData, datas.stack_type, remote_proxy_stack, local_stack);
+                            await sign_verify_object(inputData, expectData, datas.stack_type, remote_proxy_stack, local_stack);
                             break;
                         }
                     }
@@ -145,16 +170,15 @@ describe("cyfs协议栈测试", async function () {
         }
     })
 
-
 })
 
 
-async function initHandlerList(inputData: InputInfo) {
+async function initHandlerList(inputData: InputInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     for (let j in inputData.stackCfgList) {
         for (let m in inputData.stackCfgList[j].handlerList) {
             const ret = await handlerManager.addHandler(
                 inputData.stackCfgList[j].deviceName,
-                ZoneSimulator.getStackByName(inputData.stackCfgList[j].stack),
+                stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.stackCfgList[j].stack) : remote_proxy_stack,
                 inputData.stackCfgList[j].handlerList[m].type,
                 inputData.stackCfgList[j].handlerList[m].chain,
                 inputData.stackCfgList[j].handlerList[m].id,
@@ -170,7 +194,7 @@ async function initHandlerList(inputData: InputInfo) {
     }
 }
 
-async function get_data_chunk(inputData: InputInfo, expect: ResultInfo) {
+async function get_data_chunk(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
     if (fs.existsSync(filePath)) {
@@ -185,8 +209,9 @@ async function get_data_chunk(inputData: InputInfo, expect: ResultInfo) {
     await RandomGenerator.createRandomFile(filePath, fileName, fileSize);
 
     //(3) 调用接口传输chunK
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transChunksByGetData(source, target, path.join(filePath, fileName), inputData.opt.NDNoptInfo!.chunkSize!, inputData.opt.NDNoptInfo!.chunkNumber!, inputData.opt.NDNoptInfo!.level!)
     assert(run.err == expect.err, run.log)
     console.info(JSON.stringify(run.download))
@@ -204,7 +229,7 @@ async function get_data_chunk(inputData: InputInfo, expect: ResultInfo) {
     }
 }
 
-async function get_data_chunk_second(inputData: InputInfo, expect: ResultInfo) {
+async function get_data_chunk_second(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
     if (fs.existsSync(filePath)) {
@@ -219,8 +244,9 @@ async function get_data_chunk_second(inputData: InputInfo, expect: ResultInfo) {
     await RandomGenerator.createRandomFile(filePath, fileName, fileSize);
 
     //(3) 调用接口传输chunK
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transChunksByGetData(source, target, path.join(filePath, fileName), inputData.opt.NDNoptInfo!.chunkSize!, inputData.opt.NDNoptInfo!.chunkNumber!, inputData.opt.NDNoptInfo!.level!)
     assert(run.err == expect.err, run.log)
     console.info(JSON.stringify(run.download))
@@ -256,7 +282,7 @@ async function get_data_chunk_second(inputData: InputInfo, expect: ResultInfo) {
     }
 }
 
-async function put_data_chunk(inputData: InputInfo, expect: ResultInfo) {
+async function put_data_chunk(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
     if (fs.existsSync(filePath)) {
@@ -271,8 +297,9 @@ async function put_data_chunk(inputData: InputInfo, expect: ResultInfo) {
     await RandomGenerator.createRandomFile(filePath, fileName, fileSize);
 
     //(3) 调用接口传输chunK
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transChunksByPutData(source, target, path.join(filePath, fileName), inputData.opt.NDNoptInfo!.chunkSize!, inputData.opt.NDNoptInfo!.chunkNumber!, inputData.opt.NDNoptInfo!.level!)
     assert(run.err == expect.err, run.log)
     console.info(JSON.stringify(run.download))
@@ -290,7 +317,7 @@ async function put_data_chunk(inputData: InputInfo, expect: ResultInfo) {
     }
 }
 
-async function trans_file(inputData: InputInfo, expect: ResultInfo) {
+async function trans_file(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
     if (fs.existsSync(filePath)) {
@@ -305,8 +332,9 @@ async function trans_file(inputData: InputInfo, expect: ResultInfo) {
     await RandomGenerator.createRandomFile(filePath, fileName, fileSize);
 
     //(3) 调用接口传输chunK
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transFile(source, target, path.join(filePath, fileName), inputData.opt.NDNoptInfo!.chunkSize!, path.join(__dirname, './test_cache_file/target/', fileName), inputData.opt.NDNoptInfo!.level!);
     assert(run.err == expect.err, run.log)
     console.info(JSON.stringify(run))
@@ -319,7 +347,7 @@ async function trans_file(inputData: InputInfo, expect: ResultInfo) {
     }
 }
 
-async function trans_file_second(inputData: InputInfo, expect: ResultInfo) {
+async function trans_file_second(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1)清空缓存目录
     let filePath = path.join(__dirname, "test_cache_file", "source")
     if (fs.existsSync(filePath)) {
@@ -334,8 +362,9 @@ async function trans_file_second(inputData: InputInfo, expect: ResultInfo) {
     await RandomGenerator.createRandomFile(filePath, fileName, fileSize);
 
     //(3) 调用接口传输chunK
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transFile(source, target, path.join(filePath, fileName), inputData.opt.NDNoptInfo!.chunkSize!, path.join(__dirname, './test_cache_file/target/', fileName), inputData.opt.NDNoptInfo!.level!);
     assert(run.err == expect.err, run.log)
     console.info(JSON.stringify(run))
@@ -358,7 +387,7 @@ async function trans_file_second(inputData: InputInfo, expect: ResultInfo) {
     assert(run.time! > run2.time!, '第二次下载文件时间应该小于第一次下载时间')
 }
 
-async function trans_dir(inputData: InputInfo, expect: ResultInfo) {
+async function trans_dir(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //创建要测试的文件
     let dirName = `${RandomGenerator.string(10)}`
     let dirPath = path.join(__dirname, "test_cache_file", "source", dirName)
@@ -375,16 +404,19 @@ async function trans_dir(inputData: InputInfo, expect: ResultInfo) {
         fileSize = inputData.opt.NDNoptInfo!.fileSize!;
     }
     await RandomGenerator.createRandomDir(dirPath, inputData.opt.NDNoptInfo!.dirInfo!.dirNum!, inputData.opt.NDNoptInfo!.dirInfo!.fileNum!, fileSize);
-    let source = ZoneSimulator.getStackByName(inputData.opt.source)
-    let target = ZoneSimulator.getStackByName(inputData.opt.target)
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
     let run = await NDNTestManager.transDir(source, target, dirPath, inputData.opt.NDNoptInfo!.chunkSize!, targetPath, inputData.opt.NDNoptInfo!.level!)
     assert.equal(run.err, expect.err, run.log)
 }
 
-async function put_object(inputData: InputInfo, expect: ResultInfo) {
+async function put_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1) put object
     // 创建一个测试对象 
-    const owner_id = cyfs.ObjectId.from_base_58(ZoneSimulator.getPeerIdByName(inputData.opt.source)).unwrap();
+    const owner_id = stack_type === StackType.Sim ? cyfs.ObjectId.from_base_58(ZoneSimulator.getPeerIdByName(inputData.opt.source)).unwrap() : 
+    cyfs.ObjectId.from_base_58(stackInfo.owner).unwrap();
+
     const dec_id = TEST_DEC_ID;
     const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const object_id = obj.desc().calculate_id();
@@ -402,7 +434,10 @@ async function put_object(inputData: InputInfo, expect: ResultInfo) {
         },
         object: new cyfs.NONObjectInfo(object_id, object_raw)
     };
-    const put_ret = await (ZoneSimulator.getStackByName(inputData.opt.source).non_service().put_object(req));
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    const put_ret = await source.non_service().put_object(req);
     //校验结果
     //cyfs.BuckyError
     console.info('put_object result:', put_ret);
@@ -438,13 +473,20 @@ async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string) {
     return { saveobject, saveObjectId, saveobjectOwner, object_raw }
 }
 
-async function get_object(inputData: InputInfo, expect: ResultInfo) {
+async function get_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1) noc put object
     //创建需要get 的 对象
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    // 获取本地数据
+    let result = await source.util().get_device_static_info({common: {flags: 0}})
+    let zone_info = await result.unwrap()
+    let sourcePeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.source): zone_info.info.owner_id!.to_base_58();
+
+    let result2 = await target.util().get_device_static_info({common: {flags: 0}})
+    let zone_info2 = await result2.unwrap()       
+    let targetPeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.target) : zone_info2.info.owner_id!.to_base_58();
     const info = await createTestObject(target, targetPeerId);
     //await cyfs.sleep(2000)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
@@ -493,16 +535,23 @@ async function get_object(inputData: InputInfo, expect: ResultInfo) {
             assert(!handlerResult2.err, handlerResult.log);
         }
 
-
     }
 }
 
-async function select_object(inputData: InputInfo, expect: ResultInfo) {
+async function select_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
 
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    // 获取本地数据
+    let result = await source.util().get_device_static_info({common: {flags: 0}})
+    let zone_info = await result.unwrap()
+    let sourcePeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.source): zone_info.info.owner_id!.to_base_58();
+
+    let result2 = await target.util().get_device_static_info({common: {flags: 0}})
+    let zone_info2 = await result2.unwrap()       
+    let targetPeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.target) : zone_info2.info.owner_id!.to_base_58();
+
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
     const dec_id = TEST_DEC_ID;
     //开始监听是否运行handler 
@@ -572,13 +621,22 @@ async function getTestObject(stack: cyfs.SharedCyfsStack, peerId: string, object
     }
 }
 
-async function delect_object(inputData: InputInfo, expect: ResultInfo) {
+async function delect_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1) noc put object
     //创建需要get 的 对象
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    // 获取本地数据
+    let result = await source.util().get_device_static_info({common: {flags: 0}})
+    let zone_info = await result.unwrap()
+    let sourcePeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.source): zone_info.info.owner_id!.to_base_58();
+
+    let result2 = await target.util().get_device_static_info({common: {flags: 0}})
+    let zone_info2 = await result2.unwrap()       
+    let targetPeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.target) : zone_info2.info.owner_id!.to_base_58();
+
+
     const info = await createTestObject(target, targetPeerId)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
     const dec_id = TEST_DEC_ID;
@@ -613,11 +671,19 @@ async function delect_object(inputData: InputInfo, expect: ResultInfo) {
     }
 }
 
-async function post_object(inputData: InputInfo, expect: ResultInfo) {
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+async function post_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    // 获取本地数据
+    let result = await source.util().get_device_static_info({common: {flags: 0}})
+    let zone_info = await result.unwrap()
+    let sourcePeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.source): zone_info.info.owner_id!.to_base_58();
+
+    let result2 = await target.util().get_device_static_info({common: {flags: 0}})
+    let zone_info2 = await result2.unwrap()       
+    let targetPeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.target) : zone_info2.info.owner_id!.to_base_58();
+
     const info = await createTestObject(target, targetPeerId)
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
     const dec_id = TEST_DEC_ID;
@@ -646,13 +712,22 @@ async function post_object(inputData: InputInfo, expect: ResultInfo) {
     assert(!handlerResult.err, handlerResult.log)
 }
 
-async function sign_verify_object(inputData: InputInfo, expect: ResultInfo) {
+async function sign_verify_object(inputData: InputInfo, expect: ResultInfo, stack_type: StackType, remote_proxy_stack: cyfs.SharedCyfsStack, local_stack: cyfs.SharedCyfsStack) {
     //(1) put object
     // 创建一个测试对象 
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+    let source = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.source) : local_stack;
+    let target = stack_type === StackType.Sim ? ZoneSimulator.getStackByName(inputData.opt.target) : remote_proxy_stack;
+
+    // 获取本地数据
+    let result = await source.util().get_device_static_info({common: {flags: 0}})
+    let zone_info = await result.unwrap()
+    let sourcePeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.source): zone_info.info.owner_id!.to_base_58();
+
+    let result2 = await target.util().get_device_static_info({common: {flags: 0}})
+    let zone_info2 = await result2.unwrap()       
+    let targetPeerId = stack_type === StackType.Sim ? ZoneSimulator.getPeerIdByName(inputData.opt.target) : zone_info2.info.owner_id!.to_base_58();
+
+
     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
     const dec_id = TEST_DEC_ID;
     console.log(`new app id: ${dec_id}`);

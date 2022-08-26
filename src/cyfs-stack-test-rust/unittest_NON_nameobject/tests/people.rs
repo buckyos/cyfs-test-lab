@@ -3,6 +3,7 @@ use cyfs_base::*;
 use std::path::Path;
 use std::fs::{create_dir};
 
+// cargo test -- --nocapture
 #[async_std::test]
 async fn people() {
     let private_key = PrivateKey::generate_rsa(1024).unwrap();

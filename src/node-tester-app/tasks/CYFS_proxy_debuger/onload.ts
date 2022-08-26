@@ -4,12 +4,6 @@ import { StackProxyClient } from "../../taskTools/cyfs_stack_tunnel/stackTool"
 import * as cyfs from "../../taskTools/cyfs_stack_tunnel/cyfs_node"
 export async function TaskMain(_interface: TaskClientInterface) {
 
-    // cyfs.clog.enable_file_log({
-    //     name: "unittest_stack_interface",
-    //     dir: cyfs.get_app_log_dir("unittest_stack_interface"),
-    //     file_max_size: 1024 * 1024 * 10,
-    //     file_max_count: 10,
-    // });
 
     let proxy = new StackProxyClient({
         _interface,

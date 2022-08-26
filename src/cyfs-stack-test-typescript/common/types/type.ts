@@ -70,8 +70,7 @@ export type ResultInfo = {
 
 export enum StackType {
     Sim       = "sim",
-    Runtime   = "runtime",
-    Ood       = "ood",
+    Real      = "real",
 }
 
 export type testSuiteJson = {
