@@ -1,24 +1,24 @@
 {
   "stats": {
     "suites": 3,
-    "tests": 0,
+    "tests": 1,
     "passes": 0,
     "pending": 0,
-    "failures": 0,
-    "start": "2022-08-26T11:44:03.792Z",
-    "end": "2022-08-26T11:44:18.078Z",
-    "duration": 14286,
+    "failures": 1,
+    "start": "2022-08-26T11:50:39.697Z",
+    "end": "2022-08-26T11:51:05.536Z",
+    "duration": 25839,
     "testsRegistered": 1,
     "passPercent": 0,
     "pendingPercent": 0,
-    "other": 2,
+    "other": 1,
     "hasOther": true,
-    "skipped": 1,
-    "hasSkipped": true
+    "skipped": 0,
+    "hasSkipped": false
   },
   "results": [
     {
-      "uuid": "75e7066c-ba2c-4578-879f-8048230c87a1",
+      "uuid": "2954f48e-c0e4-477e-b8af-0d0826f7cb05",
       "title": "",
       "fullFile": "",
       "file": "",
@@ -27,7 +27,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "59f88d82-675c-4f00-a38c-4c71b9d6df11",
+          "uuid": "6765402f-92e6-471d-a542-c2ffd2dda2f9",
           "title": "cyfs协议栈测试",
           "fullFile": "E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_stack_NDN_Chunk\\testcase_runner.ts",
           "file": "\\testcase_runner.ts",
@@ -36,7 +36,7 @@
           "tests": [],
           "suites": [
             {
-              "uuid": "2f40f4f9-6162-4a43-8020-92237cad981d",
+              "uuid": "0afdc90d-abf9-4a1d-b572-0a1d3bfc040f",
               "title": "NDN_chunk",
               "fullFile": "E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_stack_NDN_Chunk\\testcase_runner.ts",
               "file": "\\testcase_runner.ts",
@@ -45,30 +45,26 @@
               "tests": [],
               "suites": [
                 {
-                  "uuid": "6b897252-bb34-4bfd-8982-dc139f4a16db",
+                  "uuid": "8f5c4070-b633-4927-a3da-d6fce1179f6b",
                   "title": "NDN_chunk_second_003:#chunk 大小设置为 4 Mb",
                   "fullFile": "E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_stack_NDN_Chunk\\testcase_runner.ts",
                   "file": "\\testcase_runner.ts",
                   "beforeHooks": [
                     {
-                      "title": "\"before all\" hook for \"#chunk 大小设置为 4 Mb\"",
-                      "fullTitle": "cyfs协议栈测试 NDN_chunk NDN_chunk_second_003:#chunk 大小设置为 4 Mb \"before all\" hook for \"#chunk 大小设置为 4 Mb\"",
+                      "title": "\"before all\" hook in \"NDN_chunk_second_003:#chunk 大小设置为 4 Mb\"",
+                      "fullTitle": "cyfs协议栈测试 NDN_chunk NDN_chunk_second_003:#chunk 大小设置为 4 Mb \"before all\" hook in \"NDN_chunk_second_003:#chunk 大小设置为 4 Mb\"",
                       "timedOut": false,
-                      "duration": 10125,
-                      "state": "failed",
+                      "duration": 21348,
+                      "state": null,
                       "speed": null,
                       "pass": false,
-                      "fail": true,
+                      "fail": false,
                       "pending": false,
                       "context": null,
                       "code": "//获取测试数据\nlet tmg = new testcaseInfo_1.TestcaseManger();\nawait tmg.initMongo();\nlet res = await tmg.findRecordById(data_1.datas.testcaseList[j].id);\nassert.ok(!res.err, res.log);\nlet testcaseInfo = res.datas[0];\ninputData = JSON.parse(testcaseInfo.input_data.toString());\nexpectData = JSON.parse(testcaseInfo.expect_result.toString());\nif (data_1.datas.stack_type == common_1.StackType.Sim) {\n    //初始化ACL配置文件\n    await common_2.ZoneSimulator.getPeerId();\n    await common_2.ZoneSimulator.removeAllConfig();\n    for (let j in inputData.stackCfgList) {\n        await aclManager.getdevice(inputData.stackCfgList[j].deviceName).initAcl({ configFile: path.join(__dirname, \"acl\", inputData.stackCfgList[j].ACL.configFile) });\n    }\n    //启动模拟器连接协议栈\n    await common_2.ZoneSimulator.init();\n}\nelse {\n    // runtime/ood, 开两个端口, 1对1转发到目标协议栈\n    let proxy_target_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(20002, 20001).unwrap());\n    //let stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(19999,20000).unwrap())\n    let resp = await proxy_target_stack.wait_online(cyfs.Some(cyfs.JSBI.BigInt(10000000)));\n    console.info(JSON.stringify(resp.unwrap()));\n    await cyfs.sleep(5000);\n    let res = await proxy_target_stack.util().get_zone({ common: { flags: 0 } });\n    console.info(JSON.stringify(res.unwrap()));\n    await cyfs.sleep(1000);\n    // local stack \n    let local_ood_stack = cyfs.SharedCyfsStack.open_default();\n    let resp2 = await local_ood_stack.wait_online(cyfs.Some(cyfs.JSBI.BigInt(10000000)));\n    console.info(JSON.stringify(resp.unwrap()));\n    await cyfs.sleep(5000);\n    remote_proxy_stack = proxy_target_stack;\n    local_stack = local_ood_stack;\n}",
-                      "err": {
-                        "message": "Error: Tried to unwrap Error: err: (3, stack online timeout, undefined)\n    at SharedCyfsStack.wait_online (webpack://cyfs-sdk/./src/sdk/cyfs-lib/stack/stack.ts:282:28)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async Context.<anonymous> (E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_stack_NDN_Chunk\\testcase_runner.ts:58:36)",
-                        "estack": "Error: Tried to unwrap Error: err: (3, stack online timeout, undefined)\n    at SharedCyfsStack.wait_online (webpack://cyfs-sdk/./src/sdk/cyfs-lib/stack/stack.ts:282:28)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async Context.<anonymous> (testcase_runner.ts:58:36)\n    at ErrImpl.unwrap (E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\node_modules\\src\\result.ts:140:15)\n    at Context.<anonymous> (testcase_runner.ts:59:58)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)",
-                        "diff": null
-                      },
-                      "uuid": "fcbbbf23-f7e4-4913-8057-cdbddced0cab",
-                      "parentUUID": "6b897252-bb34-4bfd-8982-dc139f4a16db",
+                      "err": {},
+                      "uuid": "e6015bf4-94ba-4660-9086-4a3e0c3f86a8",
+                      "parentUUID": "8f5c4070-b633-4927-a3da-d6fce1179f6b",
                       "isHook": true,
                       "skipped": false
                     }
@@ -78,7 +74,7 @@
                       "title": "\"after all\" hook for \"#chunk 大小设置为 4 Mb\"",
                       "fullTitle": "cyfs协议栈测试 NDN_chunk NDN_chunk_second_003:#chunk 大小设置为 4 Mb \"after all\" hook for \"#chunk 大小设置为 4 Mb\"",
                       "timedOut": false,
-                      "duration": 4153,
+                      "duration": 4195,
                       "state": "failed",
                       "speed": null,
                       "pass": false,
@@ -91,8 +87,8 @@
                         "estack": "TypeError [ERR_INVALID_ARG_TYPE]: The \"path\" argument must be of type string. Received undefined\n    at new NodeError (node:internal/errors:372:5)\n    at validateString (node:internal/validators:120:11)\n    at Object.join (node:path:429:7)\n    at Acl.removeAclToml (E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\common\\utils\\acl_manager.ts:19:32)\n    at AclManager.removeAllAcl (E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\common\\utils\\acl_manager.ts:95:39)\n    at async Context.<anonymous> (testcase_runner.ts:83:21)",
                         "diff": null
                       },
-                      "uuid": "696b0d8a-6677-4c15-bcb3-87e6b6ef07b2",
-                      "parentUUID": "6b897252-bb34-4bfd-8982-dc139f4a16db",
+                      "uuid": "fc2c550f-dacf-48cc-a39b-609835592add",
+                      "parentUUID": "8f5c4070-b633-4927-a3da-d6fce1179f6b",
                       "isHook": true,
                       "skipped": false
                     }
@@ -102,29 +98,33 @@
                       "title": "#chunk 大小设置为 4 Mb",
                       "fullTitle": "cyfs协议栈测试 NDN_chunk NDN_chunk_second_003:#chunk 大小设置为 4 Mb #chunk 大小设置为 4 Mb",
                       "timedOut": false,
-                      "duration": 0,
-                      "state": null,
+                      "duration": 284,
+                      "state": "failed",
                       "speed": null,
                       "pass": false,
-                      "fail": false,
+                      "fail": true,
                       "pending": false,
                       "context": null,
                       "code": "// 异常用例阻塞暂时跳过\nconsole.info(`开始执行测试用例：${data_1.datas.testcaseList[j].name}`);\nif (inputData.skip) {\n    assert(false, \"测试用例异常，暂时标记不执行\");\n}\n//运行超时处理机制\nlet run = true;\nlet timeout = 120 * 1000;\nif (inputData.timeout) {\n    timeout = inputData.timeout;\n}\nsetTimeout(() => {\n    if (run) {\n        console.error(false, \"测试用例运行超时\");\n    }\n}, timeout);\n//运行测试用例\nswitch (inputData.opt.optType) {\n    case \"put_data_chunk\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await put_data_chunk(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"get_data_chunk\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await get_data_chunk(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"get_data_chunk_second\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await get_data_chunk_second(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"trans_file\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await trans_file(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"trans_file_second\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await trans_file_second(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"trans_dir\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await trans_dir(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"put_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await put_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"get_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await get_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"select_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await select_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"delect_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await delect_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"post_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await post_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n    case \"sign_verify_object\": {\n        await initHandlerList(inputData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        await sign_verify_object(inputData, expectData, data_1.datas.stack_type, remote_proxy_stack, local_stack);\n        break;\n    }\n}\nrun = false;",
-                      "err": {},
-                      "uuid": "57ecaaea-8b6b-4172-9b24-8757824d7833",
-                      "parentUUID": "6b897252-bb34-4bfd-8982-dc139f4a16db",
+                      "err": {
+                        "message": "TypeError: Cannot read properties of undefined (reading 'desc')",
+                        "estack": "TypeError: Cannot read properties of undefined (reading 'desc')\n    at Function.transChunksByGetData (E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\common\\utils\\ndn.ts:17:42)\n    at get_data_chunk_second (testcase_runner.ts:250:36)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async Context.<anonymous> (testcase_runner.ts:116:29)",
+                        "diff": null
+                      },
+                      "uuid": "c46c58e1-ae27-4c30-b529-5d6f04ed8c68",
+                      "parentUUID": "8f5c4070-b633-4927-a3da-d6fce1179f6b",
                       "isHook": false,
-                      "skipped": true
+                      "skipped": false
                     }
                   ],
                   "suites": [],
                   "passes": [],
-                  "failures": [],
-                  "pending": [],
-                  "skipped": [
-                    "57ecaaea-8b6b-4172-9b24-8757824d7833"
+                  "failures": [
+                    "c46c58e1-ae27-4c30-b529-5d6f04ed8c68"
                   ],
-                  "duration": 0,
+                  "pending": [],
+                  "skipped": [],
+                  "duration": 284,
                   "root": false,
                   "rootEmpty": false,
                   "_timeout": 0
