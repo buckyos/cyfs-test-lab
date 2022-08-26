@@ -4,7 +4,8 @@ resolver = "2"
 members=[
     "bdt-tools",
     "cyfs-tools",
-    "test-simulator"
+    "test-simulator",
+    "cyfs-stack-test-rust/unittest_NON_nameobject",
 ]
 
 [profile.release]

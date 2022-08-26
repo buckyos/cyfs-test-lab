@@ -1,2 +1,3 @@
 /deploy/
 node_modules/
+src/cyfs-stack-test-rust/unittest_NON_nameobject/target/

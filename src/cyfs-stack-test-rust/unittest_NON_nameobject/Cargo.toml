@@ -1,0 +1,11 @@
+[package]
+name = "unittest_NON_nameobject"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-std = { version = '1.11', features = ['unstable', 'attributes'] }
+async-trait = '0.1.53'
+cyfs-base = '0.5'
