@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import { StackPeerProxy, StackPeer, StackError } from './stackTool'
 import * as WSParams from "./ws_params"
 import { request, ContentType } from "./request"
-import { cyfs_log_config } from '../../service/always_run_nft/cyfs';
 
 const timeout = 300 * 1000;
 

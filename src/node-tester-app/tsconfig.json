@@ -9,7 +9,8 @@
     "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
   },
   "exclude": [
-    "deploy"
+    "deploy",
+    "service/always_run_nft"
   ],
   "include": [
     "./**/*.ts",

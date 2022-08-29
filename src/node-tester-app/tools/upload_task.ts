@@ -2,7 +2,6 @@ import * as http from "http";
 import * as fs from 'fs';
 import * as path from 'path';
 import {upload,request,ContentType} from './request';
-import { Action } from "../service/always_run_nft/cyfs";
 import * as SysProcess from 'process';
 import { Command } from "commander";
 
