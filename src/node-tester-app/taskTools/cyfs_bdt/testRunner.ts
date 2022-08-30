@@ -1,5 +1,5 @@
 import {ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode, sleep} from '../../base';
-import {AgentClient,AgentManager,BdtPeerClient,BdtConnection} from './bdtTool';
+import {AgentManager} from './agentManager';
 import {BDTERROR,ActionType,Agent,Testcase,Task,Action,ActionAbstract} from './type';
 import {request,ContentType} from "./request";
 import * as config from "./config"
@@ -22,6 +22,7 @@ export class TestRunner{
     private success : number;
     private failed : number;
     private taskList : Array<Task>;
+    private cacheTask? : Task;
     constructor(_interface:TaskClientInterface,is_perf:boolean=false){
         this.m_interface = _interface;
         this.logger = this.m_interface.getLogger();
@@ -39,14 +40,43 @@ export class TestRunner{
         this.state = "run";
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
         this.begin_time = Date.now();
-        this.Testcase!.MaxTaskNum = config.MaxTaskNum;
         this.Testcase!.errorList = [];
     }
 
+    async createPrevTask(task:Task):Promise<{err:number,log:string}>{
+        if(this.cacheTask){
+            this.logger.error(`createPrevTask failed,task already exsit`)
+            return {err:BDTERROR.optExpectError,log:"createPrevTask failed,task already exsit"}
+        }
+        this.cacheTask = task; 
+        return {err:BDTERROR.success,log:"createPrevTasksuccess"}
+    }
+    async prevTaskAddAction(action:ActionAbstract):Promise<{err:number,log:string}>{
+        if(!this.cacheTask){
+            this.logger.error(`prevTaskAddAction failed,task not exsit`)
+            return {err:BDTERROR.optExpectError,log:"prevTaskAddAction failed,task not exsit"}
+        }
+        this.cacheTask!.action.push(action); 
+        return {err:BDTERROR.success,log:"prevTaskAddAction add success"}
+    }
+    async prevTaskRun():Promise<{err:number,log:string}>{
+        if(!this.cacheTask){
+            this.logger.error(`prevTaskRun failed,task not exsit`)
+            return {err:BDTERROR.optExpectError,log:"prevTaskRun failed,task not exsit"}
+        }
+        let  task = this.cacheTask!;
+        this.cacheTask = undefined;
+        if(this.total>config.MaxTaskNum){
+            return {err:BDTERROR.optExpectError,log:"already run MaxTaskNum"}
+        }
+        await this.addTask(task);
+        
+        return {err:BDTERROR.success,log:"prevTaskRun begin run"}
+    }
     // 运行测试任务
     async runTask(task:Task):Promise<{err:number,log:string}>{
         // 判断机器状态是否正常，机器不正常
-        let check = this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
+        let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
         task.state = "run" ;
         for(let i in task.action){
             await task.action[i].init(this.m_interface,task);
@@ -96,13 +126,13 @@ export class TestRunner{
     }
     async addQueue(fun:Promise<{err:number,log:string}>){
         this.taskRunner.push(fun);
-        this.runQueue();
+        await this.runQueue();
     }
     async runQueue(){
-        while (this.activeTaskNum < config.MaxConcurrency && this.taskRunner.length > 0) {
+        if(this.activeTaskNum < config.MaxConcurrency && this.taskRunner.length > 0) {
             const task = this.taskRunner.shift();
             this.activeTaskNum++;
-            this.executeQueue(task!);    
+            await this.executeQueue(task!);    
         }
     }
     // 退出测试用例
@@ -116,7 +146,7 @@ export class TestRunner{
         this.m_interface.exit(err,log);
     }
 
-    async waitRunning(){
+    async waitFinished(){
         //1.检查次数
         let check = 5;
         while(true){

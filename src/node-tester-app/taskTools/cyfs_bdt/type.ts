@@ -166,8 +166,6 @@ export type Task ={
     testcaseId : string, //用例ID
     remark:string, //用例操作
     environment : string; //环境
-    taskMult:number, //任务的并发数量限制
-    MaxTaskNum?:number, // 运行最大任务数
     success?:number,
     failed?:number,
     result?:number,

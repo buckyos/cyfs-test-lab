@@ -1,195 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
 import {EventEmitter} from 'events';
-import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
-import { BdtPeer } from '../../service/cyfs_bdt/peer';
-
-
-export class AgentClient {
-    private tags : string; // 机器名称 tags
-    private agentInfo : Agent;
-    private ip? : Array<string>;// ip信息
-    private m_agentid? : string; //节点对应的自动化测试框架节点
-    public bdtPeerMap : Map<string,BdtPeerClient>
-    private agentMult : number;
-    private logUrl? : string; //日志下载
-    private m_interface: TaskClientInterface;
-    private logger : Logger;
-    private ipInfo?:{IPv4:Array<string>,IPv6:Array<string>}
-    
-    constructor(_interface: TaskClientInterface,agent:Agent){
-        this.m_interface = _interface;
-        this.logger = _interface.getLogger();
-        this.tags = agent.tags[0];
-        this.agentInfo = agent;
-        this.bdtPeerMap = new Map();
-        this.agentMult = 0;
-    }
-    async init():Promise<{err:ErrorCode,log:string}> {
-        let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
-        if (agent.err || agent.agentid == undefined ) {
-            return {err:ErrorCode.netError,log:`${this.tags} connect bdt agent failed`}
-        }
-        this.m_agentid = agent.agentid!;
-        //启动测试服务
-        let err = await this.m_interface.startService([], this.m_agentid!, 10*1000);
-        if (err) {
-            return {err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}
-        }
-        await sleep(2000);
-        // let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-        //     name : "getIPInfo"
-        // }, this.m_agentid!, 10*1000);
-        // this.logger.info(`${this.tags} get ipinfo = ${JSON.stringify(IPInfo)}`)
-        // if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
-        //     return {err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}
-        // }
-        // this.ipInfo = IPInfo.value.ipInfo;
-        return {err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}
-    }
-    async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "uploadLog",
-            logName : `${testcaseId}_${this.tags}.zip`
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} uploadLog = ${JSON.stringify(result)}`)
-        if(result.value.upload.err ){  
-            return {err:ErrorCode.exception,log:`${this.tags} uploadLog failed`}
-        }
-        return {err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}
-    }
-    
-    async startPeerClient(config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
-        let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
-        let bdtClient = new BdtPeerClient(this.m_interface,this.m_agentid!,this.tags,peer)
-        let result = await bdtClient.init();
-        if(result.err){
-            return result
-        }
-        this.agentMult = this.agentMult + 1;
-        this.logger.info(`${this.tags} add a new bdt client, agentMult = ${this.agentMult}`)
-        this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
-        return {err:result.err,log:result.log,bdtClient}
-    }
-    async getBdtPeerClient(index:string):Promise<{err:ErrorCode,log?:string,bdtClient?:BdtPeerClient}>{
-        if(!this.bdtPeerMap.has(index)){
-            return {err:BDTERROR.AgentError,log:`${this.tags} ${index} not exsit`}
-        }
-        let bdtClient = this.bdtPeerMap.get(index)!;
-        if(bdtClient.state){
-            return {err:BDTERROR.AgentError,log:`${this.tags} ${index} state error,state = ${bdtClient.state}`}
-        }
-        return {err:BDTERROR.success,log:`${this.tags} ${index} get success`,bdtClient}
-    }
-    
-
-}
-
-export class AgentManager {
-    static manager?: AgentManager;
-    private m_interface: TaskClientInterface;
-    public agentMap : Map<string,AgentClient>
-    constructor(_interface: TaskClientInterface){
-        this.m_interface = _interface;
-        this.agentMap = new Map()
-    }
-    static createInstance(_interface:TaskClientInterface): AgentManager {
-        if (!AgentManager.manager) {
-            AgentManager.manager = new AgentManager(_interface);
-        }
-        return AgentManager.manager;
-    }
-
-    async initAgentList(agents:Array<Agent>){
-        let initList : Array<any> = []
-        for(let i in agents){
-            initList.push(new Promise<{result:{err:ErrorCode,log:string},client:AgentClient,name:string}>(async(V)=>{
-                let client = new AgentClient(this.m_interface,agents[i]);
-                let result = await client.init();
-                V({result:result,client,name:agents[i].tags[0]});
-            }))
-        }
-        for(let i in initList){
-            let res = await initList[i];
-            if(res.result!.err){
-                this.m_interface.getLogger().error(res.result!.log);
-            }else{
-                this.m_interface.getLogger().info(`### init agent ${res.name} success`)
-                this.agentMap.set(res.name,res.client);
-            }
-        }
-    }
-    async checkBdtPeerClient(name:string):Promise<{err:number,log?:string}> {
-        let agentName = name.split("_")[0];
-        let BDTIndex = name.split("_")[1];
-        
-        if(!this.agentMap.has(agentName) || !this.agentMap.get(agentName)!.bdtPeerMap.has(BDTIndex)){
-            return {err:BDTERROR.AgentError,log:`${name} not exsit`}
-        }
-        return {err:BDTERROR.success,log:`check BdtPeerClient success`};
-    }
-    async getBdtPeerClient(name:string):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}> {
-        let agentName = name.split("$")[0];
-        let BDTIndex = name.split("$")[1];
-        if(!this.agentMap.has(agentName)){
-            this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
-            return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
-        }
-        return this.agentMap.get(agentName)!.getBdtPeerClient(BDTIndex);
-    }
-    async checkBdtPeerClientList(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
-        let result = await this.checkBdtPeerClient(LN);
-        if(result.err){
-            return result
-        }
-        if(RN){
-            result = await this.checkBdtPeerClient(RN);
-            if(result.err){
-                return result
-            }
-        }
-        if(Users){
-            for(let i in Users){
-                result = await this.checkBdtPeerClient(Users[i]);
-                if(result.err){
-                    return result
-                }
-            }    
-        }
-        return {err:BDTERROR.AgentError};
-    }
-    
-    async createBdtPeerClient(agentName:string,config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
-        if(!this.agentMap.has(agentName)){
-            return {err:BDTERROR.AgentError,log:`${agentName} not exsit`}
-        }
-        return this.agentMap.get(agentName)!.startPeerClient(config)
-
-    }
-    async allAgentStartBdtPeer(config:BdtPeerClientConfig,num:number=1){
-        let taskList = []
-        for(let agent of this.agentMap.values()){
-            for(let j=0;j<num;j++){
-                taskList.push(agent.startPeerClient(config))
-            }
-        } 
-        for(let i in taskList){
-            await taskList[i]
-        }
-    } 
-    async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log:string}>{
-        let taskList = []
-        for(let agent of this.agentMap.values()){
-            taskList.push(agent.uploadLog(testcaseId));
-        }
-        for(let i in taskList){
-            await taskList[i]
-        }
-        return {err:BDTERROR.success,log:`save test log to server success`}
-    } 
-}
-
-
+import {UtilClient} from "./utilClient"
 export class BdtPeerClient extends EventEmitter{
     public peerName?: string; //  
     private m_agentid: string; 
@@ -201,15 +13,12 @@ export class BdtPeerClient extends EventEmitter{
     public FristQA_answer?:string;
     public conn_tag?:string;
     private m_timeout : number;
-    private m_establishCookie?: number;
-    private m_sendedCookie?: number;
-    private m_recvedCookie?: number;
-    private m_connectionCookie?: number;
     private m_unliveCookie?: number;
     private m_acceptCookie?: number;
     public cache_peer_info: Peer;
     public sn_resp_eps? : string;
     public tags:string;
+    public util_client? :UtilClient;
     public state : number;
     public NAT? : number;
     on(event: 'unlive', listener: () => void): this;
@@ -232,6 +41,7 @@ export class BdtPeerClient extends EventEmitter{
         this.m_conns = new Map;
         this.state = 0;
         this.m_timeout = 60*1000;
+        
     }
 
     
@@ -246,6 +56,7 @@ export class BdtPeerClient extends EventEmitter{
         }
         this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
         this.peerName = start_tool.value.peerName;
+        this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
         await sleep(2000)
         // 2. start bdt stack
         let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
@@ -456,10 +267,10 @@ export class BdtPeerClient extends EventEmitter{
     }
     async getCachePath():Promise<{err:ErrorCode,cache_path? : {file_upload:string,file_download:string,NamedObject:string}}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "md5",
+            name : "getCachePath",
             peerName: this.peerName,
         }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} md5File = ${JSON.stringify(result)}`)
+        this.logger.info(`${this.tags} getCachePath = ${JSON.stringify(result)}`)
         if(result.err ){  
             return {err:ErrorCode.exception}
         }
@@ -638,4 +449,3 @@ export class BdtConnection extends EventEmitter {
         
     }   
 }
-
