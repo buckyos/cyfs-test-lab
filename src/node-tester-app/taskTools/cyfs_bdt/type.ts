@@ -115,6 +115,7 @@ export type Action ={
        firstQA_answer? :string,
        accept_answer?:number, //是否接收FristQA answer 
        conn_tag?: string, //连接标记   
+       not_wait_upload_finished?:boolean,
        restart? : {
             ndn_event : string,
             ndn_event_target : string,
@@ -143,6 +144,7 @@ export type Action ={
     fileNum?:number, // 文件数量
     connect_time?: number, //连接时间
     send_time? : number, //传输时间
+    calculate_time? : number, //cyfs_base 计算生成对象时间
     set_time?:number, // 本地set 时间
     expect?:{err:number,log?:string}; //预期结果
     result?:{err:number,log:string}; //实际结果   

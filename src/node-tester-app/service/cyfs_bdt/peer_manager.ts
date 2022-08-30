@@ -257,6 +257,9 @@ export class UtilTool {
             case "uploadCacheFile":{
                 return await this.uploadCacheFile(command);
             };
+            case "getCachePath":{
+                return await this.getCachePath(command);
+            }
         }
         this.m_logger.info(`#### not found utilRequest req_path `)
         return {err:ErrorCode.notFound}
@@ -316,7 +319,20 @@ export class UtilTool {
             NamedObject:path.join(this.m_logger.dir(),`${peerName}_cache`,"NamedObject")
         }}
     }
-    async createDir(command:BdtLpcCommand,):Promise<BdtLpcResp>{
+    async getCachePath(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        if( !command.json.peerName){
+            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            return {err:ErrorCode.unknownCommand}
+        }
+        let peer = this._peerCachePath(command.json.peerName)
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                cache_path : peer.cache_path,
+            },
+            bytes : Buffer.from("")
+        }}
+    }
+    async createDir(command:BdtLpcCommand):Promise<BdtLpcResp>{
         if( !command.json.peerName|| !command.json.fileSize || !command.json.dirNumber || !command.json.fileNumber || !command.json.deep){
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
             return {err:ErrorCode.unknownCommand}
