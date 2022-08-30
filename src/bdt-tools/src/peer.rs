@@ -1104,28 +1104,45 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match ChunkId::calculate(c.content.as_slice()).await {
-                        Ok(chunk_id) => {
-                            let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
-                            let path = dir.join(chunk_id.to_string().as_str());
-                            CalculateChunkLpcCommandResp {
-                                seq, 
-                                result: 0 as u16,
-                                chunk_id,
-                                calculate_time:((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                    
+                    let mut ret = if c.path.as_path().exists() {
+                        let mut content =  File::open(c.path.as_path()).await.unwrap();
+                        let mut buf = vec![0u8; c.chunk_size];
+                        let len = content.read(&mut buf).await.unwrap();
+                        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                        let result =  match ChunkId::calculate(&buf).await {
+                            Ok(chunk_id) => {
+                                let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                                let path = dir.join(chunk_id.to_string().as_str());
+                                CalculateChunkLpcCommandResp {
+                                    seq, 
+                                    result: 0 as u16,
+                                    chunk_id,
+                                    calculate_time:((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                }
                             }
-                        }
-                        Err(e) => {
-                            log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
-                            CalculateChunkLpcCommandResp {
-                                seq, 
-                                result: e.code().as_u16(),
-                                chunk_id: Default::default(),
-                                calculate_time:0,
+                            Err(e) => {
+                                log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
+                                CalculateChunkLpcCommandResp {
+                                    seq, 
+                                    result: e.code().as_u16(),
+                                    chunk_id: Default::default(),
+                                    calculate_time:0,
+                                }
                             }
+                        };
+                        result
+                    }else{
+                        log::error!("set-chunk failed for path not exist");
+                        CalculateChunkLpcCommandResp {
+                            seq, 
+                            result: 1,
+                            chunk_id: Default::default(),
+                            calculate_time:0,
                         }
-                    }
+                    };
+                    ret
+                    
                 }
             };
 
@@ -1151,11 +1168,14 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    let mut content =  File::open(c.path.as_path()).await.unwrap();
+                    let mut buf = vec![0u8; c.chunk_size];
+                    let len = content.read(&mut buf).await.unwrap();
                     let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.clone().to_string().as_str());
                     let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(c.content), path.as_path()).await {
+                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(buf), path.as_path()).await {
                         Ok(_) => {
                             let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
                             SetChunkLpcCommandResp {
@@ -1910,11 +1930,12 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
+                    
                     let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let mut calculate_time : u32 = 0;
                     let ret = if c.path.as_path().exists() {
                         let chunkids = {
-                            let chunk_size: usize = c.chunk_size_mb * 1024 * 1024;
+                            let chunk_size: usize = c.chunk_size;
                             let mut chunkids = Vec::new();
                             let mut file =  File::open(c.path.as_path()).await.unwrap();
                             
@@ -2033,7 +2054,7 @@ impl Peer {
                     let mut set_time : u32 =0;
                     let ret = if c.path.as_path().exists() {
                         let chunkids = {
-                            let chunk_size: usize = c.chunk_size_mb * 1024 * 1024;
+                            let chunk_size: usize = c.chunk_size;
                             let mut chunkids = Vec::new();
                             let mut file =  File::open(c.path.as_path()).await.unwrap();
                             
@@ -2311,7 +2332,7 @@ impl Peer {
                                         //down_file_path.push(String::from(entry.path().as_os_str().to_str().expect(""))); 
                                         //单个文件chunk生成
                                         let chunkids = {
-                                            let chunk_size: usize = c.chunk_size_mb * 1024 * 1024;
+                                            let chunk_size: usize = c.chunk_size * 1024 * 1024;
                                             let mut chunkids = Vec::new();
                                             let mut file =  File::open(file_path.clone()).await.unwrap();
                                             loop {

@@ -790,14 +790,14 @@ impl TryFrom<RecvLpcCommandResp> for LpcCommand {
 
 pub struct SetChunkLpcCommandReq {
     pub seq: u32,
-    pub content: Vec<u8>,
+    pub path : PathBuf,
     pub chunk_id: ChunkId,
+    pub chunk_size : usize,
 }
 
 impl TryFrom<LpcCommand> for SetChunkLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
-        let buffer = value.as_buffer();
         let json = value.as_json_value();
         let chunk_id = match json.get("chunk_id") {
             Some(v) => match v {
@@ -815,10 +815,45 @@ impl TryFrom<LpcCommand> for SetChunkLpcCommandReq {
             },
             _ => return Err(BuckyError::new(BuckyErrorCode::NotFound, "chunk-id lost")),
         };
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
+                    BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
+                }),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        let chunk_size = match json.get("chunk_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => {
+                    match n.as_i64() {
+                        Some(i) => {
+                            Ok(i)
+                        },
+                        None => {
+                            Err(BuckyError::new(
+                                BuckyErrorCode::InvalidData,
+                                "chunk_size format err",
+                            ))
+                        }
+                    }
+                },
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "chunk_size format err",
+                )),
+            },
+            _ => Ok(10),
+        }?;
         Ok(Self {
             seq: value.seq(),
-            content: Vec::from(buffer),
+            path,
             chunk_id,
+            chunk_size : chunk_size as usize,
         })
     }
 }
@@ -845,18 +880,52 @@ impl TryFrom<SetChunkLpcCommandResp> for LpcCommand {
 }
 pub struct CalculateChunkLpcCommandReq {
     pub seq: u32,
-    pub content: Vec<u8>,
+    pub path : PathBuf,
+    pub chunk_size : usize,
 }
 
 impl TryFrom<LpcCommand> for CalculateChunkLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
-        let buffer = value.as_buffer();
         let json = value.as_json_value();
-
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
+                    BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
+                }),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        let chunk_size = match json.get("chunk_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => {
+                    match n.as_i64() {
+                        Some(i) => {
+                            Ok(i)
+                        },
+                        None => {
+                            Err(BuckyError::new(
+                                BuckyErrorCode::InvalidData,
+                                "chunk_size format err",
+                            ))
+                        }
+                    }
+                },
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "chunk_size format err",
+                )),
+            },
+            _ => Ok(10),
+        }?;
         Ok(Self {
             seq: value.seq(),
-            content: Vec::from(buffer),
+            path,
+            chunk_size : chunk_size as usize
         })
     }
 }
@@ -1450,7 +1519,7 @@ impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
 pub struct StartSendFileCommandReq {
     pub seq: u32,
     pub path: PathBuf,
-    pub chunk_size_mb: usize,
+    pub chunk_size: usize,
 }
 
 impl TryFrom<LpcCommand> for StartSendFileCommandReq {
@@ -1471,7 +1540,7 @@ impl TryFrom<LpcCommand> for StartSendFileCommandReq {
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
         }?;
 
-        let chunk_size_mb = match json.get("chunk_size_mb") {
+        let chunk_size = match json.get("chunk_size") {
             Some(v) => match v {
                 serde_json::Value::Number(n) => {
                     match n.as_i64() {
@@ -1481,14 +1550,14 @@ impl TryFrom<LpcCommand> for StartSendFileCommandReq {
                         None => {
                             Err(BuckyError::new(
                                 BuckyErrorCode::InvalidData,
-                                "chunk_size_mb format err",
+                                "chunk_size format err",
                             ))
                         }
                     }
                 },
                 _ => Err(BuckyError::new(
                     BuckyErrorCode::InvalidData,
-                    "chunk_size_mb format err",
+                    "chunk_size format err",
                 )),
             },
             _ => Ok(10),
@@ -1497,7 +1566,7 @@ impl TryFrom<LpcCommand> for StartSendFileCommandReq {
         Ok(Self {
             seq: value.seq(),
             path,
-            chunk_size_mb: chunk_size_mb as usize,
+            chunk_size: chunk_size as usize,
         })
     }
 }
@@ -1541,7 +1610,7 @@ impl TryFrom<StartSendFileCommandResp> for LpcCommand {
 pub struct CalculateFileCommandReq {
     pub seq: u32,
     pub path: PathBuf,
-    pub chunk_size_mb: usize,
+    pub chunk_size: usize,
 }
 
 impl TryFrom<LpcCommand> for CalculateFileCommandReq {
@@ -1562,7 +1631,7 @@ impl TryFrom<LpcCommand> for CalculateFileCommandReq {
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
         }?;
 
-        let chunk_size_mb = match json.get("chunk_size_mb") {
+        let chunk_size = match json.get("chunk_size") {
             Some(v) => match v {
                 serde_json::Value::Number(n) => {
                     match n.as_i64() {
@@ -1572,14 +1641,14 @@ impl TryFrom<LpcCommand> for CalculateFileCommandReq {
                         None => {
                             Err(BuckyError::new(
                                 BuckyErrorCode::InvalidData,
-                                "chunk_size_mb format err",
+                                "chunk_size format err",
                             ))
                         }
                     }
                 },
                 _ => Err(BuckyError::new(
                     BuckyErrorCode::InvalidData,
-                    "chunk_size_mb format err",
+                    "chunk_size format err",
                 )),
             },
             _ => Ok(10),
@@ -1588,7 +1657,7 @@ impl TryFrom<LpcCommand> for CalculateFileCommandReq {
         Ok(Self {
             seq: value.seq(),
             path,
-            chunk_size_mb: chunk_size_mb as usize,
+            chunk_size: chunk_size as usize,
         })
     }
 }
@@ -1607,7 +1676,7 @@ impl TryFrom<CalculateFileCommandResp> for LpcCommand {
                 let json = serde_json::json!({
                     "name": "start-send-file-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
-                    "session": session.to_string(),
+                    "ObjectId": session.to_string(),
                     "calculate_time" : value.calculate_time,
                 });
                 let buf_len = file.raw_measure(&None)?;
@@ -1679,7 +1748,7 @@ impl TryFrom<SetFileCommandResp> for LpcCommand {
                 let json = serde_json::json!({
                     "name": "start-send-file-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
-                    "session": session.to_string(),
+                    "ObjectId": session.to_string(),
                     "set_time" : value.set_time,
                 });
                 let buf_len = file.raw_measure(&None)?;
@@ -1848,9 +1917,11 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                 "name": "download-file-state-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished(_) => String::from("Ready"),
-                    TaskControlState::Paused => String::from("Pending"),
+                    TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
+                    TaskControlState::Finished(speed) => format!("Finished({})",speed),
+                    TaskControlState::Paused => String::from("Paused"),
+                    TaskControlState::Canceled => String::from("Canceled"),
+                    TaskControlState::Err(err) => format!("Err({})",err),
                     _ => String::from("unkown"),
                 }
             }),
@@ -2042,7 +2113,7 @@ pub struct StartSendDirCommandReq {
     pub seq: u32,
     pub path: PathBuf,
     pub dir_object_path : PathBuf,
-    pub chunk_size_mb: usize,
+    pub chunk_size: usize,
 }
 
 impl TryFrom<LpcCommand> for StartSendDirCommandReq {
@@ -2074,7 +2145,7 @@ impl TryFrom<LpcCommand> for StartSendDirCommandReq {
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "dir_object_path lost")),
         }?;
 
-        let chunk_size_mb = match json.get("chunk_size_mb") {
+        let chunk_size = match json.get("chunk_size") {
             Some(v) => match v {
                 serde_json::Value::Number(n) => {
                     match n.as_i64() {
@@ -2084,14 +2155,14 @@ impl TryFrom<LpcCommand> for StartSendDirCommandReq {
                         None => {
                             Err(BuckyError::new(
                                 BuckyErrorCode::InvalidData,
-                                "chunk_size_mb format err",
+                                "chunk_size format err",
                             ))
                         }
                     }
                 },
                 _ => Err(BuckyError::new(
                     BuckyErrorCode::InvalidData,
-                    "chunk_size_mb format err",
+                    "chunk_size format err",
                 )),
             },
             _ => Ok(10),
@@ -2101,7 +2172,7 @@ impl TryFrom<LpcCommand> for StartSendDirCommandReq {
             seq: value.seq(),
             path,
             dir_object_path,
-            chunk_size_mb: chunk_size_mb as usize,
+            chunk_size: chunk_size as usize,
         })
     }
 }
