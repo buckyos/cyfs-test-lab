@@ -12,6 +12,7 @@ NameObject  测试用例设计说明
 二、用例场景
 --------
 ### 1、基础对象
+输出路径：src\cyfs-stack-test-typescript\TestSuite\unittest_NON_nameobject\test-tool\
 * UnionAccount （filename: test_unionAccount_run.ts）
     * 正常传入参数创建unionaccount对象-编解码
       ```
@@ -191,23 +192,33 @@ NameObject  测试用例设计说明
     预期结果：
       1、比较ts解码后和rust解码后的属性值一致
 * People
-  * Ts编解码：有效传入owner,ood_list,public,area,name,icon参数
+  ```
+  统一编码Ts输出文件名见用例步骤：test_people_run*.desc
+  字段基准输入值设置
+  owner: cyfs.Some(cyfs.ObjectId.from_str("5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC").unwrap()),
+  ood_list: [cyfs.DeviceId.from_base_58("5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ").unwrap()], 
+  public_key: cyfs.PrivateKey.generate_rsa(2048).unwrap().public(), 
+  area: cyfs.Some(new cyfs.Area(41, 53, 669, 255)), 
+  name?: "我们在测试people基础对象", 
+  icon?: cyfs.FileId.from_base_58("7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu").unwrap()
+  ```
+  * Ts编解码：主流-正常传入基准参数有效数据
     ```
     前置条件：
     1、准备好传参数据和传参对象类型无误
     操作步骤：
-    1、正常传入必选有效参数创建people对象
-    2、对创建返回的对象进行unit8array类型转换
-    3、对创建对象进行解码并获取对象属性值
+    1、正常传入owner,ood_list,public_key,area,name,icon创建people对象
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run.desc文件
+    3、对创建对象进行解码并获取people_id、owner、icon、name、ood_list属性值
     预期结果：
-    1、编码前和解码后owner、peopleid、icon属性值一致   
-  * Ts编解码：有效传入多个DeviceId组成的ood_list参数
+    1、编码前和解码后属性值一致   
+  * Ts编解码：有效传入多个DeviceId组成的ood_list数据
     ```
     前置条件：
     1、准备好传参数据oodlist含多个deviceid元素和传参对象类型无误
     操作步骤：
-    1、正常传入必选和oodlist参数创建people对象
-    2、对创建返回的对象进行unit8array类型转换
+    1、正常传入必选和含多个deviceid的oodlist参数创建people对象
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run01.desc文件
     3、对创建对象进行解码并获取oodlist对象属性值
     预期结果：
     1、编码前和解码后oodlist属性值一致  
@@ -217,7 +228,7 @@ NameObject  测试用例设计说明
     1、准备好传参数据空数组oodlist其他传参对象类型无误
     操作步骤：
     1、正常传入必选和空oodlist参数创建people对象
-    2、对创建返回的对象进行unit8array类型转换
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run02.desc文件
     3、对创建对象进行解码并获取oodlist对象属性值
     预期结果：
     1、编码前和解码后oodlist属性值也为空
@@ -227,61 +238,50 @@ NameObject  测试用例设计说明
     1、准备好空值的owner，name参数和传参对象类型无误
     操作步骤：
     1、正常传入必选和空值参数创建people对象
-    2、对创建返回的对象进行unit8array类型转换
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run03.desc文件
     3、对创建对象进行解码并获取owner、name对象属性值
     预期结果：
     1、编码前和解码后属性值一致 
-  * Ts编解码：有效不传入name,icon参数
+  * Ts编解码：不传入name,icon参数
     ```
     前置条件：
     1、准备有效传参数据和传参对象类型无误
     操作步骤：
     1、只传必选参数创建people对象
-    2、对创建返回的对象进行unit8array类型转换
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run04.desc文件
     3、对创建对象进行解码并获取属性值
     预期结果：
     1、编码前和解码后属性值一致
-  * Ts编解码：有效调用set_name()方法，修改name属性
+  * Ts编解码：设置ood模式为主备ActiveStandby
     ```
     前置条件：
     1、准备有效传参数据和传参对象类型无误
     操作步骤：
     1、传入必选参数创建people对象
-    2、调用set_name方法修改name属性
-    2、对修改后的对象进行unit8array类型转换
-    3、对修改后对象进行解码并获取属性值
+    2、调用set_ood_work_mode方法设置ood模式为ActiveStandby
+    2、对创建返回的函数对象通过to_vec方法转换保存到test_people_run05.desc文件
+    4、对修改后对象进行解码并获取ood模式属性值
     预期结果：
     1、修改后和解码后属性值一致
-  * Ts编解码：有效调用set_icon()方法，修改icon属性  
+  
+  * 从Rust对ts编码的对象进行解码
     ```
     前置条件：
-    1、准备有效传参数据和传参对象类型无误
+      1、准备好ts编码对象输出文件
     操作步骤：
-    1、传入必选参数创建people对象
-    2、调用set_icon方法修改icon属性
-    3、对修改后的对象进行unit8array类型转换
-    4、对修改后对象进行解码并获取属性值
-    预期结果：
-    1、修改后和解码后属性值一致
-  * 使用Rust工具对ts编码对象进行解码
-    ```
-    前置条件：
-      1、准备好传参数据，desc-tool工具正常
-    操作步骤：
-      1、传入有效参数调用ts方法创建Device对象
-      2、使用rust的desc-tool工具传入ts编码对象执行show -a 指令进行解码
-      3、获取rust工具解码后的属性值
-      4、对ts创建对象进行rust解码并获取对象属性值
+      1、使用rust方法读取ts对象文件内容并解码
+      2、获取rust解码后的属性值
+      3、与Ts对象属性值比较
     预期结果：
       1、比较创建ts对象前和rust解码后的属性值一致
-  * 使用Rust工具编码后用Ts进行解码，再用rust解码进行比较
+  * 从Ts对Rust编码的对象进行解码
     ```
     前置条件：
-      1、准备好有效传参数据，desc-tool工具正常
+      1、准备好rust已编码输出文件
     操作步骤：
-      2、传入有效参数使用rust工具创建Device对象
-      3、使用ts方法去解码rust编码对象获取属性值
-      4、使用rust的desc-tool工具执行show -a 指令进行解码获取属性值
+      1、使用Ts方法读取Rust对象文件内容并解码
+      2、获取Ts解码后的属性值
+      3、与Ts对象属性值比较
     预期结果：
       1、比较ts解码后和rust解码后的属性值一致
 * Dir
@@ -680,7 +680,7 @@ NameObject  测试用例设计说明
 
 ### 2、核心对象
 * Zone
-  * Ts编码：有效传入owner,ood_list,known_device_list参数
+  * Ts编解码：有效传入owner,ood_list,known_device_list参数
     ```
     前置条件：
     1、准备好传参数据和传参对象类型无误
@@ -690,7 +690,7 @@ NameObject  测试用例设计说明
     3、对创建对象进行解码并获取对象属性值
     预期结果：
     1、编码前和解码后owner,ood_list,known_device_list属性值一致 
-  * Ts编码：有效传入多值的ood_list,known_device_list参数
+  * Ts编解码：有效传入多值的ood_list,known_device_list参数
     ```
     前置条件：
     1、准备好传参数据和传参对象类型无误
@@ -700,12 +700,42 @@ NameObject  测试用例设计说明
     3、对创建对象进行解码并获取对象属性值
     预期结果：
     1、编码前和解码后owner,ood_list,known_device_list属性值一致 
-  * Ts编码：有效传入空值的ood_list,known_device_list参数
+  * Ts编解码：有效传入空值的ood_list,known_device_list参数
     ```
     前置条件：
     1、准备好传参数据和传参对象类型无误
     操作步骤：
     1、正常传入必选有效参数且ood_list,known_device_list参数为空[]创建Zone对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+  * Ts编解码：主备模式-有效传入owner,ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、正常传入必选有效参数且ood模式为主备创建UseProtoBuf对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+  * Ts编解码：主备模式-有效传入多值的ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、ood模式为主备且ood_list,known_device_list参数有多个值创建UseProtoBuf对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+  * Ts编解码：主备模式-有效传入空值的ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、ood模式为主备且ood_list,known_device_list参数为空[]创建UseProtoBuf对象
     2、对创建返回的对象进行unit8array类型转换
     3、对创建对象进行解码并获取对象属性值
     预期结果：
@@ -1546,6 +1576,149 @@ NameObject  测试用例设计说明
       1、比较ts解码后和rust解码后的属性值一致
   
 ### 3、扩展对象
-* GitTextObject
-* 
-    * 对常用对象使用Protobuf重新实现进行编解码
+* GitTextObject  
+  * Ts编解码： 正常传入有效参数创建GitTextObject对象
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、正常传入必选有效参数创建GitTextObject对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后id,header,value属性值一致 
+  * Ts编码：传入id参数为空值时创建GitTextObject对象
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、传入id参数为空值创建GitTextObject对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后header,value属性值一致,id为空值 
+  * Ts编码：传入header参数为空值时创建GitTextObject对象
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、传入header参数为空值创建GitTextObject对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后id,value属性值一致,header为空值 
+  * Ts编码：传入value参数为空值时创建GitTextObject对象
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、传入value参数为空值创建GitTextObject对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后id,header属性值一致,value为空值 
+* MyTest
+  * Ts编解码:正常传入有效参数创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、正常传入必选有效参数创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后name,network属性值一致
+  * Ts编解码:传入name参数为空值创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、传入name参数为空值创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后network属性值一致，name为空
+  * Ts编解码：传入network参数为空值创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、传入network参数为空值创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后name属性值一致，network为空
+  * Ts编解码：puclikey为secp类型创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、传入publickey参数为secp类型创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后network，name属性值一致
+  * Ts编解码：puclikey为sm2类型创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、传入publickey参数为sm2类型创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后network，name属性值一致
+  * Ts编解码：puclikey为rsa类型且size为256创建MyTest对象
+      ```
+      前置条件：
+      1、准备好传参数据和传参对象类型无误
+      操作步骤：
+      1、传入publickey参数为rsa类型且num参数传入1创建MyTest对象
+      2、对创建返回的对象进行unit8array类型转换
+      3、对创建对象进行解码并获取对象属性值
+      预期结果：
+      1、编码前和解码后network，name属性值一致
+  * Ts编解码：puclikey为rsa类型且size为384创建MyTest对象
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、传入publickey参数为rsa类型且num参数传入2创建MyTest对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后network，name属性值一致
+* UseProtoBuf
+  * Ts编解码：有效传入owner,ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、正常传入必选有效参数创建UseProtoBuf对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+  * Ts编解码：有效传入多值的ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、正常传入必选有效参数且ood_list,known_device_list参数有多个值创建UseProtoBuf对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+  * Ts编解码：有效传入空值的ood_list,known_device_list参数
+    ```
+    前置条件：
+    1、准备好传参数据和传参对象类型无误
+    操作步骤：
+    1、正常传入必选有效参数且ood_list,known_device_list参数为空[]创建UseProtoBuf对象
+    2、对创建返回的对象进行unit8array类型转换
+    3、对创建对象进行解码并获取对象属性值
+    预期结果：
+    1、编码前和解码后owner,ood_list,known_device_list属性值一致 
+
+
+ 

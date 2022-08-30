@@ -37,12 +37,12 @@ describe("测试People对象编解码", function () {
 
     //定义文件路径：
     let filepath = descpath('People');
-    let filepath1 = descpath('People1');
-    let filepath2 = descpath('People2');
-    let filepath3 = descpath('People3');
-    let filepath4 = descpath('People4');
-    let filepath5 = descpath('People5');
-    let filepath6 = descpath('People6');
+    let filepath1 = descpath('People01');
+    let filepath2 = descpath('People02');
+    let filepath3 = descpath('People03');
+    let filepath4 = descpath('People04');
+    let filepath5 = descpath('People05');
+    let filepath6 = descpath('People06');
 
     describe("编码", function () {
         it("Ts编码：有效传入owner,ood_list,public,area,name,icon参数", async function () {

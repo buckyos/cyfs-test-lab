@@ -5,13 +5,14 @@ export * from "./agent"
 export * from "./type"
 export * from "./myTestObject"
 // Dec App object的Type一定从32768开始，不大于65535
-export const CustumObjectType = {
+export const  CustumObjectType = {
     Testcase: 38498,
     GitText : 38499,
     TestcaseResult: 38500,
     TestReporter:38501,
     Agent:38502,
     MyTest: 38503,
+    UseProtobuf : 38504,
     
 }
 

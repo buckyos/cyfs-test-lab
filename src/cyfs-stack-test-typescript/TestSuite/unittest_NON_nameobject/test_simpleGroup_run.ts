@@ -504,5 +504,6 @@ describe("测试SimpleGroup对象编解码", async function () {
             assert(deoodlist, ood_list_e, "解码后的id不匹配")
 
         });
+        
     });
 })  
