@@ -1,7 +1,7 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep } from '../../base';
 import { EventEmitter } from 'events';
 import net from "net";
-
+import {UtilClient} from "./utilClient"
 export const StackError = {
     success: 0, //执行成功
     LNAgentError: 1, //测试框架连接测试设备报错
@@ -30,6 +30,7 @@ export class StackProxyClient extends EventEmitter {
     private peerName: string; // 测试节点标签
     private stack_type: string;  // 测试节点协议栈类型
     private state: number; // 0 未初始 1 初始化中 2 可使用 -1 销毁
+    public util_client? : UtilClient;
     private m_agentid?: string;
     private ws_port: number;
     private http_port: number;
@@ -70,6 +71,7 @@ export class StackProxyClient extends EventEmitter {
             return { err: StackError.LNAgentError, log: "测试节点启动服务失败" }
         }
         let info = await this.m_interface.callApi('start_client', Buffer.from(''), { stack_type: this.stack_type }, this.m_agentid!, 0);
+        this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.peerName,info.value.cacheName);
         this.start_proxy("ws", this.ws_port);
         this.start_proxy("http", this.http_port);
         this.state = 2;
