@@ -7,9 +7,11 @@ export class AgentManager {
     static manager?: AgentManager;
     private m_interface: TaskClientInterface;
     public agentMap : Map<string,AgentClient>
+    public agentListState : Array<{name:string,state:string}>
     constructor(_interface: TaskClientInterface){
         this.m_interface = _interface;
-        this.agentMap = new Map()
+        this.agentMap = new Map();
+        this.agentListState = [];
     }
     static createInstance(_interface:TaskClientInterface): AgentManager {
         if (!AgentManager.manager) {
@@ -28,7 +30,9 @@ export class AgentManager {
             }))
         }
         for(let i in initList){
+            
             let res = await initList[i];
+            this.agentListState.push({name:res.name,state:res.result})
             if(res.result!.err){
                 this.m_interface.getLogger().error(res.result!.log);
             }else{

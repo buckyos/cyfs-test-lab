@@ -2,7 +2,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as ChildProcess from 'child_process';
-
+import * as SysProcess from 'process';
 let JSZIP = require("jszip");
 let zip = new JSZIP();
 // //读取目录及文件
@@ -35,7 +35,11 @@ async function copyTools(source:string,target:string){
       
         console.info(`testcase: ${targetPath}`)
         for (let j = 0;j<rustbdt2ToolFiles.length;j++){
-            console.info(path.join(tool_list,rustbdt2ToolFiles[j]))
+            if(rustbdt2ToolFiles[j] == "config.js" && fs.pathExistsSync(path.join(targetPath,rustbdt2ToolFiles[j]))){
+                console.info(`${path.join(tool_list,rustbdt2ToolFiles[j])} already exist`)
+                continue
+            }
+            console.info(path.join(rustbdt2ToolFiles[j]))
             await fs.copyFileSync(path.join(tool_list,rustbdt2ToolFiles[j]),path.join(targetPath,rustbdt2ToolFiles[j]))
         }
 
@@ -47,12 +51,12 @@ async function copyTools(source:string,target:string){
 async function startZIP() {
     var currPath = __dirname;//文件的绝对路径 当前当前js所在的绝对路径
     var tasksDir = path.join(currPath, "../../node_tester_app/tasks");
-    var rustbdt2 = path.join(currPath,'../../node_tester_app/taskTools/rust-bdt')
+    var rustbdt2 = path.join(currPath,'../../node_tester_app/taskTools/cyfs_bdt')
     var rustbdt2ToolFiles =await  fs.readdirSync(rustbdt2)
     var caseList = await  fs.readdirSync(tasksDir)
     for(let i = 0;i<caseList.length;i++){
         let targetPath = path.join(tasksDir,caseList[i])
-        console.info(targetPath)
+        //console.info(targetPath)
         readDir(targetPath);
         zip.generateAsync({//设置压缩格式，开始打包
             type: "nodebuffer",//nodejs用
@@ -96,15 +100,15 @@ async function  gulpBuild() {
 async function modifyImport(params:string,task_name:string,tool_url:string,deploy_url:string){
     let taskPath = path.join(__dirname,'../tasks')
     task_name =  path.join(__dirname,`../${task_name}`)
-    console.info(`复制用例列表 ${task_name} -> ${taskPath}`)
+    //console.info(`复制用例列表 ${task_name} -> ${taskPath}`)
     let caseList = fs.readdirSync(task_name);
     for(let index in caseList){
-        console.info(`复制用例 ${path.join(task_name,caseList[index])} -> ${taskPath}`)
+        //console.info(`复制用例 ${path.join(task_name,caseList[index])} -> ${taskPath}`)
         fs.copySync(path.join(task_name,caseList[index]),path.join(taskPath,caseList[index]) )
     }
     let testcasePath = fs.readdirSync(taskPath)
     for(let index in testcasePath){
-        console.info(testcasePath[index])
+       // console.info(testcasePath[index])
         if(testcasePath[index].indexOf(params)>-1){
             
             let onload = path.join(taskPath,testcasePath[index],'onload.js')
@@ -119,7 +123,7 @@ async function modifyImport(params:string,task_name:string,tool_url:string,deplo
                         v(err);
                     }
                     let result = data.replace(new RegExp(tool_url,"gm"),deploy_url)
-                    console.info(`${onload} 替换 import`) 
+                    //console.info(`${onload} 替换 import`) 
                     fs.writeFile(onload,result,'utf8',(err)=>{
                         if(err){
                             console.info(err)
@@ -143,9 +147,11 @@ async function empytTask() {
 
 
 async function main() {
+    let name =  SysProcess.argv[2];
+    let part =  SysProcess.argv[3];
     await empytTask();
-    await modifyImport('Connect','tasks_BDT_Stream','../../taskTools/rust-bdt','.');
-    await copyTools('../taskTools/rust-bdt',"../tasks"); //复制 taskTools
+    await modifyImport(part,name,'../../taskTools/cyfs_bdt','.');
+    await copyTools('../taskTools/cyfs_bdt',"../tasks"); //复制 taskTools
     await startZIP(); //生成zip压缩文件
 }
 

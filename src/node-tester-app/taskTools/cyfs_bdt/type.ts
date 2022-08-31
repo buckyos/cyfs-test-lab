@@ -146,7 +146,7 @@ export type Action ={
     send_time? : number, //传输时间
     calculate_time? : number, //cyfs_base 计算生成对象时间
     set_time?:number, // 本地set 时间
-    expect?:{err:number,log?:string}; //预期结果
+    expect:{err:number}; //预期结果
     result?:{err:number,log:string}; //实际结果   
 }
 
@@ -159,7 +159,7 @@ export type Task ={
    action:Array<ActionAbstract>, // 操作集合
    result?:{err:number,log:string}; //实际结果 
    state?:string; 
-   expect_status? : number,
+   expect_status? : string,
 }
  export type Testcase ={
     TestcaseName:string, //用例名称

@@ -99,7 +99,7 @@ export class BdtPeer extends EventEmitter  {
         let {err, resp} = await this.m_lpc!.wait_resp(command);
         this.m_logger.info(`send BdtLpcCommand ${command.json.name!} err = ${err} , resp = ${JSON.stringify(resp)}`)
         return {
-            err, 
+            err : resp!.json.result, 
             resp
         };
     } 

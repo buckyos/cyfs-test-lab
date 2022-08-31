@@ -4,6 +4,7 @@ import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/ty
 import {labAgent,BdtPeerClientConfig,LabSnList} from "../../taskTools/cyfs_bdt/labAgent"
 import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
 import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import { BDTERROR } from '../../taskTools/rust-bdt/type';
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -11,7 +12,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_ChunkListTask_ChunkSize"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -59,29 +60,51 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         conn_tag: "connect_1",
                         timeout : 60*1000,
                     },
-                    expect : {err:0},    
+                    expect : {err:0}    
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
-                    type : ActionType.send_file,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkListAction({
+                    type : ActionType.send_chunk_list,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    chunkSize : 4*1024*1024,
-                   config:{
+                    chunkSize : 1*1024*1024,
+                    fileNum : 64,
+                    config:{
                         timeout : 60*1000,
                     },
-                    expect : {err:0},      
+                    expect : {err:0}     
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
-                    type : ActionType.send_file,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkListAction({
+                    type : ActionType.send_chunk_list,
+                    LN : `${labAgent[i].tags[0]}$1`,
+                    RN : `${labAgent[j].tags[0]}$1`,
                     chunkSize : 4*1024*1024,
-                   config:{
+                    fileNum : 16,
+                    config:{
                         timeout : 60*1000,
                     },
-                    expect : {err:0},      
+                    expect : {err:0}     
+                }))
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkListAction({
+                    type : ActionType.send_chunk_list,
+                    LN : `${labAgent[i].tags[0]}$1`,
+                    RN : `${labAgent[j].tags[0]}$1`,
+                    chunkSize : 10*1024*1024,
+                    fileNum : 6,
+                    config:{
+                        timeout : 60*1000,
+                    },
+                    expect : {err:0}     
+                }))
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkListAction({
+                    type : ActionType.send_chunk_list,
+                    LN : `${labAgent[i].tags[0]}$1`,
+                    RN : `${labAgent[j].tags[0]}$1`,
+                    chunkSize : 32*1024*1024,
+                    fileNum : 2,
+                    config:{
+                        timeout : 60*1000,
+                    },
+                    expect : {err:0}     
                 }))
                 await testRunner.prevTaskRun();
             }

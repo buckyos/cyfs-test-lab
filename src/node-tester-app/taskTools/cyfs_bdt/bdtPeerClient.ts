@@ -112,9 +112,9 @@ export class BdtPeerClient extends EventEmitter{
             remote_sn,
             accept_answer : accept_answer?1:0,
         }, this.m_agentid, 0);
-        if (info.err) {
+        if (info.err || info.value.result) {
             this.logger.error(`${this.tags} connect failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-            return {err:info.err,conn:undefined};
+            return {err:info.value.result,conn:undefined};
         }
         if (!info.value || !info.value.stream_name) {
             this.m_interface.getLogger().error(`connect, service return invalid param,log = ${JSON.stringify(info.value)}`);
@@ -226,55 +226,75 @@ export class BdtPeerClient extends EventEmitter{
         }
         return info.err;
     }
-    async createFile(fileSize:number):Promise<{err:ErrorCode,log?:string,fileName?:string,filePath?:string,md5?:string}>{
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "createFile",
+    async calculateChunk(path:string,chunk_size:number): Promise<{err: ErrorCode, calculate_time?: number, chunk_id?: string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'calculate-chunk',
             peerName: this.peerName,
-            fileSize,
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} createFile = ${JSON.stringify(result)}`)
-        if(result.err ){  
-            return {err:ErrorCode.exception,log:`${this.tags} createFile failed`}
+            chunk_size,
+            path,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} calculateChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
-        return {err:ErrorCode.exception,log:`${this.tags} createFile success`,fileName:result.value.fileName,filePath:result.value.filePath,md5:result.value.md5}
+        return {err: info.err,calculate_time: info.value?.calculate_time,chunk_id: info.value?.chunk_id};
     }
-    async createDir(fileNumber:number,fileSize:number,dirNumber:number,deep:string):Promise<{err:ErrorCode,log?:string,dirName?:string,dirPath?:string}>{
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "createDir",
+    async setChunk(path:string,chunk_id: string): Promise<{err: ErrorCode, set_time?: number, chunk_id?: string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            name: 'set-chunk',
             peerName: this.peerName,
-            dirNumber,
-            fileNumber,
-            deep,
-            fileSize,
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} createDir = ${JSON.stringify(result)}`)
-        if(result.err ){  
-            return {err:ErrorCode.exception,log:`${this.tags} createDir failed`}
+            path,
+            chunk_id,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
-        return {err:ErrorCode.exception,log:`${this.tags} createDir success`,dirName:result.value.ddirName,dirPath:result.value.dirPath,}
+        return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
     }
-    async md5File(filePath:string):Promise<{err:ErrorCode,md5?:string}>{
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "md5",
+    async trackChunk(path:string,chunk_size:number): Promise<{err: ErrorCode, set_time?: number, calculate_time?: number, chunk_id?: string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'track-chunk',
             peerName: this.peerName,
-            filePath,
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} md5File = ${JSON.stringify(result)}`)
-        if(result.err ){  
-            return {err:ErrorCode.exception}
+            chunk_size,
+            path,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} uploadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
-        return {err:ErrorCode.exception,md5:result.value.md5}
+        return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id,calculate_time: info.value?.calculate_time};
     }
-    async getCachePath():Promise<{err:ErrorCode,cache_path? : {file_upload:string,file_download:string,NamedObject:string}}>{
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "getCachePath",
+    async interestChunk(remote:Buffer ,chunk_id:string): Promise<{err: ErrorCode}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
+            name: 'interest-chunk',
             peerName: this.peerName,
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} getCachePath = ${JSON.stringify(result)}`)
-        if(result.err ){  
-            return {err:ErrorCode.exception}
+            chunk_id,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} interestChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
-        return {err:ErrorCode.exception,cache_path:result.value.cache_path}
+        return {err: info.err};
+    }
+    async checkChunk(chunk_id:string): Promise<{err: ErrorCode,state?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'check-chunk',
+            peerName: this.peerName,
+            chunk_id,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} checkChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,state:info.value?.state};
+    }
+    async checkChunkListener(chunk_id:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
+        let begin = Date.now();
+        while(Date.now() - timeout < begin){
+            let check = await this.checkChunk(chunk_id);
+            if( !check.state || !check.state.includes("Pending")){
+                let time = Date.now() - begin;
+                return {err:check.err,state:check.state,time}
+            }
+            await sleep(interval);
+        }
+        return {err: BDTERROR.timeout};
     }
     async calculateFile(path:string,chunk_size:number): Promise<{err: ErrorCode, calculate_time?: number, file?: Buffer,ObjectId?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {

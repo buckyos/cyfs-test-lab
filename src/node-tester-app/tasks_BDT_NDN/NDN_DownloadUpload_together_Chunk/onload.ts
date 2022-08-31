@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_DownloadUpload_together_Chunk"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -44,7 +44,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let i in labAgent){
         for(let j in labAgent){
-            if(i != j ){
+            if(i != j && labAgent[i].NAT + labAgent[j].NAT < 5){
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
@@ -61,25 +61,25 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     },
                     expect : {err:0},    
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    chunkSize : 4*1024*1024,
+                    chunkSize : 32*1024*1024,
                    config:{
                         timeout : 60*1000,
+                        not_wait_upload_finished : true,
                     },
                     expect : {err:0},      
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    chunkSize : 4*1024*1024,
+                    chunkSize : 32*1024*1024,
                    config:{
                         timeout : 60*1000,
+                        not_wait_upload_finished : true,
                     },
                     expect : {err:0},      
                 }))

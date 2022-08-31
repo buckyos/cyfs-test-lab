@@ -1,7 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
 import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
 import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList} from "../../taskTools/cyfs_bdt/labAgent"
+import {labAgent,BdtPeerClientConfig,LabSnList,PNType} from "../../taskTools/cyfs_bdt/labAgent"
 import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
 import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
 
@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_AllEP_ChannelSelect_PN"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -36,6 +36,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
             },
             logType:"info",
             SN :LabSnList,
+            PN : PNType.all,
             resp_ep_type:Resp_ep_type.SN_Resp, 
     }
     // 每台机器运行一个bdt 客户端
@@ -67,7 +68,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     fileSize : 10*1024*1024,
                     chunkSize : 4*1024*1024,
-                   config:{
+                    config:{
                         timeout : 60*1000,
                     },
                     expect : {err:0},      

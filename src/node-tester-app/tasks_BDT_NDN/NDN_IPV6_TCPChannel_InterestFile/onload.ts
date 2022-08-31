@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_IPV6_TCPChannel_InterestFile"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -25,14 +25,9 @@ export async function TaskMain(_interface: TaskClientInterface) {
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
-                ipv4:{
-                    udp:true,
+                ipv6:{
                     tcp:true,
                 },
-                ipv6:{
-                    udp:true,
-                    tcp:true,
-                }
             },
             logType:"info",
             SN :LabSnList,
@@ -59,7 +54,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         conn_tag: "connect_1",
                         timeout : 60*1000,
                     },
-                    expect : {err:0},    
+                    expect : {err:0}      
                 }))
                 info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
                     type : ActionType.send_file,
@@ -67,10 +62,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     fileSize : 10*1024*1024,
                     chunkSize : 4*1024*1024,
-                   config:{
+                    config:{
                         timeout : 60*1000,
                     },
-                    expect : {err:0},      
+                    expect : {err:0}     
                 }))
                 info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
                     type : ActionType.send_file,
@@ -78,10 +73,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[i].tags[0]}$1`,
                     fileSize : 10*1024*1024,
                     chunkSize : 4*1024*1024,
-                   config:{
+                    config:{
                         timeout : 60*1000,
                     },
-                    expect : {err:0},      
+                    expect : {err:0}      
                 }))
                 await testRunner.prevTaskRun();
             }

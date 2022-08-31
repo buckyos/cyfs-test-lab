@@ -44,7 +44,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let i in labAgent){
         for(let j in labAgent){
-            if(i != j ){
+            if(i != j && labAgent[i].NAT + labAgent[j].NAT < 5 ){
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,

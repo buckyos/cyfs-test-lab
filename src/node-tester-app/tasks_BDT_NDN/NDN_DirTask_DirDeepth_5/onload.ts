@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_DirTask_DirDeepth_5"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -61,22 +61,24 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     },
                     expect : {err:0},    
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendDirAction({
                     type : ActionType.send_file,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
                     fileSize : 10*1024*1024,
+                    fileNum : 10,
                     chunkSize : 4*1024*1024,
                    config:{
                         timeout : 60*1000,
                     },
                     expect : {err:0},      
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendDirAction({
                     type : ActionType.send_file,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
                     fileSize : 10*1024*1024,
+                    fileNum : 10,
                     chunkSize : 4*1024*1024,
                    config:{
                         timeout : 60*1000,
