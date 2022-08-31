@@ -26,7 +26,31 @@ router.post('/add',
     
     }
 );
-
+router.post('/addList',
+    async (req, res) => {
+        console.info(`#receive bdt_task addList request,body = ${JSON.stringify(req.body)} `)
+        let taskInfoList = req.body.taskInfoList;
+        for(let i in taskInfoList){
+            const testcaseInfo:TaskModel = {
+                testcaseId : taskInfoList[i].testcaseId,
+                task_id: taskInfoList[i].task_id,
+                LN:taskInfoList[i].LN,
+                RN:taskInfoList[i].RN,
+                Users: taskInfoList[i].Users,
+                result: taskInfoList[i].result,
+                state:taskInfoList[i].state,
+                expect_status:taskInfoList[i].expect_status,
+            };
+            let model = new BdtTask();
+            let result =await  model.add(testcaseInfo);
+            if(result.err){
+                return res.json(result)   
+            }
+        }
+        return res.json({err:0,log:`add taskList success`})
+    
+    }
+);
 router.post('/add_action',
     async (req, res) => {
         console.info(`#receive bdt_task add request,body = ${JSON.stringify(req.body)} `)
