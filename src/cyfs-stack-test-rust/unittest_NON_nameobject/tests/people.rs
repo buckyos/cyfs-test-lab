@@ -1,15 +1,15 @@
 use async_std::{future, io::prelude::*, task};
 use cyfs_base::*;
 use cyfs_util::*;
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
 // cargo test -- --nocapture
 #[async_std::test]
 async fn people() {
-    let root = ::cyfs_util::get_cyfs_root_path().join("etc").join("desc");
+    let temp = ::cyfs_util::get_temp_path();
     // 加载密钥
     let sec_file_name = format!("people.sec");
-    let sec_file = root.join(sec_file_name);
+    let sec_file = temp.join(sec_file_name);
     println!("{}", sec_file.display());
     if !sec_file.is_file() {
         let private_key = PrivateKey::generate_rsa(1024).unwrap();
@@ -22,34 +22,46 @@ async fn people() {
 
     let pubic_key = private_key.public();
 
-    let mut p = People::new(None, Vec::new(), pubic_key.clone(), None, None, None)
+    let name = "TEST123456!@#$%^";
+    let owner = ObjectId::from_str("5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC").unwrap();
+    let device_id = DeviceId::from_str("5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ").unwrap();
+    let ood_list = vec![device_id];
+    let area = Area::new(1, 2, 3, 4);
+    let file_id = FileId::from_str("7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu").unwrap();
+    let icon = file_id;
+    let people_file = temp.join("peopel.obj");
+    if !people_file.is_file() {
+        let p = People::new(
+            Some(owner), 
+            ood_list, 
+            pubic_key.clone(), 
+            Some(area), 
+            Some(name.to_string()), 
+            Some(icon)
+        )
         .no_create_time()
         .build();
 
-    let p2 = People::new(None, Vec::new(), pubic_key, None, None, None)
-        .no_create_time()
-        .build();
+        if !people_file.exists() {
+            let _ = p.encode_to_file(people_file.as_path(), false);
+        }
 
-    assert!(p.desc().people_id() == p2.desc().people_id());
+        let buf = p.to_vec().unwrap();
+        let pp = People::clone_from_slice(&buf).unwrap();
 
-    p.set_name("people".to_owned());
-
-    let path = Path::new("../../people.obj");
-    if !path.exists() {
-        let _ = p.encode_to_file(path, false);
+        assert_eq!(p.desc().people_id(), pp.desc().people_id());
+        assert_eq!(p.name(), pp.name());
+        let mut buf = vec![];
+        
+        let (p1, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
+        assert_eq!(p.desc().people_id(), p1.desc().people_id());
+        assert_eq!(p.name(), p1.name());
+    } else {
+        let mut buf = vec![];
+        let (p1, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
+        assert_eq!(owner, p1.desc().owner().unwrap());
+        println!("1234");
     }
 
-    let user_data = vec![0u8; 100];
-    let _ = p.body_mut().as_mut().unwrap().set_userdata(&user_data);
 
-    let buf = p.to_vec().unwrap();
-    let pp = People::clone_from_slice(&buf).unwrap();
-
-    assert_eq!(p.desc().people_id(), pp.desc().people_id());
-    assert_eq!(p.name(), pp.name());
-    let mut buf = vec![];
-    
-    let (p1, _) = People::decode_from_file(&path, &mut buf).unwrap();
-    assert_eq!(p.desc().people_id(), p1.desc().people_id());
-    assert_eq!(p.name(), p1.name());
 }
