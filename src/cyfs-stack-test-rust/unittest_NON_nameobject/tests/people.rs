@@ -60,7 +60,8 @@ async fn people() {
         let mut buf = vec![];
         let (p1, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
         assert_eq!(owner, p1.desc().owner().unwrap());
-        println!("1234");
+        assert_eq!(name, p1.name().unwrap());
+        println!("{}", name);
     }
 
 
