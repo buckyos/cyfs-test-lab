@@ -29,11 +29,11 @@ async fn people() {
     let area = Area::new(1, 2, 3, 4);
     let file_id = FileId::from_str("7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu").unwrap();
     let icon = file_id;
-    let people_file = temp.join("peopel.obj");
+    let people_file = temp.join("people.obj");
     if !people_file.is_file() {
         let p = People::new(
             Some(owner), 
-            ood_list, 
+            ood_list.to_owned(), 
             pubic_key.clone(), 
             Some(area), 
             Some(name.to_string()), 
@@ -51,16 +51,25 @@ async fn people() {
 
         assert_eq!(p.desc().people_id(), pp.desc().people_id());
         assert_eq!(p.name(), pp.name());
+        assert_eq!(p.icon(), pp.icon());
+        assert_eq!(p.ood_list(), pp.ood_list());
+
         let mut buf = vec![];
         
         let (p1, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
         assert_eq!(p.desc().people_id(), p1.desc().people_id());
         assert_eq!(p.name(), p1.name());
+        assert_eq!(p.icon(), p1.icon());
+        assert_eq!(p.ood_list(), p1.ood_list());
+
     } else {
         let mut buf = vec![];
         let (p1, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
         assert_eq!(owner, p1.desc().owner().unwrap());
         assert_eq!(name, p1.name().unwrap());
+        assert_eq!(icon, *p1.icon().unwrap());
+
+        assert_eq!(ood_list, *p1.ood_list());
         println!("{}", name);
     }
 
