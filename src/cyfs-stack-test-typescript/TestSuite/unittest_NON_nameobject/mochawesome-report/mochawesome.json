@@ -1,0 +1,119 @@
+{
+  "stats": {
+    "suites": 2,
+    "tests": 1,
+    "passes": 1,
+    "pending": 0,
+    "failures": 0,
+    "start": "2022-09-01T11:46:55.217Z",
+    "end": "2022-09-01T11:46:55.235Z",
+    "duration": 18,
+    "testsRegistered": 1,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "b8b47f21-8364-4c14-9738-af4cac961859",
+      "title": "",
+      "fullFile": "",
+      "file": "",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "263939f5-0ec1-46e1-8e3b-bddace7932ea",
+          "title": "测试People对象编解码",
+          "fullFile": "E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_NON_nameobject\\test_people_cross_run.ts",
+          "file": "\\test_people_cross_run.ts",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [],
+          "suites": [
+            {
+              "uuid": "136be008-b582-477e-ad8f-6f38d207b7f9",
+              "title": "Ts编解码",
+              "fullFile": "E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_NON_nameobject\\test_people_cross_run.ts",
+              "file": "\\test_people_cross_run.ts",
+              "beforeHooks": [],
+              "afterHooks": [],
+              "tests": [
+                {
+                  "title": "Ts编码: 有效传入owner,ood_list,public,area,name,icon参数",
+                  "fullTitle": "测试People对象编解码 Ts编解码 Ts编码: 有效传入owner,ood_list,public,area,name,icon参数",
+                  "timedOut": false,
+                  "duration": 13,
+                  "state": "passed",
+                  "speed": "fast",
+                  "pass": true,
+                  "fail": false,
+                  "pending": false,
+                  "context": null,
+                  "code": "var _a, _b, _c;\n//定义创建对象需要的参数\nlet name = \"TEST123456!@#$%^\";\nlet owner = cyfs.ObjectId.from_base_58('5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC').unwrap();\nlet deviceid = cyfs.DeviceId.from_base_58('5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ').unwrap();\nlet ood_list1 = [deviceid];\nlet area = new cyfs.Area(1, 2, 3, 4);\nlet fileid = cyfs.FileId.from_base_58('7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu').unwrap();\nlet icon = fileid;\nlet temp_path = cyfs.get_temp_path();\nlet private_path = temp_path + \"people.sec\";\nif (!fs.existsSync(private_path)) {\n    let secret = cyfs.PrivateKey.generate_rsa(2048).unwrap();\n    let s = secret.to_vec().unwrap();\n    fs.writeFileSync(private_path, s);\n}\nlet [secret] = new cyfs.PrivatekeyDecoder().raw_decode(new Uint8Array(fs.readFileSync(private_path))).unwrap();\n//定义文件路径：\nlet filepath = temp_path + 'people.obj';\nlet people = cyfs.People.create(cyfs.Some(owner), ood_list1, secret.public(), cyfs.Some(area), name, icon);\nlet p = people.to_vec().unwrap();\nlet people_id = people.desc().calculate_id();\nlet [p1, _] = new cyfs.PeopleDecoder().raw_decode(p).unwrap();\nlet p1_ood_list = p1.body_expect().content().ood_list;\n//属性校验\nassert((_b = (_a = p1.desc().owner()) === null || _a === void 0 ? void 0 : _a.unwrap()) === null || _b === void 0 ? void 0 : _b.equals(owner), 'owner属性不相等');\nassert(p1.desc().calculate_id().equals(people_id), 'PeopleId属性不相等');\nassert((_c = p1.icon()) === null || _c === void 0 ? void 0 : _c.equals(icon), 'icon属性不相等');\nassert.equal(name, p1.name());\nfor (let i in p1_ood_list) {\n    assert(p1_ood_list[i].equals(ood_list1[i]), 'ood_list属性不相等');\n}\nfs.writeFileSync(filepath, p);",
+                  "err": {},
+                  "uuid": "dd6bf4d2-a25f-447d-9d2d-4f3d0e98c3c0",
+                  "parentUUID": "136be008-b582-477e-ad8f-6f38d207b7f9",
+                  "isHook": false,
+                  "skipped": false
+                }
+              ],
+              "suites": [],
+              "passes": [
+                "dd6bf4d2-a25f-447d-9d2d-4f3d0e98c3c0"
+              ],
+              "failures": [],
+              "pending": [],
+              "skipped": [],
+              "duration": 13,
+              "root": false,
+              "rootEmpty": false,
+              "_timeout": 0
+            }
+          ],
+          "passes": [],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 0,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 0
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "9.2.2"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "6.3.1"
+    },
+    "marge": {
+      "options": null,
+      "version": "5.2.0"
+    }
+  }
+}
