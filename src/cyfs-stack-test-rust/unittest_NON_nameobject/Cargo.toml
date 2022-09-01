@@ -9,3 +9,4 @@ edition = "2021"
 async-std = { version = '1.11', features = ['unstable', 'attributes'] }
 async-trait = '0.1.53'
 cyfs-base = '0.5'
+cyfs-util = "0.5"
