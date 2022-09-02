@@ -383,8 +383,8 @@ pub async fn test() {
     unsafe {
         if HAS_RUN {
             post_object(&stack, &dec_id).await;
-            put_object(&stack, &dec_id).await;
-            get_object(&stack, &dec_id).await;
+            //put_object(&stack, &dec_id).await;
+            //get_object(&stack, &dec_id).await;
         } else {
             HAS_RUN = true;
             print!("{}", dec_id);
@@ -405,7 +405,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(10).measurement_time(Duration::new(20, 0));
+    config = Criterion::default().sample_size(1000).measurement_time(Duration::new(60 * 60, 0));
     targets = criterion_benchmark
 }
 criterion_main!(benches);
