@@ -6,6 +6,7 @@ members=[
     "cyfs-tools",
     "test-simulator",
     "cyfs-stack-test-rust/unittest_NON_nameobject",
+    "cyfs-stack-test-rust/profile",
 ]
 
 [profile.release]
