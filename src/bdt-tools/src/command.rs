@@ -38,6 +38,8 @@ pub struct CreateLpcCommandReq {
     pub ep_type :  Option<String>,
     pub ndn_event : Option<String>,
     pub ndn_event_target : Option<DeviceId>,
+    pub sn_only : bool,
+    pub tcp_port_mapping : Option<Vec<(cyfs_base::Endpoint, u16)>>,
 }
 
 impl TryFrom<LpcCommand> for CreateLpcCommandReq {
@@ -271,6 +273,14 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             }
         }?;
 
+        let sn_only = match json.get("sn_only") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        let tcp_port_mapping = None;
         Ok(Self {
             seq: value.seq(),
             known_peers,
@@ -283,6 +293,8 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             ep_type,
             ndn_event,
             ndn_event_target,
+            sn_only,
+            tcp_port_mapping
         })
     }
 }

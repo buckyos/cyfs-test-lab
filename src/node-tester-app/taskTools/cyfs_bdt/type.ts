@@ -97,6 +97,8 @@ export type Peer ={
     ep_type?:string,
     ndn_event?:string,
     ndn_event_target?:string
+    udp_sn_only?:number,
+    tcp_port_mapping? : string,
 }
  
 export type Action ={

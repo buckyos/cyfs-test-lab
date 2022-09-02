@@ -129,6 +129,21 @@ export class CloseConnectAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "CloseConnectAction run success" }
     }
 }
+export class DestoryAction extends ActionBase implements ActionAbstract {
+    async run(): Promise<{ err: number, log: string }> {
+
+        // (1) 检查测试bdt 客户端
+        let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
+        if (LN.err) {
+            return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
+        }
+        let info  = await LN.bdtClient!.destory();
+        if(info){
+            return { err: BDTERROR.success, log: `${this.action.LN} destory bdt client failed`}
+        }
+        return { err: BDTERROR.success, log: "DestoryAction run success" }
+    }
+}
 export class SendStreamAction extends ActionBase implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
@@ -173,7 +188,41 @@ export class SendStreamAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "SendStreamAction run success" }
     }
 }
+export class SendStreamNotReadAction extends ActionBase implements ActionAbstract {
+    async run(): Promise<{ err: number, log: string }> {
+        // (1) 检查测试bdt 客户端
+        let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
+        let RN = await this.agentManager!.getBdtPeerClient(this.action.RN!);
+        if (LN.err) {
+            return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
+        }
+        if (RN.err) {
+            return { err: RN.err, log: `${this.action.RN} bdt client not exist` }
+        }
+        // (2) 检查连接是否存在
+        let LN_connInfo = await LN.bdtClient!.getConnection(this.action.config.conn_tag!);
 
+        if (LN_connInfo.err ) {
+            return { err: BDTERROR.optExpectError, log: `conn not found,LN err = ${LN_connInfo.err} ,` }
+        }
+        // (3) 传输 BDT Stream
+   
+        let send = await LN_connInfo.conn!.send(this.action.fileSize!)
+        this.logger!.debug(`${this.action.LN} send stream,result = ${JSON.stringify(send)} `)
+        // (4) 校验结果
+        if (send.err) {
+            return { err: BDTERROR.sendDataFailed, log: `${this.action.LN} send stream failed` }
+        }
+
+        // (5) 保存数据
+        if (!this.action.info) {
+            this.action.info = {};
+        }
+        this.action.send_time = send.time;
+        this.action.info!.hash_LN = send.hash;
+        return { err: BDTERROR.success, log: "SendStreamNotReadAction run success" }
+    }
+}
 export class SendChunkAction extends ActionBase implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端

@@ -1870,14 +1870,15 @@ impl Peer {
         params.known_sn = Some(sns);
         params.active_pn = Some(active_pn);
         params.passive_pn = Some(passive_pn);
-
+        params.config.interface.udp.sn_only = c.sn_only;
+        params.tcp_port_mapping = c.tcp_port_mapping;
         let _ = match &c.ndn_event{
             Some(s) =>{
                 let _ = match &c.ndn_event_target{
                     Some(d) =>{
                         if s.clone() == "Redirect" {
                             log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
-                            // params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
+                            params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
                         }else if s.clone() == "Forward"{
                             log::info!("set ndn_event handler = Forward,target = {}",d.clone());
                             params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));

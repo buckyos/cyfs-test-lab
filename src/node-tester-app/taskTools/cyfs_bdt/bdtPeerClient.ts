@@ -72,6 +72,8 @@ export class BdtPeerClient extends EventEmitter{
             ep_type:this.cache_peer_info!.ep_type,
             ndn_event:this.cache_peer_info!.ndn_event,
             ndn_event_target:this.cache_peer_info!.ndn_event_target,
+            sn_only:this.cache_peer_info.udp_sn_only,
+            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
         }, this.m_agentid!, 10*1000);
         if(start_stack.err){
             this.logger.error(`${this.tags} start bdt stack failed`)

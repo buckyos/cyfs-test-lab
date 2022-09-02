@@ -150,6 +150,8 @@ export type BdtPeerClientConfig={
     logType? : string,
     firstQA_answer? : string,
     resp_ep_type? :string,
+    udp_sn_only?:number,
+    tcp_port_mapping? : string,
 }
 export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientConfig):Promise<Peer>  {
     let epList = [];
@@ -187,6 +189,9 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if (!config.PN) {
         config.PN = PNType.none;
     }
+    if(!config.udp_sn_only){
+        config.udp_sn_only = 0; 
+    }
     return {
         agent: agent,
         addrInfo: epList,
@@ -197,6 +202,8 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
         known_peer_files: config.PN.knownPeerFiles,
         FristQA_answer: config.firstQA_answer,
         ep_type: config.resp_ep_type,
+        udp_sn_only:config.udp_sn_only,
+        tcp_port_mapping: config.tcp_port_mapping,
     };
 }
 
