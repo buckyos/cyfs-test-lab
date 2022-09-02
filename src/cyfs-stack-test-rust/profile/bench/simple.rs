@@ -259,6 +259,122 @@ async fn post_object(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     }
 }
 
+
+async fn put_object(stack: &SharedCyfsStack, dec_id: &ObjectId) {
+
+    let filter = format!("dec_id == {}", dec_id);
+
+    // 添加一个处理器
+    let listener = OnPutObject {};
+    let ret = stack.router_handlers().add_handler(
+        RouterHandlerChain::PreRouter,
+        "put-object1",
+        0,
+        &filter,
+        RouterHandlerAction::Default,
+        Some(Box::new(listener)),
+    );
+    assert!(ret.is_ok());
+
+    // 添加一个观察者
+    let listener = OnPutObjectWatcher {};
+    let ret = stack.router_handlers().add_handler(
+        RouterHandlerChain::PreRouter,
+        "watch-object1",
+        // 观察者模式使用负数索引
+        -1,
+        &filter,
+        RouterHandlerAction::Pass,
+        Some(Box::new(listener)),
+    );
+    assert!(ret.is_ok());
+
+    // 事件是异步注册的，需要等待
+    async_std::task::sleep(std::time::Duration::from_secs(2)).await;
+
+    // 发起一次成功的put
+    {
+        let (q, _a) = qa_pair();
+        let object_id = q.text_id().object_id().to_owned();
+
+        let mut req = NONPutObjectOutputRequest::new_router(None, object_id, q.to_vec().unwrap());
+        req.common.dec_id = Some(dec_id.clone());
+
+        let ret = stack.non_service().put_object(req).await;
+
+        match ret {
+            Ok(resp) => {
+                info!("put_object success! object_id={}, resp={}", object_id, resp);
+                assert_eq!(resp.result, NONPutObjectResult::Accept);
+            }
+            Err(e) => {
+                error!("put_object failed! object_id={}, {}", object_id, e);
+                unreachable!();
+            }
+        }
+    }
+
+    // 一次失败的put
+    {
+        let q = Text::build("simple", "test_header", "hello!")
+            .no_create_time()
+            .build();
+        let object_id = q.text_id().object_id().to_owned();
+
+        let mut req = NONPutObjectOutputRequest::new_router(None, object_id, q.to_vec().unwrap());
+        req.common.dec_id = Some(dec_id.clone());
+
+        let ret = stack.non_service().put_object(req).await;
+        match ret {
+            Ok(resp) => {
+                error!(
+                    "put_object but success! object_id={}, resp={}",
+                    object_id, resp
+                );
+                unreachable!();
+            }
+            Err(e) => {
+                info!("put_object failed! object_id={}, {}", object_id, e);
+                assert_eq!(e.code(), BuckyErrorCode::NotSupport);
+            }
+        }
+    }
+}
+
+async fn get_object(stack: &SharedCyfsStack, dec_id: &ObjectId) {
+    let filter = format!("dec_id == {}", dec_id);
+
+    let listener = OnGetObject {};
+    stack
+        .router_handlers()
+        .add_handler(
+            RouterHandlerChain::PreRouter,
+            "get-object1",
+            0,
+            &filter,
+            RouterHandlerAction::Default,
+            Some(Box::new(listener)),
+        )
+        .unwrap();
+
+    // 事件是异步注册的，需要等待
+    async_std::task::sleep(std::time::Duration::from_secs(2)).await;
+
+    let (q, a) = qa_pair();
+    let object_id = q.text_id().object_id().to_owned();
+
+    let mut req = NONGetObjectOutputRequest::new_router(None, object_id, None);
+    req.common.dec_id = Some(dec_id.clone());
+
+    let ret = stack.non_service().get_object(req).await;
+    let resp = ret.unwrap();
+
+    let t = Text::clone_from_slice(&resp.object.object_raw).unwrap();
+    assert_eq!(*t.text_id().object_id(), *a.text_id().object_id());
+    assert_eq!(resp.object.object_id, *a.text_id().object_id());
+}
+
+
 static mut HAS_RUN: bool = false;
 
 pub async fn test() {
@@ -267,6 +383,8 @@ pub async fn test() {
     unsafe {
         if HAS_RUN {
             post_object(&stack, &dec_id).await;
+            put_object(&stack, &dec_id).await;
+            get_object(&stack, &dec_id).await;
         } else {
             HAS_RUN = true;
             print!("{}", dec_id);
