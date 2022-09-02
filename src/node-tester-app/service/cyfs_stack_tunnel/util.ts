@@ -188,6 +188,23 @@ export class UtilTool {
             bytes : Buffer.from("")
         }}
     }
+    async uploadFile(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        this.m_logger.info(`command : ${JSON.stringify(command.json)}`)
+        if(!command.json.logName || !command.json.dirPath){
+            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            return {err:ErrorCode.unknownCommand}
+        }
+        
+        let zip = await this.m_interface.zip(command.json.dirPath,command.json.logName)
+        let upload = await this.m_interface.uploadFile(zip.dstPath!,"logs");
+        this.m_logger.info(`upload log to server ,result = ${JSON.stringify(upload)}`)
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                upload,
+            },
+            bytes : Buffer.from("")
+        }}
+    }
     async uploadCacheFile(command:BdtLpcCommand):Promise<BdtLpcResp>{
         if(!command.json.path || !command.json.logName){
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)

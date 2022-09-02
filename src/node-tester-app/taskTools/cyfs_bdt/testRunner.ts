@@ -77,18 +77,29 @@ export class TestRunner{
     // 运行测试任务
     async runTask(task:Task):Promise<{err:number,log:string,taskId:string}>{
         // 判断机器状态是否正常，机器不正常
-        let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
-        task.state = "run" ;
-        for(let i in task.action){
-            await task.action[i].init(this.m_interface,task);
-            let result = await task.action[i].run();
-            if(result.err){
-                task.state = "failed"
-                return {err:result.err,taskId:task.task_id!,log:result.log};
+        return new Promise(async(V)=>{
+            let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
+            task.state = "run" ;
+            if(!task.timeout){
+                task.timeout = 60*1000;
             }
-        }
-        task.state = "success" ;       
-        return {err:BDTERROR.success,taskId:task.task_id!,log:"task run success"}
+            setTimeout(() => {
+                if(this.state=="run"){
+                    V({err:BDTERROR.timeout,taskId:task.task_id!,log:`${task.task_id} run timeout ${task.timeout},LN = ${task.LN} , RN = ${task.RN}`});
+                }
+            }, task.timeout);
+            for(let i in task.action){
+                await task.action[i].init(this.m_interface,task);
+                let result = await task.action[i].run();
+                if(result.err){
+                    task.state = "failed"
+                    V({err:result.err,taskId:task.task_id!,log:result.log});
+                }
+            }
+            task.state = "success" ;       
+            V({err:BDTERROR.success,taskId:task.task_id!,log:"task run success"}) 
+        })
+        
     }
     // 添加测试任务
     async addTask(task:Task):Promise<{err:number,log:string}>{

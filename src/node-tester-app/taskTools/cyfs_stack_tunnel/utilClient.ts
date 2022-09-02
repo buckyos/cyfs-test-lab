@@ -62,5 +62,18 @@ export class UtilClient {
             return {err:ErrorCode.exception}
         }
         return {err:ErrorCode.exception,cache_path:result.value.cache_path}
+    }
+    async getStackLog(dirPath:string,logName:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "createFile",
+            peerName: this.peerName,
+            dirPath,
+            logName
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} getStackLog = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception,log:`${this.tags} createFile failed`}
+        }
+        return {err:ErrorCode.exception,log:`${this.tags} getStackLog`,url: result.value.upload.url}
     }  
 }

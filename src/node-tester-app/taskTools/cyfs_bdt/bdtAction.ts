@@ -72,7 +72,7 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         if (info.err) {
             return { err: BDTERROR.connnetFailed, log: `${this.action.LN} conenct ${this.action.RN!} err =${info.err}` }
         }
-        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!}`)
+        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!} ,stream_name = ${info.conn!.stream_name}`)
         // 检查fristQA answer 
         if (info.answer) {
             if (info.answer != RN!.bdtClient!.FristQA_answer) {
@@ -80,19 +80,22 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
             }
         }
         //校验RN 连接成功
-        let check = await RN.bdtClient!.remark_accpet_conn_name(info.conn!.stream_name, LN!.bdtClient!.peerid!, this.action.config!.conn_tag);
+        let check = await RN.bdtClient!.remark_accpet_conn_name(info.conn!.TempSeq, LN!.bdtClient!.peerid!, this.action.config!.conn_tag);
         if (check.err) {
             // 等待2s再试一次，监听事件可能有网络延时
             await sleep(2000);
-            check = await await RN.bdtClient!.remark_accpet_conn_name(info.conn!.stream_name, LN!.bdtClient!.peerid!, this.action.config!.conn_tag);
+            check = await await RN.bdtClient!.remark_accpet_conn_name(info.conn!.TempSeq, LN!.bdtClient!.peerid!, this.action.config!.conn_tag);
             if (check.err) {
                 return { err: BDTERROR.connnetFailed, log: ` ${this.action.RN!} confirm failed` }
             }
         } 
+        if(check.conn!.TempSeq != info.conn!.TempSeq){
+            return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , ${check.conn!.TempSeq} != ${info.conn!.TempSeq}` } 
+        }
          // 检查FirstQA question 和 answer
         if (check.conn?.question!) {
             if (check.conn?.question! != FirstQ) {
-                //return {err:BDTERROR.connnetFailed,log:`${action.LN!.peer?.tags} conenct ${action.RN!.peer?.tags} , FristQA question is error`}
+                return {err:BDTERROR.connnetFailed,log:`${this.action.LN} conenct ${this.action.RN} , FristQA question is error`}
             }
         }
         // (5) 保存测试数据
@@ -107,7 +110,25 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "ConnectAction run success" }
     }
 }
+export class CloseConnectAction extends ActionBase implements ActionAbstract {
+    async run(): Promise<{ err: number, log: string }> {
 
+        // (1) 检查测试bdt 客户端
+        let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
+        if (LN.err) {
+            return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
+        }
+        let info =await LN.bdtClient!.getConnection(this.action.config.conn_tag!); 
+        if(info.err){
+            return { err: info.err, log: `${this.action.LN} Connecion ${this.action.config.conn_tag!} not exist` } 
+        }
+        let close = await info.conn!.close();
+        if(close){
+            return { err: close, log: `${this.action.LN} Connecion ${this.action.config.conn_tag!} close failed` } 
+        }
+        return { err: BDTERROR.success, log: "CloseConnectAction run success" }
+    }
+}
 export class SendStreamAction extends ActionBase implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
@@ -120,8 +141,8 @@ export class SendStreamAction extends ActionBase implements ActionAbstract {
             return { err: RN.err, log: `${this.action.RN} bdt client not exist` }
         }
         // (2) 检查连接是否存在
-        let LN_connInfo = await LN.bdtClient!.getConnecion(this.action.config.conn_tag!);
-        let RN_connInfo = await RN.bdtClient!.getConnecion(this.action.config.conn_tag!);
+        let LN_connInfo = await LN.bdtClient!.getConnection(this.action.config.conn_tag!);
+        let RN_connInfo = await RN.bdtClient!.getConnection(this.action.config.conn_tag!);
         if (LN_connInfo.err || RN_connInfo.err) {
             return { err: BDTERROR.optExpectError, log: `conn not found,LN err = ${LN_connInfo.err} ,RN err = ${RN_connInfo.err}` }
         }
@@ -173,7 +194,9 @@ export class SendChunkAction extends ActionBase implements ActionAbstract {
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
-
+        if(prev){
+            return { err: prev, log: `SendChunkAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // (3) BDT 传输  File
         // cyfs-base 计算chunk
         let calculate = await RN.bdtClient!.calculateChunk(randFile.filePath!, this.action.fileSize!);
@@ -182,16 +205,16 @@ export class SendChunkAction extends ActionBase implements ActionAbstract {
         if (!this.action.config.not_wait_upload_finished) {
             let setResult = await setRunning;
             if (setResult.err) {
-                return { err: setResult.err, log: `SendChunkAction run failed,err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+                return { err: setResult.err, log: `SendChunkAction run failed,setChunk err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
         }
         let download = await LN.bdtClient!.interestChunk(RN.bdtClient!.device_object!, calculate.chunk_id!);
         if (download.err) {
-            return { err: download.err, log: `SendChunkAction run failed,err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: download.err, log: `SendChunkAction run failed, interestChunk err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let check = await LN.bdtClient!.checkChunkListener(calculate.chunk_id!, 2000, this.action.config.timeout);
         if (check.err) {
-            return { err: check.err, log: `SendChunkAction run failed,err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: check.err, log: `SendChunkAction run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let setResult = await setRunning;
         // (4) 校验结果
@@ -270,19 +293,37 @@ export class SendFileAction extends ActionBase implements ActionAbstract {
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
-
+        if(prev){
+            return { err: prev, log: `SendFileAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // (3) BDT 传输  File
         // cyfs-base 计算文件Object 
         let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
+        if(calculate.err){
+            return { err: calculate.err, log: `SendFileAction run failed, calculateFile err = ${JSON.stringify(calculate)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // RN 将文件保存到BDT NDN 中
         let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
         if (!this.action.config.not_wait_upload_finished) {
             let setResult = await setRunning;
+            if(setResult.err){
+                return { err: setResult.err, log: `SendFileAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            }
         }
         let savePath = path.join(LNcachePath.cache_path!.file_download, randFile.fileName!)
         let download = await LN.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
+        if(download.err){
+            return { err: download.err, log: `SendFileAction run failed, downloadFile err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
+            
         let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
+        if(check.err){
+            return { err: check.err, log: `SendFileAction run failed, downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         let setResult = await setRunning;
+        if(setResult.err){
+            return { err: setResult.err, log: `SendFileAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // (4) 校验结果
         let LN_hash = await LN.bdtClient!.util_client!.md5File(savePath);
         if (LN_hash.md5 != randFile.md5) {

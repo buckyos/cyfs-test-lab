@@ -38,7 +38,7 @@ export const enum  ActionType {
     start = "start",
     restart = "restart",
     connect = "connect",
-    shutdown = "shutdown",
+    close_connect = "close-connect",
     exit = "destory",
     connect_second = "connect-second",  
     connect_reverse = "connect-reverse",  

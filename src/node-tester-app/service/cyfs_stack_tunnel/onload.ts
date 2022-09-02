@@ -22,6 +22,11 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let result = await manager.build_tunnel(param.type, param.remoteAddress, param.remotePort)
         return { err: ErrorCode.succ, bytes: Buffer.from(''), value: result };
     });
+    _interface.registerApi('end_tunnel', async (from: Namespace, bytes: Buffer, param: { seq: number, type: string, remoteAddress: string, remotePort: number }): Promise<any> => {
+        _interface.getLogger().debug(`remote call proxy_data,${JSON.stringify(param)}`);
+        let result = await manager.end_tunnel(param.type, param.remoteAddress, param.remotePort)
+        return { err: ErrorCode.succ, bytes: Buffer.from(''), value: result };
+    });
     _interface.registerApi('utilRequest', async (from: Namespace, bytes: Buffer, param: any): Promise<any> => {
         _interface.getLogger().debug(`remote ${from.agentid} call utilRequest ${param.name}`);
         _interface.getLogger().debug(`remote call createBdtLpcListener ${param.name} `);

@@ -92,7 +92,7 @@ export class BdtPeerClient extends EventEmitter{
         return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
     }
     
-    async getConnecion(conn_tag:string):Promise<{err:number,conn?:BdtConnection}>{
+    async getConnection(conn_tag:string):Promise<{err:number,conn?:BdtConnection}>{
 
         for(let conn of this.m_conns.values()){
             if(conn.conn_tag === conn_tag){
@@ -169,9 +169,9 @@ export class BdtPeerClient extends EventEmitter{
         }
         
     }
-    async remark_accpet_conn_name(name:string,remote:string,conn_tag?:string):Promise<{err:number,conn?:BdtConnection}>{
+    async remark_accpet_conn_name(TempSeq:string,remote:string,conn_tag?:string):Promise<{err:number,conn?:BdtConnection}>{
         for(let conn of this.m_conns.values()){
-            if(conn.stream_name == name ,conn.remote == remote){
+            if(conn.TempSeq == TempSeq && conn.remote == remote){
                 conn.conn_tag = conn_tag;
                 return {err:BDTERROR.success,conn}
             }
@@ -216,7 +216,7 @@ export class BdtPeerClient extends EventEmitter{
         return info.err;
     }
 
-    async addDevice(peer: Buffer){
+    async addDevice(peer: Buffer): Promise<ErrorCode> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  peer, {
             name: 'add-device', 
             peerName: this.peerName,
@@ -363,7 +363,10 @@ export class BdtPeerClient extends EventEmitter{
             let check = await this.downloadTaskState(session);
             if( !check.state || !check.state.includes("Downloading")){
                 let time = Date.now() - begin;
-                return {err:check.err,state:check.state,record,time}
+                if(check.state!.includes("Finished")){
+                    return {err:BDTERROR.success,state:check.state,record,time}
+                }
+                return {err:BDTERROR.sendDataFailed,state:check.state,record,time}
             }
             record.push({
                 time: Date.now(),
@@ -431,7 +434,7 @@ export class BdtConnection extends EventEmitter {
     
     async close(): Promise<ErrorCode> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
-            name: 'add-device', 
+            name: 'close', 
             peerName: this.peerName,
             stream_name: this.stream_name,
         }, this.m_agentid, 0);
