@@ -80,10 +80,12 @@ export class LocalMaster extends ClientStack {
             });
 
             rpc.once('close', () => {
+                this.logger.info(`local master close net Socket`)
                 rpc.removeAllListeners();
             });
 
             rpc.once('error', () => {
+                this.logger.info(`local master net Socket error`)
                 rpc.removeAllListeners();
             });
         });
@@ -186,6 +188,7 @@ export class LocalMaster extends ClientStack {
 
         client.on('timeout', async () => {
             this.m_logger.info(`===============client exit,namespace=${JSON.stringify(client.namespace)}`);
+            
             if (!client.isService && !(client as TaskProxy).isLocalTest) {
                 this._reportTaskExecuteResult(client as TaskProxy);
             }

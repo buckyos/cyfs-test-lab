@@ -1,4 +1,4 @@
-import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator, HttpDownloader } from '../../base';
+import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator } from '../../base';
 import * as path from "path"
 import { StackProxyClient } from "../../taskTools/cyfs_stack_tunnel/stackTool"
 import * as cyfs from "../../taskTools/cyfs_stack_tunnel/cyfs_node"
@@ -7,7 +7,7 @@ import * as fs from "fs-extra";
 
 async function test_file(_interface: TaskClientInterface,DMC_Download:StackProxyClient,DMC_Upload:StackProxyClient,stack_download:cyfs.SharedCyfsStack,stack_upload:cyfs.SharedCyfsStack,fileSize:number,timeout:number) {
     let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnab9uVtjeaK4bM59QKSkLEGWow1pJq6hjjK9MM").unwrap();
-   
+    let download_path = await DMC_Download.util_client!.getCachePath();
     let createFile = await DMC_Upload.util_client!.createFile(fileSize);
     let add_file = await stack_upload.trans().publish_file({
         common: {// 请求路径，可为空
@@ -26,7 +26,7 @@ async function test_file(_interface: TaskClientInterface,DMC_Download:StackProxy
         local_path: createFile.filePath!,
         chunk_size: 4 * 1024 * 1024
     });
-    _interface.getLogger().info(`${JSON.stringify(add_file)}`);
+   
     let test_file = add_file.unwrap().file_id
     let task_id: string;
     await cyfs.sleep(1000)
@@ -42,7 +42,6 @@ async function test_file(_interface: TaskClientInterface,DMC_Download:StackProxy
         }
     };
     const get_ret = await stack_upload.non_service().get_object(req1);
-    _interface.getLogger().info(`${JSON.stringify(get_ret)}`)
     let file_obj = get_ret.unwrap().object;
     let stream = await stack_upload.non_service().put_object({
         common: {
@@ -68,26 +67,8 @@ async function test_file(_interface: TaskClientInterface,DMC_Download:StackProxy
     };
     const get_ret2 = await stack_download.non_service().get_object(req2);
     get_ret2.unwrap().object
-    let savePath = path.join(__dirname,"../../DMC.txt")
-    if(!fs.pathExistsSync(savePath)){
-        fs.createFileSync(savePath)
-    }
-    
+    let save_filePath =  path.join( download_path.cache_path!.file_download!,createFile.fileName!)
     _interface.getLogger().info(`${JSON.stringify(get_ret2) }`)
-    for(let i=0;i<1;i++){
-        let result = await download(_interface,DMC_Download,stack_download,stack_upload,fileSize,timeout,test_file,createFile.fileName!)
-        let file = fs.appendFileSync(savePath,`${JSON.stringify(result)}\n`)
-        if(result.err == ErrorCode.succ){
-            return;
-        }
-    }
-}
-
-export async function  download(_interface: TaskClientInterface,DMC_Download:StackProxyClient,stack_download:cyfs.SharedCyfsStack,stack_upload:cyfs.SharedCyfsStack,fileSize:number,timeout:number,test_file:cyfs.ObjectId,fileName:string,error_time:number=0){
-    let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnab9uVtjeaK4bM59QKSkLEGWow1pJq6hjjK9MM").unwrap();
-    let download_path = await DMC_Download.util_client!.getCachePath();
-    let save_filePath =  path.join( download_path.cache_path!.file_download!,fileName!)
-
     let begin = Date.now();
     let download = await stack_download.trans().create_task( {
         common:  {
@@ -104,13 +85,13 @@ export async function  download(_interface: TaskClientInterface,DMC_Download:Sta
         auto_start: true,
     })
     _interface.getLogger().info(`##${download}`)
+    
+    let download_id  = download.unwrap().task_id
     let savePath = path.join(__dirname,"../../DMC_download.txt")
     if(!fs.pathExistsSync(savePath)){
         fs.createFileSync(savePath)
     }
-    let errorPath = path.join(__dirname,"../../DMC_error.txt")
-    fs.removeSync(errorPath);
-    let download_id  = download.unwrap().task_id
+    
     for(let i =0;i<timeout;i++){
         let task = await stack_download.trans().get_task_state( {
             common:  {
@@ -131,38 +112,29 @@ export async function  download(_interface: TaskClientInterface,DMC_Download:Sta
         }
         if(state==5){
             _interface.getLogger().info(`####### 传输完成： ${JSON.stringify(task.unwrap())} ,time = ${Date.now() - begin} ,文件大小 : ${fileSize}` );
-            error_time = error_time + 1;
-            if(error_time>20){
-                return {err:ErrorCode.exception,fileId:test_file.to_base_58(),time:Date.now() - begin,fileSize}
-            }
-            fs.createFileSync(errorPath);
-            fs.appendFileSync(errorPath,`fileId=${test_file.to_base_58()}#fileName=${fileName}#error_time=${error_time}`)
             return {err:ErrorCode.exception,fileId:test_file.to_base_58(),time:Date.now() - begin,fileSize}
             
         }
         await cyfs.sleep(1000)
     }
-    
-
     return {err:ErrorCode.timeout,fileId:test_file.to_base_58(),time:Date.now() - begin,fileSize}
 }
-
 
 export async function TaskMain(_interface: TaskClientInterface) {
 
     let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnab9uVtjeaK4bM59QKSkLEGWow1pJq6hjjK9MM").unwrap();
     let DMC_Download = new StackProxyClient({
         _interface,
-        peerName: "PC_0005", // DMC_Download
+        peerName: "DMC_Download",
         stack_type: "ood",
         timeout: 60 * 1000,
         ws_port: 20001,
-        http_port: 20002  
+        http_port: 20002
     })
     await DMC_Download.init();
     let DMC_Upload = new StackProxyClient({
         _interface,
-        peerName: "PC_0018",  // DMC_Upload
+        peerName: "DMC_Upload",
         stack_type: "ood",
         timeout: 60 * 1000,
         ws_port: 20003,
@@ -179,19 +151,11 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let resp2 = await stack_upload.wait_online(cyfs.None);
     _interface.getLogger().info(`wait_online finished ${JSON.stringify(resp.unwrap())}`);
     let res2 = await stack_upload.util().get_zone({ common: { flags: 0 } });
-    let errorPath = path.join(__dirname,"../../DMC_error.txt")
-    let fileSize = 50*1024*1024;
-    if(fs.pathExistsSync(errorPath)){
-        let data = fs.readFileSync(errorPath).toString();
-        let fileId_str = data.split("#")[0].split("=")[1]
-        let fileName = data.split("#")[1].split("=")[1]
-        let error_time = Number(data.split("#")[2].split("=")[1]) 
-        _interface.getLogger().info(`fileId_str = ${fileId_str}  fileName = ${fileName} error_time =${error_time}`)
-        let fileId = cyfs.ObjectId.from_base_58(fileId_str).unwrap();
-        let result = await  download(_interface,DMC_Download,stack_download,stack_upload,fileSize,400,fileId,fileName,error_time);
-        await _interface.exit(ClientExitCode.failed, `${result}`)
+    let result = await test_file(_interface,DMC_Download,DMC_Upload,stack_download,stack_upload,500*1024*1024,1000);
+    let savePath = path.join(__dirname,"../../DMC.txt")
+    if(!fs.pathExistsSync(savePath)){
+        fs.createFileSync(savePath)
     }
-    let result = await test_file(_interface,DMC_Download,DMC_Upload,stack_download,stack_upload,fileSize,400);
-    
+    let file = fs.appendFileSync(savePath,`${JSON.stringify(result)}\n`)
     await _interface.exit(ClientExitCode.failed, `${result}`)
 }

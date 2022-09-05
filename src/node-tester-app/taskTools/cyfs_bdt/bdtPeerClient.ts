@@ -93,7 +93,56 @@ export class BdtPeerClient extends EventEmitter{
         await this.autoAccept();
         return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
     }
-    
+    async restart(ndn_event:string,ndn_event_target:string):Promise<{err:number,log?:string}> {
+        this.cache_peer_info.ndn_event = ndn_event;
+        this.cache_peer_info.ndn_event_target = ndn_event_target;
+        // 1. start bdt-tool
+        let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
+            RUST_LOG : this.cache_peer_info!.RUST_LOG!
+        }, this.m_agentid!, 10*1000);
+        if(start_tool.err){
+            this.logger.error(`${this.tags} start bdt-tools failed`)
+            return  {err:start_tool.err,log:`${this.tags} start bdt-tools failed`}
+        }
+        this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
+        this.peerName = start_tool.value.peerName;
+        this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
+        await sleep(2000)
+        // 2. start bdt stack
+        let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
+            name: 'create',
+            peerName:this.peerName,
+            addrInfo:this.cache_peer_info!.addrInfo,
+            sn_files: this.cache_peer_info!.sn_files,
+            active_pn_files: this.cache_peer_info!.active_pn_files,
+            passive_pn_files:this.cache_peer_info!.passive_pn_files,
+            known_peer_files:this.cache_peer_info!.known_peer_files,
+            local:this.cache_peer_info!.local,
+            chunk_cache:this.cache_peer_info!.chunk_cache,
+            ep_type:this.cache_peer_info!.ep_type,
+            ndn_event:this.cache_peer_info!.ndn_event,
+            ndn_event_target:this.cache_peer_info!.ndn_event_target,
+            sn_only:this.cache_peer_info.udp_sn_only,
+            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
+        }, this.m_agentid!, 10*1000);
+        if(start_stack.err){
+            this.logger.error(`${this.tags} start bdt stack failed`)
+            return  {err:start_tool.err,log:`${this.tags} start bdt stack failed`}
+        }
+        this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
+        this.device_object = start_stack.bytes;
+        this.sn_resp_eps = start_stack.value.ep_resp;
+        this.peerid = start_stack.value.id
+        // 3. attachEvent bdt-tool unlive
+        let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
+            this.state = -1;
+            this.logger.error(`${this.tags} unlive_${this.peerName}`)
+        }, this.m_agentid, this.m_timeout);
+        this.m_unliveCookie = info.cookie;
+        // 4. bdt client start autoAccept
+        await this.autoAccept();
+        return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
+    }
     async getConnection(conn_tag:string):Promise<{err:number,conn?:BdtConnection}>{
 
         for(let conn of this.m_conns.values()){

@@ -47,6 +47,7 @@ export class ClientProxy extends Channel {
         
         this.m_process = ChildProcess.fork(file, [paramPath], {silent: true});
         this.m_process.on('exit', (code: number, signal: string) => {
+            this.logger.info(`###### TASK CLIENT RUN EXIST`)
             this.m_process = undefined;
             if (signal) {
                 code = ClientExitCode.killed;
@@ -81,6 +82,7 @@ export class ClientProxy extends Channel {
 
         return await new Promise<ErrorCode>((v) => {
             this.m_process!.once('exit', () => {
+                this.logger.info(`######  CLIENT stopProcess `)
                 v(ErrorCode.succ);
             });
 
