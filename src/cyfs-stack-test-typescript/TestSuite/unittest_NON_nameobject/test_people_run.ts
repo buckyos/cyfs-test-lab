@@ -1,10 +1,10 @@
 import * as cyfs from "../../cyfs_node/cyfs_node"
 import * as path from 'path'
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import { descpath, run, decoder, DeleteDescFile } from './index';
 import { copySync } from "fs-extra";
 var assert = require("assert");
-import {RandomGenerator} from "../../common";
+import { ErrorCode, RandomGenerator } from "../../common";
 
 
 //People对象测试
@@ -20,15 +20,12 @@ describe("测试People对象编解码", function () {
     let owner = cyfs.ObjectId.from_base_58(objectidstr).unwrap();
     let deviceid = cyfs.DeviceId.from_base_58(deviceidstr).unwrap();
     let ood_list1 = [deviceid]
-    let area = new cyfs.Area(1, 2, 3, 4);
+    let area = new cyfs.Area(245, 2, 5, 10);
     let fileid = cyfs.FileId.from_base_58(fileidstr).unwrap()
     let secret = cyfs.PrivateKey.generate_rsa(2048).unwrap();
     let icon = fileid
 
-    //变量定义：ood_list参数传入多个DeviceId
-    let deviceid2 = cyfs.DeviceId.from_base_58(deviceidstr2).unwrap();
-    let ood_list = [deviceid, deviceid, deviceid, deviceid, deviceid2, deviceid2]
-    let deviceid3: cyfs.DeviceId[] = [];
+
 
     //变量定义：set_icon的调用
     let fileidstr1 = '7Tk94Yfh3i5r5fFtvPMZqreFA9tcYfrhMext8dVDU5Zi'
@@ -46,6 +43,17 @@ describe("测试People对象编解码", function () {
     let filepath7 = descpath('People07');
     let filepath8 = descpath('People08');
     let filepath9 = descpath('People09');
+    let filepath10 = descpath('People10');
+    let filepath11 = descpath('People11');
+    let filepath12 = descpath('People12');
+    let filepath13 = descpath('People13');
+
+    cyfs.clog.enable_file_log({
+        name: "test_main",
+        dir: cyfs.get_app_log_dir("test_namedobject"),
+        file_max_size: 1024 * 1024 * 10,
+        file_max_count: 10,
+    });
 
     describe("Ts编解码", function () {
         it("Ts编码：有效传入owner,ood_list,public,area,name,icon参数", async function () {
@@ -81,6 +89,9 @@ describe("测试People对象编解码", function () {
         });
 
         it("Ts编码：有效传入多个DeviceId组成的ood_list参数", async function () {
+            let deviceid2 = cyfs.DeviceId.from_base_58(deviceidstr2).unwrap();
+            let ood_list = [deviceid, deviceid, deviceid, deviceid, deviceid2, deviceid2]
+
             let People = cyfs.People.create(
                 cyfs.Some(owner),
                 ood_list,
@@ -91,17 +102,34 @@ describe("测试People对象编解码", function () {
             )
             let u8people = People.to_vec().unwrap()
             fs.writeFileSync(filepath1, People.to_vec().unwrap());
-            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
+
+
+            PeopleId = People.desc().calculate_id();
+
+            let [target] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
+            let owner_deco = target.desc().owner()?.unwrap();
+            let PeopleId_deco = target.desc().calculate_id();
+            let icon_deco = target.icon()
+            let name_deco = target.name();
             let ood_list_deco = target.body_expect().content().ood_list
 
             //属性校验
+            assert(owner_deco?.equals(owner), 'owner属性不相等');
+            assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
+            assert(icon_deco?.equals(icon), 'icon属性不相等');
+            assert.equal(name, name_deco);
             for (let i in ood_list_deco) {
                 assert(ood_list_deco[i].equals(ood_list[i]), 'ood_list属性不相等')
             }
+
+
+
         });
         it("Ts编码：有效传入空值的ood_list参数", async function () {
+            let deviceid3: cyfs.DeviceId[] = [];
+
             let People = cyfs.People.create(
                 cyfs.Some(owner),
                 deviceid3,
@@ -119,9 +147,9 @@ describe("测试People对象编解码", function () {
             let deood_list = target.body_expect().content().ood_list
             //属性校验
 
-            console.log("en----------"+typeof(enood_list))
-            console.log("de----------"+typeof(deood_list))
-            assert.equals(deood_list, deviceid3, 'ood_list属性不相等')
+            console.log("en----------" + typeof (enood_list))
+            console.log("de----------" + typeof (deood_list))
+            assert.equal(deood_list, "", 'ood_list属性不相等')
 
 
         });
@@ -130,7 +158,7 @@ describe("测试People对象编解码", function () {
                 cyfs.None,
                 ood_list1,
                 secret.public(),
-                cyfs.None,
+                cyfs.Some(area),
                 "",
                 icon,
             )
@@ -220,10 +248,16 @@ describe("测试People对象编解码", function () {
             assert.equal(undefined, target.icon());
             assert.equal(undefined, target.name());
         });
-        it("Ts编码：设置name足够大2^16 Byte", async function () {
+        it("Ts编码：设置name大于64MB", async function (done) {
+            this.timeout(15000);
 
-            let strRandom = RandomGenerator.string(10000,10000,10000)
-
+            let namePath = path.join(cyfs.get_temp_path(), "strfile");
+            let datafile = path.join(namePath, "strfile64.txt")
+            fs.removeSync(datafile)
+            if (!fs.existsSync(datafile)) {
+                RandomGenerator.createRandomFile(namePath, "strfile64.txt", 64 * 1024 * 1024);
+            }
+            let strRandom = fs.readFileSync(datafile).toString()
             let People = cyfs.People.create(
                 cyfs.Some(owner),
                 ood_list1,
@@ -236,10 +270,164 @@ describe("测试People对象编解码", function () {
             let u8people = People.to_vec().unwrap()
             fs.writeFileSync(filepath8, u8people);
             assert(People.icon()?.equals(fileid1), 'icon 属性不相等');
+            done()
+        });
+        it.skip("Ts编码：设置name大于128MB", async function (done) {
+            this.timeout(20000);
+            console.log("128kaihsi")
+            let namePath = path.join(cyfs.get_temp_path(), "strfile");
+            let datafile = path.join(namePath, "strfile128.txt")
+            fs.removeSync(datafile)
+            if (!fs.existsSync(datafile)) {
+                RandomGenerator.createRandomFile(namePath, "strfile128.txt", 128 * 1024 * 1024);
+            }
+            let namedata = fs.readFileSync(datafile).toString()
+            console.log("______________________2")
+            let People = cyfs.People.create(
+                cyfs.Some(owner),
+                ood_list1,
+                secret.public(),
+                cyfs.Some(area),
+                namedata,
+                icon,
+            )
+            console.log("______________________3")
+            People.set_icon(fileid1)
+            console.log("______________________4")
+            let u8people = People.to_vec().unwrap()
+            console.log("______________________5")
+
+            fs.writeFileSync(filepath9, u8people);
+            console.log("______________________6")
+
+            assert(People.icon()?.equals(fileid1), 'icon 属性不相等');
+            done()
+        });
+        it("Ts编码：有效传入100个DeviceId组成的ood_list参数", async function () {
+            let deviceid2 = cyfs.DeviceId.from_base_58(deviceidstr2).unwrap();
+            let num: number = 100
+            let ood_list: cyfs.DeviceId[] = new Array(num)
+            for (let index: number = 0; index < num / 2; index++) { ood_list[index] = deviceid2; }
+            for (let index: number = num / 2; index < num; index++) { ood_list[index] = deviceid; }
+            let People = cyfs.People.create(
+                cyfs.Some(owner),
+                ood_list,
+                secret.public(),
+                cyfs.Some(area),
+                name,
+                icon,
+            )
+            let u8people = People.to_vec().unwrap()
+            fs.writeFileSync(filepath10, People.to_vec().unwrap());
+            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
+
+            //获取属性
+            let ood_list_deco = target.body_expect().content().ood_list
+
+            //属性校验
+            for (let i in ood_list_deco) {
+                assert(ood_list_deco[i].equals(ood_list![i]), 'ood_list属性不相等')
+            }
+        });
+        it("Ts编码：设置ood_work_mode为主备", async function () {
+            let People = cyfs.People.create(
+                cyfs.Some(owner),
+                ood_list1,
+                secret.public(),
+                cyfs.Some(area),
+                name,
+                icon,
+            )
+            People.set_ood_work_mode(cyfs.OODWorkMode.ActiveStandby)
+            let u8people = People.to_vec().unwrap()
+            fs.writeFileSync(filepath11, u8people);
+            PeopleId = People.desc().calculate_id();
+
+            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
+
+            //获取属性
+            let owner_deco = target.desc().owner()?.unwrap();
+            let PeopleId_deco = target.desc().calculate_id();
+            let icon_deco = target.icon()
+            let name_deco = target.name();
+            let ood_list_deco = target.body_expect().content().ood_list
+
+            //属性校验
+            assert(owner_deco?.equals(owner), 'owner属性不相等');
+            assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
+            assert(icon_deco?.equals(icon), 'icon属性不相等');
+            assert.equal(name, name_deco);
+            for (let i in ood_list_deco) {
+                assert(ood_list_deco[i].equals(ood_list1[i]), 'ood_list属性不相等')
+            }
+        });
+        it("Ts编码：传入的area为None", async function () {
+            let People = cyfs.People.create(
+                cyfs.Some(owner),
+                ood_list1,
+                secret.public(),
+                cyfs.None,
+                name,
+                icon,
+            )
+            let u8people = People.to_vec().unwrap()
+            fs.writeFileSync(filepath12, u8people);
+            PeopleId = People.desc().calculate_id();
+
+            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
+
+            //获取属性
+            let owner_deco = target.desc().owner()?.unwrap();
+            let PeopleId_deco = target.desc().calculate_id();
+            let icon_deco = target.icon()
+            let name_deco = target.name();
+            let ood_list_deco = target.body_expect().content().ood_list
+
+            //属性校验
+            assert(owner_deco?.equals(owner), 'owner属性不相等');
+            assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
+            assert(icon_deco?.equals(icon), 'icon属性不相等');
+            assert.equal(name, name_deco);
+            for (let i in ood_list_deco) {
+                assert(ood_list_deco[i].equals(ood_list1[i]), 'ood_list属性不相等')
+            }
+        });
+        it("Ts编码：传入的area值输入为0", async function () {
+            let zeroarea = new cyfs.Area(0, 0, 0, 0);
+
+            let People = cyfs.People.create(
+                cyfs.Some(owner),
+                ood_list1,
+                secret.public(),
+                cyfs.Some(zeroarea),
+                name,
+                icon,
+            )
+            let u8people = People.to_vec().unwrap()
+            fs.writeFileSync(filepath13, u8people);
+            PeopleId = People.desc().calculate_id();
+
+            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
+
+            //获取属性
+            let owner_deco = target.desc().owner()?.unwrap();
+            let PeopleId_deco = target.desc().calculate_id();
+            let icon_deco = target.icon()
+            let name_deco = target.name();
+            let ood_list_deco = target.body_expect().content().ood_list
+
+            //属性校验
+            assert(owner_deco?.equals(owner), 'owner属性不相等');
+            assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
+            assert(icon_deco?.equals(icon), 'icon属性不相等');
+            assert.equal(name, name_deco);
+            for (let i in ood_list_deco) {
+                assert(ood_list_deco[i].equals(ood_list1[i]), 'ood_list属性不相等')
+            }
         });
     });
 
-    describe("Rust编解码desc-tool.exe", function () {
+    describe.skip("Rust编解码", function () {
         it("Rust工具解码(Ts编码对象)：有效对Ts编码对象进行Rust工具解码", async function () {
             let ffsClientPath = __dirname + '/test-tool/tool/desc-tool.exe';
             let args = ' show -a ' + filepath;
@@ -329,26 +517,30 @@ describe("测试People对象编解码", function () {
             })
         });
         it("Ts从Rust解码：有效传入owner,ood_list,public,area,name,icon参数", async function () {
+            let temp_path = cyfs.get_temp_path();
+            let file_path = path.join(temp_path, "people.obj");
+            if (fs.existsSync(file_path)) {
+                let rust_buffer = decoder(file_path)
 
-            let rust_buffer = decoder(filepath)
+                let [target] = new cyfs.PeopleDecoder().raw_decode(rust_buffer).unwrap();
 
-            let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(rust_buffer).unwrap();
+                //获取属性
+                let owner_deco = target.desc().owner()?.unwrap();
+                let PeopleId_deco = target.desc().calculate_id();
+                let icon_deco = target.icon()
+                let name_deco = target.name();
+                let ood_list_deco = target.body_expect().content().ood_list
 
-            //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
-            let PeopleId_deco = target.desc().calculate_id();
-            let icon_deco = target.icon()
-            let name_deco = target.name();
-            let ood_list_deco = target.body_expect().content().ood_list
+                //属性校验
+                assert(owner_deco?.equals(owner), 'owner属性不相等');
+                assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
+                assert(icon_deco?.equals(icon), 'icon属性不相等');
+                assert.equal(name, name_deco);
+                for (let i in ood_list_deco) {
+                    assert(ood_list_deco[i].equals(ood_list1[i]), 'ood_list属性不相等')
+                }
+            } else { throw new Error("Rust侧未生成编码文件") };
 
-            //属性校验
-            assert(owner_deco?.equals(owner), 'owner属性不相等');
-            assert(PeopleId_deco.equals(PeopleId), 'PeopleId属性不相等');
-            assert(icon_deco?.equals(icon), 'icon属性不相等');
-            assert.equal(name, name_deco);
-            for (let i in ood_list_deco) {
-                assert(ood_list_deco[i].equals(ood_list1[i]), 'ood_list属性不相等')
-            }
 
 
         });
