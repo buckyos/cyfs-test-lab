@@ -6,12 +6,12 @@ export type TestcaseModel = {
     TestcaseName: string 
     remark?: string 
     agentList?: string 
-    taskList?: number 
     environment?: string 
     taskMult?: string 
     createTime?: string
     result?: string
     errorList?: string ,
+    total?: number 
     success?:number,
     failed?:number,
     date?:string,
@@ -30,12 +30,12 @@ export class BdtTestcase{
             testcaseId : testcase.testcaseId,
             remark: testcase.remark,
             agentList:testcase.agentList,
-            taskList:testcase.taskList,
             environment:testcase.environment,
             taskMult:String(testcase.taskMult) ,
             result:String(testcase.result) ,
             errorList:testcase.errorList,
             createTime: Date.now().toString(),
+            total:testcase.total,
             success:testcase.success,
             failed:testcase.failed,
             date:testcase.date,

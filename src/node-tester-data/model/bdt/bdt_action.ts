@@ -18,6 +18,7 @@ export interface ActionModel{
   send_time?: number 
   expect?: string 
   result?: string 
+  result_log?: string 
 }
 
 
@@ -46,6 +47,7 @@ export class BdtAction{
             send_time:action.send_time ,
             set_time:action.set_time ,
             result:action.result,
+            resultLog : action.result_log!,
             expect:action.expect,
             createTime: Date.now().toString(),
           }})
