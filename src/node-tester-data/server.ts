@@ -4,6 +4,7 @@ import * as bdtTestcase from "./routes/bdt/bdt_testcase";
 import * as bdt_action from "./routes/bdt/bdt_action";
 import * as bdt_task from "./routes/bdt/bdt_task";
 import * as bdt_agent from "./routes/bdt/bdt_agent";
+import * as bdt_client from "./routes/bdt/bdt_client";
 import * as agent from "./routes/base/agent";
 import * as perf from "./routes/base/agent_perf";
 import * as system_info from "./routes/base/system_info";
@@ -33,6 +34,8 @@ app.use("/api/bdt/action", bdt_action.router);
 app.use("/api/bdt/task", bdt_task.router);
 
 app.use("/api/bdt/agent", bdt_agent.router);
+
+app.use("/api/bdt/client", bdt_client.router);
 
 app.use("/api/base/agent", agent.router);
 
