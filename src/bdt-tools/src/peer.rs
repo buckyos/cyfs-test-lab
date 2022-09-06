@@ -734,28 +734,42 @@ impl Peer {
                         Some(conn) => {
                             let mut conn = conn;
                             let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                            match conn.send_file(c.size).await {
-                                Err(e) => {
-                                    log::error!("send failed, name={}, e={}", &c.stream_name, &e);
-                                    SendLpcCommandResp {
-                                        seq, 
-                                        result: e.code().as_u16(),
-                                        stream_name: c.stream_name,
-                                        time: 0,
-                                        hash: HashValue::default()
-                                    }
-                                },
-                                Ok(hash) => {
-                                    log::info!("send succ, name={}", &c.stream_name);
-                                    SendLpcCommandResp {
-                                        seq, 
-                                        result: 0 as u16,
-                                        stream_name: c.stream_name,
-                                        time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
-                                        hash
+                            let connState = format!("{}", conn.get_stream().state());
+                            if(connState == "StreamState::Closing" || connState == "StreamState::Closed"){
+                                SendLpcCommandResp {
+                                    seq, 
+                                    result: 105,
+                                    stream_name: c.stream_name,
+                                    time: 0,
+                                    hash: HashValue::default()
+                                }
+                            }else{
+                                match conn.send_file(c.size).await {
+                                    Err(e) => {
+                                        log::error!("send failed, name={}, e={}", &c.stream_name, &e);
+                                        SendLpcCommandResp {
+                                            seq, 
+                                            result: e.code().as_u16(),
+                                            stream_name: c.stream_name,
+                                            time: 0,
+                                            hash: HashValue::default()
+                                        }
+                                    },
+                                    Ok(hash) => {
+                                        log::info!("send succ, name={}", &c.stream_name);
+                                        SendLpcCommandResp {
+                                            seq, 
+                                            result: 0 as u16,
+                                            stream_name: c.stream_name,
+                                            time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                            hash
+                                        }
                                     }
                                 }
                             }
+                           
+                            
+                            
                         }
                     }
                 }
@@ -1878,7 +1892,7 @@ impl Peer {
                     Some(d) =>{
                         if s.clone() == "Redirect" {
                             log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
-                            params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
+                            //params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
                         }else if s.clone() == "Forward"{
                             log::info!("set ndn_event handler = Forward,target = {}",d.clone());
                             params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));
