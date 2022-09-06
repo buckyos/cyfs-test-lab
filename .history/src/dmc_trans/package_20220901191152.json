@@ -1,0 +1,21 @@
+{
+  "name": "cyfs-ts-sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+
+  },
+  "bin": {
+    "bucky": "tools/bucky.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+
+  },
+  "dependencies": {
+ 
+  }
+}

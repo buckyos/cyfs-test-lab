@@ -486,8 +486,8 @@ dependencies = [
  "backtrace",
  "byteorder",
  "bytes 1.2.0",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-debug 0.5.0",
  "cyfs-util 0.5.1",
  "futures",
@@ -1147,7 +1147,7 @@ dependencies = [
 
 [[package]]
 name = "cyfs-base"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "aes 0.7.5",
  "async-recursion",
@@ -1253,7 +1253,7 @@ version = "0.5.2"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-core 0.5.2",
  "generic-array 0.12.4",
  "hex",
@@ -1266,14 +1266,14 @@ dependencies = [
 
 [[package]]
 name = "cyfs-bdt"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "async-std",
  "async-trait",
  "bytes 0.4.12",
  "chrono",
  "clap",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-debug 0.5.0",
  "cyfs-raptorq 1.6.1",
  "cyfs-util 0.5.1",
@@ -1283,11 +1283,13 @@ dependencies = [
  "libc",
  "log",
  "lru_time_cache",
+ "md5",
  "nix 0.24.2",
  "once_cell",
  "rand 0.7.3",
  "ringbuf",
  "rusqlite",
+ "serde_json",
  "sha2 0.8.2",
  "socket2 0.4.4",
  "winapi 0.3.9",
@@ -1330,7 +1332,7 @@ version = "0.5.1"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-chunk-lib",
  "cyfs-util 0.5.1",
  "futures-lite",
@@ -1351,7 +1353,7 @@ version = "0.5.1"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-util 0.5.1",
  "log",
  "memmap2",
@@ -1363,7 +1365,7 @@ name = "cyfs-cip"
 version = "0.5.0"
 dependencies = [
  "bip39",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "digest 0.10.3",
  "hex",
  "hmac 0.12.1",
@@ -1383,7 +1385,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "chrono",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-util 0.5.1",
  "hex",
  "int-enum",
@@ -1433,7 +1435,7 @@ dependencies = [
  "async-trait",
  "backtrace",
  "chrono",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-util 0.5.1",
  "flexi_logger",
  "hex",
@@ -1508,7 +1510,7 @@ dependencies = [
 
 [[package]]
 name = "cyfs-lib"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "async-h1",
  "async-std",
@@ -1516,8 +1518,8 @@ dependencies = [
  "async-tungstenite",
  "bytes 1.2.0",
  "chrono",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-core 0.5.2",
  "cyfs-debug 0.5.0",
  "cyfs-util 0.5.1",
@@ -1582,7 +1584,7 @@ version = "0.5.0"
 dependencies = [
  "async-h1",
  "async-std",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-base-meta",
  "hex",
  "http-types",
@@ -1598,9 +1600,9 @@ version = "0.5.0"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-util 0.5.1",
  "log",
  "rusqlite",
@@ -1614,9 +1616,9 @@ dependencies = [
  "async-std",
  "async-trait",
  "bson",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-util 0.5.1",
  "lazy_static",
  "log",
@@ -1672,13 +1674,13 @@ dependencies = [
  "async-trait",
  "byteorder",
  "crossbeam",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-chunk-cache",
  "cyfs-chunk-lib",
  "cyfs-core 0.5.2",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-meta-lib",
  "cyfs-ndc",
  "cyfs-noc",
@@ -1711,10 +1713,10 @@ version = "0.5.0"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-meta-lib",
  "cyfs-noc",
  "cyfs-stack",
@@ -1733,7 +1735,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "base58",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "futures",
  "generic-array 0.12.4",
  "lazy_static",
@@ -1749,8 +1751,8 @@ dependencies = [
  "async-trait",
  "backtrace",
  "byteorder",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-debug 0.5.0",
  "cyfs-util 0.5.1",
  "futures",
@@ -1769,9 +1771,9 @@ version = "0.5.0"
 dependencies = [
  "async-std",
  "async-trait",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-util 0.5.1",
  "log",
  "rusqlite",
@@ -1787,7 +1789,7 @@ dependencies = [
  "async-trait",
  "c_linked_list",
  "clap",
- "cyfs-base 0.5.2",
+ "cyfs-base 0.5.3",
  "cyfs-sha2 0.8.2",
  "dirs",
  "flexi_logger",
@@ -2896,6 +2898,12 @@ dependencies = [
  "digest 0.9.0",
  "opaque-debug 0.3.0",
 ]
+
+[[package]]
+name = "md5"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
 
 [[package]]
 name = "memchr"
@@ -4981,12 +4989,12 @@ dependencies = [
  "async-trait",
  "bip39",
  "clap",
- "cyfs-base 0.5.2",
- "cyfs-bdt 0.5.3",
+ "cyfs-base 0.5.3",
+ "cyfs-bdt 0.5.4",
  "cyfs-cip",
  "cyfs-core 0.5.2",
  "cyfs-debug 0.5.0",
- "cyfs-lib 0.5.3",
+ "cyfs-lib 0.5.4",
  "cyfs-stack-loader",
  "cyfs-util 0.5.1",
  "futures",

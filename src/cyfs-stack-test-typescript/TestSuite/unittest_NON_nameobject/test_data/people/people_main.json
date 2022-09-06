@@ -1,0 +1,11 @@
+{
+    "casename": "Ts编解码:有效传入owner,ood_list,public,area,name,icon参数",
+    "outfile": "people_test_main.desc", //输出到path.join(cyfs.get_temp_path(), "people");
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", //限制32位字符，cyfs.ObjectId.from_base_58(str).unwrap()
+    "ood_list": "1", //  代表一个device
+    "area": "41:2:30:4", //new cyfs.Area(41, 2, 30, 4)
+    "name": "我们在测试people基础对象", //无需转换cyfs类型直接使用
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu", //限制32位字符，cyfs.FileId.from_base_58(str).unwrap()
+    "public_key": "keySize:2048", //cyfs.PrivateKey.generate_rsa(2048).unwrap()
+    "assert_character": "owner:PeopleId:icon:ood_list"   // 断言了哪些属性
+}

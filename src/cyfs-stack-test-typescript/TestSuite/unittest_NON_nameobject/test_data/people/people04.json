@@ -1,0 +1,9 @@
+{
+    "casename": "Ts编码:不传入name,icon参数",
+    "outfile": "people_test04.desc", //输出到path.join(cyfs.get_temp_path(), "people");
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", //为空
+    "ood_list": "1", //  代表多少个device
+    "area": "41:2:30:4", //new cyfs.Area(41, 2, 30, 4)
+    "public_key": "keySize:2048", //cyfs.PrivateKey.generate_rsa(2048).unwrap()
+    "assert_character": "owner:PeopleId:ood_list"   // 断言了哪些属性
+}

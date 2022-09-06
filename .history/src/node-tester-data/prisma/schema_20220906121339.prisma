@@ -1,0 +1,305 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:123456@192.168.100.254:3306/cyfs_test_lab"
+}
+
+model agent {
+  id        Int     @id @default(autoincrement())
+  name      String? @db.VarChar(255)
+  online    String? @db.VarChar(255)
+  type      String? @db.VarChar(255)
+  agentinfo String? @db.VarChar(255)
+  last_time String? @db.VarChar(255)
+}
+
+model error_info {
+  id            Int     @id @default(autoincrement())
+  agent         String? @db.VarChar(255)
+  create_time   String? @db.VarChar(255)
+  error_message String? @db.VarChar(255)
+  error_stack   String? @db.Text
+  testcase      String? @db.VarChar(255)
+  create_date   String? @db.VarChar(255)
+}
+
+model suite_case {
+  id         Int     @id @default(autoincrement())
+  suite_id   String? @db.VarChar(255)
+  testcaseId String? @db.VarChar(255)
+}
+
+model test_job {
+  id              Int     @id @default(autoincrement())
+  task_name       String? @db.VarChar(255)
+  system          String? @db.VarChar(255)
+  module          String? @db.VarChar(255)
+  describe        String? @db.VarChar(255)
+  status          String? @db.VarChar(255)
+  begin_time      String? @db.VarChar(255)
+  end_time        String? @db.VarChar(255)
+  test_suite_list String? @db.Text
+}
+
+model test_reporter {
+  id           Int     @id @default(autoincrement())
+  reporterName String? @db.VarChar(255)
+  test_job     String? @db.VarChar(255)
+  system       String? @db.VarChar(255)
+  module       String? @db.VarChar(255)
+  describe     String? @db.VarChar(255)
+  create_time  String? @db.VarChar(255)
+  update_time  String? @db.VarChar(255)
+  report_path  String? @db.VarChar(255)
+  report_url   String? @db.VarChar(255)
+  log_path     String? @db.VarChar(255)
+}
+
+model test_suite {
+  id             Int     @id @default(autoincrement())
+  name           String? @db.VarChar(255)
+  system         String? @db.VarChar(255)
+  module         String? @db.VarChar(255)
+  describe       String? @db.VarChar(255)
+  create_time    String? @db.VarChar(255)
+  update_time    String? @db.VarChar(255)
+  configList     String? @db.Text
+  testcaseRunner String? @db.VarChar(255)
+  evn            String? @db.VarChar(255)
+}
+
+model test_task {
+  id              Int     @id @default(autoincrement())
+  name            String? @db.VarChar(255)
+  system          String? @db.VarChar(255)
+  module          String? @db.VarChar(255)
+  describe        String? @db.VarChar(255)
+  create_time     String? @db.VarChar(255)
+  update_time     String? @db.VarChar(255)
+  agent_name      String? @db.VarChar(255)
+  schedule        String? @db.VarChar(255)
+  test_suite_list String? @db.Text
+}
+
+model testcase {
+  id            Int     @id @default(autoincrement())
+  testcaseId    String? @db.VarChar(255)
+  system        String? @db.VarChar(255)
+  module        String? @db.VarChar(255)
+  type          String? @db.VarChar(255)
+  testcase_name String? @db.VarChar(255)
+  priority      String? @db.VarChar(255)
+  level         String? @db.VarChar(255)
+  author        String? @db.VarChar(255)
+  create_time   String? @db.VarChar(255)
+  update_time   String? @db.VarChar(255)
+  precondition  String? @db.Text
+  postcondition String? @db.Text
+  input_data    String? @db.Text
+  opt           String? @db.Text
+  expect_result String? @db.Text
+}
+
+model testcase_data {
+  id            Int     @id @default(autoincrement())
+  testcaseId    String? @db.VarChar(255)
+  input_data    String? @db.Text
+  opt           String? @db.Text
+  expect_result String? @db.Text
+}
+
+model testcase_result {
+  id            Int     @id @default(autoincrement())
+  testcaseId    String? @db.VarChar(255)
+  test_suite_id String? @db.VarChar(255)
+  test_job_id   String? @db.VarChar(255)
+  result        String? @db.VarChar(255)
+  error_info_id String? @db.VarChar(255)
+}
+
+model bdt_action {
+  id            Int     @id @default(autoincrement())
+  testcaseId    String? @db.VarChar(255)
+  task_id       String? @db.VarChar(255)
+  action_id     String? @db.VarChar(255)
+  type          String? @db.VarChar(255)
+  LN            String? @db.VarChar(255)
+  RN            String? @db.VarChar(255)
+  Users         String? @db.Text
+  parent_action String? @db.VarChar(255)
+  config        String? @db.Text
+  info          String? @db.Text
+  fileSize      Float?
+  chunkSize     Float?
+  connect_time  Int?
+  set_time      Int?
+  send_time     Int?
+  expect        String? @db.VarChar(255)
+  result        String? @db.VarChar(255)
+  createTime    String? @db.VarChar(255)
+}
+
+model bdt_testcase {
+  id           Int     @id @default(autoincrement())
+  testcaseId   String? @db.VarChar(255)
+  TestcaseName String? @db.VarChar(255)
+  remark       String? @db.Text
+  agentList    String? @db.Text
+  taskList     Int?
+  success      Int?
+  failed       Int?
+  environment  String? @db.VarChar(255)
+  taskMult     String? @db.VarChar(255)
+  createTime   String? @db.VarChar(255)
+  date         String? @db.VarChar(255)
+  result       String? @db.VarChar(255)
+  errorList    String? @db.Text
+}
+
+model agent_perf {
+  id          Int     @id @default(autoincrement())
+  name        String? @db.VarChar(255)
+  cpu         String? @db.Text
+  mem         String? @db.Text
+  disk        String? @db.Text
+  disk_io     String? @db.Text
+  net_info    String? @db.Text
+  net_stats   String? @db.Text
+  process     String? @db.Text
+  create_time String? @db.VarChar(255)
+}
+
+model agent_system_info {
+  id                Int     @id @default(autoincrement())
+  name              String? @db.VarChar(255)
+  testcaseId        String? @db.VarChar(255)
+  cpu_usage         Float?  @db.Float
+  total_memory      Float?  @db.Float
+  used_memory       Float?  @db.Float
+  received_bytes    Float?  @db.Float
+  transmitted_bytes Float?  @db.Float
+  ssd_disk_total    Float?  @db.Float
+  ssd_disk_avail    Float?  @db.Float
+  hdd_disk_total    Float?  @db.Float
+  hdd_disk_avail    Float?  @db.Float
+  create_time       String? @db.VarChar(255)
+}
+
+model nft_info {
+  id            Int     @id @default(autoincrement())
+  name          String? @db.VarChar(255)
+  author_id     String? @db.VarChar(255)
+  owner_id      String? @db.VarChar(255)
+  nft_id        String? @db.VarChar(255)
+  status        String? @db.VarChar(255)
+  cyfs_link     String? @db.VarChar(255)
+  nft_link      String? @db.VarChar(255)
+  create_time   BigInt?
+  testcase_date String? @db.VarChar(255)
+  data          String? @db.Text
+}
+
+model cyfs_action {
+  id            Int     @id @default(autoincrement())
+  testcaseId    String? @db.VarChar(255)
+  task_id       String? @db.VarChar(255)
+  action_id     String? @db.VarChar(255)
+  parent_action String? @db.VarChar(255)
+  type          String? @db.VarChar(255)
+  source        String? @db.VarChar(255)
+  target        String? @db.VarChar(255)
+  input_data    String? @db.Text
+  timeout       Int?
+  data_size     Float?
+  opt_time      Float?
+  cache_size    Float?
+  result        String? @db.VarChar(255)
+  expect        String? @db.VarChar(255)
+  createTime    String? @db.VarChar(255)
+}
+
+model cyfs_peer_info {
+  id         Int     @id @default(autoincrement())
+  testcaseId String? @db.VarChar(255)
+  name       String? @db.VarChar(255)
+  device_id  String? @db.VarChar(255)
+  type       String? @db.VarChar(255)
+  SDK_type   String? @db.VarChar(255)
+  config     String? @db.Text
+  createTime String? @db.VarChar(255)
+}
+
+model cyfs_task {
+  task_id      String  @id @db.VarChar(255)
+  testcaseId   String? @db.VarChar(255)
+  LN           String? @db.VarChar(255)
+  RN           String? @db.VarChar(255)
+  clients      String? @db.Text
+  action       String? @db.Text
+  child_action String? @db.Text
+  expect       String? @db.Text
+  result       String? @db.Text
+  state        String? @db.VarChar(255)
+  timeout      Int?
+  createTime   String? @db.VarChar(255)
+}
+
+model cyfs_testcase {
+  id           Int     @id @default(autoincrement())
+  testcaseId   String? @db.VarChar(255)
+  TestcaseName String? @db.VarChar(255)
+  remark       String? @db.VarChar(255)
+  agentList    String? @db.Text
+  taskList     String? @db.Text
+  environment  String? @db.VarChar(255)
+  taskMult     String? @db.VarChar(255)
+  success      Int?
+  failed       Int?
+  result       String? @db.VarChar(255)
+  errorList    String? @db.Text
+  test_date    String? @db.VarChar(255)
+  createTime   String? @db.VarChar(255)
+}
+
+model users {
+  id       Int       @id @default(autoincrement())
+  name     String?   @db.VarChar(255)
+  email    String?   @db.VarChar(255)
+  password String?   @db.VarChar(255)
+  avatar   String?   @db.VarChar(255)
+  identity String?   @db.VarChar(255)
+  date     DateTime? @db.DateTime(0)
+}
+
+model bdt_agent {
+  id             Int     @id @default(autoincrement())
+  testcaseId     String? @db.VarChar(255)
+  name           String? @db.VarChar(255)
+  NAT            String? @db.VarChar(255)
+  eps            String? @db.Text
+  agentMult      String? @db.VarChar(255)
+  resp_ep_type   String? @db.VarChar(255)
+  agentid        String? @db.VarChar(255)
+  logType        String? @db.VarChar(255)
+  report_time    String? @db.VarChar(255)
+  chunk_cache    String? @db.VarChar(255)
+  firstQA_answer String? @db.VarChar(255)
+  PN             String? @db.VarChar(255)
+  logUrl         String? @db.VarChar(255)
+}
+
+model bdt_task {
+  id            Int     @id @default(autoincrement())
+  task_id       String  @db.VarChar(255)
+  testcaseId    String? @db.VarChar(255)
+  LN            String? @db.VarChar(255)
+  RN            String? @db.VarChar(255)
+  Users         String? @db.Text
+  result        String? @db.VarChar(255)
+  expect_status String? @db.VarChar(255)
+  state         String? @db.VarChar(255)
+  createTime    String? @db.VarChar(255)
+}
