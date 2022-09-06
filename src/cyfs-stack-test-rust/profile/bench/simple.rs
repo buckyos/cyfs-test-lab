@@ -374,9 +374,9 @@ async fn get_object(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     assert_eq!(resp.object.object_id, *a.text_id().object_id());
 }
 
-pub async fn test_path_env_update(stack: &SharedCyfsStack) {
+pub async fn test_path_env_update(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     // let dec_id = new_dec("root_state1");
-    let root_state = stack.root_state_stub(None, None);
+    let root_state = stack.root_state_stub(None, Some(dec_id.clone()));
     let root_info = root_state.get_current_root().await.unwrap();
     info!("current root: {:?}", root_info);
 
@@ -425,9 +425,9 @@ pub async fn test_path_env_update(stack: &SharedCyfsStack) {
     }
 }
 
-pub async fn test_path_env(stack: &SharedCyfsStack) {
+pub async fn test_path_env(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     // let dec_id = new_dec("root_state1");
-    let root_state = stack.root_state_stub(None, None);
+    let root_state = stack.root_state_stub(None, Some(dec_id.clone()));
     let root_info = root_state.get_current_root().await.unwrap();
     info!("current root: {:?}", root_info);
 
@@ -516,8 +516,8 @@ pub async fn test_path_env(stack: &SharedCyfsStack) {
     info!("test root_state complete!");
 }
 
-pub async fn test_iterator(stack: &SharedCyfsStack) {
-    let root_state = stack.root_state_stub(None, None);
+pub async fn test_iterator(stack: &SharedCyfsStack, dec_id: &ObjectId) {
+    let root_state = stack.root_state_stub(None, Some(dec_id.clone()));
     let root_info = root_state.get_current_root().await.unwrap();
     info!("current root: {:?}", root_info);
 
@@ -575,9 +575,9 @@ pub async fn test_iterator(stack: &SharedCyfsStack) {
     assert_eq!(all_list, all_list3);
 }
 
-pub async fn test_gbk_path(stack: &SharedCyfsStack) {
+pub async fn test_gbk_path(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     // let dec_id = new_dec("root_state1");
-    let root_state = stack.root_state_stub(None, None);
+    let root_state = stack.root_state_stub(None, Some(dec_id.clone()));
     let root_info = root_state.get_current_root().await.unwrap();
     info!("current root: {:?}", root_info);
 
@@ -912,11 +912,11 @@ pub async fn test() {
 
             test_storage(&stack).await;
 
-            test_gbk_path(&stack).await;
+            test_gbk_path(&stack, &dec_id).await;
     
-            test_path_env(&stack).await;
-            test_path_env_update(&stack).await;
-            test_iterator(&stack).await;
+            test_path_env(&stack, &dec_id).await;
+            test_path_env_update(&stack, &dec_id).await;
+            test_iterator(&stack, &dec_id).await;
 
         } else {
             HAS_RUN = true;
@@ -938,7 +938,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(1000).measurement_time(Duration::new(60 * 60, 0));
+    config = Criterion::default().sample_size(100).measurement_time(Duration::new(60 * 60, 0));
     targets = criterion_benchmark
 }
 criterion_main!(benches);
