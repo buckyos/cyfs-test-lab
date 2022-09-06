@@ -6,7 +6,7 @@ import { request, ContentType } from "./request"
 
 import * as path from "path"
 
-export class ActionBase {
+export class ActionBase implements ActionAbstract{
     public action: Action
     public m_interface?: TaskClientInterface;
     public agentManager?: AgentManager;
@@ -22,7 +22,10 @@ export class ActionBase {
         this.state = "ready";
         await this.agentManager!.checkBdtPeerClient(this.action.LN)
     }
-    async init(_interface: TaskClientInterface, task?: Task): Promise<{ err: number, log: string }> {
+    async init(_interface: TaskClientInterface,task:Task,index?:number): Promise<{ err: number, log: string }> {
+        this.action.testcaseId = task!.testcaseId;
+        this.action.task_id = task!.task_id;
+        this.action.action_id = `${this.action.task_id!}_action${index}_${this.action.type}`;
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
         this.agentManager = AgentManager.createInstance(_interface);
@@ -31,9 +34,47 @@ export class ActionBase {
         return { err: BDTERROR.success, log: "task run success" }
     }
     async save(): Promise<{ err: number, log: string }> {
-        this.state = "finished"
+        let run_action =await request("POST","api/bdt/action/add",{
+            task_id:this.action.task_id ,
+            testcaseId:this.action!.testcaseId,
+            type: this.action.type,
+            action_id:this.action.action_id,
+            parent_action :this.action.parent_action,
+            LN:this.action.LN,
+            RN:this.action.RN,
+            Users: JSON.stringify(this.action.Users),
+            config:JSON.stringify( this.action.config),
+            info:JSON.stringify( this.action.info),
+            fileSize : this.action.fileSize,
+            chunkSize : this.action.chunkSize,
+            connect_time : this.action.connect_time,
+            set_time : this.action.set_time,
+            send_time : this.action.send_time,
+            expect:String(this.action.expect!.err),
+            result: String(this.action.result!.err),
+            result_log: String(this.action.result!.log),
+        },ContentType.json);
+        this.logger!.info(`api/bdt/action/add resp:  ${JSON.stringify(run_action)}`)
+        return {err:BDTERROR.success,log:`reportAgent to server success`}
         return { err: BDTERROR.success, log: "task run success" }
     }
+    async start(): Promise<{ err: number, log: string }> {
+        return new Promise(async(V)=>{
+            this.state = "running";
+            setTimeout(async ()=>{
+                if(this.state == "running"){
+                    V({ err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`});
+                }
+            },this.action.config.timeout!)
+            let result = await this.run();
+            this.state = "finished"
+            V(result)
+        })
+    }
+    async run():Promise<{ err: number, log: string }>{
+        return { err: BDTERROR.success, log: "DestoryAction run success" }
+    }
+
 }
 
 export class ConnectAction extends ActionBase implements ActionAbstract {
@@ -208,7 +249,7 @@ export class SendStreamNotReadAction extends ActionBase implements ActionAbstrac
         // (3) 传输 BDT Stream
    
         let send = await LN_connInfo.conn!.send(this.action.fileSize!)
-        this.logger!.debug(`${this.action.LN} send stream,result = ${JSON.stringify(send)} `)
+        this.logger!.debug(`${this.action.LN} send stream not read,result = ${JSON.stringify(send)} `)
         // (4) 校验结果
         if (send.err) {
             return { err: BDTERROR.sendDataFailed, log: `${this.action.LN} send stream failed` }
@@ -460,11 +501,13 @@ export class SendFileRedirectAction extends ActionBase implements ActionAbstract
         let randFile = await RN.bdtClient!.util_client!.createFile(this.action.fileSize!);
         // LN获取本地下载缓存文件路径
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
+        let CacheNodecachePath = await CacheNode.bdtClient!.util_client!.getCachePath();
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
         if(prev){
             return { err: prev, log: `SendFileAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
+        
         // (3) BDT 传输  File
         // cyfs-base 计算文件Object 
         let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
@@ -479,7 +522,20 @@ export class SendFileRedirectAction extends ActionBase implements ActionAbstract
                 return { err: setResult.err, log: `SendFileAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
         }
+        // Cache Node 节点进行数据缓存
+        if(this.action.config.ndn_event_config?.is_connect){
+            let cahce_conn = await LN.bdtClient!.connect(CacheNode.bdtClient!.device_object!,"",0,0,"conn_cahe_node");
+        }
+        if(this.action.config.ndn_event_config?.is_cache_data){
+            let savePath = path.join(CacheNodecachePath.cache_path!.file_download, randFile.fileName!)
+            let download = await CacheNode.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
+            if(download.err){
+                return { err: download.err, log: `SendFileAction run failed, CacheNode downloadFile err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            }
+        }
+        // LN 下载文件
         let savePath = path.join(LNcachePath.cache_path!.file_download, randFile.fileName!)
+
         let download = await LN.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
         if(download.err){
             return { err: download.err, log: `SendFileAction run failed, downloadFile err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }

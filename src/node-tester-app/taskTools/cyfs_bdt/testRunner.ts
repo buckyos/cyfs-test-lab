@@ -89,8 +89,8 @@ export class TestRunner{
                 }
             }, task.timeout);
             for(let i in task.action){
-                await task.action[i].init(this.m_interface,task);
-                let result = await task.action[i].run();
+                await task.action[i].init(this.m_interface,task,Number(i));
+                let result = await task.action[i].start();
                 if(result.err){
                     task.state = "failed"
                     V({err:result.err,taskId:task.task_id!,log:result.log});
@@ -121,11 +121,12 @@ export class TestRunner{
             testcaseId:this.Testcase!.testcaseId,
             remark:this.Testcase!.remark,
             agentList: JSON.stringify(this.agentManager.agentListState),
-            taskList: this.total,
+            
             environment:this.Testcase!.environment,
             taskMult: config.MaxConcurrency,
             result: this.Testcase!.result,
             errorList : JSON.stringify(this.Testcase!.errorList),
+            total: this.total,
             success : this.success!,
             failed : this.failed!,
             date:this.Testcase!.date,
@@ -201,6 +202,9 @@ export class TestRunner{
     async saveRecord() {
         if(config.ReportTestcase){
             await this.reportTestcase();
+        }
+        if(config.ReportAgent){
+            this.agentManager
         }
     }
     // 退出测试用例

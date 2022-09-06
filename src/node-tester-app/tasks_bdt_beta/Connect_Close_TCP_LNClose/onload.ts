@@ -51,7 +51,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    timeout : 60*1000,
+                    timeout : 30*1000,
                     action : []
                 })
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
@@ -60,7 +60,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: "connect_1",
-                        timeout : 60*1000,
+                        timeout : 30*1000,
                     },
                     expect : {err:0},    
                 }))
@@ -71,7 +71,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     fileSize : 10*1024*1024,
                     config:{
                         conn_tag: "connect_1",
-                        timeout : 60*1000,
+                        timeout : 30*1000,
                     },
                     expect : {err:0},      
                 }))
@@ -80,7 +80,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     LN : `${labAgent[i].tags[0]}$1`,
                     config:{
                         conn_tag: "connect_1",
-                        timeout : 60*1000,
+                        timeout : 30*1000,
                     },
                     expect : {err:0},      
                 }))
@@ -91,7 +91,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     fileSize : 10*1024*1024,
                     config:{
                         conn_tag: "connect_1",
-                        timeout : 60*1000,
+                        timeout : 30*1000,
                     },
                     expect : {err:0},      
                 }))

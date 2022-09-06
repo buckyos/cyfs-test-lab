@@ -31,6 +31,7 @@ export const BDTERROR = {
     DestoryStackFailed:101,//关闭连接错误
     RNCheckConnFailed:102,//RN 检查连接错误
     NotFound :104,
+    ConnCloesd : 105,
     perfTestError : 1000, //性能测试出现bug，退出
 }
 
@@ -104,6 +105,8 @@ export type Peer ={
 export type Action ={
     // 输入数据
     type : ActionType, //操作类型
+    testcaseId? : string, //用例ID
+    task_id?:string, //Task ID
     action_id?:string, //action id
     parent_action?:string,//父任务
     LN : string, //LN 设备
@@ -153,7 +156,8 @@ export type Action ={
 }
 
 export type Task ={
-   task_id?:string,
+   testcaseId? : string, //用例ID
+   task_id?:string, //Task ID
    timeout? : number, //超时时间
    LN : string, //LN 设备
    RN : string,  // RN 设备
@@ -178,7 +182,8 @@ export type Task ={
 }
 
 export abstract  class ActionAbstract{
+    abstract  start(): Promise<{err:number,log:string}>;
     abstract  run(): Promise<{err:number,log:string}>;
     abstract  save(): Promise<{err:number,log:string}>;
-    abstract  init(_interface:TaskClientInterface,task?:Task): Promise<{err:number,log:string}>;
+    abstract  init(_interface:TaskClientInterface,task?:Task,index?:number): Promise<{err:number,log:string}>;
 }

@@ -2,6 +2,7 @@ import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, Tas
 import {EventEmitter} from 'events';
 import {Agent,Peer,BDTERROR} from './type'
 import {UtilClient} from "./utilClient"
+import {request,ContentType} from "./request";
 export class BdtPeerClient extends EventEmitter{
     public peerName?: string; //  
     private m_agentid: string; 
@@ -92,6 +93,18 @@ export class BdtPeerClient extends EventEmitter{
         // 4. bdt client start autoAccept
         await this.autoAccept();
         return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
+    }
+    async reportAgent(testcaseId:string) :Promise<{err:ErrorCode,log:string}>{
+        let run_action =await request("POST","api/bdt/client/add",{
+            name : this.tags,
+            testcaseId : testcaseId,
+            peerName : this.peerName,
+            peerid : this.peerid,
+            peerInfo : JSON.stringify(this.cache_peer_info),
+            sn_resp_eps : this.sn_resp_eps,
+        },ContentType.json)
+        this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
+        return {err:BDTERROR.success,log:`reportAgent to server success`}
     }
     async restart(ndn_event:string,ndn_event_target:string):Promise<{err:number,log?:string}> {
         this.cache_peer_info.ndn_event = ndn_event;
@@ -222,7 +235,7 @@ export class BdtPeerClient extends EventEmitter{
     }
     async remark_accpet_conn_name(TempSeq:string,remote:string,conn_tag?:string):Promise<{err:number,conn?:BdtConnection}>{
         for(let conn of this.m_conns.values()){
-            if(conn.TempSeq == TempSeq && conn.remote == remote){
+            if(conn.TempSeq == TempSeq && conn.remote == remote && !conn.conn_tag){
                 conn.conn_tag = conn_tag;
                 return {err:BDTERROR.success,conn}
             }

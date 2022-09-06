@@ -1,6 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
 import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
+import {request,ContentType} from "./request";
 import {BdtPeerClient} from "./bdtPeerClient"
 export class AgentClient {
     private tags : string; // 机器名称 tags
@@ -43,7 +44,7 @@ export class AgentClient {
         }
         this.ipInfo = IPInfo.value.ipInfo;
         return {err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}
-    }
+    } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "uploadLog",
@@ -53,6 +54,7 @@ export class AgentClient {
         if(result.value.upload?.err ){  
             return {err:ErrorCode.exception,log:`${this.tags} uploadLog failed`}
         }
+        this.logUrl = result.value.upload?.url;
         return {err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}
     }
     
@@ -79,5 +81,28 @@ export class AgentClient {
         return {err:BDTERROR.success,log:`${this.tags} ${index} get success`,bdtClient}
     }
     
+    async reportAgent(testcaseId:string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
+        if(report_agent){
+            let run_action =await request("POST","api/bdt/agent/add",{
+                testcaseId:testcaseId,
+                name:this.agentInfo.tags,
+                NAT :this.agentInfo.NAT,
+                eps:JSON.stringify({ipv4:this.agentInfo.ipv4,ipv6:this.agentInfo.ipv6}),
+                agentMult:this.agentMult,
+                agentid:this.m_agentid,
+                logUrl : this.logUrl,
+                router : this.agentInfo.router,
+                portMap : JSON.stringify(this.agentInfo.portMap)
+
+            },ContentType.json)
+            this.logger.info(`api/bdt/agent/add resp:  ${JSON.stringify(run_action)}`)
+        }
+        if(report_bdtClient){
+            for(let client of  this.bdtPeerMap.values()){
+                await client.reportAgent(testcaseId);
+            }
+        }
+        return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
 
 }
