@@ -22,8 +22,8 @@ app.get('/', (req, res) => {
 });
 
 //使用body-parser中间件
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit:'100mb', extended: true }));
+app.use(bodyParser.json({limit:'100mb'}));
 
 
 // 使用routes
