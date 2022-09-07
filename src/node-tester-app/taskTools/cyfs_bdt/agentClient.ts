@@ -11,6 +11,7 @@ export class AgentClient {
     public bdtPeerMap : Map<string,BdtPeerClient>
     private agentMult : number;
     private logUrl? : string; //日志下载
+    private is_run : boolean;
     private m_interface: TaskClientInterface;
     private logger : Logger;
     private ipInfo?:{IPv4:Array<string>,IPv6:Array<string>}
@@ -22,6 +23,7 @@ export class AgentClient {
         this.agentInfo = agent;
         this.bdtPeerMap = new Map();
         this.agentMult = 0;
+        this.is_run = false;
     }
     async init():Promise<{err:ErrorCode,log:string}> {
         let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
@@ -46,6 +48,9 @@ export class AgentClient {
         return {err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}
     } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
+        if(!this.is_run){
+            return {err:ErrorCode.exception,log:`${this.tags}  not run`}
+        }
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "uploadLog",
             logName : `${testcaseId}_${this.tags}.zip`
@@ -59,6 +64,7 @@ export class AgentClient {
     }
     
     async startPeerClient(config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
+        
         let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
         let bdtClient = new BdtPeerClient(this.m_interface,this.m_agentid!,this.tags,peer)
         let result = await bdtClient.init();
@@ -71,6 +77,7 @@ export class AgentClient {
         return {err:result.err,log:result.log,bdtClient}
     }
     async getBdtPeerClient(index:string):Promise<{err:ErrorCode,log?:string,bdtClient?:BdtPeerClient}>{
+        this.is_run = true;
         if(!this.bdtPeerMap.has(index)){
             return {err:BDTERROR.AgentError,log:`${this.tags} ${index} not exsit`}
         }
@@ -82,10 +89,13 @@ export class AgentClient {
     }
     
     async reportAgent(testcaseId:string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
+        if(!this.is_run){
+            return {err:ErrorCode.exception,log:`${this.tags}  not run`}
+        }
         if(report_agent){
             let run_action =await request("POST","api/bdt/agent/add",{
                 testcaseId:testcaseId,
-                name:this.agentInfo.tags,
+                name:this.agentInfo.tags[0],
                 NAT :this.agentInfo.NAT,
                 eps:JSON.stringify({ipv4:this.agentInfo.ipv4,ipv6:this.agentInfo.ipv6}),
                 agentMult:this.agentMult,

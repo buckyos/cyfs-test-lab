@@ -186,4 +186,5 @@ export abstract  class ActionAbstract{
     abstract  run(): Promise<{err:number,log:string}>;
     abstract  save(): Promise<{err:number,log:string}>;
     abstract  init(_interface:TaskClientInterface,task?:Task,index?:number): Promise<{err:number,log:string}>;
+    abstract  record():any;
 }

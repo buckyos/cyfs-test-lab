@@ -13,6 +13,7 @@ export class ActionBase implements ActionAbstract{
     public logger?: Logger;
     public state: string;
     public errorInfo: string;
+   
     constructor(action: Action) {
         this.action = action;
         this.state = "new";
@@ -56,19 +57,53 @@ export class ActionBase implements ActionAbstract{
         },ContentType.json);
         this.logger!.info(`api/bdt/action/add resp:  ${JSON.stringify(run_action)}`)
         return {err:BDTERROR.success,log:`reportAgent to server success`}
-        return { err: BDTERROR.success, log: "task run success" }
+    }
+    record(){
+        return {
+            task_id:this.action.task_id ,
+            testcaseId:this.action!.testcaseId,
+            type: this.action.type,
+            action_id:this.action.action_id,
+            parent_action :this.action.parent_action,
+            LN:this.action.LN,
+            RN:this.action.RN,
+            Users: JSON.stringify(this.action.Users),
+            config:JSON.stringify( this.action.config),
+            info:JSON.stringify( this.action.info),
+            fileSize : this.action.fileSize,
+            chunkSize : this.action.chunkSize,
+            connect_time : this.action.connect_time,
+            set_time : this.action.set_time,
+            send_time : this.action.send_time,
+            expect:String(this.action.expect!.err),
+            result: String(this.action.result!.err),
+            result_log: String(this.action.result!.log),
+        }
     }
     async start(): Promise<{ err: number, log: string }> {
         return new Promise(async(V)=>{
-            this.state = "running";
-            setTimeout(async ()=>{
-                if(this.state == "running"){
-                    V({ err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`});
+            try {
+                this.state = "running";
+                setTimeout(async ()=>{
+                    if(this.state == "running"){
+                        if(this.action.expect.err){
+                            V({ err: BDTERROR.success, log: "action expect err" })
+                        }
+                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`};
+                        V({ err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`});
+                    }
+                },this.action.config.timeout!)
+                let result = await this.run();
+                this.action.result = result;
+                this.state = "finished"
+                if(this.action.result.err && this.action.expect.err){
+                    V({ err: BDTERROR.success, log: "action expect err" })
                 }
-            },this.action.config.timeout!)
-            let result = await this.run();
-            this.state = "finished"
-            V(result)
+                V(result)
+            } catch (error) {
+                V({ err: BDTERROR.optExpectError, log: `${error}` })
+            }
+            
         })
     }
     async run():Promise<{ err: number, log: string }>{
@@ -113,7 +148,7 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         if (info.err) {
             return { err: BDTERROR.connnetFailed, log: `${this.action.LN} conenct ${this.action.RN!} err =${info.err}` }
         }
-        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!} ,stream_name = ${info.conn!.stream_name}`)
+        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!} ,stream_name = ${info.conn?.stream_name}`)
         // 检查fristQA answer 
         if (info.answer) {
             if (info.answer != RN!.bdtClient!.FristQA_answer) {

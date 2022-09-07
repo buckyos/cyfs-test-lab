@@ -101,7 +101,7 @@ export class BdtPeerClient extends EventEmitter{
             peerName : this.peerName,
             peerid : this.peerid,
             peerInfo : JSON.stringify(this.cache_peer_info),
-            sn_resp_eps : this.sn_resp_eps,
+            sn_resp_eps : JSON.stringify(this.sn_resp_eps) ,
         },ContentType.json)
         this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
         return {err:BDTERROR.success,log:`reportAgent to server success`}
@@ -178,7 +178,7 @@ export class BdtPeerClient extends EventEmitter{
         }, this.m_agentid, 0);
         if (info.err || info.value.result) {
             this.logger.error(`${this.tags} connect failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-            return {err:info.value.result,conn:undefined};
+            return {err: BDTERROR.connnetFailed};
         }
         if (!info.value || !info.value.stream_name) {
             this.m_interface.getLogger().error(`connect, service return invalid param,log = ${JSON.stringify(info.value)}`);
@@ -452,7 +452,7 @@ export class BdtConnection extends EventEmitter {
     public question? : string;
     private m_agentid: string;
     private logger : Logger
-    private m_stream_name?: string;
+    private m_stream_name: string;
     private m_interface: TaskClientInterface;
     private peerName: string; 
     private m_timeout: number;
@@ -480,6 +480,7 @@ export class BdtConnection extends EventEmitter {
         super();
         this.m_agentid = options.agentid;
         this.m_connInfo = options.stream_name;
+        this.m_stream_name = options.stream_name;
         this.peerName = options.peerName;
         this.m_interface = options._interface;
         this.m_timeout = options.timeout;
@@ -489,7 +490,6 @@ export class BdtConnection extends EventEmitter {
         this.TempSeq = this.m_connInfo.split("), ")[0].split("TempSeq(")[1]
         this.port = this.m_connInfo.split(", ")[3].split(":")[1]
         this.id = this.m_connInfo.split(", ")[4].split(":")[1].split(" }}")[0]   
-        this.m_stream_name = options.stream_name;
         this.question = options.question;
         this.conn_tag = options.conn_tag;
         this.logger = this.m_interface.getLogger();

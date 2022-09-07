@@ -3,6 +3,8 @@ import {AgentManager} from './agentManager';
 import {BDTERROR,ActionType,Agent,Testcase,Task,Action,ActionAbstract} from './type';
 import {request,ContentType} from "./request";
 import * as config from "./config"
+import * as fs from 'fs';
+import * as path from 'path';
 var date = require("silly-datetime");
 const timeout = 300*1000;
 
@@ -24,6 +26,7 @@ export class TestRunner{
     private errorList : Array<{taskId:string,error:string}>;
     private taskList : Array<Task>;
     private cacheTask? : Task;
+    private JSONReport :{TestcaseInfo:any,TaskList:Array<any>,actionList:Array<{taskId:string,data:Array<any>}> };
     constructor(_interface:TaskClientInterface,is_perf:boolean=false){
         this.m_interface = _interface;
         this.logger = this.m_interface.getLogger();
@@ -33,6 +36,7 @@ export class TestRunner{
         this.taskList = [];
         this.state = "wait"; 
         this.total = 0;
+        this.JSONReport = {TestcaseInfo:{},TaskList:[],actionList:[]};
         this.success = 0;
         this.failed = 0;
     }
@@ -75,7 +79,7 @@ export class TestRunner{
         return {err:BDTERROR.success,log:"prevTaskRun begin run"}
     }
     // 运行测试任务
-    async runTask(task:Task):Promise<{err:number,log:string,taskId:string}>{
+    async runTask(task:Task):Promise<{err:number,log:string, record : {taskId:string,data:Array<any>}}>{
         // 判断机器状态是否正常，机器不正常
         return new Promise(async(V)=>{
             let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
@@ -83,21 +87,24 @@ export class TestRunner{
             if(!task.timeout){
                 task.timeout = 60*1000;
             }
+            let record : {taskId:string,data:Array<any>} = {taskId:task.task_id!,data:[]}
             setTimeout(() => {
                 if(this.state=="run"){
-                    V({err:BDTERROR.timeout,taskId:task.task_id!,log:`${task.task_id} run timeout ${task.timeout},LN = ${task.LN} , RN = ${task.RN}`});
+                    V({err:BDTERROR.timeout,record,log:`${task.task_id} run timeout ${task.timeout},LN = ${task.LN} , RN = ${task.RN}`});
                 }
             }, task.timeout);
+            
             for(let i in task.action){
                 await task.action[i].init(this.m_interface,task,Number(i));
                 let result = await task.action[i].start();
+                record.data.push(task.action[i].record());
                 if(result.err){
                     task.state = "failed"
-                    V({err:result.err,taskId:task.task_id!,log:result.log});
+                    V({err:result.err,record,log:result.log});
                 }
             }
             task.state = "success" ;       
-            V({err:BDTERROR.success,taskId:task.task_id!,log:"task run success"}) 
+            V({err:BDTERROR.success,record,log:"task run success"}) 
         })
         
     }
@@ -114,14 +121,13 @@ export class TestRunner{
         return {err:BDTERROR.success,log:"task add success"}
     }
     // 保存测试记录到中心化服务器
-    async reportTestcase() {
+    async saveTestcase() {
         this.logger.info(`### ReportTestcase`)
-        let run = await request("POST","api/bdt/testcase/add",{
+        this.JSONReport.TestcaseInfo = {
             TestcaseName:this.Testcase!.TestcaseName,
             testcaseId:this.Testcase!.testcaseId,
             remark:this.Testcase!.remark,
             agentList: JSON.stringify(this.agentManager.agentListState),
-            
             environment:this.Testcase!.environment,
             taskMult: config.MaxConcurrency,
             result: this.Testcase!.result,
@@ -130,38 +136,60 @@ export class TestRunner{
             success : this.success!,
             failed : this.failed!,
             date:this.Testcase!.date,
-        },ContentType.json)
-        this.logger.info(`api/bdt/testcase/add resp: ${JSON.stringify(run)}`)
-        return;
+        }
+        
     }
-    async reportTask() {
+    async saveTask() {
         this.logger.info(`### ReportTask`)
-        let taskInfoList = [];
         for(let i in this.taskList){
-            taskInfoList.push({
+            this.JSONReport.TaskList.push({
                 task_id:this.taskList[i].task_id ,
                 testcaseId:this.Testcase!.testcaseId,
                 LN:this.taskList[i].LN,
                 RN:this.taskList[i].RN,
                 Users: JSON.stringify(this.taskList[i].Users),
                 expect_status : this.taskList[i].expect_status,
-                result:JSON.stringify(this.taskList[i].result),
+                result:JSON.stringify(this.taskList[i].result!.err),
                 state : this.taskList[i]!.state,
             })
         }
-        let run_task =await request("POST","api/bdt/task/addList",{
-            taskInfoList  
-        },ContentType.json)
-
-        this.logger.info(`api/bdt/task/add resp:  ${JSON.stringify(run_task)}`)
+        return
+    }
+    async saveMysql(){
+        if(config.ReportTestcase){
+            let run = await request("POST","api/bdt/testcase/add",this.JSONReport.TestcaseInfo,ContentType.json)
+            this.logger.info(`api/bdt/testcase/add resp: ${JSON.stringify(run)}`)
+        }
+        if(config.ReportTask){
+            let run_task =await request("POST","api/bdt/task/addList",{
+                taskInfoList:this.JSONReport.TaskList  
+            },ContentType.json)
+            this.logger.info(`api/bdt/task/add resp:  ${JSON.stringify(run_task)}`)
+        }
+        if(config.ReportAction){
+            for(let info of this.JSONReport.actionList){
+                let run_task =await request("POST","api/bdt/action/addList",{
+                    list:info.data
+                },ContentType.json)
+                this.logger.info(`##${info.taskId} api/bdt/task/add resp:  ${JSON.stringify(run_task)}`)
+            }
+            
+        }
+        return;
+    }
+    async saveJson(){
+        fs.writeFileSync(path.join(this.logger.dir(),`./testReport.json`),JSON.stringify(this.JSONReport));
+        return;
     }
     // 实现Task 执行队列
     async executeQueue(task:Task){
         this.runTask(task).then(async result  => {
+            task.result = result;
             if(result.err){
                 this.failed++ 
-                this.errorList.push({taskId:result.taskId,error:result.log})
+                this.errorList.push({taskId:result.record.taskId,error:result.log})
                 this.logger.error(result.log);
+                this.JSONReport.actionList.push(result.record)
                 if(config.ErrorBreak){
                    await this.exitTestcase(result.err,result.log);
                 }
@@ -172,7 +200,8 @@ export class TestRunner{
             return result;
         })
         .catch(error => {
-            this.failed++ 
+            task.result = {err:ErrorCode.exception,log:`${error}`}
+            this.failed++ ;
             this.errorList.push({taskId:"Test Code Expection",error})
             this.logger.error(`task run failed ,err =${error},stack = ${error.stack}`);
             
@@ -190,7 +219,7 @@ export class TestRunner{
         return;
     }
     async runQueue(){
-        if(this.activeTaskNum <= config.MaxConcurrency && this.taskRunner.length > 0) {
+        if(this.activeTaskNum < config.MaxConcurrency && this.taskRunner.length > 0) {
             const task = this.taskRunner.shift();
             this.activeTaskNum++;
             await this.executeQueue(task!);    
@@ -200,12 +229,12 @@ export class TestRunner{
         return;
     }
     async saveRecord() {
-        if(config.ReportTestcase){
-            await this.reportTestcase();
-        }
-        if(config.ReportAgent){
-            this.agentManager
-        }
+        await this.saveTestcase();
+        await this.saveTask();
+        await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer);
+        await this.saveJson();
+        await this.saveMysql();
+        return;
     }
     // 退出测试用例
     async exitTestcase(err:number,log:string){
@@ -215,11 +244,17 @@ export class TestRunner{
         this.logger.info(`######## success = ${this.success} `)
         this.logger.info(`######## failed = ${this.failed}`)
         this.logger.info(`######## ErrorList:`)
-       for(let i in this.errorList){
-        this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
-       }
-       await this.saveRecord();
+        if(this.failed==0){
+            this.Testcase!.result = 0;
+        }else{
+            this.Testcase!.result = this.failed;
+        }
         await this.agentManager.uploadLog(this.Testcase!.testcaseId)
+        for(let i in this.errorList){
+            this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
+        }
+       await this.saveRecord();
+        
         this.m_interface.exit(err,log);
     }
 

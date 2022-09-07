@@ -80,7 +80,10 @@ async function main() {
     });
     restartWatchTimer();
     process.on('exit',()=>{
-        Base.blog.info(`[master_main] exit`);
+        Base.blog.error(`[master_main] exit`);
+    })
+    process.on('error',(error)=>{
+        Base.blog.error(`[master_main] error ${error}`);
     })
     let err = localMaster.init(GlobalConfig.ip, GlobalConfig.port);
     if (err) {

@@ -27,7 +27,7 @@ export type ClientStackOptions = {
 };
 
 export class ClientStack implements ClientStackInterface {
-    public static MinTimeout: number = 100000 * 1000;
+    public static MinTimeout: number = 5000 * 1000;
     private m_ip?: string;
     private m_port?: number;
     
