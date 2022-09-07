@@ -735,7 +735,8 @@ impl Peer {
                             let mut conn = conn;
                             let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                             let connState = format!("{}", conn.get_stream().state());
-                            if(connState == "StreamState::Closing" || connState == "StreamState::Closed"){
+                            log::info!("check StreamState = {}", connState);
+                            if(connState == "# StreamState::Closing" || connState == "StreamState::Closed"){
                                 SendLpcCommandResp {
                                     seq, 
                                     result: 105,
