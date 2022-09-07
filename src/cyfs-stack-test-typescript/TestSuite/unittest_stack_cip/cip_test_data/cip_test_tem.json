@@ -1,0 +1,27 @@
+{
+    "stack_type":"simulator",
+    "outfile": "people_test_main.desc", 
+    "expect": "owner:PeopleId:icon:ood_list", 
+    "people_input": {
+        "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+        "ood_list": "1", 
+        "area": "41:2:30:4", 
+        "name": "2",
+        "icon": "3"
+    },
+    "device_input": {
+        "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+        "unique_id": "", 
+        "endpoints": "", 
+        "sn_list": "2",
+        "passive_sn_list": "3", 
+        "area": "4"
+
+    },
+    "cip_input": {
+        "mnemonic_str": "", 
+        "password": "", 
+        "network": "", 
+        "address_index": ""
+    }
+}
