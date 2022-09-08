@@ -1,11 +1,14 @@
 {
+    "stack_type": "simulator",
+    "type": "people",
     "casename": "Ts编码:有效传入空值的owner,name参数",
-    "outfile": "people_test03.desc", //输出到path.join(cyfs.get_temp_path(), "people");
-    "owner": null, //为空
-    "ood_list": "1", //  代表多少个device
-    "area": "41:2:30:4", //new cyfs.Area(41, 2, 30, 4)
-    "name": "", //无需转换cyfs类型直接使用
-    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu", //限制32位字符，cyfs.FileId.from_base_58(str).unwrap()
-    "public_key": "keySize:2048", //cyfs.PrivateKey.generate_rsa(2048).unwrap()
-    "assert_character": "owner:PeopleId:name:ood_list"   // 断言了哪些属性
+    "file": "people_test03.desc",
+    "owner": null,
+    "ood_list": [
+        "5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ"
+    ],
+    "area": "41:2:30:4",
+    "name": "",
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu",
+    "public_key": "random:2048"
 }

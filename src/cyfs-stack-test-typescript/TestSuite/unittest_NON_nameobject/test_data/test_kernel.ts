@@ -1,11 +1,14 @@
 import * as cyfs from '../../../cyfs_node/cyfs_node';
+import * as path from 'path'
+
+
 import * as fs from 'fs-extra'
 
 let proc_in: boolean | undefined = undefined;
 let ret = 0;
 
 function print_usage() {
-    console.log("usage: node desc_test.js [--in|--out] <json file path>")
+    console.log("usage: node test_kernel.js [--in|--out] <json file path>")
 }
 
 function process_argv(): string | undefined {
@@ -14,10 +17,10 @@ function process_argv(): string | undefined {
     }
 
     if (process.argv[2] === "--in") {
-        proc_in = true;
+        proc_in = true;    // 解码
         return process.argv[3]
     } else if (process.argv[2] === "--out") {
-        proc_in = false;
+        proc_in = false;  // 编码
         return process.argv[3]
     } else {
         print_usage()
@@ -44,6 +47,36 @@ function public_key(param: string): cyfs.PublicKey {
     }
 }
 
+function get_big_str(size:number) {
+    let tmppath = path.join(cyfs.get_temp_path(),"strfile.txt");
+    let insertstr = ""
+    let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
+    let maxnum = basestr.length
+    let len =  Buffer.byteLength(basestr,'utf-8');
+
+    // for (let i = 0; i < 3000; i++) {
+    //     insertstr+=basestr.charAt(Math.floor(Math.random() * (maxnum - 0) ) + 0);
+    // }
+    while(size>len){
+        insertstr+=basestr.charAt(Math.floor(Math.random() * (maxnum - 0) ) + 0);
+    }
+    // let len =  Buffer.byteLength(insertstr,'utf-8');
+
+    
+    // while(size>len){
+    //     fs.appendFileSync(tmppath,insertstr);
+    //     size = size - len;
+    // }
+    
+    
+
+    // fs.removeSync(datafile)
+    // if (!fs.existsSync(datafile)) {
+    //     RandomGenerator.createRandomFile(namePath, "strfile128.txt", 128 * 1024 * 1024);
+    // }
+    // let namedata = fs.readFileSync(datafile).toString()
+}
+
 function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent, T extends cyfs.NamedObject<DC, BC>>
     (builder: cyfs.NamedObjectBuilder<DC, BC>, obj: any,
         constructor: new (desc: cyfs.NamedObjectDesc<DC>, body: cyfs.Option<cyfs.ObjectMutBody<DC, BC>>, signs: cyfs.ObjectSigns, nonce: cyfs.Option<cyfs.JSBI>) => T): T {
@@ -67,13 +100,15 @@ function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent
         builder = builder.single_key(public_key(obj.public_key))
     }
 
+    
+
     // 这里是通用的，再往下加参数就行了，前边不用动
 
     return builder.build(constructor)
 }
 
 function output_check_err(type: string, except: string, actual: string) {
-    console.error(`check ${type} failed!, except ${except}, actual ${actual}`)
+    console.error(`check ${type} failed!,\n --> except ${except},\n --> actual ${actual}`)
 }
 
 
@@ -127,13 +162,13 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
     }
 
     if (except.public_key) {
-        let e_key = public_key(except.public_key).to_hex().unwrap()
+        let e_key = public_key(except.public_key).toHex().unwrap()
         if (!actual.desc().public_key()) {
             output_check_err("public_key", except.public_key, "undefined")
             return false;
         }
-        let a_key = actual.desc().public_key()!.to_hex().unwrap()
-        if (e_key !== a_key) {
+        let a_key = actual.desc().public_key()!.toHex().unwrap()
+        if (e_key !== a_key && except.public_key.split(":")[0] !== "random") {
             output_check_err("public_key", e_key, a_key)
             return false;
         }
@@ -141,10 +176,18 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
 
     return true;
 }
-
+function save_path(nameobject: string, filename: string): string {
+    let basepath = path.join(cyfs.get_temp_path(), "test_nameObject_ts")
+    let filepath = path.join(path.join(basepath, nameobject), filename)
+    return filepath;
+}
 function process_people(obj: any) {
+    let filepath = save_path("people", obj.file)
     if (proc_in) {
-        let people_r = new cyfs.PeopleDecoder().from_raw(new Uint8Array(fs.readFileSync(obj.file)))
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let people_r = new cyfs.PeopleDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
         if (people_r.err) {
             console.error(`decode people from file ${obj.file} err ${people_r.val}`)
             ret = people_r.val.code
@@ -156,9 +199,12 @@ function process_people(obj: any) {
         if (check_common(people, obj)) {
             // 再检测content数据
             if (obj.ood_list) {
+                let deoodlist = people.body_expect().content().ood_list
                 // TODO: 自己填写检测逻辑
+                for (let i in deoodlist) {
+                    if (deoodlist[i].to_base_58() !== obj.ood_list[i]) { output_check_err("ood_list", obj.ood_list, "oodlist属性解码后不一致") }
+                }
             }
-
             if (obj.icon) {
                 if (!people.body_expect().content().icon) {
                     output_check_err("icon", obj.icon, "undefined")
@@ -170,13 +216,24 @@ function process_people(obj: any) {
                     return;
                 }
             }
+            if (obj.name) {
+                if (!people.body_expect().content().name) {
+                    output_check_err("name", obj.name, "undefined")
+                    return;
+                }
 
+                if (people.body_expect().content().name !== obj.name) {
+                    output_check_err("name", obj.name, people.body_expect().content().name!)
+                    return;
+                }
+            }
             if (obj.ood_work_mode) {
                 if (people.body_expect().content().ood_work_mode() !== obj.ood_work_mode) {
                     output_check_err("ood_work_mode", obj.ood_work_mode, people.body_expect().content().ood_work_mode())
                     return;
                 }
             }
+            console.log(`解码成功 casename is (${obj.casename})`)
         }
     } else {
         // 从json创建对象
@@ -186,20 +243,21 @@ function process_people(obj: any) {
                 ood_list.push(cyfs.DeviceId.from_base_58(ood).unwrap())
             }
         }
-
         let icon;
         if (obj.icon) {
             icon = cyfs.FileId.from_base_58(obj.icon).unwrap()
         }
-
         let ood_work_mode
         if (obj.ood_work_mode === cyfs.OODWorkMode.Standalone || obj.ood_work_mode === cyfs.OODWorkMode.ActiveStandby) {
             ood_work_mode = obj.ood_work_mode as cyfs.OODWorkMode;
         }
+        let name
+        if(obj.name ===){}
         let builder = new cyfs.PeopleBuilder(new cyfs.PeopleDescContent(), new cyfs.PeopleBodyContent(ood_list, obj.name, icon, ood_work_mode));
         let people = process_common(builder, obj, cyfs.People);
 
-        fs.writeFileSync(obj.file, people.to_vec().unwrap());
+        fs.outputFileSync(filepath, people.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
     }
 }
 
@@ -215,6 +273,34 @@ function main() {
         case "people":
             process_people(obj)
             break;
+        case "devcie":
+
+            break;
+        case "dir": break;
+        case "file": break;
+        case "simplegroup": break;
+        case "proofofservice": break;
+        case "snservice": break;
+        case "flowservice": break;
+        case "metatx": break;
+        case "minergroup": break;
+        case "tx": break;
+        case "block": break;
+
+        case "zone": break;
+        case "decapp": break;
+        case "nftlist": break;
+        case "friendlist": break;
+        case "storage": break;
+        case "msg": break;
+        case "addfriend": break;
+        case "": break;
+        case "": break;
+        case "": break;
+        case "": break;
+        case "": break;
+        case "": break;
+
         default:
             console.error(`unsupport type`, obj.type)
             break;

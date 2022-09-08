@@ -41,12 +41,17 @@ export function get_path() {
 // }
 
 
-let alljson = get_path()
-for (let j of alljson) {
+// let alljson = get_path()
 
-    let testdatas = fs.readJSONSync(j,"utf8");
-    console.log(testdatas)
-}
+// console.log(alljson)
+// let obj = JSON.parse(fs.readFileSync('D:\\CYFShub\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\TestSuite\\unittest_NON_nameobject\\test_data\\people\\people_main.json', { encoding: 'utf-8' }));
+// console.log(obj)
+// let test =obj.type
+// console.log(typeof(test))
+
+
+
+
 // //定义创建对象传入参数
 // let objectidstr = '5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC';
 // let deviceidstr = '5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ';
@@ -90,3 +95,37 @@ for (let j of alljson) {
 // let file = RandomGenerator.createRandomFile(filePath, fileName, 100 * 1024 * 1024);
 
 // console.log(">>>>>>>>>>>>>>>>>>>>>>>>>" + (("dadsdadsdadasdasdadasdasda".length * 2) / 1024).toFixed(2))
+
+
+
+
+function get_big_str(size: number) {
+    let tmppath = path.join(cyfs.get_temp_path(), "strfile.txt");
+    let insertstr = ""
+    let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
+    let maxnum = basestr.length
+    for (let i = 0; i < 3000; i++) {
+        insertstr += basestr.charAt(Math.floor(Math.random() * (maxnum - 0)) + 0);
+    }
+    console.log(insertstr.length)
+    let thesize = size * 1024 * 1024
+
+    let len = Buffer.byteLength(insertstr, 'utf-8');
+    console.log("--------------------len  buffer  " + len)
+
+
+    while (thesize > len) {
+        fs.appendFileSync(tmppath, "utf-8")
+        thesize = thesize - len;
+    }
+
+
+    // fs.removeSync(datafile)
+    // if (!fs.existsSync(datafile)) {
+    //     RandomGenerator.createRandomFile(namePath, "strfile128.txt", 128 * 1024 * 1024);
+    // }
+    // let namedata = fs.readFileSync(datafile).toString()
+}
+
+get_big_str(10)
+

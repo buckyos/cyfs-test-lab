@@ -1,11 +1,12 @@
 {
+    "stack_type": "simulator",
+    "type": "people",
     "casename": "Ts编解码:有效设置name大于64MB",
-    "outfile": "people_test08.desc", //输出到path.join(cyfs.get_temp_path(), "people");
-    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", //限制32位字符，cyfs.ObjectId.from_base_58(str).unwrap()
-    "ood_list": "1", //  代表一个device
-    "area": "41:2:30:4", //new cyfs.Area(41, 2, 30, 4)
-    "name": "64", //64Mb大小字符串
-    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu", //限制32位字符，cyfs.FileId.from_base_58(str).unwrap()
-    "public_key": "keySize:2048", //cyfs.PrivateKey.generate_rsa(2048).unwrap()
-    "assert_character": "owner:PeopleId:name:ood_list"   // 断言了哪些属性
+    "file": "people_test08.desc", 
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+    "ood_list": ["5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ"], 
+    "area": "41:2:30:4", 
+    "name": "64mb", 
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu", 
+    "public_key": "random:2048"
 }

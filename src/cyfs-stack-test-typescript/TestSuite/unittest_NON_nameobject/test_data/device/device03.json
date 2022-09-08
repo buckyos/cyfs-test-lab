@@ -2,7 +2,7 @@
     "stack_type": "simulator",
     "type": "device",
     "casename": "Ts编解码:正常输入device构造的所有参数",
-    "file": "device_test_main.desc",
+    "file": "device_test04.desc",
 
     "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
     "unique_id": "",
