@@ -909,7 +909,7 @@ async fn main() {
     .arg(
         Arg::with_name("threads_nums")
             .long("threads_nums")
-            .takes_value(false)
+            .takes_value(true)
             .help("cocurrency thread num"),
     )
     .arg(
@@ -922,6 +922,8 @@ async fn main() {
     let matches = app.get_matches();
     let threads_nums = matches.value_of("threads_nums").unwrap_or_default().parse::<u32>().unwrap_or(10);
     let end_time = matches.value_of("end_time").unwrap_or_default().parse::<u64>().unwrap_or(60 * 1);
+
+    println!("threads_nums: {}, end_time: {}", threads_nums, end_time);
 
     let dec_id = new_dec("test1");
     let mut param = SharedCyfsStackParam::default(None);
@@ -938,8 +940,8 @@ async fn main() {
         task::spawn(async move {
             loop {
                 COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                post_object(&stack_test.clone(), &dec_id).await;
-                put_object(&stack_test, &dec_id).await;
+                //post_object(&stack_test.clone(), &dec_id).await;
+                //put_object(&stack_test, &dec_id).await;
                 //get_object(&stack_test, &dec_id).await;
             
                 test_storage(&stack_test).await;
