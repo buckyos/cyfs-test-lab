@@ -210,9 +210,9 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 
 ### Stream基础测试用例操作流程
 + （1）LN/RN 初始化本地BDT协议栈
-+ （2）LN 向 RN 发起首次连接，发送1M大小stream 数据，关闭连接
-+ （3）LN 向 RN 发起二次连接，发送1M大小stream 数据，关闭连接
-+ （4）RN 向 LN 发起反向连接，发送1M大小stream 数据，关闭连接
++ （2）LN 向 RN 发起首次连接，LN->RN发送1M大小stream 数据，RN->LN发送1M大小stream 数据,关闭连接
++ （3）LN 向 RN 发起二次连接，LN->RN发送1M大小stream 数据，RN->LN发送1M大小stream 数据,关闭连接
++ （4）RN 向 LN 发起反向连接，LN->RN发送1M大小stream 数据，RN->LN发送1M大小stream 数据,关闭连接
 +  (5) 关闭所有连接
 
 ### 统计测试数据项
@@ -745,7 +745,23 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     (1) LN 连接RN成功，连接过程中实现首次数据包发送
 ```
 ##### FristQA数据包大小
-+ Connect_FristQA_TCP_PackageSize
++ Connect_FristQA_TCP_PackageSize_question
+ ```
+前置条件：
+    （1）LN/RN 同时使用TCP协议EP
+     (2) LN 可以直连RN
+操作步骤：
+    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有100字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
+    (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
+    (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
+    (5) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie+1字节数据
+测试节点数据限制：
+    (1) 节点使用TCP直连
+预期结果：
+    (1) LN 连接RN成功，连接过程中实现首次数据包发送
+```
++ Connect_FristQA_TCP_PackageSize_answer
  ```
 前置条件：
     （1）LN/RN 同时使用TCP协议EP
@@ -761,7 +777,23 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 预期结果：
     (1) LN 连接RN成功，连接过程中实现首次数据包发送
 ```
-+ Connect_FristQA_UDP_PackageSize
++ Connect_FristQA_UDP_PackageSize_question
+ ```
+前置条件：
+    （1）LN/RN 同时使用UDP协议EP
+     (2) LN 可以直连RN
+操作步骤：
+    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
+    (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
+    (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
+    (5) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie+1字节数据
+测试节点数据限制：
+    (1) 节点使用UDP直连
+预期结果：
+    (1) LN 连接RN成功，连接过程中实现首次数据包发送
+```
++ Connect_FristQA_UDP_PackageSize_answer
  ```
 前置条件：
     （1）LN/RN 同时使用UDP协议EP
