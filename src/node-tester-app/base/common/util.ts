@@ -279,6 +279,9 @@ export class RandomGenerator {
         for (let i = 0; i < length; i++) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
+        while(Buffer.byteLength(result)<length){
+            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
+        }
         return result;
     };
 

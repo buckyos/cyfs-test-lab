@@ -27,12 +27,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
         labAgent.PC_0018,
     ]
     let firstQA_answer= RandomGenerator.string(25);
-    agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{tcp:true,udp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.Empty))
+    agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{tcp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.all))
     for(let i in agentList){
         for(let j in agentList){
             if(i != j){
                 // NAT穿透
-                if(agentList[j].NAT==0 ){
+                if(agentList[j].NAT==0  || SameRouter(agentList[i].router!,agentList[j].router!) ){
                     taskList.push(
                         {
                             LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
@@ -82,7 +82,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                                         firstQA_question : RandomGenerator.string(25),
                                         accept_answer : 1,
                                         timeout : 30*1000, 
-                                    }, 
+                                    },
                                     fileSize : 0,
                                     expect:{err:BDTERROR.success} 
                                 },

@@ -15,12 +15,15 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `# 操作流程：\n
-        + （1）LN/RN 初始化本地BDT协议栈
-        + （2）LN 向 RN 发起首次连接，发送10M大小stream 数据，关闭连接
-        + （3）LN 向 RN 发起二次连接，发送10M大小stream 数据，关闭连接
-        + （4）RN 向 LN 发起反向连接，发送10M大小stream 数据，关闭连接
-        +  (5) 关闭所有连接 `,
+        remark: `前置条件：
+        (1) LN 和 RN使用TCP EP建立连接成功
+    操作步骤：
+        (1) LN向RN发起连接
+        (2) LN向RN发送1M大小数据
+        (3) RN发起关闭连接操作
+        (4) LN向RN发送1M大小数据 
+    预期结果：
+        (1) 连接关闭后，LN发送数据失败，返回对应错误码 `,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -51,7 +54,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    timeout : 60*1000,
+                    timeout : 3*60*1000,
                     action : []
                 })
                 // 1.1 LN 连接 RN

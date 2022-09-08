@@ -199,7 +199,6 @@ async function main() {
     const serviceid = "4";
     
     const taskList = [
-        "Connect_AllEP_TunnelSelect",
         "Connect_Close_TCP_LNClose",
         "Connect_Close_TCP_LNUnlive",
         "Connect_Close_TCP_RNClose",
@@ -208,6 +207,18 @@ async function main() {
         "Connect_Close_UDP_LNUnlive",
         "Connect_Close_UDP_RNClose",
         "Connect_Close_UDP_RNUnlive",
+        "Connect_Endpoint_Port_TCP_direct",
+        "Connect_Endpoint_Port_TCP_SN",
+        "Connect_Endpoint_Port_UDP_direct",
+        "Connect_Endpoint_Port_UDP_SN",
+        "Connect_FristQA_TCP_direct",
+        "Connect_FristQA_TCP_PackageSize_answer",
+        "Connect_FristQA_TCP_PackageSize_question",
+        "Connect_FristQA_TCP_SN",
+        "Connect_FristQA_UDP_direct",
+        "Connect_FristQA_UDP_PackageSize_answer",
+        "Connect_FristQA_UDP_PackageSize_question",
+        "Connect_FristQA_UDP_SN",
     ];
     runner.process.on(`exit`,async()=>{
         console.info(`runner exit`)

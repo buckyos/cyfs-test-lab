@@ -106,7 +106,7 @@ export class BdtPeerClient extends EventEmitter{
         this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
         return {err:BDTERROR.success,log:`reportAgent to server success`}
     }
-    async restart(ndn_event:string,ndn_event_target:string):Promise<{err:number,log?:string}> {
+    async restart(ndn_event?:string,ndn_event_target?:string):Promise<{err:number,log?:string}> {
         this.cache_peer_info.ndn_event = ndn_event;
         this.cache_peer_info.ndn_event_target = ndn_event_target;
         // 1. start bdt-tool
@@ -246,11 +246,11 @@ export class BdtPeerClient extends EventEmitter{
     /**
      * 销毁节点
      * 
-     * state -1  空测试框架退出释放
-     * state -2  用例操作退出，可能需要获取peer 信息
+     * state -1  用例操作退出，可能需要获取peer 信息
+     * state -2  空测试框架退出释放
      */
 
-    async destory(state?:number): Promise<ErrorCode> {
+    async destory(state:number=-2): Promise<ErrorCode> {
         if(this.state == -2){
             return ErrorCode.succ;
         }
@@ -265,19 +265,14 @@ export class BdtPeerClient extends EventEmitter{
         let param: any = {
             peerName: this.peerName,
         };
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+        // send exit bdt client will destory,not resp
+        this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             peerName: this.peerName,
             name: 'exit',
         }, this.m_agentid, 0);
-        if(state){
-            this.state = -2;
-        }else{
-            this.state = -1;
-        }
-        if (info.err) {
-            this.logger.error(`${this.tags} destory failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return info.err;
+        await sleep(2000)
+        this.state = state
+        return BDTERROR.success;
     }
 
     async addDevice(peer: Buffer): Promise<ErrorCode> {

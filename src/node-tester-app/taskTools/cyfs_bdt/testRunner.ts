@@ -100,17 +100,18 @@ export class TestRunner{
                 record.data.push(task.action[i].record());
                 if(result.err){
                     task.state = "failed"
-                    V({err:result.err,record,log:result.log});
+                    return V({err:result.err,record,log:result.log});
                 }
             }
             task.state = "success" ;       
-            V({err:BDTERROR.success,record,log:"task run success"}) 
+            return V({err:BDTERROR.success,record,log:"task run success"}) 
         })
         
     }
     // 添加测试任务
     async addTask(task:Task):Promise<{err:number,log:string}>{
         this.total++
+        task.testcaseId = this.Testcase!.testcaseId!;
         task.task_id = `${this.Testcase!.testcaseId!}_${RandomGenerator.string(10)}`;
         if(!task.expect_status){
             task.expect_status = "success";
@@ -131,7 +132,7 @@ export class TestRunner{
             environment:this.Testcase!.environment,
             taskMult: config.MaxConcurrency,
             result: this.Testcase!.result,
-            errorList : JSON.stringify(this.Testcase!.errorList),
+            errorList : JSON.stringify(this.errorList),
             total: this.total,
             success : this.success!,
             failed : this.failed!,
@@ -185,17 +186,19 @@ export class TestRunner{
     async executeQueue(task:Task){
         this.runTask(task).then(async result  => {
             task.result = result;
+            this.JSONReport.actionList.push(result.record)
             if(result.err){
+                this.logger.info(`#####${task.task_id} 运行失败，err = ${result.log}`)
                 this.failed++ 
                 this.errorList.push({taskId:result.record.taskId,error:result.log})
                 this.logger.error(result.log);
-                this.JSONReport.actionList.push(result.record)
+                
                 if(config.ErrorBreak){
                    await this.exitTestcase(result.err,result.log);
                 }
             }else{
+                this.logger.info(`#####${task.task_id} 运行成功`)
                 this.success++ 
-                this.logger.info(result.log);
             }
             return result;
         })
@@ -239,22 +242,23 @@ export class TestRunner{
     // 退出测试用例
     async exitTestcase(err:number,log:string){
         this.end_time = Date.now();
-        this.logger.info(`######## Tescase run finished ,testcaseId = ${this.Testcase!.testcaseId}`)
-        this.logger.info(`######## run total = ${this.total}`)
-        this.logger.info(`######## success = ${this.success} `)
-        this.logger.info(`######## failed = ${this.failed}`)
-        this.logger.info(`######## ErrorList:`)
+       
         if(this.failed==0){
             this.Testcase!.result = 0;
         }else{
             this.Testcase!.result = this.failed;
         }
+        
         await this.agentManager.uploadLog(this.Testcase!.testcaseId)
+        await this.saveRecord();
+        this.logger.info(`######## Tescase run finished ,testcaseId = ${this.Testcase!.testcaseId}`)
+        this.logger.info(`######## run total = ${this.total}`)
+        this.logger.info(`######## success = ${this.success} `)
+        this.logger.info(`######## failed = ${this.failed}`)
+        this.logger.info(`######## ErrorList:`)
         for(let i in this.errorList){
             this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
         }
-       await this.saveRecord();
-        
         this.m_interface.exit(err,log);
     }
 

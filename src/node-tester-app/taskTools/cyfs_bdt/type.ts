@@ -32,7 +32,18 @@ export const BDTERROR = {
     RNCheckConnFailed:102,//RN 检查连接错误
     NotFound :104,
     ConnCloesd : 105,
+    ExpectionResult : 500, //错误结果
     perfTestError : 1000, //性能测试出现bug，退出
+    // BDT 操作报错
+    AddDeviceError : 1001,
+    BDTClientTimeout : 1002,
+    CalculateChunkError : 1003,
+    SetChunkError : 1004,
+    InterestChunkError : 1005,
+    CheckChunkError : 1005,
+    // 测试数据生成类型的报错
+    RandFileError : 20000,
+    GetCachePathError : 20001,
 }
 
 export const enum  ActionType {
@@ -40,7 +51,7 @@ export const enum  ActionType {
     restart = "restart",
     connect = "connect",
     close_connect = "close-connect",
-    exit = "destory",
+    destory = "destory",
     connect_second = "connect-second",  
     connect_reverse = "connect-reverse",  
     connect_mult = "connect-mult", 

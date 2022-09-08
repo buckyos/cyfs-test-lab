@@ -6,7 +6,7 @@ import { request, ContentType } from "./request"
 
 import * as path from "path"
 
-export class ActionBase implements ActionAbstract{
+export class BaseAction implements ActionAbstract{
     public action: Action
     public m_interface?: TaskClientInterface;
     public agentManager?: AgentManager;
@@ -86,33 +86,42 @@ export class ActionBase implements ActionAbstract{
                 this.state = "running";
                 setTimeout(async ()=>{
                     if(this.state == "running"){
+                        // 实际超时 预期失败
                         if(this.action.expect.err){
                             V({ err: BDTERROR.success, log: "action expect err" })
                         }
                         this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`};
+                        // 实际超时 预期成功
                         V({ err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`});
                     }
                 },this.action.config.timeout!)
                 let result = await this.run();
                 this.action.result = result;
                 this.state = "finished"
-                if(this.action.result.err && this.action.expect.err){
+                // 实际失败 预期失败
+                if(this.action.result.err !=0 && this.action.expect.err !=0 ){
                     V({ err: BDTERROR.success, log: "action expect err" })
                 }
+                // 实际成功 预期失败
+                if(this.action.result.err == 0  && this.action.expect.err != 0){
+                    V({ err: BDTERROR.ExpectionResult, log: "action expect err" })
+                }
+                // 预期成功 返回实际结果
                 V(result)
             } catch (error) {
+                //测试程序异常，进行捕获
                 V({ err: BDTERROR.optExpectError, log: `${error}` })
             }
             
         })
     }
     async run():Promise<{ err: number, log: string }>{
-        return { err: BDTERROR.success, log: "DestoryAction run success" }
+        return { err: BDTERROR.success, log: "Action run success" }
     }
 
 }
 
-export class ConnectAction extends ActionBase implements ActionAbstract {
+export class ConnectAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
 
         // (1) 检查测试bdt 客户端
@@ -130,9 +139,11 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         if (this.action.config!.firstQA_question) {
             FirstQ = this.action.config!.firstQA_question!;
             this.action.fileSize = Buffer.byteLength(this.action.config!.firstQA_question!)
+            this.logger?.info(`Set FirstQ question size ${this.action.fileSize}`)
         }
         // 判断RN是否要进行FristQA,answer 数据设置
         if (this.action.config!.firstQA_answer) {
+            this.logger?.info(`Set FirstQ answer size ${Buffer.byteLength(this.action.config!.firstQA_answer!)}`)
             let err = await RN.bdtClient!.set_answer(this.action.config!.firstQA_answer);
             if (err) {
                 return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_answer info failed ` }
@@ -151,7 +162,8 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!} ,stream_name = ${info.conn?.stream_name}`)
         // 检查fristQA answer 
         if (info.answer) {
-            if (info.answer != RN!.bdtClient!.FristQA_answer) {
+            if (info.answer != this.action.config.firstQA_answer) {
+                this.logger!.error(`send answer = ${this.action.config.firstQA_answer} ,recv answer = ${info.answer}`);
                 return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , FristQA answer is error` }
             }
         }
@@ -168,9 +180,10 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         if(check.conn!.TempSeq != info.conn!.TempSeq){
             return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , ${check.conn!.TempSeq} != ${info.conn!.TempSeq}` } 
         }
-         // 检查FirstQA question 和 answer
+         // 检查FirstQA question 
         if (check.conn?.question!) {
-            if (check.conn?.question! != FirstQ) {
+            if (check.conn?.question != FirstQ) {
+                this.logger!.error(`send question = ${FirstQ} ,recv question = ${check.conn?.question}`);
                 return {err:BDTERROR.connnetFailed,log:`${this.action.LN} conenct ${this.action.RN} , FristQA question is error`}
             }
         }
@@ -186,7 +199,7 @@ export class ConnectAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "ConnectAction run success" }
     }
 }
-export class CloseConnectAction extends ActionBase implements ActionAbstract {
+export class CloseConnectAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
 
         // (1) 检查测试bdt 客户端
@@ -205,7 +218,7 @@ export class CloseConnectAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "CloseConnectAction run success" }
     }
 }
-export class DestoryAction extends ActionBase implements ActionAbstract {
+export class DestoryAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
 
         // (1) 检查测试bdt 客户端
@@ -213,14 +226,30 @@ export class DestoryAction extends ActionBase implements ActionAbstract {
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }
-        let info  = await LN.bdtClient!.destory();
+        let info  = await LN.bdtClient!.destory(-1);
         if(info){
             return { err: BDTERROR.success, log: `${this.action.LN} destory bdt client failed`}
         }
         return { err: BDTERROR.success, log: "DestoryAction run success" }
     }
 }
-export class SendStreamAction extends ActionBase implements ActionAbstract {
+export class RestartAction extends BaseAction implements ActionAbstract {
+    async run(): Promise<{ err: number, log: string }> {
+
+        // (1) 检查测试bdt 客户端
+        let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
+        if (LN.err) {
+            return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
+        }
+        let info  = await LN.bdtClient!.restart(this.action.config.restart?.ndn_event,this.action.config.restart?.ndn_event_target);
+        if(info){
+            return { err: BDTERROR.success, log: `${this.action.LN} restart bdt client failed`}
+        }
+        return { err: BDTERROR.success, log: "RestartAction run success" }
+    }
+}
+
+export class SendStreamAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
         let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
@@ -264,7 +293,7 @@ export class SendStreamAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "SendStreamAction run success" }
     }
 }
-export class SendStreamNotReadAction extends ActionBase implements ActionAbstract {
+export class SendStreamNotReadAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
         let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
@@ -299,7 +328,7 @@ export class SendStreamNotReadAction extends ActionBase implements ActionAbstrac
         return { err: BDTERROR.success, log: "SendStreamNotReadAction run success" }
     }
 }
-export class SendChunkAction extends ActionBase implements ActionAbstract {
+export class SendChunkAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -315,31 +344,41 @@ export class SendChunkAction extends ActionBase implements ActionAbstract {
         // (2) 构造测试数据
         // RN生成测试文件
         let randFile = await RN.bdtClient!.util_client!.createFile(this.action.chunkSize!);
+        if(randFile.err){
+            return { err: BDTERROR.RandFileError, log: `${this.action.RN} send chunk create randFile failed` }
+        }
         // LN获取本地下载缓存文件路径
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
+        if(LNcachePath.err){
+            return { err: BDTERROR.GetCachePathError, log: `${this.action.LN} send chunk get cache path failed` }
+        }
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
         if(prev){
-            return { err: prev, log: `SendChunkAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: BDTERROR.AddDeviceError, log: `SendChunkAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         // (3) BDT 传输  File
         // cyfs-base 计算chunk
         let calculate = await RN.bdtClient!.calculateChunk(randFile.filePath!, this.action.fileSize!);
+        if(calculate.err){
+            return { err: BDTERROR.CalculateChunkError, log: `${this.action.LN} calculate chunk failed` }
+        }
         // RN 将文件保存到BDT NDN 中
         let setRunning = RN.bdtClient!.setChunk(randFile.filePath!, calculate.chunk_id!);
+        // 判断是否要等待上传完成
         if (!this.action.config.not_wait_upload_finished) {
             let setResult = await setRunning;
             if (setResult.err) {
-                return { err: setResult.err, log: `SendChunkAction run failed,setChunk err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+                return { err: BDTERROR.SetChunkError, log: `SendChunkAction run failed,setChunk err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
         }
         let download = await LN.bdtClient!.interestChunk(RN.bdtClient!.device_object!, calculate.chunk_id!);
         if (download.err) {
-            return { err: download.err, log: `SendChunkAction run failed, interestChunk err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: BDTERROR.InterestChunkError, log: `SendChunkAction run failed, interestChunk err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let check = await LN.bdtClient!.checkChunkListener(calculate.chunk_id!, 2000, this.action.config.timeout);
         if (check.err) {
-            return { err: check.err, log: `SendChunkAction run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: BDTERROR.CheckChunkError, log: `SendChunkAction run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let setResult = await setRunning;
         // (4) 校验结果
@@ -354,7 +393,7 @@ export class SendChunkAction extends ActionBase implements ActionAbstract {
     }
 }
 
-export class SendChunkListAction extends ActionBase implements ActionAbstract {
+export class SendChunkListAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -398,7 +437,7 @@ export class SendChunkListAction extends ActionBase implements ActionAbstract {
     }
 }
 
-export class SendFileAction extends ActionBase implements ActionAbstract {
+export class SendFileAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -465,7 +504,7 @@ export class SendFileAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "SendFileAction run success" }
     }
 }
-export class SendFileRangeAction extends ActionBase implements ActionAbstract {
+export class SendFileRangeAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -514,7 +553,7 @@ export class SendFileRangeAction extends ActionBase implements ActionAbstract {
         return { err: BDTERROR.success, log: "SendFileAction run success" }
     }
 }
-export class SendFileRedirectAction extends ActionBase implements ActionAbstract {
+export class SendFileRedirectAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -600,7 +639,7 @@ export class SendFileRedirectAction extends ActionBase implements ActionAbstract
         return { err: BDTERROR.success, log: "SendFileAction run success" }
     }
 }
-export class SendDirAction extends ActionBase implements ActionAbstract {
+export class SendDirAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 

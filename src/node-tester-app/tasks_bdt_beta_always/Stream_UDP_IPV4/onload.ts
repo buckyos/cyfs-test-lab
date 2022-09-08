@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "Connect_AllEP_TunnelSelect"
+    let testcaseName = "Stream_UDP_IPV4"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -29,11 +29,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
             eps:{
                 ipv4:{
                     udp:true,
-                    tcp:true,
-                },
-                ipv6:{
-                    udp:true,
-                    tcp:true,
                 }
             },
             logType:"info",

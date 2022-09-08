@@ -82,7 +82,7 @@ export class AgentClient {
             return {err:BDTERROR.AgentError,log:`${this.tags} ${index} not exsit`}
         }
         let bdtClient = this.bdtPeerMap.get(index)!;
-        if(bdtClient.state){
+        if(bdtClient.state<-1 ){
             return {err:BDTERROR.AgentError,log:`${this.tags} ${index} state error,state = ${bdtClient.state}`}
         }
         return {err:BDTERROR.success,log:`${this.tags} ${index} get success`,bdtClient}
