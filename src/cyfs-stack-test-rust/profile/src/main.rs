@@ -796,7 +796,7 @@ pub async fn test_storage(s: &SharedCyfsStack) {
 
             let map = StateStorageMap::new(storage);
             let ret = map.get("user2").await.unwrap();
-            assert_eq!(ret, Some(x1_value));
+            // assert_eq!(ret, Some(x1_value));
         }
     }
 
@@ -936,11 +936,11 @@ async fn main() {
         let stack_test = stack.clone();
         task::spawn(async move {
             loop {
-                post_object(&stack_test.clone(), &dec_id).await;
-                put_object(&stack_test, &dec_id).await;
-                get_object(&stack_test, &dec_id).await;
+                // post_object(&stack_test.clone(), &dec_id).await;
+                // put_object(&stack_test, &dec_id).await;
+                // get_object(&stack_test, &dec_id).await;
             
-                //test_storage(&stack_test).await;
+                // test_storage(&stack_test).await;
             
                 //test_gbk_path(&stack_test, &dec_id).await;
             
@@ -959,6 +959,6 @@ async fn main() {
 
     let total = COUNT.load(Ordering::SeqCst);
 
-    println!("TPS: {}/{}", total, end_time);
+    println!("TPS: {}/{} = {}", total, end_time, total/end_time);
 
 }
