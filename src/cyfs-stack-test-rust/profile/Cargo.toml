@@ -18,6 +18,8 @@ cyfs-core ="0.5"
 cyfs-debug = "0.5"
 cyfs-lib = "0.5"
 
+clap = "2.34.0"
+
 log = "0.4"
 async-std = { version = "1.11", features = ["unstable", "attributes"] }
 futures = "0.3"

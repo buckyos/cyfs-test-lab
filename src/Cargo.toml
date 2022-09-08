@@ -5,7 +5,7 @@ members=[
     "bdt-tools",
     "cyfs-tools",
     "test-simulator",
-    "cyfs-stack-test-rust/unittest_NON_nameobject",
+    "cyfs-stack-test-rust/unittest_non_nameobject",
     "cyfs-stack-test-rust/profile",
 ]
 
