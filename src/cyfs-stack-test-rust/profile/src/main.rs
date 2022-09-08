@@ -343,17 +343,16 @@ async fn get_object(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     let filter = format!("dec_id == {}", dec_id);
 
     let listener = OnGetObject {};
-    stack
-        .router_handlers()
-        .add_handler(
-            RouterHandlerChain::PreRouter,
-            "get-object1",
-            0,
-            &filter,
-            RouterHandlerAction::Default,
-            Some(Box::new(listener)),
-        )
-        .unwrap();
+    // stack
+    //     .router_handlers()
+    //     .add_handler(
+    //         RouterHandlerChain::PreRouter,
+    //         "get-object1",
+    //         0,
+    //         &filter,
+    //         RouterHandlerAction::Default,
+    //         Some(Box::new(listener)),
+    //     );
 
     // 事件是异步注册的，需要等待
     //async_std::task::sleep(std::time::Duration::from_secs(2)).await;
@@ -657,8 +656,6 @@ pub async fn test_gbk_path(stack: &SharedCyfsStack, dec_id: &ObjectId) {
     info!("test root_state gbk complete!");
 }
 
-
-
 pub async fn test_storage(s: &SharedCyfsStack) {
     let x1_value = ObjectId::from_str("95RvaS5anntyAoRUBi48vQoivWzX95M8xm4rkB93DdSt").unwrap();
     let x2_value = ObjectId::from_str("95RvaS5F94aENffFhjY1FTXGgby6vUW2AkqWYhtzrtHz").unwrap();
@@ -931,7 +928,7 @@ async fn main() {
 
     let stack = SharedCyfsStack::open(param).await.unwrap();
 
-    stack.wait_online(Some(std::time::Duration::from_secs(30))).await.unwrap();
+    stack.wait_online(Some(std::time::Duration::from_secs(10))).await.unwrap();
 
     static COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -939,10 +936,9 @@ async fn main() {
         let stack_test = stack.clone();
         task::spawn(async move {
             loop {
-                COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                //post_object(&stack_test.clone(), &dec_id).await;
-                //put_object(&stack_test, &dec_id).await;
-                //get_object(&stack_test, &dec_id).await;
+                post_object(&stack_test.clone(), &dec_id).await;
+                put_object(&stack_test, &dec_id).await;
+                get_object(&stack_test, &dec_id).await;
             
                 test_storage(&stack_test).await;
             
@@ -951,14 +947,17 @@ async fn main() {
                 test_path_env(&stack_test, &dec_id).await;
                 test_path_env_update(&stack_test, &dec_id).await;
                 test_iterator(&stack_test, &dec_id).await;
+
+                COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
             }
         });
 
     }
 
-    let total = COUNT.load(Ordering::SeqCst);
-
     async_std::task::sleep(std::time::Duration::from_secs(end_time)).await;
+
+    let total = COUNT.load(Ordering::SeqCst);
 
     println!("TPS: {}/{}", total, end_time);
 
