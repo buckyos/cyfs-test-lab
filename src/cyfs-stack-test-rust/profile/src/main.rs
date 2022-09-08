@@ -928,7 +928,7 @@ async fn main() {
 
     let stack = SharedCyfsStack::open(param).await.unwrap();
 
-    stack.wait_online(Some(std::time::Duration::from_secs(10))).await.unwrap();
+    stack.wait_online(Some(std::time::Duration::from_secs(30))).await.unwrap();
 
     static COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -940,13 +940,13 @@ async fn main() {
                 put_object(&stack_test, &dec_id).await;
                 get_object(&stack_test, &dec_id).await;
             
-                test_storage(&stack_test).await;
+                //test_storage(&stack_test).await;
             
-                test_gbk_path(&stack_test, &dec_id).await;
+                //test_gbk_path(&stack_test, &dec_id).await;
             
                 test_path_env(&stack_test, &dec_id).await;
-                test_path_env_update(&stack_test, &dec_id).await;
-                test_iterator(&stack_test, &dec_id).await;
+                //test_path_env_update(&stack_test, &dec_id).await;
+                //test_iterator(&stack_test, &dec_id).await;
 
                 COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
