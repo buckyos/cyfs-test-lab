@@ -1,8 +1,10 @@
 use clap::{App, Arg};
-use std::collections::BTreeMap;
-use async_std::fs;
+use crate::process::Process;
 
-mod procss;
+#[macro_use]
+extern crate log;
+
+mod process;
 
 #[async_std::main]
 async fn main() {
@@ -32,10 +34,19 @@ async fn main() {
     let matches = app.get_matches();
     let proc_in = matches.is_present("in");
     let proc_out = matches.is_present("out");
-    let proc_file = matches.value_of("json_file").unwrap_or("./");
+    let proc_file = matches.value_of("json_file").unwrap_or("a.json");
 
-    println!("{}, {}, {}", proc_in, proc_out, proc_file);
+    debug!("{}, {}, {}", proc_in, proc_out, proc_file);
 
 
-    let procss = Procss::new(proc_in, proc_out, proc_file);
+    let mut procss = Process::new(proc_in, proc_out, proc_file);
+    if let Err(e) = procss.init().await {
+        println!("{}", e);
+        std::process::exit(-1);
+    }
+
+    procss.handle();
+    
+    std::process::exit(0);
+
 }

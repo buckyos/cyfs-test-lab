@@ -940,9 +940,14 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 }
 
+/*
+criterion benchmark + FlameGraph + html
+如果你无法测量，那你就无法改进（If you can’t measure it, you can’t improve it）。  jaeger
+*/
+
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(10000).measurement_time(Duration::new(60 * 60, 0));
+    config = Criterion::default().sample_size(100).measurement_time(Duration::new(60 * 60, 0));
     targets = criterion_benchmark
 }
 criterion_main!(benches);
