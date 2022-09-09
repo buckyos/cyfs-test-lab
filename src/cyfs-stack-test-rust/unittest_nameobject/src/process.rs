@@ -91,31 +91,25 @@ impl Process {
         }
 
         let obj_type = node.as_str().unwrap();
-        
+        println!("process: {}", obj_type);
         match obj_type {
             "people" => {
-                //  TODO: process people
-                println!("process: {}", obj_type);
+                self.process_people();
             },
             "device" => {
-                //  TODO: process device
-                println!("process: {}", obj_type);
+                self.process_device();
             },
             "file" => {
-                // TODO: process file
-                println!("process: {}", obj_type);
+                self.process_file();
             },
             "dir" => {
-                //  TODO: process dir
-                println!("process: {}", obj_type);
+                self.process_dir();
             },
             "simple_group" => {
-                // TODO: process simple_group
-                println!("process: {}", obj_type);
+                self.process_simple_group();
             },
             "union_account" => {
-                //  TODO: process union_account
-                println!("process: {}", obj_type);
+                self.process_union_account();
             },
             _ => {
                 // nothing to do
@@ -124,4 +118,53 @@ impl Process {
         }
     
     }
+
+    pub fn process_people(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
+    pub fn process_device(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
+    pub fn process_file(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
+    pub fn process_dir(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
+    pub fn process_simple_group(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
+    pub fn process_union_account(&self) {
+        if self.proc_in {
+
+        } else {
+            
+        }
+    }
+
 }
