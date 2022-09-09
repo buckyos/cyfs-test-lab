@@ -306,6 +306,12 @@ export class BdtPeerClient extends EventEmitter{
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
+        }
+        let check =await this.checkChunk(info.value!.chunk_id)
+        if(check.err){
+            this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: check.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
         }
         return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
     }

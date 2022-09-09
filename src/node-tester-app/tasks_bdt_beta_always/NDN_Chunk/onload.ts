@@ -33,7 +33,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }
             },
             logType:"info",
-            udp_sn_only : 1,
             SN :LabSnList,
             resp_ep_type:Resp_ep_type.SN_Resp, 
     }
@@ -43,7 +42,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let i in labAgent){
         for(let j in labAgent){
-            if(i != j && labAgent[i].NAT * labAgent[j].NAT == 0 ){
+            if(i != j && labAgent[i].NAT + labAgent[j].NAT < 5 ){
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
@@ -63,11 +62,11 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0},    
                 }))
                 // 1.2 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                    type : ActionType.send_chunk,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                    chunkSize : 10*1024*1024,
                     config:{
                         conn_tag: connect_1,
                         timeout : 30*1000,
@@ -75,149 +74,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0},      
                 }))
                 // 1.3 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream_reverse,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                    type : ActionType.send_chunk,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                    chunkSize : 10*1024*1024,
                     config:{
                         conn_tag: connect_1,
                         timeout : 30*1000,
                     },
                     expect : {err:0},      
                 }))
-                // 1.4 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 1.5 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.1 LN 连接 RN
-                let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                    type : ActionType.connect_second,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},    
-                }))
-                // 2.2 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.3 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream_reverse,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.4 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                })) 
-                // 2.5 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                })) 
-                // 3.1 RN 连接 LN
-                let connect_3 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                    type : ActionType.connect_reverse,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    RN : `${labAgent[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},    
-                }))
-                // 3.2 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 3.3 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream_reverse,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 3.4 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))  
-                // 3.5 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))  
                 
                 await testRunner.prevTaskRun();
             }

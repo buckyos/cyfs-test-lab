@@ -23,7 +23,7 @@ export class UtilClient {
         if(result.err ){  
             return {err:ErrorCode.exception,log:`${this.tags} createFile failed`}
         }
-        return {err:ErrorCode.exception,log:`${this.tags} createFile success`,fileName:result.value.fileName,filePath:result.value.filePath,md5:result.value.md5}
+        return {err:ErrorCode.succ,log:`${this.tags} createFile success`,fileName:result.value.fileName,filePath:result.value.filePath,md5:result.value.md5}
     }
     async createDir(fileNumber:number,fileSize:number,dirNumber:number,deep:string):Promise<{err:ErrorCode,log?:string,dirName?:string,dirPath?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
@@ -38,7 +38,7 @@ export class UtilClient {
         if(result.err ){  
             return {err:ErrorCode.exception,log:`${this.tags} createDir failed`}
         }
-        return {err:ErrorCode.exception,log:`${this.tags} createDir success`,dirName:result.value.ddirName,dirPath:result.value.dirPath,}
+        return {err:ErrorCode.succ,log:`${this.tags} createDir success`,dirName:result.value.ddirName,dirPath:result.value.dirPath,}
     }
     async md5File(filePath:string):Promise<{err:ErrorCode,md5?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
@@ -50,7 +50,7 @@ export class UtilClient {
         if(result.err ){  
             return {err:ErrorCode.exception}
         }
-        return {err:ErrorCode.exception,md5:result.value.md5}
+        return {err:ErrorCode.succ,md5:result.value.md5}
     }
     async getCachePath():Promise<{err:ErrorCode,cache_path? : {file_upload:string,file_download:string,NamedObject:string}}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
@@ -61,6 +61,6 @@ export class UtilClient {
         if(result.err ){  
             return {err:ErrorCode.exception}
         }
-        return {err:ErrorCode.exception,cache_path:result.value.cache_path}
+        return {err:ErrorCode.succ,cache_path:result.value.cache_path}
     }  
 }
