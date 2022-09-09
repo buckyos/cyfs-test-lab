@@ -254,6 +254,9 @@ export class RandomGenerator {
         for (let i = 0; i < symbol; i++) {
             result += RandomGenerator.SYMBOL.charAt(RandomGenerator.integer(maxPos));
         }
+        while(Buffer.byteLength(result)<length){
+            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
+        }
         return result;
     };
     // static ESC_char = "\0\b\t\n\v\f\r\"\'\\\x34\xfa\123\253\u3445\uabcd";
