@@ -1,0 +1,14 @@
+{
+    "stack_type": "simulator",
+    "type": "people",
+    "casename": "Ts编解码:有效设置public_key为哈希值",
+    "file": "people_test15.desc",
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
+    "ood_list": [
+        "5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ"
+    ],
+    "area": "41:2:30:4",
+    "name": "64:mb",
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu",
+    "public_key": "hex:013082010a0282010100c61177d43156477d0e2312135f3a8686ab607458a3aec144aeeaebc6da09b4eed43542d04104e57cb1d2048b18ffe39f30cd52d2713885b8ea88cd92573846f52342c8a3b10be0ae599cae5afc567daa1813e689258d2cf7ee9bf23efa5f49b40078d368f49ae466454e2f70c701657ce0ee35742b304a1580849ea06899c10f5304bdb053fab1f798ffc3533efc94ba8a8f0d1c6492a593d50a0f6557a9f5fad2330ee14b91134172fd02dad0b9f8190e78cd5970f8d73b4528d7d52bf64ce09a4932fd8d106472fd93f290f0db7abe688795e86c9096a1b41477ef55427836ec924d674f35179a1a8bdf7e173ffcfbf91b812bab56b328ad2c4d5645329a0f0203010001000000000000000000000000000000000000000000000000"
+}
