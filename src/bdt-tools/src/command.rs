@@ -814,8 +814,7 @@ impl TryFrom<LpcCommand> for SetChunkLpcCommandReq {
         let chunk_id = match json.get("chunk_id") {
             Some(v) => match v {
                 serde_json::Value::String(s) => {
-                    let chunk_id: Vec<u8> = hex::decode(s)?;
-                    let (chunk_id, _) = ChunkId::raw_decode(chunk_id.as_slice())?;
+                    let chunk_id = ChunkId::from_str(s).unwrap();
                     chunk_id
                 }
                 _ => {
@@ -883,7 +882,7 @@ impl TryFrom<SetChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "set-chunk-resp",
             "result": value.result,
-            "chunk_id": hex::encode(value.chunk_id.as_slice()),
+            "chunk_id": value.chunk_id.to_string(),
             "set_time" : value.set_time,
         });
 
@@ -954,7 +953,7 @@ impl TryFrom<CalculateChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "calculate-chunk-resp",
             "result": value.result,
-            "chunk_id": hex::encode(value.chunk_id.as_slice()),
+            "chunk_id": value.chunk_id.to_string(),
             "calculate_time" : value.calculate_time,
         });
 
@@ -982,8 +981,7 @@ impl TryFrom<LpcCommand> for InterestChunkLpcCommandReq {
         let chunk_id = match json.get("chunk_id") {
             Some(v) => match v {
                 serde_json::Value::String(s) => {
-                    let chunk_id: Vec<u8> = hex::decode(s)?;
-                    let (chunk_id, _) = ChunkId::raw_decode(chunk_id.as_slice())?;
+                    let chunk_id = ChunkId::from_str(s).unwrap();
                     chunk_id
                 }
                 _ => {
@@ -1053,9 +1051,9 @@ impl TryFrom<LpcCommand> for InterestChunkListLpcCommandReq {
                         let chunk_id = match fileInfo.get("chunk_id") {
                             Some(v) => match v {
                                 serde_json::Value::String(s) => {
-                                    let chunk_id: Vec<u8> = hex::decode(s)?;
-                                    let (chunk_id, _) = ChunkId::raw_decode(chunk_id.as_slice())?;
+                                    let chunk_id = ChunkId::from_str(s).unwrap();
                                     chunk_id
+                                    
                                 }
                                 _ => {
                                     return Err(BuckyError::new(
@@ -1243,8 +1241,7 @@ impl TryFrom<LpcCommand> for CheckChunkLpcCommandReq {
         let chunk_id = match json.get("chunk_id") {
             Some(v) => match v {
                 serde_json::Value::String(s) => {
-                    let chunk_id: Vec<u8> = hex::decode(s)?;
-                    let (chunk_id, _) = ChunkId::raw_decode(chunk_id.as_slice())?;
+                    let chunk_id = ChunkId::from_str(s).unwrap();
                     chunk_id
                 }
                 _ => {

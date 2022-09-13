@@ -1190,7 +1190,7 @@ impl Peer {
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.clone().to_string().as_str());
                     let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(buf), path.as_path()).await {
+                    match cyfs_bdt::download::track_chunk_in_path(&*stack, &c.chunk_id, path.clone()).await {
                         Ok(_) => {
                             let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
                             SetChunkLpcCommandResp {
@@ -1212,6 +1212,28 @@ impl Peer {
                             }
                         }
                     }
+                    // match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id, Arc::new(buf), path.as_path()).await {
+                    //     Ok(_) => {
+                    //         let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                    //         SetChunkLpcCommandResp {
+                    //             seq, 
+                    //             result: 0 as u16,
+                    //             chunk_id:c.chunk_id.clone(),
+                    //             set_time,
+                                
+                    //         }
+                    //     },
+                    //     Err(e) => {
+                    //         log::error!("set-chunk failed, e={}", &e);
+                    //         SetChunkLpcCommandResp {
+                    //             seq, 
+                    //             result: e.code().as_u16(),
+                    //             chunk_id:c.chunk_id.clone(),
+                    //             set_time:0,
+                                
+                    //         }
+                    //     }
+                    // }
                 }
             };
 
