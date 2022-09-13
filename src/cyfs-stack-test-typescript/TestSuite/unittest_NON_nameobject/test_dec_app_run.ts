@@ -243,7 +243,7 @@ describe("测试DecApp对象编解码", function () {
             });
         });
 
-        it("Rust工具编码->Ts解码：有效进行Rust工具编码对象，再进行Ts解码流程", async function () {
+        it.skip("Rust工具编码->Ts解码：有效进行Rust工具编码对象，再进行Ts解码流程", async function () {
             //rust创建对象
             //创建cmd命令：app-tool.exe app create "13213286383" --owner ./test_config/test_owner
             let ffsClientPath = __dirname + '/test-tool/tool/app-tool.exe';

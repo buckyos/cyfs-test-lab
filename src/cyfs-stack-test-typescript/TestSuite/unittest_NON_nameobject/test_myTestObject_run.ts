@@ -21,7 +21,7 @@ describe("测试MyTest对象编解码", async function () {
     let buf = new Uint8Array().fromHex(hashvalue).unwrap()
     let rsa = cyfs.Some(new cyfs.RSAPublicKey(0, buf))
     let secp = cyfs.Some(new cyfs.Secp256k1PublicKey(buf))
-    let sm2 = cyfs.Some(new cyfs.SM2PublicKey(buf))
+    //let sm2 = cyfs.Some(new cyfs.SM2PublicKey(buf))
 
     let name: string = "扩展对象公匙"
     let network: string = "局域网"
@@ -87,18 +87,18 @@ describe("测试MyTest对象编解码", async function () {
             assert.equal(name, mtname, "断言失败，name不一致")
             assert.equal(network, mtnetwork, "断言失败，network不一致")
         });
-        it("Ts编码：puclikey为sm2类型创建MyTest对象", function () {
-            myTest5 = MyTest.create(owner, author, prev, ol, sm2, name, network)
+        // it.skip("Ts编码：puclikey为sm2类型创建MyTest对象", function () {
+        //     myTest5 = MyTest.create(owner, author, prev, ol, sm2, name, network)
 
-            let mtname = myTest5.body_expect().content().name
-            let mtnetwork = myTest5.body_expect().content().network
+        //     let mtname = myTest5.body_expect().content().name
+        //     let mtnetwork = myTest5.body_expect().content().network
 
-            console.info(mtname)
-            console.info(mtnetwork)
+        //     console.info(mtname)
+        //     console.info(mtnetwork)
 
-            assert.equal(name, mtname, "断言失败，name不一致")
-            assert.equal(network, mtnetwork, "断言失败，network不一致")
-        });
+        //     assert.equal(name, mtname, "断言失败，name不一致")
+        //     assert.equal(network, mtnetwork, "断言失败，network不一致")
+        // });
         it("Ts编码：puclikey为rsa类型且size为256创建MyTest对象", function () {
             let rsa2048 = cyfs.Some(new cyfs.RSAPublicKey(1, buf))
             myTest6 = MyTest.create(owner, author, prev, ol, rsa2048, name, network)
@@ -186,20 +186,20 @@ describe("测试MyTest对象编解码", async function () {
             assert.equal(name, mtname, "断言失败，name不一致")
             assert.equal(network, mtnetwork, "断言失败，network不一致")
         });
-        it("Ts解码：puclikey为sm2类型创建MyTest对象", function () {
-            let umyTest  = cyfs.to_vec(myTest5).unwrap()
-            let [demyTest1,u] = new MyTestDecoder().raw_decode(umyTest).unwrap()
+        // it("Ts解码：puclikey为sm2类型创建MyTest对象", function () {
+        //     let umyTest  = cyfs.to_vec(myTest5).unwrap()
+        //     let [demyTest1,u] = new MyTestDecoder().raw_decode(umyTest).unwrap()
 
-            let mtname = demyTest1.body_expect().content().name
-            let mtnetwork = demyTest1.body_expect().content().network
+        //     let mtname = demyTest1.body_expect().content().name
+        //     let mtnetwork = demyTest1.body_expect().content().network
 
     
-            console.info(mtname)
-            console.info(mtnetwork)
+        //     console.info(mtname)
+        //     console.info(mtnetwork)
 
-            assert.equal(name, mtname, "断言失败，name不一致")
-            assert.equal(network, mtnetwork, "断言失败，network不一致")
-        });
+        //     assert.equal(name, mtname, "断言失败，name不一致")
+        //     assert.equal(network, mtnetwork, "断言失败，network不一致")
+        // });
         it("Ts解码：puclikey为rsa类型且size为256创建MyTest对象", function () {
             let umyTest  = cyfs.to_vec(myTest6).unwrap()
             let [demyTest1,u] = new MyTestDecoder().raw_decode(umyTest).unwrap()

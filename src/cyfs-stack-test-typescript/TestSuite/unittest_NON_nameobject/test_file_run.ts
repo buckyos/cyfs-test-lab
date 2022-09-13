@@ -182,7 +182,7 @@ describe("测试File对象编解码", function () {
 
         });
 
-        it("Rust工具编码->Ts解码：有效进行Rust工具编码对象，再进行Ts解码流程", async function () {
+        it.skip("Rust工具编码->Ts解码：有效进行Rust工具编码对象，再进行Ts解码流程", async function () {
             //rust创建对象
             //创建cmd命令：cyfs-client.exe create ./test_config/test_file.txt --chunk_size 8192 --owner ./test_config/test_owner
             let ffsClientPath = __dirname + '/test-tool/tool/cyfs-client.exe';
@@ -193,7 +193,7 @@ describe("测试File对象编解码", function () {
             })
 
             //Ts解码(Ts编码对象)对象,获取属性
-            let rustfilepath = __dirname + '/test-tool/tool/' + rust_desc + '.fileobj'
+            let rustfilepath = __dirname + '/test-tool/tool/' + rust_desc + '.obj'
             let desc_buffer = decoder(rustfilepath)
             let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
 

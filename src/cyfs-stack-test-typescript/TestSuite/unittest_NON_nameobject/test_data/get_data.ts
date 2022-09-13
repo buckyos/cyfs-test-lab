@@ -101,31 +101,21 @@ export function get_path() {
 
 function get_big_str(size: number) {
     let tmppath = path.join(cyfs.get_temp_path(), "strfile.txt");
+    fs.removeSync(tmppath)
     let insertstr = ""
     let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
     let maxnum = basestr.length
     for (let i = 0; i < 3000; i++) {
         insertstr += basestr.charAt(Math.floor(Math.random() * (maxnum - 0)) + 0);
     }
-    console.log(insertstr.length)
-    let thesize = size * 1024 * 1024
-
     let len = Buffer.byteLength(insertstr, 'utf-8');
-    console.log("--------------------len  buffer  " + len)
-
-
+    let thesize = size * 1024 * 1024
     while (thesize > len) {
-        fs.appendFileSync(tmppath, "utf-8")
+        fs.appendFileSync(tmppath,insertstr, "utf-8")
         thesize = thesize - len;
     }
-
-
-    // fs.removeSync(datafile)
-    // if (!fs.existsSync(datafile)) {
-    //     RandomGenerator.createRandomFile(namePath, "strfile128.txt", 128 * 1024 * 1024);
-    // }
-    // let namedata = fs.readFileSync(datafile).toString()
+    let strdata = fs.readFileSync(tmppath).toString()
+    return strdata
 }
 
-get_big_str(10)
 

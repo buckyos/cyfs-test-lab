@@ -1,7 +1,7 @@
 {
     "stack_type": "simulator",
     "type": "device",
-    "casename": "Ts编解码:正常输入device构造的所有参数",
+    "casename": "对endpoints,sn_list,passive_sn_list参数传空值的对象进行Ts解码",
     "file": "device_test.desc02",
 
     "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",

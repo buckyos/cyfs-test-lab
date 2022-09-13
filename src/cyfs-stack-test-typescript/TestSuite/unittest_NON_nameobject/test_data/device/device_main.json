@@ -1,12 +1,12 @@
 {
     "stack_type": "simulator",
     "type": "device",
-    "casename": "Ts编解码:正常输入device构造的所有参数",
+    "casename": "Ts编解码:正常输入device包含的所有参数",
     "file": "device_test_main.desc",
 
     "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
     "unique_id": "",
-    "endpoints": "",
+    "endpoints": ["L6udp[512:2067:4658:4686:1217:512:768:255]:20993","L6tcp[512:ffff:4658:4686:ffff:512:768:255]:20993"],
     "sn_list": "",
     "passive_sn_list": "",
     "public_key": "random:1024",
