@@ -24,7 +24,7 @@ impl Process {
     }
 
     pub async fn init(&mut self) -> Result<(), BuckyError> {
-        let dir = get_temp_path().join("non");
+        let dir = get_temp_path().join("test_nameObject_ts");
         if !dir.is_dir() {
             if let Err(e) = std::fs::create_dir_all(&dir) {
                 let msg = format!("create profile dir error! dir={}, err={}", dir.display(), e);
@@ -83,8 +83,6 @@ impl Process {
 
 
     pub fn handle(&self) {
-        info!("handle nameobject todo....");
-
         let node = self.storage.get_key_value("type").map(|(_, value)| value).unwrap();
         if !node.is_string() {
             std::process::exit(1);
@@ -134,19 +132,18 @@ impl Process {
                 return pubic_key;
             },
             "hex" => {
+                let pub_hex = parts[1].trim();
+                let mut buf: Vec<u8> = Vec::new();
+                let ret = PublicKey::clone_from_hex(&pub_hex, &mut buf);
+                let public_key = ret.unwrap();
+                return public_key;
+            },
+            "file" =>{     
                 let temp = ::cyfs_util::get_temp_path();
                 let pub_file = temp.join(parts[1].trim());
                 let mut buf: Vec<u8> = Vec::new();
                 let ret = PublicKey::decode_from_file(&pub_file, &mut buf);
                 let (public_key, _) = ret.unwrap();
-                return public_key;
-
-            },
-            "file" =>{
-                let pub_hex = parts[1].trim();
-                let mut buf: Vec<u8> = Vec::new();
-                let ret = PublicKey::clone_from_hex(&pub_hex, &mut buf);
-                let public_key = ret.unwrap();
                 return public_key;
             },
             _ => {
@@ -227,7 +224,7 @@ impl Process {
             match actual.public_key() {
                 Some(o) => {
                     if o.to_hex().unwrap() != except_key.to_hex().unwrap() {
-                        Self::output_check_err("update_time", except_key.to_hex().unwrap(), actual.public_key().unwrap().to_hex().unwrap());
+                        Self::output_check_err("public_key", except_key.to_hex().unwrap(), actual.public_key().unwrap().to_hex().unwrap());
                         return false;
                     }
                 },
@@ -256,7 +253,8 @@ impl Process {
         let node = self.storage.get_key_value("file").map(|(_, value)| value).unwrap();
         let obj_file = node.as_str().unwrap();
         let temp = ::cyfs_util::get_temp_path();
-        let people_file = temp.join(obj_file);
+        let dir = get_temp_path().join("test_nameObject_ts/people");
+        let people_file = dir.join(obj_file);
 
         if self.proc_in {
             let mut buf = vec![];
