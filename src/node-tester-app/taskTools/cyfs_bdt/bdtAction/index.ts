@@ -12,3 +12,4 @@ export * from "./sendFileRangeAction";
 export * from "./sendFileRedirectAction";
 export * from "./sendStreamAction";
 export * from "./sendStreamNotReadAction";
+export * from "./sendFileDualAction";

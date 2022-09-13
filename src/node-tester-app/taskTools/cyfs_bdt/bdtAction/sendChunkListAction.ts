@@ -1,5 +1,5 @@
 
-import { sleep } from '../../../base';
+import { RandomGenerator, sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./baseAction"
 import * as path from "path"
@@ -18,32 +18,55 @@ export class SendChunkListAction extends BaseAction implements ActionAbstract {
         }
 
         // (2) 构造测试数据
-        // RN生成测试文件
-        let randFile = await RN.bdtClient!.util_client!.createFile(this.action.chunkSize!);
+        
+        this.action.fileSize =this.action.chunkSize! * this.action.fileNum!;
         // LN获取本地下载缓存文件路径
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
+        if(LNcachePath.err){
+            return { err: BDTERROR.GetCachePathError, log: `${this.action.LN} send chunk get cache path failed` }
+        }
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
-
+        if(prev){
+            return { err: BDTERROR.AddDeviceError, log: `SendChunkAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // (3) BDT 传输  File
         // cyfs-base 计算chunk
-        let calculate = await RN.bdtClient!.calculateChunk(randFile.filePath!, this.action.fileSize!);
-        // RN 将文件保存到BDT NDN 中
-        let setRunning = RN.bdtClient!.setChunk(randFile.filePath!, calculate.chunk_id!);
-        if (!this.action.config.not_wait_upload_finished) {
-            let setResult = await setRunning;
+        let chunk_list = []
+        let calculate_time = 0;
+        let set_time = 0;
+        for(let i =0;i<this.action.fileNum!;i++){
+            // RN生成测试文件
+            let randFile = await RN.bdtClient!.util_client!.createFile(this.action.chunkSize!);
+            if(randFile.err){
+                return { err: BDTERROR.RandFileError, log: `${this.action.RN} send chunk create randFile failed` }
+            }
+            let trackChunk = await RN.bdtClient!.trackChunk(randFile.filePath!, this.action.fileSize!);
+            if(trackChunk.err){
+                return { err: BDTERROR.setChunckFailed, log: `${this.action.RN} send chunk setChunckFailed failed` }
+            }
+            calculate_time = calculate_time + trackChunk.calculate_time!;
+            set_time = set_time + trackChunk.set_time!;
+            chunk_list.push(trackChunk.chunk_id!)
         }
-        let download = await LN.bdtClient!.interestChunk(RN.bdtClient!.device_object!, calculate.chunk_id!);
-        let check = await LN.bdtClient!.checkChunkListener(calculate.chunk_id!, 2000, this.action.config.timeout);
-        let setResult = await setRunning;
+        let task_name = RandomGenerator.string(15); 
+        let download = await LN.bdtClient!.interestChunkList(RN.bdtClient!.device_object!, task_name,chunk_list);
+        if (download.err) {
+            return { err: BDTERROR.InterestChunkError, log: `interestChunkList run failed, interestChunk err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
+        
+        let check = await LN.bdtClient!.checkChunkListListener(download.session!, 2000, this.action.config.timeout);
+        if (check.err) {
+            return { err: BDTERROR.CheckChunkError, log: `checkChunkListListener run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+        }
         // (4) 校验结果
         // chunk 本身id基于hash计算,不需要校验
         // (5) 保存数据
         this.action.send_time = check.time
         this.action.info = {}
-        this.action.calculate_time = calculate.calculate_time
-        this.action.set_time = setResult.set_time
+        this.action.calculate_time = calculate_time
+        this.action.set_time = set_time
         this.action.send_time = check.time
-        return { err: BDTERROR.success, log: "SendChunkAction run success" }
+        return { err: BDTERROR.success, log: "SendChunkListAction run success" }
     }
 }

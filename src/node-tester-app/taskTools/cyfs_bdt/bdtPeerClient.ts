@@ -338,6 +338,42 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err};
     }
+    async interestChunkList(remote:Buffer ,task_name:string,chunk_list: Array<string>): Promise<{err: ErrorCode,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
+            name: 'interest-chunk-list',
+            peerName: this.peerName,
+            task_name,
+            chunk_list,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} interestChunkList failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,session:info.value.session};
+    }
+    
+    async checkChunkList(session:string): Promise<{err: ErrorCode,state?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'check-chunk-list',
+            peerName: this.peerName,
+            session,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} checkChunkList failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,state:info.value?.state};
+    }
+    async checkChunkListListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
+        let begin = Date.now();
+        while(Date.now() - timeout < begin){
+            let check = await this.checkChunkList(session);
+            if( !check.state || !check.state.includes("Pending")){
+                let time = Date.now() - begin;
+                return {err:check.err,state:check.state,time}
+            }
+            await sleep(interval);
+        }
+        return {err: BDTERROR.timeout};
+    }
     async checkChunk(chunk_id:string): Promise<{err: ErrorCode,state?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'check-chunk',
@@ -349,6 +385,7 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err,state:info.value?.state};
     }
+    
     async checkChunkListener(chunk_id:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
         let begin = Date.now();
         while(Date.now() - timeout < begin){
@@ -402,6 +439,20 @@ export class BdtPeerClient extends EventEmitter{
             name: 'start-download-file',
             peerName: this.peerName,
             peer_id,
+            path:save_path,
+            second_peer_id
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,file:info.bytes,session:info.value?.session};
+    }
+    async downloadFileRange(file:Buffer ,save_path:string,peer_id:string,ranges:Array<{begin:number,end:number}> ,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
+            name: 'start-download-file-range',
+            peerName: this.peerName,
+            peer_id,
+            ranges,
             path:save_path,
             second_peer_id
         }, this.m_agentid, 0);

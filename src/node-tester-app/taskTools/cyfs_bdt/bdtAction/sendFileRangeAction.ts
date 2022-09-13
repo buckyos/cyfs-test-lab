@@ -34,14 +34,11 @@ export class SendFileRangeAction extends BaseAction implements ActionAbstract {
             let setResult = await setRunning;
         }
         let savePath = path.join(LNcachePath.cache_path!.file_download, randFile.fileName!)
-        let download = await LN.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
+        let download = await LN.bdtClient!.downloadFileRange(calculate.file!, savePath, RN.bdtClient!.peerid!,this.action.config.range!)
         let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
         let setResult = await setRunning;
         // (4) 校验结果
         let LN_hash = await LN.bdtClient!.util_client!.md5File(savePath);
-        if (LN_hash.md5 != randFile.md5) {
-            return { err: BDTERROR.recvDataFailed, log: `download file calculate md5 failed ,LN =${LN_hash.md5},RN = ${randFile.md5} ` }
-        }
         // (5) 保存数据
         this.action.send_time = check.time
         this.action.info = {}

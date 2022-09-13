@@ -159,7 +159,6 @@ export const labAgent : Array<{
 }> = shuffle(labAgentData)
 
 
-
 export type BdtPeerClientConfig={
     LW_type? :string,
     eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}

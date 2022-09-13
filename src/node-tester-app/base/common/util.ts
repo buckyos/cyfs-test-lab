@@ -273,7 +273,20 @@ export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
     static CHAR_SET:string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
 
-    static string(length: number = 32) {
+    static  string(length: number = 32) {
+        let maxPos = RandomGenerator.CHAR_SET.length;
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
+        }
+        if(Buffer.byteLength(result)<length){
+            let accurate_len = length - Buffer.byteLength(result);
+            result += RandomGenerator.accurateString(accurate_len);
+        }
+        return result;
+    };
+    
+    static accurateString(length: number = 32){
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -283,7 +296,7 @@ export class RandomGenerator {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
         return result;
-    };
+    }
 
     static integer(max: number, min: number = 0) {
         let result = Math.round(Math.random() * (max - min)) + min;
