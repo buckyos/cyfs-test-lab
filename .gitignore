@@ -1,3 +1,5 @@
 /deploy/
 node_modules/
-src/cyfs-stack-test-rust/unittest_NON_nameobject/target/
+src/cyfs-stack-test-rust/unittest_nameobject/target/
+src/cyfs-stack-test-rust/profile/target/
+/.history/

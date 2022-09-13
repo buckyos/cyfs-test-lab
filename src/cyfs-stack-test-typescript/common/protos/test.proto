@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+// UseProtoBuf
+message UseProtoBufDescContent {
+    bytes owner = 1;
+}
+message UseProtoBufBodyContent {
+    repeated bytes ood_list = 1;
+    repeated bytes known_device_list = 2;
+    optional string ood_work_mode = 3;
+}
+

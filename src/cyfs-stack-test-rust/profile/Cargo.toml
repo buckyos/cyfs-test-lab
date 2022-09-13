@@ -1,0 +1,29 @@
+[package]
+name = "profile"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bench]]
+name = "simple"
+path = "bench/simple.rs"
+harness = false
+
+[dependencies]
+cyfs-util = "0.5"
+cyfs-bdt = "0.5"
+cyfs-base ="0.5"
+cyfs-core ="0.5"
+cyfs-debug = "0.5"
+cyfs-lib = "0.5"
+
+clap = "2.34.0"
+
+log = "0.4"
+async-std = { version = "1.11", features = ["unstable", "attributes"] }
+futures = "0.3"
+async-trait = "0.1.53"
+
+[dev-dependencies]
+criterion = { version = "0.3", features = ["async_futures", "async_std", "html_reports"] } 

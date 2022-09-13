@@ -1,0 +1,12 @@
+{
+    "stack_type": "simulator",
+    "type": "people",
+    "casename": "Ts编解码:设置name,icon参数为undefined",
+    "file": "people_test07.desc",
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+    "ood_list": ["5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ"], 
+    "area": "41:2:30:4",
+    "name": null, 
+    "icon": null, 
+    "public_key": "random:2048"
+}

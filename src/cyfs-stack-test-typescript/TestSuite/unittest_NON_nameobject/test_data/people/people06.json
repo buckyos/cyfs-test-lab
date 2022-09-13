@@ -1,0 +1,13 @@
+{
+    "stack_type": "simulator",
+    "type": "people",
+    "casename": "Ts编码:设置oodworkmode为独立模式",
+    "file": "people_test06.desc", 
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+    "ood_list": ["5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ"], 
+    "area": "41:2:30:4", 
+    "name": "我们在测试people基础对象", 
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu",
+    "public_key": "random:2048",
+    "ood_work_mode": "standalone"
+}

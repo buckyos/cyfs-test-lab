@@ -108,5 +108,15 @@ export class AgentManager {
             await taskList[i]
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
-    } 
+    }
+    async reportAgent(testcaseId: string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
+        let taskList = []
+        for(let agent of this.agentMap.values()){
+            taskList.push(agent.reportAgent(testcaseId,report_agent,report_bdtClient));
+        }
+        for(let i in taskList){
+            await taskList[i]
+        }
+        return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
 }

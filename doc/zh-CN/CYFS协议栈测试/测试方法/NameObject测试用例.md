@@ -1721,4 +1721,3 @@ NameObject  测试用例设计说明
     1、编码前和解码后owner,ood_list,known_device_list属性值一致 
 
 
- 

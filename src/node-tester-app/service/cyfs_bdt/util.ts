@@ -7,12 +7,19 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 
 
+
+
 export class UtilTool {
     private m_interface:ServiceClientInterface
     private m_logger: Logger;
+    private cacheSomeBuffer?: Buffer;
     constructor(_interface:ServiceClientInterface,logger:Logger){
         this.m_logger = logger;
         this.m_interface = _interface;
+        this.init();
+    }
+    async  init() {
+        this.cacheSomeBuffer = Buffer.from(RandomGenerator.string(1000*1000)) ;
     }
 
     async utilRequest(command:BdtLpcCommand):Promise<BdtLpcResp>{
@@ -46,19 +53,23 @@ export class UtilTool {
         return {err:ErrorCode.notFound}
     }
     async _createFile(filePath:string,fileSize:number){
-        let same =  new Buffer (RandomGenerator.string(999983)) 
-        if(fileSize>90*1024*1024){
-            same = new Buffer (RandomGenerator.string(10*999983)) 
+        if(!this.cacheSomeBuffer){
+            this.cacheSomeBuffer = Buffer.from(RandomGenerator.string(1000*1000)) ;
         }
+        
+        let same = this.cacheSomeBuffer;
         let randBuffer = new Buffer(''); 
         while(fileSize>(same.length+200)){
-            randBuffer = Buffer.concat([randBuffer,new Buffer ( RandomGenerator.string(100)),same,new Buffer ( RandomGenerator.string(100))]);
-            await fs.appendFileSync(filePath,randBuffer)
+            //randBuffer = Buffer.concat([randBuffer,new Buffer ( RandomGenerator.string(100)),same,new Buffer ( RandomGenerator.string(100))]);
+            await fs.appendFileSync(filePath,this.cacheSomeBuffer)
+            fileSize = fileSize - this.cacheSomeBuffer.byteLength;
+            randBuffer = Buffer.from(RandomGenerator.string(100))
             fileSize = fileSize - randBuffer.byteLength;
-            this.m_logger.info(`add buffer ${randBuffer.length} `)
+            await fs.appendFileSync(filePath,randBuffer)
             await sleep(50);
         }
         await fs.appendFileSync(filePath,new Buffer (RandomGenerator.string(fileSize)))
+        return;
     }
     async _md5(filePath:string){
         let fsHash = crypto.createHash('md5')

@@ -1,0 +1,12 @@
+{
+    "stack_type": "simulator",
+    "type": "people",
+    "casename": "Ts编解码:设置name大于128MB",
+    "file": "people_test09.desc", 
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC", 
+    "ood_list": ["5aUiNsqWyZFmJNndx5dTDaTASNJPmj8k8npCdq9z9D16"], 
+    "area": "41:2:30:4", 
+    "name": "128:mb", 
+    "icon": "7Tk94YfZjQQETp7wnMZPg9CiqZWNDwSTAxnXfCAG62Vu", 
+    "public_key": "random:2048"
+}

@@ -6,6 +6,7 @@ import ServiceList from '../views/ServiceList.vue';
 import TaskList from '../views/TaskList.vue';
 import JobList from '../views/JobList.vue';
 import JobResult from '../views/JobResult.vue';
+import TestReport from '../views/TestReport.vue';
 //import AgentEnv from '../views/AgentEnv.vue';
 import SysUpdate from '../views/SysUpdate.vue';
 
@@ -50,7 +51,11 @@ const routes = [
     name: 'jobresult',
     component: JobResult,
   },
-
+  {
+    path: '/testreport',
+    name: 'testreport',
+    component: TestReport,
+  },
   // {
   //   path: '/agentenv',
   //   name: 'agentenv',

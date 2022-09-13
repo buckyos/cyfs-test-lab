@@ -27,7 +27,7 @@ export type ClientStackOptions = {
 };
 
 export class ClientStack implements ClientStackInterface {
-    public static MinTimeout: number = 100 * 1000;
+    public static MinTimeout: number = 5000 * 1000;
     private m_ip?: string;
     private m_port?: number;
     
@@ -53,7 +53,7 @@ export class ClientStack implements ClientStackInterface {
         this.m_channelWithMaster = new Channel({
             namespace: options.namespace,
             logger: options.logger,
-            timeout: options.heartbeatIntervalTime * 30,
+            timeout: options.heartbeatIntervalTime * 3000,
         });
         this.m_key = options.key;
         this.m_platform = options.platform;

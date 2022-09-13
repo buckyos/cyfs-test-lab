@@ -40,7 +40,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
     
     describe("unit接口白盒测试",async()=>{
         describe("unit 接口 get_device",async()=>{
-            it("runtime接口正常调用",async()=>{
+            it.only("runtime接口正常调用",async()=>{
                 let run =  await stack_runtime.util().get_device({common: {flags: 0}})
                 assert(!run.err,`调用接口失败:${run}`)
                 console.info(`${JSON.stringify(run.unwrap())}`)

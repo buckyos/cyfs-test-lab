@@ -196,11 +196,13 @@ async function main() {
     //     "Connect_FristQA_UDP_PackageSize_answer",
     //     "Connect_FristQA_UDP_PackageSize_question",
     // ]
-
-    const serviceid = "2";
+    const serviceid = "564150";
     const taskList = [
-        "CYFS_proxy_debuger",
+        "DMC_debuger_50MB",
     ];
+    for (let i = 0; i < 10000; i++) {
+        taskList.push("DMC_debuger_50MB");
+    }
     for(let i in taskList){
         let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
         if(!fs.existsSync(runConfig)){

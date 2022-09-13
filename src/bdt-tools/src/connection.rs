@@ -36,6 +36,7 @@ impl TestConnection {
         self.stream.clone()
     }
 
+
     pub async fn send_file(&mut self, size: u64) -> Result<HashValue, BuckyError> {
         let mut hashs = Vec::<HashValue>::new();
         let mut send_buffer = Vec::new();
@@ -47,7 +48,7 @@ impl TestConnection {
         }
         send_buffer[0..8].copy_from_slice(&size_need_to_send.to_be_bytes());
         Self::random_data(send_buffer[8..].as_mut());
-
+        
         loop {
             let hash = hash_data(&send_buffer[0..gen_count]);
             hashs.push(hash);
@@ -56,6 +57,7 @@ impl TestConnection {
                 log::error!("send file failed, e={}",&e);
                 e
             });
+            
             let _ = match result_err{
                 Err(_)=>{break},
                 Ok(_)=>{}

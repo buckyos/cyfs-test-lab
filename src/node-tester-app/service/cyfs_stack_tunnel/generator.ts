@@ -16,6 +16,9 @@ export class RandomGenerator {
         for (let i = 0; i < length; i++) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
+        while(Buffer.byteLength(result)<length){
+            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
+        }
         return result;
     };
     
@@ -55,6 +58,7 @@ export class RandomGenerator {
             list.push(RandomGenerator.createRandomFile(root,file_name,fileSize))
             await sleep(100);
         }
+        
         for(let i in list){
             await list[i]
         }

@@ -79,7 +79,12 @@ async function main() {
         restartWatchTimer();
     });
     restartWatchTimer();
-
+    process.on('exit',()=>{
+        Base.blog.error(`[master_main] exit`);
+    })
+    process.on('error',(error)=>{
+        Base.blog.error(`[master_main] error ${error}`);
+    })
     let err = localMaster.init(GlobalConfig.ip, GlobalConfig.port);
     if (err) {
         Base.blog.info(`[startup] init server failed, err=${err}`);

@@ -24,7 +24,7 @@ export let PNType = {
         knownPeerFiles: ["pn-miner.desc"]
     }
 };
-export let labAgent = [
+export let labAgentData = [
     {
         tags: ["PC_0005"],
         OS: "CentOS8.5",
@@ -138,6 +138,27 @@ export let labAgent = [
         router: "Bucky",
     },
 ];
+const shuffle = function (arr:Array<any>) {
+    let newArr = Array.prototype.slice.call(arr), // copy 新数组
+        temp = 0
+    for (let i = arr.length - 1; i > 0; i--) {
+        temp = Math.floor(Math.random() * i);
+        [newArr[i], newArr[temp]] = [newArr[temp], newArr[i]];
+    }
+    return newArr
+}
+
+// 将测试节点数据乱序
+export const labAgent : Array<{
+    tags: string[];
+    OS: string;
+    NAT: NAT_Type;
+    ipv4: string[];
+    ipv6: string[];
+    router: string;
+}> = shuffle(labAgentData)
+
+
 export type BdtPeerClientConfig={
     LW_type? :string,
     eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}
@@ -150,6 +171,8 @@ export type BdtPeerClientConfig={
     logType? : string,
     firstQA_answer? : string,
     resp_ep_type? :string,
+    udp_sn_only?:number,
+    tcp_port_mapping? : string,
 }
 export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientConfig):Promise<Peer>  {
     let epList = [];
@@ -187,6 +210,9 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if (!config.PN) {
         config.PN = PNType.none;
     }
+    if(!config.udp_sn_only){
+        config.udp_sn_only = 0; 
+    }
     return {
         agent: agent,
         addrInfo: epList,
@@ -197,6 +223,8 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
         known_peer_files: config.PN.knownPeerFiles,
         FristQA_answer: config.firstQA_answer,
         ep_type: config.resp_ep_type,
+        udp_sn_only:config.udp_sn_only,
+        tcp_port_mapping: config.tcp_port_mapping,
     };
 }
 

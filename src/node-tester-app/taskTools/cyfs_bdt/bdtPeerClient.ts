@@ -2,6 +2,7 @@ import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, Tas
 import {EventEmitter} from 'events';
 import {Agent,Peer,BDTERROR} from './type'
 import {UtilClient} from "./utilClient"
+import {request,ContentType} from "./request";
 export class BdtPeerClient extends EventEmitter{
     public peerName?: string; //  
     private m_agentid: string; 
@@ -72,6 +73,8 @@ export class BdtPeerClient extends EventEmitter{
             ep_type:this.cache_peer_info!.ep_type,
             ndn_event:this.cache_peer_info!.ndn_event,
             ndn_event_target:this.cache_peer_info!.ndn_event_target,
+            sn_only:this.cache_peer_info.udp_sn_only,
+            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
         }, this.m_agentid!, 10*1000);
         if(start_stack.err){
             this.logger.error(`${this.tags} start bdt stack failed`)
@@ -91,8 +94,69 @@ export class BdtPeerClient extends EventEmitter{
         await this.autoAccept();
         return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
     }
-    
-    async getConnecion(conn_tag:string):Promise<{err:number,conn?:BdtConnection}>{
+    async reportAgent(testcaseId:string) :Promise<{err:ErrorCode,log:string}>{
+        let run_action =await request("POST","api/bdt/client/add",{
+            name : this.tags,
+            testcaseId : testcaseId,
+            peerName : this.peerName,
+            peerid : this.peerid,
+            peerInfo : JSON.stringify(this.cache_peer_info),
+            sn_resp_eps : JSON.stringify(this.sn_resp_eps) ,
+        },ContentType.json)
+        this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
+        return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
+    async restart(ndn_event?:string,ndn_event_target?:string):Promise<{err:number,log?:string}> {
+        this.cache_peer_info.ndn_event = ndn_event;
+        this.cache_peer_info.ndn_event_target = ndn_event_target;
+        // 1. start bdt-tool
+        let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
+            RUST_LOG : this.cache_peer_info!.RUST_LOG!
+        }, this.m_agentid!, 10*1000);
+        if(start_tool.err){
+            this.logger.error(`${this.tags} start bdt-tools failed`)
+            return  {err:start_tool.err,log:`${this.tags} start bdt-tools failed`}
+        }
+        this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
+        this.peerName = start_tool.value.peerName;
+        this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
+        await sleep(2000)
+        // 2. start bdt stack
+        let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
+            name: 'create',
+            peerName:this.peerName,
+            addrInfo:this.cache_peer_info!.addrInfo,
+            sn_files: this.cache_peer_info!.sn_files,
+            active_pn_files: this.cache_peer_info!.active_pn_files,
+            passive_pn_files:this.cache_peer_info!.passive_pn_files,
+            known_peer_files:this.cache_peer_info!.known_peer_files,
+            local:this.cache_peer_info!.local,
+            chunk_cache:this.cache_peer_info!.chunk_cache,
+            ep_type:this.cache_peer_info!.ep_type,
+            ndn_event:this.cache_peer_info!.ndn_event,
+            ndn_event_target:this.cache_peer_info!.ndn_event_target,
+            sn_only:this.cache_peer_info.udp_sn_only,
+            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
+        }, this.m_agentid!, 10*1000);
+        if(start_stack.err){
+            this.logger.error(`${this.tags} start bdt stack failed`)
+            return  {err:start_tool.err,log:`${this.tags} start bdt stack failed`}
+        }
+        this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
+        this.device_object = start_stack.bytes;
+        this.sn_resp_eps = start_stack.value.ep_resp;
+        this.peerid = start_stack.value.id
+        // 3. attachEvent bdt-tool unlive
+        let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
+            this.state = -1;
+            this.logger.error(`${this.tags} unlive_${this.peerName}`)
+        }, this.m_agentid, this.m_timeout);
+        this.m_unliveCookie = info.cookie;
+        // 4. bdt client start autoAccept
+        await this.autoAccept();
+        return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
+    }
+    async getConnection(conn_tag:string):Promise<{err:number,conn?:BdtConnection}>{
 
         for(let conn of this.m_conns.values()){
             if(conn.conn_tag === conn_tag){
@@ -114,7 +178,7 @@ export class BdtPeerClient extends EventEmitter{
         }, this.m_agentid, 0);
         if (info.err || info.value.result) {
             this.logger.error(`${this.tags} connect failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-            return {err:info.value.result,conn:undefined};
+            return {err: BDTERROR.connnetFailed};
         }
         if (!info.value || !info.value.stream_name) {
             this.m_interface.getLogger().error(`connect, service return invalid param,log = ${JSON.stringify(info.value)}`);
@@ -169,9 +233,9 @@ export class BdtPeerClient extends EventEmitter{
         }
         
     }
-    async remark_accpet_conn_name(name:string,remote:string,conn_tag?:string):Promise<{err:number,conn?:BdtConnection}>{
+    async remark_accpet_conn_name(TempSeq:string,remote:string,conn_tag?:string):Promise<{err:number,conn?:BdtConnection}>{
         for(let conn of this.m_conns.values()){
-            if(conn.stream_name == name ,conn.remote == remote){
+            if(conn.TempSeq == TempSeq && conn.remote == remote && !conn.conn_tag){
                 conn.conn_tag = conn_tag;
                 return {err:BDTERROR.success,conn}
             }
@@ -182,11 +246,11 @@ export class BdtPeerClient extends EventEmitter{
     /**
      * 销毁节点
      * 
-     * state -1  空测试框架退出释放
-     * state -2  用例操作退出，可能需要获取peer 信息
+     * state -1  用例操作退出，可能需要获取peer 信息
+     * state -2  空测试框架退出释放
      */
 
-    async destory(state?:number): Promise<ErrorCode> {
+    async destory(state:number=-2): Promise<ErrorCode> {
         if(this.state == -2){
             return ErrorCode.succ;
         }
@@ -201,22 +265,17 @@ export class BdtPeerClient extends EventEmitter{
         let param: any = {
             peerName: this.peerName,
         };
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+        // send exit bdt client will destory,not resp
+        this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             peerName: this.peerName,
             name: 'exit',
         }, this.m_agentid, 0);
-        if(state){
-            this.state = -2;
-        }else{
-            this.state = -1;
-        }
-        if (info.err) {
-            this.logger.error(`${this.tags} destory failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return info.err;
+        await sleep(2000)
+        this.state = state
+        return BDTERROR.success;
     }
 
-    async addDevice(peer: Buffer){
+    async addDevice(peer: Buffer): Promise<ErrorCode> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  peer, {
             name: 'add-device', 
             peerName: this.peerName,
@@ -247,6 +306,12 @@ export class BdtPeerClient extends EventEmitter{
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
+        }
+        let check =await this.checkChunk(info.value!.chunk_id)
+        if(check.err){
+            this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: check.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
         }
         return {err: info.err,set_time: info.value?.set_time,chunk_id: info.value?.chunk_id};
     }
@@ -273,6 +338,42 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err};
     }
+    async interestChunkList(remote:Buffer ,task_name:string,chunk_list: Array<string>): Promise<{err: ErrorCode,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
+            name: 'interest-chunk-list',
+            peerName: this.peerName,
+            task_name,
+            chunk_list,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} interestChunkList failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,session:info.value.session};
+    }
+    
+    async checkChunkList(session:string): Promise<{err: ErrorCode,state?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'check-chunk-list',
+            peerName: this.peerName,
+            session,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} checkChunkList failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,state:info.value?.state};
+    }
+    async checkChunkListListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
+        let begin = Date.now();
+        while(Date.now() - timeout < begin){
+            let check = await this.checkChunkList(session);
+            if( !check.state || !check.state.includes("Pending")){
+                let time = Date.now() - begin;
+                return {err:check.err,state:check.state,time}
+            }
+            await sleep(interval);
+        }
+        return {err: BDTERROR.timeout};
+    }
     async checkChunk(chunk_id:string): Promise<{err: ErrorCode,state?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'check-chunk',
@@ -284,6 +385,7 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err,state:info.value?.state};
     }
+    
     async checkChunkListener(chunk_id:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
         let begin = Date.now();
         while(Date.now() - timeout < begin){
@@ -345,6 +447,20 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err,file:info.bytes,session:info.value?.session};
     }
+    async downloadFileRange(file:Buffer ,save_path:string,peer_id:string,ranges:Array<{begin:number,end:number}> ,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
+            name: 'start-download-file-range',
+            peerName: this.peerName,
+            peer_id,
+            ranges,
+            path:save_path,
+            second_peer_id
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,file:info.bytes,session:info.value?.session};
+    }
     async downloadTaskState(session:string): Promise<{err: ErrorCode,state?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'download-file-state',
@@ -363,7 +479,10 @@ export class BdtPeerClient extends EventEmitter{
             let check = await this.downloadTaskState(session);
             if( !check.state || !check.state.includes("Downloading")){
                 let time = Date.now() - begin;
-                return {err:check.err,state:check.state,record,time}
+                if(check.state!.includes("Finished")){
+                    return {err:BDTERROR.success,state:check.state,record,time}
+                }
+                return {err:BDTERROR.sendDataFailed,state:check.state,record,time}
             }
             record.push({
                 time: Date.now(),
@@ -385,7 +504,7 @@ export class BdtConnection extends EventEmitter {
     public question? : string;
     private m_agentid: string;
     private logger : Logger
-    private m_stream_name?: string;
+    private m_stream_name: string;
     private m_interface: TaskClientInterface;
     private peerName: string; 
     private m_timeout: number;
@@ -413,6 +532,7 @@ export class BdtConnection extends EventEmitter {
         super();
         this.m_agentid = options.agentid;
         this.m_connInfo = options.stream_name;
+        this.m_stream_name = options.stream_name;
         this.peerName = options.peerName;
         this.m_interface = options._interface;
         this.m_timeout = options.timeout;
@@ -422,7 +542,6 @@ export class BdtConnection extends EventEmitter {
         this.TempSeq = this.m_connInfo.split("), ")[0].split("TempSeq(")[1]
         this.port = this.m_connInfo.split(", ")[3].split(":")[1]
         this.id = this.m_connInfo.split(", ")[4].split(":")[1].split(" }}")[0]   
-        this.m_stream_name = options.stream_name;
         this.question = options.question;
         this.conn_tag = options.conn_tag;
         this.logger = this.m_interface.getLogger();
@@ -431,7 +550,7 @@ export class BdtConnection extends EventEmitter {
     
     async close(): Promise<ErrorCode> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
-            name: 'add-device', 
+            name: 'close', 
             peerName: this.peerName,
             stream_name: this.stream_name,
         }, this.m_agentid, 0);

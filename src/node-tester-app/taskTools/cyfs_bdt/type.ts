@@ -31,15 +31,27 @@ export const BDTERROR = {
     DestoryStackFailed:101,//关闭连接错误
     RNCheckConnFailed:102,//RN 检查连接错误
     NotFound :104,
+    ConnCloesd : 105,
+    ExpectionResult : 500, //错误结果
     perfTestError : 1000, //性能测试出现bug，退出
+    // BDT 操作报错
+    AddDeviceError : 1001,
+    BDTClientTimeout : 1002,
+    CalculateChunkError : 1003,
+    SetChunkError : 1004,
+    InterestChunkError : 1005,
+    CheckChunkError : 1005,
+    // 测试数据生成类型的报错
+    RandFileError : 20000,
+    GetCachePathError : 20001,
 }
 
 export const enum  ActionType {
     start = "start",
     restart = "restart",
     connect = "connect",
-    shutdown = "shutdown",
-    exit = "destory",
+    close_connect = "close-connect",
+    destory = "destory",
     connect_second = "connect-second",  
     connect_reverse = "connect-reverse",  
     connect_mult = "connect-mult", 
@@ -97,11 +109,15 @@ export type Peer ={
     ep_type?:string,
     ndn_event?:string,
     ndn_event_target?:string
+    udp_sn_only?:number,
+    tcp_port_mapping? : string,
 }
  
 export type Action ={
     // 输入数据
     type : ActionType, //操作类型
+    testcaseId? : string, //用例ID
+    task_id?:string, //Task ID
     action_id?:string, //action id
     parent_action?:string,//父任务
     LN : string, //LN 设备
@@ -151,7 +167,8 @@ export type Action ={
 }
 
 export type Task ={
-   task_id?:string,
+   testcaseId? : string, //用例ID
+   task_id?:string, //Task ID
    timeout? : number, //超时时间
    LN : string, //LN 设备
    RN : string,  // RN 设备
@@ -176,7 +193,9 @@ export type Task ={
 }
 
 export abstract  class ActionAbstract{
+    abstract  start(): Promise<{err:number,log:string}>;
     abstract  run(): Promise<{err:number,log:string}>;
     abstract  save(): Promise<{err:number,log:string}>;
-    abstract  init(_interface:TaskClientInterface,task?:Task): Promise<{err:number,log:string}>;
+    abstract  init(_interface:TaskClientInterface,task?:Task,index?:number): Promise<{err:number,log:string}>;
+    abstract  record():any;
 }

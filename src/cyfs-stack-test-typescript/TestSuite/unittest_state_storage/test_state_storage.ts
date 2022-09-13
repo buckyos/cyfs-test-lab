@@ -47,7 +47,11 @@ describe("#state_storage 测试执行",function(){
         before(async() => {})
         after(async() => {})
         describe("#function storage",async()=>{
+<<<<<<< HEAD
             it("storage_Map_RootState 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -72,7 +76,11 @@ describe("#state_storage 测试执行",function(){
 
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Map_LocalCache 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -97,7 +105,11 @@ describe("#state_storage 测试执行",function(){
                     
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Set_RootState 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -122,7 +134,11 @@ describe("#state_storage 测试执行",function(){
                     
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Set_LocalCache 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -150,7 +166,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function save",async()=>{
+<<<<<<< HEAD
             it("save_Map_RootState 正常调用,多次save",async()=>{
+=======
+            it("save_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -189,7 +209,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
                     }
             })
+<<<<<<< HEAD
             it("save_Map_LocalCache 正常调用,多次save",async()=>{
+=======
+            it("save_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -229,7 +253,11 @@ describe("#state_storage 测试执行",function(){
                     }
 
             })
+<<<<<<< HEAD
             it("save_Set_RootState 正常调用,多次save",async()=>{
+=======
+            it("save_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -269,7 +297,11 @@ describe("#state_storage 测试执行",function(){
                     }
 
             })
+<<<<<<< HEAD
             it("save_Set_LocalCache 正常调用,多次save",async()=>{
+=======
+            it("save_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -310,7 +342,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function abort",async()=>{
+<<<<<<< HEAD
             it("abort_Map_RootState  正常调用,多次abort后insert",async()=>{
+=======
+            it("abort_Map_RootState  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -364,7 +400,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Map_LocalCache 正常调用,多次abort后insert",async()=>{
+=======
+            it("abort_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -417,7 +457,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Set_RootState  正常调用,多次abort后insert",async()=>{
+=======
+            it("abort_Set_RootState  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -471,7 +515,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Set_LocalCache  正常调用,多次abort后insert",async()=>{
+=======
+            it("abort_Set_LocalCache  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -527,7 +575,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function get",async()=>{
+<<<<<<< HEAD
             it("get_Map_RootState 正常调用,set后进行get",async()=>{                
+=======
+            it("get_Map_RootState 正常调用",async()=>{                
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -564,12 +616,20 @@ describe("#state_storage 测试执行",function(){
                     assert.ok(!save_result1.err)
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
 
+<<<<<<< HEAD
                     let get_result0= await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+=======
+                    let get_result0= await new cyfs.StateStorageMap(storage).save()
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     assert.ok(!get_result0.err)
                     console.info(`get_result0 ${JSON.stringify(get_result0)}`)
                 }
             })
+<<<<<<< HEAD
             it("get_Map_LocalCache 正常调用,set后进行get",async()=>{
+=======
+            it("get_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -606,12 +666,20 @@ describe("#state_storage 测试执行",function(){
                     assert.ok(!save_result1.err)
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
 
+<<<<<<< HEAD
                     let get_result0= await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+=======
+                    let get_result0= await new cyfs.StateStorageMap(storage).save()
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     assert.ok(!get_result0.err)
                     console.info(`get_result0 ${JSON.stringify(get_result0)}`)
                 }
             })
+<<<<<<< HEAD
             it("get_Set_RootState 正常调用,set后进行get",async()=>{
+=======
+            it("get_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -648,12 +716,20 @@ describe("#state_storage 测试执行",function(){
                     assert.ok(!save_result1.err)
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
 
+<<<<<<< HEAD
                     let get_result0= await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+=======
+                    let get_result0= await new cyfs.StateStorageMap(storage).save()
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     assert.ok(!get_result0.err)
                     console.info(`get_result0 ${JSON.stringify(get_result0)}`)
                 }
             })
+<<<<<<< HEAD
             it("get_Set_LocalCache 正常调用,set后进行get",async()=>{
+=======
+            it("get_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -690,14 +766,22 @@ describe("#state_storage 测试执行",function(){
                     assert.ok(!save_result1.err)
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
 
+<<<<<<< HEAD
                     let get_result0= await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+=======
+                    let get_result0= await new cyfs.StateStorageMap(storage).save()
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     assert.ok(!get_result0.err)
                     console.info(`get_result0 ${JSON.stringify(get_result0)}`)
                 }
             })
         })
         describe("#function set",async()=>{
+<<<<<<< HEAD
             it("set_Map_RootState 正常调用,多次set",async()=>{
+=======
+            it("set_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -751,7 +835,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("set_Map_LocalCache 正常调用,多次set",async()=>{
+=======
+            it("set_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -805,7 +893,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("set_Set_RootState 正常调用,多次set",async()=>{
+=======
+            it("set_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -859,7 +951,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("set_Set_LocalCache 正常调用,多次set",async()=>{
+=======
+            it("set_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -915,7 +1011,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function set_ex",async()=>{
+<<<<<<< HEAD
             it("set_ex_Map_RootState正常调用,多次set_ex",async()=>{
+=======
+            it("set_ex_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -971,7 +1071,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })                
+<<<<<<< HEAD
             it("set_ex_Map_LocalCache正常调用,多次set_ex",async()=>{
+=======
+            it("set_ex_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1027,7 +1131,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                     }
             })
+<<<<<<< HEAD
             it("set_ex_Set_RootState正常调用,多次set_ex",async()=>{
+=======
+            it("set_ex_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1083,7 +1191,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("set_ex_Set_LocalCache正常调用,多次set_ex",async()=>{
+=======
+            it("set_ex_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1141,7 +1253,11 @@ describe("#state_storage 测试执行",function(){
             })  
         })
         describe("#function insert",async()=>{
+<<<<<<< HEAD
             it("insert_Map_RootState 正常调用,取消插入后重复插入",async()=>{
+=======
+            it("insert_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1195,7 +1311,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Map_LocalCache 正常调用,取消插入后重复插入",async()=>{
+=======
+            it("insert_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1249,7 +1369,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Set_RootState 正常调用,取消插入后重复插入",async()=>{
+=======
+            it("insert_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1303,7 +1427,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Set_LocalCache 正常调用,取消插入后重复插入",async()=>{
+=======
+            it("insert_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1359,7 +1487,11 @@ describe("#state_storage 测试执行",function(){
             })
         })  
         describe("#function remove",async()=>{
+<<<<<<< HEAD
             it("remove_Map_RootState正常调用,插入后移除",async()=>{
+=======
+            it("remove_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1407,7 +1539,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Map_LocalCache正常调用,插入后移除",async()=>{
+=======
+            it("remove_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1455,7 +1591,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Set_RootState正常调用,插入后移除",async()=>{
+=======
+            it("remove_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1503,7 +1643,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Set_LocalCache正常调用,插入后移除",async()=>{
+=======
+            it("remove_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -1552,8 +1696,13 @@ describe("#state_storage 测试执行",function(){
             }
             })
         })
+<<<<<<< HEAD
         describe("#function next",async()=>{
             it("next_Map_RootState正常调用,查找多次插入结果",async()=>{
+=======
+        describe("#function next....",async()=>{
+            it("next_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -1575,6 +1724,7 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -1856,6 +2006,37 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function reset",async()=>{
             it("reset_Map_RootState正常调用,反复reset后多次插入",async()=>{
+=======
+
+                (await storage.init()).unwrap();
+                //storage.op_data = (await storage.load()).unwrap();
+                for(let i=0 ; i<= 99;i++){
+                let save_result0= await new cyfs.StateStorageMap(storage).save()
+                assert.ok(!save_result0.err)
+                console.info(`save_result0 ${JSON.stringify(save_result0)}`)
+                
+                let save_result1 = await new cyfs.StateStorageMap(storage).set(`${obj0_id}`,obj0_id)
+                assert.ok(!save_result1.err)
+                console.info(`save_result1 ${JSON.stringify(save_result1)}`)
+
+                let get_result0 = await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+                assert.ok(!get_result0.err)
+                console.info(`save_result1 ${JSON.stringify(get_result0)}`)
+            }
+            })
+            it("next_Map_LocalCache正常调用",async()=>{
+                
+            })
+            it("next_Set_RootState正常调用",async()=>{
+                
+            })
+            it("next_Set_LocalCache正常调用",async()=>{
+                
+            })
+        })
+        describe("#function reset....",async()=>{
+            it("reset_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -1877,6 +2058,7 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -2186,12 +2368,45 @@ describe("#state_storage 测试执行",function(){
                     assert.ok(!map.next(i))
                     console.info(`map.next(i) ${map.next(i)}`)
                 }
+=======
+
+                (await storage.init()).unwrap();
+                //storage.op_data = (await storage.load()).unwrap();
+                for(let i=0 ; i<= 99;i++){
+                let save_result0= await new cyfs.StateStorageMap(storage).save()
+                assert.ok(!save_result0.err)
+                console.info(`save_result0 ${JSON.stringify(save_result0)}`)
+                
+                let save_result1 = await new cyfs.StateStorageMap(storage).set(`${obj0_id}`,obj0_id)
+                assert.ok(!save_result1.err)
+                console.info(`save_result1 ${JSON.stringify(save_result1)}`)
+
+                let get_result0 = await new cyfs.StateStorageMap(storage).get(`${obj0_id}`)
+                assert.ok(!get_result0.err)
+                console.info(`save_result1 ${JSON.stringify(get_result0)}`)
+            }
+
+            })
+            it("reset_Map_LocalCache正常调用",async()=>{
+
+
+            })
+            it("reset_Set_RootState正常调用",async()=>{
+
+
+            })
+            it("reset_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 
 
             })
         })
         describe("#function list",async()=>{
+<<<<<<< HEAD
             it("list_Map_RootState正常调用,查找所有插入结果",async()=>{
+=======
+            it("list_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2266,7 +2481,11 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result1)}`)
 
             })
+<<<<<<< HEAD
             it("list_Map_LocalCache正常调用,查找所有插入结果",async()=>{
+=======
+            it("list_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2340,7 +2559,11 @@ describe("#state_storage 测试执行",function(){
                 assert.ok(list_result1.err)
                 console.info(`save_result1 ${JSON.stringify(list_result1)}`)
             })
+<<<<<<< HEAD
             it("list_Set_RootState正常调用,查找所有插入结果",async()=>{
+=======
+            it("list_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2414,7 +2637,11 @@ describe("#state_storage 测试执行",function(){
                 assert.ok(list_result1.err)
                 console.info(`save_result1 ${JSON.stringify(list_result1)}`)
             })
+<<<<<<< HEAD
             it("list_Set_LocalCache正常调用,查找所有插入结果",async()=>{
+=======
+            it("list_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2490,7 +2717,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function convert_list",async()=>{
+<<<<<<< HEAD
             it("convert_list_Map_RootState正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2569,7 +2800,11 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
 
             })
+<<<<<<< HEAD
             it("convert_list_Map_LocalCache正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2647,7 +2882,11 @@ describe("#state_storage 测试执行",function(){
                 let convert_list_result0 = map.convert_list([convert_list_para])
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
+<<<<<<< HEAD
             it("convert_list_Set_RootState正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2725,7 +2964,11 @@ describe("#state_storage 测试执行",function(){
                 let convert_list_result0 = map.convert_list([convert_list_para])
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
+<<<<<<< HEAD
             it("convert_list_Set_LocalCache正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -2833,8 +3076,13 @@ describe("#state_storage 测试执行",function(){
             assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
         })
         after(async() => {})
+<<<<<<< HEAD
         describe.only("#function storage",async()=>{
             it("storage_Map_RootState 正常调用,返回storage对象",async()=>{
+=======
+        describe("#function storage",async()=>{
+            it("storage_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -2859,7 +3107,11 @@ describe("#state_storage 测试执行",function(){
     
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Map_LocalCache 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -2884,7 +3136,11 @@ describe("#state_storage 测试执行",function(){
     
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Set_RootState 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -2909,7 +3165,11 @@ describe("#state_storage 测试执行",function(){
     
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
+<<<<<<< HEAD
             it("storage_Set_LocalCache 正常调用,返回storage对象",async()=>{
+=======
+            it("storage_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(10)}`,
@@ -2936,7 +3196,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function save",async()=>{
+<<<<<<< HEAD
             it("save_Map_RootState 正常调用, 多次save",async()=>{
+=======
+            it("save_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -2975,7 +3239,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
                     }
             })
+<<<<<<< HEAD
             it("save_Map_LocalCache 正常调用,多次save",async()=>{
+=======
+            it("save_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -3014,7 +3282,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
                     }
             })
+<<<<<<< HEAD
             it("save_Set_RootState 正常调用,多次save",async()=>{
+=======
+            it("save_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -3053,7 +3325,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result0 ${JSON.stringify(save_result1)}`)
                     }
             })
+<<<<<<< HEAD
             it("save_Set_LocalCache 正常调用,多次save",async()=>{
+=======
+            it("save_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -3094,7 +3370,11 @@ describe("#state_storage 测试执行",function(){
             })
         })    
         describe("#function abort",async()=>{
+<<<<<<< HEAD
             it("abort_Map_RootState  正常调用,多次abort后插入", async()=>{
+=======
+            it("abort_Map_RootState  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3148,7 +3428,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Map_LocalCache 正常调用,多次abort后插入",async()=>{
+=======
+            it("abort_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3202,7 +3486,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Set_RootState  正常调用,多次abort后插入",async()=>{
+=======
+            it("abort_Set_RootState  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3256,7 +3544,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("abort_Set_LocalCache  正常调用,多次abort后插入",async()=>{
+=======
+            it("abort_Set_LocalCache  正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3311,6 +3603,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
         })
+<<<<<<< HEAD
         describe("#function contains",async()=>{
             it("contains_Map_RootState 正常调用,多次插入及移除及取消后contains",async()=>{
                     let set = new cyfs.StateStorageSet(storage)
@@ -3483,6 +3776,112 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function insert", async()=>{
             it("insert_Map_RootState 正常调用,多次abort后insert",async()=>{
+=======
+        describe("#function contains....",async()=>{
+            it("contains_Map_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("contains_Map_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("contains_Set_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("contains_Set_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+        })
+        describe("#function insert",async()=>{
+            it("insert_Map_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3536,7 +3935,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Map_LocalCache 正常调用,多次abort后insert",async()=>{
+=======
+            it("insert_Map_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3590,7 +3993,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Set_RootState 正常调用,多次abort后insert",async()=>{
+=======
+            it("insert_Set_RootState 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3644,7 +4051,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(set_result1)}`)
                 }
             })
+<<<<<<< HEAD
             it("insert_Set_LocalCache 正常调用,多次abort后insert",async()=>{
+=======
+            it("insert_Set_LocalCache 正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3700,7 +4111,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function remove",async()=>{
+<<<<<<< HEAD
             it("remove_Map_RootState正常调用,插入后移除",async()=>{
+=======
+            it("remove_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3748,7 +4163,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Map_LocalCache正常调用,插入后移除",async()=>{
+=======
+            it("remove_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3796,7 +4215,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Set_RootState正常调用,插入后移除",async()=>{
+=======
+            it("remove_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3844,7 +4267,11 @@ describe("#state_storage 测试执行",function(){
                     console.info(`save_result1 ${JSON.stringify(remove_result1)}`)
             }
             })
+<<<<<<< HEAD
             it("remove_Set_LocalCache正常调用,插入后移除",async()=>{
+=======
+            it("remove_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 for(let i=0 ; i<= 99;i++){
                     let obj0 = cyfs.TextObject.create(cyfs.Some(
                         cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
@@ -3893,6 +4320,7 @@ describe("#state_storage 测试执行",function(){
             }
             })             
         })
+<<<<<<< HEAD
         describe("#function next",async()=>{
             it("next_Map_RootState 正常调用,查找多次插入结果",async()=>{
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
@@ -3974,6 +4402,15 @@ describe("#state_storage 测试执行",function(){
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
+=======
+        describe("#function next....",async()=>{
+            it("next_Map_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
 
                 let obj0_id = obj0.desc().object_id() 
                 let storage_para0:storage_para = {
@@ -3990,6 +4427,7 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -4122,12 +4560,27 @@ describe("#state_storage 测试执行",function(){
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
+=======
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("next_Map_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
 
                 let obj0_id = obj0.desc().object_id() 
                 let storage_para0:storage_para = {
                     category:cyfs.GlobalStateCategory.LocalCache,
                     path:`/user/friends/${obj0_id}`,
+<<<<<<< HEAD
                     content_type:cyfs.ObjectMapSimpleContentType.Set,
+=======
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     target:undefined,
                     dec_id:cyfs.get_system_dec_app().object_id}
 
@@ -4138,6 +4591,7 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -4280,6 +4734,16 @@ describe("#state_storage 测试执行",function(){
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
+=======
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("next_Set_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
 
                 let obj0_id = obj0.desc().object_id() 
                 let storage_para0:storage_para = {
@@ -4296,6 +4760,60 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("next_Set_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })             
+        })
+        describe("#function reset....",async()=>{
+            it("reset_Map_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -4444,12 +4962,27 @@ describe("#state_storage 测试执行",function(){
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
+=======
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("reset_Map_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
 
                 let obj0_id = obj0.desc().object_id() 
                 let storage_para0:storage_para = {
                     category:cyfs.GlobalStateCategory.LocalCache,
                     path:`/user/friends/${obj0_id}`,
+<<<<<<< HEAD
                     content_type:cyfs.ObjectMapSimpleContentType.Set,
+=======
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                     target:undefined,
                     dec_id:cyfs.get_system_dec_app().object_id}
 
@@ -4460,6 +4993,7 @@ describe("#state_storage 测试执行",function(){
                         storage_para0.target,
                         storage_para0.dec_id
                     );
+<<<<<<< HEAD
                 (await storage.init()).unwrap();
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
@@ -4523,6 +5057,64 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function list",async()=>{
             it("list_Map_RootState正常调用,多次插入后查看列表",async()=>{
+=======
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("reset_Set_RootState 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })
+            it("reset_Set_LocalCache 正常调用",async()=>{
+                let obj0 = cyfs.TextObject.create(cyfs.Some(
+                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`,
+                    `${RandomGenerator.string(10)}`)
+
+                let obj0_id = obj0.desc().object_id() 
+                let storage_para0:storage_para = {
+                    category:cyfs.GlobalStateCategory.LocalCache,
+                    path:`/user/friends/${obj0_id}`,
+                    content_type:cyfs.ObjectMapSimpleContentType.Map,
+                    target:undefined,
+                    dec_id:cyfs.get_system_dec_app().object_id}
+
+                let storage = stack.global_state_storage_ex(
+                        storage_para0.category,
+                        storage_para0.path,
+                        storage_para0.content_type,
+                        storage_para0.target,
+                        storage_para0.dec_id
+                    );
+                    
+                assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());             
+            })           
+        })
+        describe("#function list",async()=>{
+            it("list_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4597,7 +5189,11 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result0)}`)
 
             })
+<<<<<<< HEAD
             it("list_Map_LocalCache正常调用,多次插入后查看列表",async()=>{
+=======
+            it("list_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4666,7 +5262,11 @@ describe("#state_storage 测试执行",function(){
                 assert.ok(list_result0.err)
                 console.info(`save_result1 ${JSON.stringify(list_result0)}`)
             })
+<<<<<<< HEAD
             it("list_Set_RootState正常调用,多次插入后查看列表",async()=>{
+=======
+            it("list_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4735,7 +5335,11 @@ describe("#state_storage 测试执行",function(){
                 assert.ok(list_result0.err)
                 console.info(`save_result1 ${JSON.stringify(list_result0)}`)
             })
+<<<<<<< HEAD
             it("list_Set_LocalCache正常调用,多次插入后查看列表",async()=>{
+=======
+            it("list_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4810,7 +5414,11 @@ describe("#state_storage 测试执行",function(){
             })
         })
         describe("#function convert_list",async()=>{
+<<<<<<< HEAD
             it("convert_list_Map_RootState正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Map_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4889,7 +5497,11 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
 
             })
+<<<<<<< HEAD
             it("convert_list_Map_LocalCache正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Map_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -4967,7 +5579,11 @@ describe("#state_storage 测试执行",function(){
                 let convert_list_result0 = set.convert_list([convert_list_para])
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
+<<<<<<< HEAD
             it("convert_list_Set_RootState正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Set_RootState正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -5045,7 +5661,11 @@ describe("#state_storage 测试执行",function(){
                 let convert_list_result0 = set.convert_list([convert_list_para])
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
+<<<<<<< HEAD
             it("convert_list_Set_LocalCache正常调用,多次插入后进行列表转换",async()=>{
+=======
+            it("convert_list_Set_LocalCache正常调用",async()=>{
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20
                 let obj0 = cyfs.TextObject.create(cyfs.Some(
                     cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
                     `${RandomGenerator.string(1000)}`,
@@ -5124,6 +5744,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
         })
+<<<<<<< HEAD
     })   
     describe("##StateStorageMap 接口流程",async()=>{
         it("#state_storageMap 测试接口执行,多个object_id插入后移除并重置",async()=>{
@@ -5593,3 +6214,9 @@ describe("#state_storage 测试执行",function(){
     })
     
 })
+=======
+    })
+    describe("##StateStorageMap 接口流程",async()=>{})
+    describe("##StateStorageSet 接口流程",async()=>{})
+})
+>>>>>>> f89deeae8eb0365aaa06eec4e474bf0df6779e20

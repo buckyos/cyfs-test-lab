@@ -117,7 +117,10 @@ export class StackProxyClient extends EventEmitter {
                 let msg_u8 = buf as Uint8Array;
                 let info = await this.m_interface.callApi('proxy_data', Buffer.from(Uint8ArrayToString(msg_u8)), param, this.m_agentid!, 0);
             })
-
+            c.on("end",async ()=>{
+                let info = await this.m_interface.callApi('end_tunnel', Buffer.from(""), param, this.m_agentid!, 0);
+                
+            })
             c.on('error', async (err) => {
                 this.log.info(`${this.peerName} client ${port} proxy error ${err}`)
                 await this.m_interface.detachEvent(`${c.remoteAddress}_${c.remotePort}`, rnAccept.cookie!)

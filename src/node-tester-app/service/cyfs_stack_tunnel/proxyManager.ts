@@ -102,6 +102,15 @@ export class ProxyManager extends EventEmitter {
             return { err: ErrorCode.exception, log: `${error}` };
         }
     }
+    async end_tunnel(type: string, remoteAddress: string, remotePort: number) {
+        for (let i in this.socketList) {
+            if (this.socketList[i].type == type && this.socketList[i].remoteAddress == remoteAddress && this.socketList[i].remotePort == remotePort) {
+                // 实现序列化发送
+                this.socketList[i].socket.end();
+            }
+        }
+        return ErrorCode.notFound
+    }
     async proxy_data(type: string, remoteAddress: string, remotePort: number, seq: number, bytes: Buffer) {
         for (let i in this.socketList) {
             if (this.socketList[i].type == type && this.socketList[i].remoteAddress == remoteAddress && this.socketList[i].remotePort == remotePort) {

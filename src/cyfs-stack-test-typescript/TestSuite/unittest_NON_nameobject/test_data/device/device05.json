@@ -1,0 +1,16 @@
+{
+    "stack_type": "simulator",
+    "type": "device",
+    "casename": "Ts编解码:正常输入device构造的所有参数",
+    "file": "device_test05.desc",
+
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
+    "unique_id": "",
+    "endpoints": "",
+    "sn_list": "",
+    "passive_sn_list": "",
+    "public_key": "random:1024",
+    "area": "41:2:30:4",
+    "category": "category",
+    "name":""
+}

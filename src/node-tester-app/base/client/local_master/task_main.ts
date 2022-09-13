@@ -48,7 +48,9 @@ async function main() {
         Base.blog.error(`uncaughtException e=${err},  at ${err.stack}`);
         reportCrash(`${err.stack}`);
     });
-
+    process.on('exit',()=>{
+        Base.blog.error(`#### task_main exit`);
+    })
     let logger: Logger = new Logger(Base.blog.info, Base.blog.debug, Base.blog.error, param.logPath);
 
     let storage: LocalStorageJson = new LocalStorageJson({
