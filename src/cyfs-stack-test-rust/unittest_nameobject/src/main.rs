@@ -36,10 +36,7 @@ async fn main() {
     let proc_out = matches.is_present("out");
     let proc_file = matches.value_of("json_file").unwrap_or("people/people08.json");
 
-    proc_in = true;
-    println!("{}, {}, {}", proc_in, proc_out, proc_file);
-
-
+    println!("in: {}, out: {}, proc_file: {}", proc_in, proc_out, proc_file);
     let mut procss = Process::new(proc_in, proc_out, proc_file);
     if let Err(e) = procss.init().await {
         println!("{}", e);

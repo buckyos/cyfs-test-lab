@@ -5344,6 +5344,7 @@ dependencies = [
  "clap",
  "cyfs-base 0.5.4",
  "cyfs-util 0.5.2",
+ "hex",
  "log",
  "serde",
  "serde_json",
