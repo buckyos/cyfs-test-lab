@@ -858,7 +858,7 @@ impl TryFrom<LpcCommand> for SetChunkLpcCommandReq {
                     "chunk_size format err",
                 )),
             },
-            _ => Ok(10),
+            _ => Ok(10*1024*1024),
         }?;
         Ok(Self {
             seq: value.seq(),
@@ -960,7 +960,80 @@ impl TryFrom<CalculateChunkLpcCommandResp> for LpcCommand {
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
     }
 }
+pub struct TrackChunkLpcCommandReq {
+    pub seq: u32,
+    pub path : PathBuf,
+    pub chunk_size : usize,
+}
 
+impl TryFrom<LpcCommand> for TrackChunkLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
+                    BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
+                }),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        let chunk_size = match json.get("chunk_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => {
+                    match n.as_i64() {
+                        Some(i) => {
+                            Ok(i)
+                        },
+                        None => {
+                            Err(BuckyError::new(
+                                BuckyErrorCode::InvalidData,
+                                "chunk_size format err",
+                            ))
+                        }
+                    }
+                },
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "chunk_size format err",
+                )),
+            },
+            _ => Ok(10),
+        }?;
+        Ok(Self {
+            seq: value.seq(),
+            path,
+            chunk_size : chunk_size as usize
+        })
+    }
+}
+
+pub struct TrackChunkLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub chunk_id: ChunkId,
+    pub calculate_time : u32,
+    pub set_time : u32,
+}
+
+impl TryFrom<TrackChunkLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: TrackChunkLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "calculate-chunk-resp",
+            "result": value.result,
+            "chunk_id": value.chunk_id.to_string(),
+            "calculate_time" : value.calculate_time,
+            "set_time" : value.set_time,
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
 
 
 pub struct InterestChunkLpcCommandReq {
@@ -2229,6 +2302,7 @@ pub struct StartDownloadDirCommandReq {
     pub peer_id: DeviceId,
     pub second_peer_id: Option<DeviceId>,
     pub path: PathBuf,
+    //pub dir_name : String,
     pub dir_object_path: PathBuf,
     pub dir: Option<cyfs_base::Dir>,
     pub dir_map : Vec<FileInfo>
@@ -2240,7 +2314,7 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> BuckyResult<Self> {
         let json = value.as_json_value();
-        let path = match json.get("path") {
+        let mut path = match json.get("path") {
             Some(v) => match v {
                 serde_json::Value::String(s) => PathBuf::from_str(s.as_str()).map_err(|_err| {
                     BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
@@ -2252,7 +2326,17 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
             },
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
         }?;
-
+        let dir_name = match json.get("dir_name") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.clone()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "dir_name format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "dir_name lost")),
+        }?;
+        path = path.join(dir_name);
         let peer_id = match json.get("peer_id") {
             Some(v) => match v {
                 serde_json::Value::String(s) => DeviceId::from_str(s.as_str()).map_err(|_err| {
