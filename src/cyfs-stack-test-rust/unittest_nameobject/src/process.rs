@@ -132,10 +132,11 @@ impl Process {
                 return pubic_key;
             },
             "hex" => {
-                let pub_hex = parts[1].trim();
-                let mut buf: Vec<u8> = Vec::new();
-                let ret = PublicKey::clone_from_hex(&pub_hex, &mut buf);
-                let public_key = ret.unwrap();
+                let pub_hex = parts[1];
+                let (public_key, _) = PublicKey::raw_decode(&hex::decode(pub_hex).unwrap()).unwrap();
+                // let mut buf: Vec<u8> = Vec::new();
+                // let ret = PublicKey::clone_from_hex(&PUBKEY_HEX, &mut buf);
+                // let public_key = ret.unwrap();
                 return public_key;
             },
             "file" =>{     
@@ -220,13 +221,29 @@ impl Process {
         if let Some(node) = self.storage.get_key_value("public_key").map(|(_, value)| value) {
             let param = node.as_str().unwrap();
             let except_key = Self::public_key(param.into());
-
+            //let except_key = "";
             match actual.public_key() {
                 Some(o) => {
-                    if o.to_hex().unwrap() != except_key.to_hex().unwrap() {
-                        Self::output_check_err("public_key", except_key.to_hex().unwrap(), actual.public_key().unwrap().to_hex().unwrap());
-                        return false;
+                    match o {
+                        PublicKeyRef::Single(single) => {
+                            let size = single.raw_measure(&None).unwrap();
+                            let mut buf = vec![0u8; size];
+                            let _rest_buf = single.raw_encode(&mut buf, &None).unwrap();
+                            println!("{}", hex::encode(buf));
+                            //let (public_key, _) = PublicKey::raw_decode(&hex::decode(buf.to_hex().unwrap()).unwrap()).unwrap();
+                            //let (d,buf) = PublicKey::raw_decode(&buf).unwrap();
+
+                            if single.to_hex().unwrap() != except_key.to_hex().unwrap() {
+                                Self::output_check_err("public_key", except_key.to_hex().unwrap(), single.to_hex().unwrap());
+                                return false;
+                            }
+
+                        },
+                        PublicKeyRef::MN(_) => {
+                            todo!()
+                        },
                     }
+
                 },
                 None => {
                     Self::output_check_err("public_key", except_key.to_hex().unwrap(), "none");
@@ -252,10 +269,10 @@ impl Process {
     pub fn process_people(&self) {
         let node = self.storage.get_key_value("file").map(|(_, value)| value).unwrap();
         let obj_file = node.as_str().unwrap();
-        let temp = ::cyfs_util::get_temp_path();
         let dir = get_temp_path().join("test_nameObject_ts/people");
         let people_file = dir.join(obj_file);
 
+        println!("{:?}", people_file);
         if self.proc_in {
             let mut buf = vec![];
             let (p, _) = People::decode_from_file(&people_file, &mut buf).unwrap();
@@ -266,7 +283,10 @@ impl Process {
                 let mut except_ood_list = vec![];
                 if let Some(node) = self.storage.get_key_value("ood_list").map(|(_, value)| value) {
                     let obj_list = node.as_array().unwrap();
-                    let _ = obj_list.iter().map(|value| except_ood_list.push(DeviceId::from_str(value.as_str().unwrap()).unwrap()));
+                    for v in obj_list.iter() {
+                        let device_str = v.as_str().unwrap();
+                        except_ood_list.push(DeviceId::from_str(device_str).unwrap());
+                    }
                 }
 
                 assert_eq!(*p.ood_list(), except_ood_list);
