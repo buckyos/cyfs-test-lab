@@ -1,6 +1,5 @@
 import { PrismaClient,bdt_task } from '@prisma/client'
 import {prisma} from "../"
-import { Action } from '../../cyfs';
 export type TaskModel = {
   task_id: string
   testcaseId: string
