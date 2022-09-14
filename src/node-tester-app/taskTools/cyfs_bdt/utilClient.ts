@@ -41,6 +41,18 @@ export class UtilClient {
         }
         return {err:ErrorCode.succ,log:`${this.tags} createDir success`,dirName:result.value.dirName,dirPath:result.value.dirPath,}
     }
+    async createPath(dirName:string):Promise<{err:ErrorCode,log?:string,dirName?:string,dirPath?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "createPath",
+            peerName: this.peerName,
+            dirName,
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} createPath = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception,log:`${this.tags} createDir failed`}
+        }
+        return {err:ErrorCode.succ,log:`${this.tags} createDir success`,dirName:result.value.dirName,dirPath:result.value.dirPath,}
+    }
     async md5File(filePath:string):Promise<{err:ErrorCode,md5?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "md5",

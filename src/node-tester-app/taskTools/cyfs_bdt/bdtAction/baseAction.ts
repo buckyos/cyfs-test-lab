@@ -80,6 +80,7 @@ export class BaseAction implements ActionAbstract{
         }
     }
     async start(): Promise<{ err: number, log: string }> {
+        this.logger!.info(`##### ${this.action.action_id} start running , date = ${this.action.date} `)
         return new Promise(async(V)=>{
             try {
                 this.state = "running";

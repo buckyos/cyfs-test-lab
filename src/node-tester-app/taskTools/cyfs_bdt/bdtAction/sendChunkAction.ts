@@ -40,7 +40,7 @@ export class SendChunkAction extends BaseAction implements ActionAbstract {
             return { err: BDTERROR.CalculateChunkError, log: `${this.action.LN} calculate chunk failed` }
         }
         // RN 将文件保存到BDT NDN 中
-        let setRunning = RN.bdtClient!.setChunk(randFile.filePath!, calculate.chunk_id!);
+        let setRunning = RN.bdtClient!.setChunk(randFile.filePath!, calculate.chunk_id!,this.action.fileSize!);
        
         // 判断是否要等待上传完成
         if (!this.action.config.not_wait_upload_finished) {

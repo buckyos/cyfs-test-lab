@@ -74,6 +74,7 @@ export class SendDirAction extends BaseAction implements ActionAbstract {
         }
         // cyfs-base 计算文件Object 
         let peer_id:string = RN.bdtClient!.peerid!
+        let mkdir = await LN.bdtClient!.util_client!.createPath(randFile.dirName!);
         let download_dir = await LN.bdtClient!.downloadDir(LN.bdtClient!.util_client!.cachePath!.file_download,randFile.dirName!,peer_id,LN.bdtClient!.util_client!.cachePath!.NamedObject!,setDir.dir_id!,setDir.dir_map!)
         // RN 将文件保存到BDT NDN 中
      

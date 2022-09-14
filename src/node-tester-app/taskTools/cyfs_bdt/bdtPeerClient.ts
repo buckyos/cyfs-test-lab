@@ -302,12 +302,13 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err,calculate_time: info.value?.calculate_time,chunk_id: info.value?.chunk_id};
     }
-    async setChunk(path:string,chunk_id: string): Promise<{err: ErrorCode, set_time?: number, chunk_id?: string}>{
+    async setChunk(path:string,chunk_id: string,chunk_size:number): Promise<{err: ErrorCode, set_time?: number, chunk_id?: string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
             name: 'set-chunk',
             peerName: this.peerName,
             path,
             chunk_id,
+            chunk_size,
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} setChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
