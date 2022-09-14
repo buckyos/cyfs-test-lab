@@ -108,7 +108,8 @@ export class UtilTool {
         return{cache_path :{
             file_upload:path.join(this.m_logger.dir(),`../${peerName}_cache`,"file_upload"),
             file_download:path.join(this.m_logger.dir(),`../${peerName}_cache`,"file_download"),
-            NamedObject:path.join(this.m_logger.dir(),`../${peerName}_cache`,"NamedObject")
+            NamedObject:path.join(this.m_logger.dir(),`../${peerName}_cache`,"NamedObject"),
+            logPath : this.m_logger.dir(),
         }}
     }
     async getCachePath(command:BdtLpcCommand):Promise<BdtLpcResp>{

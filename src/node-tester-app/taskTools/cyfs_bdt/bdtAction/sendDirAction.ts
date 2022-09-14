@@ -1,8 +1,43 @@
 import { sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./baseAction"
-import * as path from "path"
+import {BdtPeerClient} from "../bdtPeerClient"
+import * as path from "../path";
 export class SendDirAction extends BaseAction implements ActionAbstract {
+
+    async send_object(LN : BdtPeerClient,RN :BdtPeerClient,obj_type:number,file_id:string): Promise<{ err: number, log: string }>{
+        let LN_connInfo = await LN.getConnection(this.action.config.conn_tag!);
+        let RN_connInfo = await RN.getConnection(this.action.config.conn_tag!);
+        if (LN_connInfo.err || RN_connInfo.err) {
+            return { err: BDTERROR.optExpectError, log: `conn not found,LN err = ${LN_connInfo.err} ,RN err = ${RN_connInfo.err}` }
+        }
+        let filePath = LN.util_client!.cachePath?.NamedObject!
+        if(obj_type == 2){
+            filePath = path.join(filePath,"file_obj")
+        }else if(obj_type == 3){
+            filePath = path.join(filePath,"dir_obj")
+        }else if(obj_type == 4){
+            filePath = path.join(filePath,"dir_map")
+        }
+        filePath = path.join(filePath,file_id)
+        // (3) 传输 BDT Stream
+        let recv = RN_connInfo.conn!.recv_object(RN.util_client!.cachePath!.NamedObject);
+        let send = await LN_connInfo.conn!.send_object(filePath,obj_type)
+        this.logger!.debug(`${this.action.LN} send stream,result = ${JSON.stringify(send)} `)
+        // (4) 校验结果
+        if (send.err) {
+            return { err: BDTERROR.sendDataFailed, log: `${this.action.LN} send stream failed` }
+        }
+        let recvInfo = await recv;
+        this.logger!.debug(`${this.action.RN} recv stream,result = ${JSON.stringify(recvInfo)} `)
+        if (recvInfo.err) {
+            return { err: BDTERROR.recvDataFailed, log: `${this.action.RN} recv stream failed` }
+        }
+        if (send.hash != recvInfo.hash) {
+            return { err: BDTERROR.sendDataFailed, log: "SendStreamAction recv data hash error" }
+        }
+        return { err: BDTERROR.success, log: "send_object run success" }
+    }
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
 
@@ -17,36 +52,37 @@ export class SendDirAction extends BaseAction implements ActionAbstract {
 
         // (2) 构造测试数据
         // RN生成测试文件
-        let randFile = await RN.bdtClient!.util_client!.createFile(this.action.fileSize!);
+        let randFile = await RN.bdtClient!.util_client!.createDir(this.action.fileNum!,this.action.fileSize!,1,1);
         // LN获取本地下载缓存文件路径
         let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
-
-        // (3) BDT 传输  File
+        // (3) RN set Dir
+        let setDir = await RN.bdtClient!.setDir(randFile.dirPath!, RN.bdtClient!.util_client!.cachePath?.NamedObject!,this.action.chunkSize!);
+        // (4) BDT 传输  NameObject
+        let send_object = await this.send_object(RN.bdtClient!,LN.bdtClient!,3,setDir.dir_id!)
+        if(send_object.err){
+            this.logger!.error(send_object.log)
+            return send_object
+        }
+        for(let file of setDir.dir_map!){
+            let send_object = await this.send_object(RN.bdtClient!,LN.bdtClient!,2,file.file_id)
+            if(send_object.err){
+                this.logger!.error(send_object.log)
+                return send_object
+            }
+        }
         // cyfs-base 计算文件Object 
-        let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
+        let peer_id:string = RN.bdtClient!.peerid!
+        let download_dir = await LN.bdtClient!.downloadDir(LN.bdtClient!.util_client!.cachePath!.file_download,randFile.dirName!,peer_id,LN.bdtClient!.util_client!.cachePath!.NamedObject!,setDir.dir_id!,setDir.dir_map!)
         // RN 将文件保存到BDT NDN 中
-        let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
-        if (!this.action.config.not_wait_upload_finished) {
-            let setResult = await setRunning;
-        }
-        let savePath = path.join(LNcachePath.cache_path!.file_download, randFile.fileName!)
-        let download = await LN.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
-        let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
-        let setResult = await setRunning;
-        // (4) 校验结果
-        let LN_hash = await LN.bdtClient!.util_client!.md5File(savePath);
-        if (LN_hash.md5 != randFile.md5) {
-            return { err: BDTERROR.recvDataFailed, log: `download file calculate md5 failed ,LN =${LN_hash.md5},RN = ${randFile.md5} ` }
-        }
+     
+        let check = await LN.bdtClient!.downloadDirTaskListener(download_dir.session!, 2000, this.action.config.timeout);
+       
         // (5) 保存数据
         this.action.send_time = check.time
+        this.action.fileSize = this.action.fileSize! * this.action.fileNum!
         this.action.info = {}
-        this.action.info.hash_LN = LN_hash.md5
-        this.action.info.hash_RN = randFile.md5
-        this.action.calculate_time = calculate.calculate_time
-        this.action.set_time = setResult.set_time
         this.action.send_time = check.time
         return { err: BDTERROR.success, log: "SendFileAction run success" }
     }

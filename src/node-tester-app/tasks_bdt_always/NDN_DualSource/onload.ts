@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_Event"
+    let testcaseName = "NDN_DualSource"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -48,21 +48,20 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     timeout : 5*60*1000,
                     action : []
                 })
-                // 1.1 LN 重启设置 cache device
-                info = await testRunner.prevTaskAddAction(new BDTAction.RestartAction({
-                    type : ActionType.send_file,
-                    LN : `${labAgent[j].tags[0]}$1`,
+                // 1.1 LN 连接 RN
+                let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+                    type : ActionType.connect,
+                    LN : `${labAgent[i].tags[0]}$1`,
+                    RN : `${labAgent[j].tags[0]}$1`,
                     config:{
+                        conn_tag: connect_1,
                         timeout : 60*1000,
-                        restart :{
-                            ndn_event_target : `${AgentList.WAN[0].tags[0]}$1`,
-                            ndn_event : "Forward",
-                        }
                     },
-                    expect : {err:0},      
+                    expect : {err:0},    
                 }))
                 // 1.2 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileDualAction({
                     type : ActionType.send_file,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
@@ -71,10 +70,19 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     chunkSize : 4*1024*1024,
                     config:{
                         timeout : 60*1000,
-                        ndn_event_config : {
-                            is_cache_data : true,
-                            is_connect : true,
-                        }
+                    },
+                    expect : {err:0},      
+                }))
+                // 1.3 RN -> LN 发送数据
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileDualAction({
+                    type : ActionType.send_file,
+                    LN : `${labAgent[j].tags[0]}$1`,
+                    RN : `${labAgent[i].tags[0]}$1`,
+                    Users : [ `${AgentList.WAN[0].tags[0]}$1`],
+                    fileSize : 10*1024*1024,
+                    chunkSize : 4*1024*1024,
+                    config:{
+                        timeout : 60*1000,
                     },
                     expect : {err:0},      
                 }))

@@ -147,6 +147,17 @@ const shuffle = function (arr:Array<any>) {
     }
     return newArr
 }
+export function randShuffle(len:number){
+    let result = [];
+    for(let i = 0;i<len;i++){
+        for(let j = 0;j<len;j++){
+            result.push([i,j]);
+        } 
+    }
+    result =  shuffle(result);
+    return result
+
+}
 
 // 将测试节点数据乱序
 export const labAgent : Array<{

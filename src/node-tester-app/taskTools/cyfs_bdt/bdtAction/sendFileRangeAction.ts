@@ -2,7 +2,7 @@
 import { sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./baseAction"
-import * as path from "path"
+import * as path from "../path";
 
 export class SendFileRangeAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
@@ -40,6 +40,10 @@ export class SendFileRangeAction extends BaseAction implements ActionAbstract {
         // (4) 校验结果
         let LN_hash = await LN.bdtClient!.util_client!.md5File(savePath);
         // (5) 保存数据
+        let fileSize = 0
+        for(let data of this.action.config.range!){
+            fileSize += data.end - data.begin;
+        }
         this.action.send_time = check.time
         this.action.info = {}
         this.action.info.hash_LN = LN_hash.md5

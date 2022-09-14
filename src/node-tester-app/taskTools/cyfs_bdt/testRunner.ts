@@ -95,7 +95,7 @@ export class TestRunner{
             }, task.timeout);
             
             for(let i in task.action){
-                await task.action[i].init(this.m_interface,task,Number(i));
+                await task.action[i].init(this.m_interface,task,Number(i),this.Testcase!.date);
                 let result = await task.action[i].start();
                 record.data.push(task.action[i].record());
                 if(result.err){
@@ -152,6 +152,7 @@ export class TestRunner{
                 expect_status : this.taskList[i].expect_status,
                 result:JSON.stringify(this.taskList[i].result!.err),
                 state : this.taskList[i]!.state,
+                date:this.Testcase!.date,
             })
         }
         return

@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_Dir"
+    let testcaseName = "NDN_File"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -61,30 +61,26 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0},    
                 }))
                 // 1.2 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendDirAction({
-                    type : ActionType.send_dir,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                    type : ActionType.send_file,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileNum : 10,
-                    fileSize : 1*1024*1024,
+                    fileSize : 10*1024*1024,
                     chunkSize : 4*1024*1024,
                     config:{
                         timeout : 60*1000,
-                        conn_tag: connect_1,
                     },
                     expect : {err:0},      
                 }))
                 // 1.3 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendDirAction({
-                    type : ActionType.send_dir,
+                info = await testRunner.prevTaskAddAction(new BDTAction.SendFileAction({
+                    type : ActionType.send_file,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 1*1024*1024,
-                    fileNum : 10,
+                    fileSize : 10*1024*1024,
                     chunkSize : 4*1024*1024,
                     config:{
                         timeout : 60*1000,
-                        conn_tag: connect_1,
                     },
                     expect : {err:0},      
                 }))
