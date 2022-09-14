@@ -33,6 +33,9 @@ export class UtilTool {
             case "createDir" : {
                 return  await this.createDir(command);
             };
+            case "createPath" : {
+                return  await this.createPath(command);
+            };
             case "md5" : {
                 return await this.md5(command);
             }; 
@@ -138,6 +141,24 @@ export class UtilTool {
             await fs.mkdirpSync(peer.cache_path.file_upload);
         }
         await RandomGenerator.createRandomDir(dirPath,command.json.dirNumber,command.json.fileNumber,command.json.fileSize,command.json.deep);
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                dirName,
+                dirPath,
+            },
+            bytes : Buffer.from("")
+        }}
+    }
+    async createPath(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        if( !command.json.peerName||  !command.json.dirName){
+            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            return {err:ErrorCode.unknownCommand}
+        }
+        let peer = this._peerCachePath(command.json.peerName)
+        let dirName = command.json.dirName;
+        let dirPath = path.join(peer.cache_path.file_download,`${dirName}`)
+        //创建文件夹
+        fs.mkdirpSync(dirPath);
         return {err:ErrorCode.succ,resp:{
             json : {
                 dirName,
