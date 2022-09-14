@@ -18,6 +18,7 @@ router.post('/add',
             Users: req.body.Users,
             result: req.body.result,
             state:req.body.state,
+            date : req.body.date,
             expect_status:req.body.expect_status,
         };
         let model = new BdtTask();
@@ -39,6 +40,7 @@ router.post('/addList',
                 Users: taskInfoList[i].Users,
                 result: taskInfoList[i].result,
                 state:taskInfoList[i].state,
+                date : taskInfoList[i].date,
                 expect_status:taskInfoList[i].expect_status,
             };
             let model = new BdtTask();
@@ -62,6 +64,7 @@ router.post('/add_action',
               Users: req.body.Users,
               result: req.body.result,
               state:req.body.state,
+              date :req.body.date,
               expect_status:req.body.expect_status,
         };
         let model = new BdtTask();

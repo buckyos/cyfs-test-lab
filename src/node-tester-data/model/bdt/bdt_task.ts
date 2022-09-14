@@ -1,5 +1,6 @@
 import { PrismaClient,bdt_task } from '@prisma/client'
 import {prisma} from "../"
+import { Action } from '../../cyfs';
 export type TaskModel = {
   task_id: string
   testcaseId: string
@@ -9,6 +10,7 @@ export type TaskModel = {
   result: string 
   expect_status: string 
   state: string 
+  date?:string,
 }
 export class BdtTask{
     private prisma :PrismaClient
@@ -27,6 +29,7 @@ export class BdtTask{
               result: task.result,
               state:task.state,
               expect_status:task.expect_status,
+              date : task.date,
               createTime: Date.now().toString(),
           }})
           return {err:0,log:`${task.task_id} add record success`}
