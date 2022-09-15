@@ -1,0 +1,10 @@
+{
+    "stack_type": "simulator",
+    "type": "unionaccount",
+    "casename": "Ts编解码:正常输入unionaccount包含的所有参数",
+    "file": "unionaccount_test_main.desc",
+
+    "account1": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
+    "account2": "1234567891112223315456687897854567486764468",
+    "service_type": 255
+}

@@ -3,14 +3,22 @@
     "type": "device",
     "casename": "Ts编解码:正常输入device包含的所有参数",
     "file": "device_test_main.desc",
-
     "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
-    "unique_id": "",
-    "endpoints": ["L6udp[512:2067:4658:4686:1217:512:768:255]:20993","L6tcp[512:ffff:4658:4686:ffff:512:768:255]:20993"],
-    "sn_list": "",
-    "passive_sn_list": "",
+    "unique_id": "K8i8tj6HJ8gxger8Py1z4W",
+    "endpoints": [
+        "L6udp[512:2067:4658:4686:1217:512:768:255]:20993",
+        "L6tcp[512:ffff:4658:4686:ffff:512:768:255]:20993"
+    ],
+    "sn_list": [
+        "5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ",
+        "5aUiNsqWyZFmJNndx5dTDaTASNJPmj8k8npCdq9z9D16"
+    ],
+    "passive_sn_list": [
+        "5aUiNsqh5oSZnwaEb8wj7rwSouqGNuEgjF3pLB1y4pGQ",
+        "5aUiNsqWyZFmJNndx5dTDaTASNJPmj8k8npCdq9z9D16"
+    ],
     "public_key": "random:1024",
     "area": "41:2:30:4",
-    "category": "category",
-    "name":""
+    "category": 0,
+    "name": "这是测试device主流"
 }

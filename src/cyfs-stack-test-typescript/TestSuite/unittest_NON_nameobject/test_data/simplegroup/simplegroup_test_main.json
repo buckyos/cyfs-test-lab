@@ -1,0 +1,23 @@
+{
+    "stack_type": "simulator",
+    "type": "simplegroup",
+    "casename": "Ts编解码:正常输入simplegroup包含的所有参数",
+    "file": "simplegroup_test_main.desc",
+    "threshold": 1,
+    "owners": [
+        "random:1024",
+        "random:2048",
+        "random:3072"
+      
+    ],
+    "members": [
+        "5aUiNsqr6NL7wJxXczpU8C7wecQ7NXnPtGCrFeM12789",
+        "5aUiNsqNmYBFTeVaZcsUijQKYe3faYeTPL6STYE3i456"
+    ],
+    "ood_work_mode": "standalone",
+    "ood_list": [
+        "5aUiNsqr6NL7wJxXczpU8C7wecQ7NXnPtGCrFeM12789",
+        "5aUiNsqNmYBFTeVaZcsUijQKYe3faYeTPL6STYE3i456"
+    ],
+    "area": "1:2:3:4"
+}

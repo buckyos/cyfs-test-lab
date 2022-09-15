@@ -56,6 +56,21 @@ function public_key_list(params: string[]): cyfs.PublicKey[] {
     return pklist
 }
 
+
+function get_len_buf(len: number, str: string) {
+    const arr: number[] = []
+    for (let i = 0, j = str.length; i < j; ++i) {
+        arr.push(str.charCodeAt(i))
+    }
+
+
+    return new Uint8Array(arr)
+}
+
+function exercise(num: number) {
+    let newnum = cyfs.JSBI.BigInt(num)
+    console.log("test design------------->  " + newnum)
+}
 function get_big_str(obj: any, key: string) {
     //避免直接使用临时变量，小心堆栈内存溢出
     let s = obj[key!].split(":")
@@ -83,7 +98,6 @@ function get_big_str(obj: any, key: string) {
 }
 
 function save_path(nameobject: string, filename: string): string {
-    console.log("创建编码文件")
     let basepath = path.join(path.join(cyfs.get_temp_path(), "test_nameObject_ts"), nameobject)
     fs.ensureDirSync(basepath);
     let filepath = path.join(basepath, filename)
@@ -98,7 +112,14 @@ function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent
     }
 
     if (obj.area) {
-        builder = builder.area(cyfs.Area.from_str(obj.area).unwrap())
+        if (obj.category) {
+            const arealist = [];
+            const values = obj.area.split(":");
+            for (let v of values) { const vv = parseInt(v, 10); arealist.push(vv) }
+            builder = builder.area(new cyfs.Area(arealist[0], arealist[1], arealist[2], obj.category))
+        } else {
+            builder = builder.area(cyfs.Area.from_str(obj.area).unwrap())
+        }
     }
 
     if (obj.create_time) {
@@ -117,7 +138,6 @@ function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent
         builder = builder.mn_key(new cyfs.MNPublicKey(obj.threshold, new cyfs.Vec(public_key_list(obj.owners))))
     }
 
-    // 这里是通用的，再往下加参数就行了，前边不用动
 
     return builder.build(constructor)
 }
@@ -277,6 +297,7 @@ function process_people(obj: any) {
         console.log(`编码输出路径：${filepath}`)
     }
 }
+
 function process_simpleGroup(obj: any) {
     let filepath = save_path("simplegroup", obj.file)
     if (proc_in) {
@@ -365,9 +386,9 @@ function process_simpleGroup(obj: any) {
         }
 
         let builder = new cyfs.SimpleGroupBuilder(new cyfs.SimpleGroupDescContent(), new cyfs.SimpleGroupBodyContent(members, ood_list, ood_work_mode));
-        let people = process_common(builder, obj, cyfs.SimpleGroup);
+        let simplegroup = process_common(builder, obj, cyfs.SimpleGroup);
 
-        fs.outputFileSync(filepath, people.to_vec().unwrap());
+        fs.outputFileSync(filepath, simplegroup.to_vec().unwrap());
         console.log(`编码输出路径：${filepath}`)
     }
 }
@@ -393,51 +414,243 @@ function process_device(obj: any) {
             if (obj.endpoints) {
                 let deendpoints = device.body_expect().content().endpoints()
                 for (let i in deendpoints) {
-                    let e_endpoint = cyfs.Endpoint.fromString(obj.endpoints[i]).unwrap()
-                    if (deendpoints[i] !== e_endpoint) {
-                        output_check_err("endpoints", obj.endpoints, "endpoints内容不一致");
+                    let deendpoint = deendpoints[i].toString()
+                    if (deendpoint !== obj.endpoints[i]) {
+                        output_check_err("endpoints", obj.endpoints[i], deendpoint);
                         return;
                     }
                 }
+            }
 
+            if (obj.sn_list) {
+                let desn_list = device.body_expect().content().sn_list()
+                for (let i in desn_list) {
+                    if (desn_list[i].to_base_58() !== obj.sn_list[i]) { output_check_err("sn_list", obj.sn_list, "oodlist属性解码后不一致"); return; }
+                }
+            }
+            if (obj.passive_sn_list) {
+                let depassive_sn_list = device.body_expect().content().passive_pn_list()
+                for (let i in depassive_sn_list) {
+                    if (depassive_sn_list[i].to_base_58() !== obj.passive_sn_list[i]) { output_check_err("passive_sn_list", obj.passive_sn_list, "passive_sn_list属性解码后不一致"); return; }
+                }
+            }
+            if (obj.unique_id) {
+                if (!device.desc().content().unique_id()) {
+                    output_check_err("unique_id", obj.unique_id, "undefined")
+                    return;
+                }
+
+                let de_unique_id = device.desc().content().unique_id().to_base_58()
+
+                if (obj.unique_id !== de_unique_id) { output_check_err("unique_id", obj.unique_id, de_unique_id); return; }
 
             }
-           
-            if (obj.sn_list){}
-            if (obj.passive_sn_list){}
-            if (obj.unique_id){}
+            if (obj.name) {
+                if (!device.body_expect().content().name()) {
+                    output_check_err("name", obj.name, "undefined")
+                    return;
+                }
+                if (obj.name.split(":")[1] === "mb") {
+                    if (device.body_expect().content().name() !== fs.readFileSync(path.join(cyfs.get_temp_path(), "strfile.txt")).toString()) {
+                        console.error(`大字符串解码后不一致: ${obj.name}`); return;
+                    }
+
+                }
+                else if (device.body_expect().content().name() !== obj.name) {
+                    output_check_err("name", obj.name, device.body_expect().content().name()!)
+                    return;
+                }
+            }
+        }
+        console.log(`解码成功 casename is (${obj.casename})`)
+
+    }
+    else {
+        // 从json创建对象
+        console.log("开始根据json创建对象")
+        let unique_id: cyfs.UniqueId
+        if (obj.unique_id) {
+            unique_id = cyfs.UniqueId.from_base_58(obj.unique_id).unwrap();
+        }
+        let endpoints: cyfs.Endpoint[] = []
+        if (obj.endpoints) {
+            for (let enstr of obj.endpoints) {
+                endpoints.push(cyfs.Endpoint.fromString(enstr).unwrap())
+            }
+        }
+        let sn_list: cyfs.DeviceId[] = []
+        if (obj.sn_list) {
+            for (let sl of obj.sn_list) {
+                sn_list.push(cyfs.DeviceId.from_base_58(sl).unwrap())
+            }
+        }
+        let passive_sn_list: cyfs.DeviceId[] = []
+        if (obj.passive_sn_list) {
+            for (let psl of obj.passive_sn_list) {
+                passive_sn_list.push(cyfs.DeviceId.from_base_58(psl).unwrap())
+            }
+        }
+        let name
+        if (obj.name.split(":")[1] === "mb") { name = get_big_str(obj, "name") } else { name = obj.name }
+        let builder = new cyfs.DeviceBuilder(new cyfs.DeviceDescContent(unique_id!), new cyfs.DeviceBodyContent(endpoints, sn_list, passive_sn_list, name));
+        let device = process_common(builder, obj, cyfs.Device);
+
+        fs.outputFileSync(filepath, device.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+
+function process_unionAccount(obj: any) {
+    let filepath = save_path("unionaccount", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let unionaccount_r = new cyfs.UnionAccountDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (unionaccount_r.err) {
+            console.error(`decode unionaccount from file ${obj.file} err ${unionaccount_r.val}`)
+            ret = unionaccount_r.val.code
+            return;
+        }
+
+        // 先检查通用数据部分
+        let unionaccount = unionaccount_r.unwrap()
+        if (check_common(unionaccount, obj)) {
+            // 再检测content数据
+            if (obj.account1) {
+                let deunionAccount1 = unionaccount.desc().content().left.to_base_58()
+
+                if (deunionAccount1 !== obj.account1) { output_check_err("account1", obj.account1, deunionAccount1) }
+
+            }
+
+            if (obj.account2) {
+                let deunionAccount2 = unionaccount.desc().content().right.to_base_58()
+
+                if (deunionAccount2 !== obj.account2) { output_check_err("account2", obj.account2, deunionAccount2) }
+
+            }
+            if (obj.service_type) {
+                let deservice_type = unionaccount.desc().content().service_type
+                if (obj.service_type !== deservice_type) {
+                    output_check_err("service_type", obj.service_type.toString(), deservice_type.toString())
+                    return;
+                }
+            }
 
             console.log(`解码成功 casename is (${obj.casename})`)
-
         }
     } else {
         // 从json创建对象
-        console.log("开始根据json创建对象")
+        let account1: cyfs.ObjectId
+        if (obj.account1) {
+            account1 = cyfs.ObjectId.from_str(obj.account1).unwrap()
+        }
+        let account2: cyfs.ObjectId
+        if (obj.account2) {
+            account2 = cyfs.ObjectId.from_str(obj.account2).unwrap()
+        }
+
+        let builder = new cyfs.UnionAccountBuilder(new cyfs.UnionAccountDescContent(account1!, account2!, obj.service_type), new cyfs.UnionAccountBodyContent());
+        let unionaccount = process_common(builder, obj, cyfs.UnionAccount);
+
+        fs.outputFileSync(filepath, unionaccount.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+
+
+function process_file(obj: any) {
+    let filepath = save_path("file", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let file_r = new cyfs.FileDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (file_r.err) {
+            console.error(`decode file from file ${obj.file} err ${file_r.val}`)
+            ret = file_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let file = file_r.unwrap()
+        if (check_common(file, obj)) {
+            // 再检测content数据
+            if (obj.len) {
+                if (!file.desc().content().len) {
+                    output_check_err("len", obj.len, "undefined")
+                    return;
+                }
+                let delen = file.desc().content().len
+                if (delen !== cyfs.JSBI.BigInt(obj.len)) {
+                    output_check_err("len", obj.len, delen.toString())
+                    return;
+                }
+            }
+            if (obj.hash) {
+                if (!file.desc().content().hash) {
+                    output_check_err("hash", obj.hash, "undefined")
+                    return;
+                }
+                if (file.desc().content().hash.to_base_58() !== obj.hash) {
+                    output_check_err("hash", obj.hash, file.desc().content().hash.to_base_58())
+                    return;
+                }
+            }
+            if (obj.chunk_list) {
+                if (!file.body_expect().content().chunk_list) {
+                    output_check_err("chunk_list", obj.chunk_list, "undefined")
+                    return;
+                }
+                let dechunk_list = file.body_expect().content().chunk_list
+                let dechunk_list_bundle = dechunk_list.chunk_in_bundle?.chunk_list!
+                for (let i in dechunk_list_bundle) {
+                    if (dechunk_list_bundle[i].to_base_58() !== obj.chunk_list.chunk_in_bundle.chunk_list[i]) {
+                        output_check_err("chunk_in_bundle", obj.chunk_list.chunk_in_bundle.chunk_list[i], dechunk_list_bundle[i].to_base_58())
+                    }
+                }
+                let dechunk_in_list = dechunk_list.chunk_in_list!
+                for (let j in dechunk_in_list) {
+                    if (dechunk_in_list[j].to_base_58() !== obj.chunk_list.chunk_in_list[j]) {
+                        output_check_err("chunk_in_list", obj.chunk_list.chunk_in_list[j], dechunk_in_list[j].to_base_58())
+                    }
+                }
+                let defile_id = dechunk_list.file_id!.to_base_58()
+                if (defile_id !== obj.chunk_list.file_id){
+                    output_check_err("file_id", obj.chunk_list.file_id, defile_id)
+                }
+                if (!dechunk_list.chunk_in_bundle?.hash_method){
+                    output_check_err("hash_method", obj.chunk_list.chunk_in_bundle.hash_method, "undefined")
+
+                }
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
         let ood_list: cyfs.DeviceId[] = [];
         if (obj.ood_list) {
             for (const ood of obj.ood_list) {
                 ood_list.push(cyfs.DeviceId.from_base_58(ood).unwrap())
             }
         }
-        let members: cyfs.ObjectId[] = []
-        if (obj.members) {
-            for (const object of obj.members) {
-                members.push(cyfs.ObjectId.from_base_58(object).unwrap())
-            }
+        let icon;
+        if (obj.icon) {
+            icon = cyfs.FileId.from_base_58(obj.icon).unwrap()
         }
         let ood_work_mode
         if (obj.ood_work_mode === cyfs.OODWorkMode.Standalone || obj.ood_work_mode === cyfs.OODWorkMode.ActiveStandby) {
             ood_work_mode = obj.ood_work_mode as cyfs.OODWorkMode;
         }
-
-        let builder = new cyfs.SimpleGroupBuilder(new cyfs.SimpleGroupDescContent(), new cyfs.SimpleGroupBodyContent(members, ood_list, ood_work_mode));
-        let people = process_common(builder, obj, cyfs.SimpleGroup);
+        let name
+        if (obj.name.split(":")[1] === "mb") { name = get_big_str(obj, "name") } else { name = obj.name }
+        let builder = new cyfs.PeopleBuilder(new cyfs.PeopleDescContent(), new cyfs.PeopleBodyContent(ood_list, name, icon, ood_work_mode));
+        let people = process_common(builder, obj, cyfs.People);
 
         fs.outputFileSync(filepath, people.to_vec().unwrap());
         console.log(`编码输出路径：${filepath}`)
     }
 }
-
 
 function main() {
     let json_path = process_argv();
@@ -451,11 +664,16 @@ function main() {
         case "people":
             process_people(obj)
             break;
-        case "devcie":
-
+        case "device":
+            process_device(obj)
+            break;
+        case "unionaccount":
+            process_unionAccount(obj)
             break;
         case "dir": break;
-        case "file": break;
+        case "file":
+            process_file(obj)
+            break;
         case "simplegroup":
             process_simpleGroup(obj)
             break;
