@@ -1,5 +1,5 @@
 use cyfs_base::*;
-use rust_bdt::{StreamGuard};
+use cyfs_bdt::{StreamGuard};
 use async_std::io::prelude::{ReadExt, WriteExt};
 
 #[derive(Clone)]

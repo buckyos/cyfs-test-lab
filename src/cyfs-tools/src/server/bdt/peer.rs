@@ -1,4 +1,4 @@
-use rust_bdt::{Stack, StackGuard, StreamListenerGuard, BuildTunnelParams, TempSeqGenerator, StreamGuard,
+use cyfs_bdt::{Stack, StackGuard, StreamListenerGuard, BuildTunnelParams, TempSeqGenerator, StreamGuard,
      DownloadTask, DownloadTaskControl, TaskControlState, StackOpenParams, ChunkDownloadConfig};
 
 use cyfs_base::{self, *};
@@ -653,7 +653,7 @@ impl Peer {
                 Ok(c) => {
                     let remote_id = c.remote.desc().device_id();
                     stack.device_cache().add(&remote_id, &c.remote);
-                    let ret = rust_bdt::download::download_chunk(&stack, 
+                    let ret = cyfs_bdt::download::download_chunk(&stack, 
                         c.chunk_id.clone(), 
                         ChunkDownloadConfig::force_stream(remote_id), 
                         None);
@@ -816,7 +816,7 @@ impl Peer {
                         Ok((task_id, file.clone()))
                     } else {
                         if let Some(file) = c.file.as_ref() {
-                            let task = rust_bdt::download::download_file_to_path(&stack, 
+                            let task = cyfs_bdt::download::download_file_to_path(&stack, 
                                 file.clone(), 
                                 ChunkDownloadConfig::force_stream(c.default_hub), 
                                 c.path.as_path()).await.unwrap();
@@ -1244,7 +1244,7 @@ impl Peer {
                         }
                         
                         if let Some(file) = c.file.as_ref() {
-                            let task = rust_bdt::download::download_file_to_path(&stack, 
+                            let task = cyfs_bdt::download::download_file_to_path(&stack, 
                                 file.clone(), 
                                 ChunkDownloadConfig::from(src), 
                                 c.path.as_path()).await.unwrap();
