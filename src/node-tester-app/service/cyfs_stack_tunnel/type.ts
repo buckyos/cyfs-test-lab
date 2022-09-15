@@ -14,22 +14,22 @@ export type BdtLpcCommand = {
     bytes?: Buffer; // Buffer数据，把对象编码数据放里面，返回解码数据
     json: {
         name: string;// Objetct 类型
-        obj_type :number; // Objetct 编号
-        desc:{ // 每个对象不一样，根据变量定义走。rust 读取必填少了返回一个错误码
-            name : string,
-            owner : string,
-            ood_list : Array<string>,
-            public_key :string // 如果引用类型写两个人定义一个解析规范 比如 type=fuza#relation={name=lixiang#friend=wangzhi} 
+        obj_type: number; // Objetct 编号
+        desc: { // 每个对象不一样，根据变量定义走。rust 读取必填少了返回一个错误码
+            name: string,
+            owner: string,
+            ood_list: Array<string>,
+            public_key: string // 如果引用类型写两个人定义一个解析规范 比如 type=fuza#relation={name=lixiang#friend=wangzhi} 
             // {type:string,relation:{name:string,friend:string}}
         },
-        body:{ //每个对象不一样，根据变量定义走。rust 读取必填少了返回一个错误码
-            ood_work_mode :string
+        body: { //每个对象不一样，根据变量定义走。rust 读取必填少了返回一个错误码
+            ood_work_mode: string
         }
-        result? : { // rust执行结果
-            err : number,
-            log : string,
+        result?: { // rust执行结果
+            err: number,
+            log: string,
         }
-    } 
-    
+    }
+
 };
 

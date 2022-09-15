@@ -60,7 +60,7 @@ async fn main()->Result<(), BuckyError> {
     let log_default_level = "debug";
 
     #[cfg(not(debug_assertions))]
-    let log_default_level = "debug";
+    let log_default_level = "info";
 
     cyfs_debug::CyfsLoggerBuilder::new_app("qa-test-tool")
         .level(log_default_level)

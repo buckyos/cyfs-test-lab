@@ -4,10 +4,9 @@ nohup gunicorn -b 127.0.0.1:12000 api:app -k gevent > server.log &
 bdt2_echo:
 nohup /opt/pypy/bin/gunicorn -b 127.0.0.1:11002 api:app -k gevent > bdt2_server.log &
 
-ͳ����������
- netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 
-ͳ���ļ����а������ļ������������ļ��У�
+
 ls -lR|grep "^-"| wc -l
 
 SCP:
@@ -17,29 +16,28 @@ scp root@ip:/sourcepath root@ip:/destpath
 192.168.100.254	<------>	10.13.187.14
 106.75.175.167(bdt-api) <------->	10.13.94.172
 
-�Ŷ�ҳ��
 http://bdttest.tinyappcloud.com/index.html#/
 
-$grep -5 'parttern' inputfile //��ӡƥ���е�ǰ��5��
+$grep -5 'parttern' inputfile 
  
-$grep -C 5 'parttern' inputfile //��ӡƥ���е�ǰ��5��
+$grep -C 5 'parttern' inputfile
  
-$grep -A 5 'parttern' inputfile //��ӡƥ���еĺ�5��
+$grep -A 5 'parttern' inputfile
  
-$grep -B 5 'parttern' inputfile //��ӡƥ���е�ǰ5��
+$grep -B 5 'parttern' inputfile 
 
 
 
-����ĳ��peer�ϱ���queryCmd
+
 cat report_log/2018-07-02.log | grep queryCmd | grep "}}, \"peerid\": \"15232783589-TZpJdFer" | grep "Jul 2 00"
 
-bdt_echo �����в���
+
 "13794462011_xxx" "1.1" "{\"seedPeers\": [{\"peerid\":\"SEED_DHT_PEER_10000\", \"eplist\":[\"4@192.168.100.254@10000@u\", \"4@192.168.100.254@10010@t\"]},{\"peerid\": \"SEED_DHT_PEER_10000_IPV6\", \"eplist\": [\"6@240e:fa:1143:bd00::16e@10000@u\", \"6@240e:fa:1143:bd00::16e@10010@t\"]}]}"
 
-blockchain NPM��
+blockchain NPM
 username:buckychain
 password:EAR6bXKlLP
 email:blockchain@buckyos.com
 
-�ҳ���ַ��
+
 http://www.gct.one/Ch/bdt-2/
