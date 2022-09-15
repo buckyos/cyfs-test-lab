@@ -95,6 +95,8 @@ async fn main()->Result<(), BuckyError> {
             peer.on_calculate_chunk(c, lpc.clone());
         }else if name == String::from("set-chunk") {
             peer.on_set_chunk(c, lpc.clone());
+        }else if name == String::from("track-chunk") {
+            peer.on_track_chunk(c, lpc.clone());
         } else if name == String::from("interest-chunk") {
             peer.on_interest_chunk(c, lpc.clone());
         } else if name == String::from("check-chunk") {

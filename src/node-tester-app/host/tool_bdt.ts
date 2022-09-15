@@ -199,26 +199,12 @@ async function main() {
     const serviceid = "4";
     
     const taskList = [
-        "Connect_Close_TCP_LNClose",
-        "Connect_Close_TCP_LNUnlive",
-        "Connect_Close_TCP_RNClose",
-        "Connect_Close_TCP_RNUnlive",
-        "Connect_Close_UDP_LNClose",
-        "Connect_Close_UDP_LNUnlive",
-        "Connect_Close_UDP_RNClose",
-        "Connect_Close_UDP_RNUnlive",
-        "Connect_Endpoint_Port_TCP_direct",
-        "Connect_Endpoint_Port_TCP_SN",
-        "Connect_Endpoint_Port_UDP_direct",
-        "Connect_Endpoint_Port_UDP_SN",
-        "Connect_FristQA_TCP_direct",
-        "Connect_FristQA_TCP_PackageSize_answer",
-        "Connect_FristQA_TCP_PackageSize_question",
-        "Connect_FristQA_TCP_SN",
-        "Connect_FristQA_UDP_direct",
-        "Connect_FristQA_UDP_PackageSize_answer",
-        "Connect_FristQA_UDP_PackageSize_question",
-        "Connect_FristQA_UDP_SN",
+        "Stream_AllEP_TunnelSelect",
+        "Stream_FristQA",
+        "Stream_TCP_IPV4",
+        "Stream_UDP_IPV4",
+        "NDN_File",
+        "NDN_FileRange",
     ];
     runner.process.on(`exit`,async()=>{
         console.info(`runner exit`)
@@ -228,16 +214,19 @@ async function main() {
         console.info(`runner error ${error}`)
         process.exit(0);
     })
-    for(let i in taskList){
-        let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
-        if(!fs.existsSync(runConfig)){
-            fs.createFileSync(runConfig)
+    while(true){
+        for(let i in taskList){
+            let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
+            if(!fs.existsSync(runConfig)){
+                fs.createFileSync(runConfig)
+            }
+            let taskid = taskList[i];
+            let str = JSON.stringify({serviceid, taskid});
+            runner.process.send(str);
+            await runner.check_state();
         }
-        let taskid = taskList[i];
-        let str = JSON.stringify({serviceid, taskid});
-        runner.process.send(str);
-        await runner.check_state();
     }
+    
     process.exit(0);
 }
 

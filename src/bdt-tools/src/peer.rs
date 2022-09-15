@@ -21,7 +21,11 @@ use futures::StreamExt;
 use sha2::Digest;
 use cyfs_base::*;
 use bytes::Bytes;
-
+use cyfs_bdt::*;
+use cyfs_util::cache::{
+    NamedDataCache, 
+    TrackerCache
+};
 //use cyfs_base::{self, *};
 use cyfs_bdt::{
     Stack, 
@@ -37,6 +41,9 @@ use cyfs_bdt::{
     download::DirTaskPathControl,
     local_chunk_store::LocalChunkWriter,
     local_chunk_store::LocalChunkListWriter,
+    local_chunk_store::LocalChunkReader,
+    mem_tracker::MemTracker,
+    mem_chunk_store::MemChunkStore,
     ChunkWriter,
     ChunkWriterExt,
     ChunkListDesc
@@ -1129,6 +1136,7 @@ impl Peer {
                             Ok(chunk_id) => {
                                 let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                                 let path = dir.join(chunk_id.to_string().as_str());
+                                log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 CalculateChunkLpcCommandResp {
                                     seq, 
                                     result: 0 as u16,
@@ -1186,13 +1194,25 @@ impl Peer {
                     let mut content =  File::open(c.path.as_path()).await.unwrap();
                     let mut buf = vec![0u8; c.chunk_size];
                     let len = content.read(&mut buf).await.unwrap();
+                    log::info!("set chunk content len={}",len.clone());
                     let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.clone().to_string().as_str());
+                    log::info!("track_chunk_in_path, path={}", path.display());
                     let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match cyfs_bdt::download::track_chunk_in_path(&*stack, &c.chunk_id, path.clone()).await {
+                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id,Arc::new(buf),path.as_path()).await {
                         Ok(_) => {
                             let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                            let request = cyfs_util::UpdateChunkStateRequest {
+                                chunk_id: c.chunk_id.clone(),
+                                current_state : None,
+                                state: ChunkState::Ready,
+
+                            };
+                            let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                            let chunk_exists = stack.ndn().chunk_manager().store().exists( &c.chunk_id).await;
+                            log::info!("chunk is exists {}",chunk_exists);
+                            
                             SetChunkLpcCommandResp {
                                 seq, 
                                 result: 0 as u16,
@@ -1241,7 +1261,94 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
+    pub fn on_track_chunk(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on calculate-chunk, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack();
+            let resp = match TrackChunkLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to TrackChunkLpcCommandReq failed, e={}", &e);
+                    TrackChunkLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        chunk_id: Default::default(),
+                        calculate_time:0,
+                        set_time : 0,
+                    }
+                },
+                Ok(c) => {
+                    
+                    let mut ret = if c.path.as_path().exists() {
+                        let mut content =  File::open(c.path.as_path()).await.unwrap();
+                        let mut buf = vec![0u8; c.chunk_size];
+                        let len = content.read(&mut buf).await.unwrap();
+                        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                        let result =  match ChunkId::calculate(&buf).await {
+                            Ok(chunk_id) => {
+                                let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                                let path = dir.join(chunk_id.to_string().as_str());
+                                log::info!("calculate chunk ,len = {}",chunk_id.len());
+                                let calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32;
+                                let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                let resp = match cyfs_bdt::download::track_chunk_in_path(&*stack, &chunk_id,path.clone()).await {
+                                    Ok(_) => {
+                                        let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                                        TrackChunkLpcCommandResp {
+                                            seq, 
+                                            result: 0 as u16,
+                                            chunk_id:chunk_id.clone(),
+                                            calculate_time:calculate_time,
+                                            set_time : set_time,
+                                            
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::error!("set-chunk failed, e={}", &e);
+                                        TrackChunkLpcCommandResp {
+                                            seq, 
+                                            result: e.code().as_u16(),
+                                            chunk_id:chunk_id.clone(),
+                                            calculate_time:0,
+                                            set_time : 0,
+                                            
+                                        }
+                                    }
+                                };
+                                resp
+                            }
+                            Err(e) => {
+                                log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
+                                TrackChunkLpcCommandResp {
+                                    seq, 
+                                    result: e.code().as_u16(),
+                                    chunk_id: Default::default(),
+                                    calculate_time:0,
+                                    set_time : 0,
+                                }
+                            }
+                        };
+                        result
+                    }else{
+                        log::error!("set-chunk failed for path not exist");
+                        TrackChunkLpcCommandResp {
+                            seq, 
+                            result: 1,
+                            chunk_id: Default::default(),
+                            calculate_time:0,
+                            set_time : 0,
+                        }
+                    };
+                    ret
+                    
+                }
+            };
 
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
     pub fn on_interest_chunk(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on interest-chunk, c={:?}", &c);
         let seq = c.seq();
@@ -1893,13 +2000,15 @@ impl Peer {
 
         let mut params = StackOpenParams::new(local.desc().device_id().to_string().as_str());
         match c.chunk_cache.as_str() {
-            "file" => {},
+            "file" => {
+                
+            },
             "mem" => {
-                // let tracker = bdt_utils::MemTracker::new();
-                // let store = bdt_utils::MemChunkStore::new(NamedDataCache::clone(&tracker).as_ref());
-                // params.chunk_store = Some(store.clone_as_reader());
-                // params.ndc = Some(NamedDataCache::clone(&tracker));
-                // params.tracker = Some(TrackerCache::clone(&tracker));
+                let tracker = MemTracker::new();
+                let store = MemChunkStore::new(NamedDataCache::clone(&tracker).as_ref());
+                params.chunk_store = Some(store.clone_as_reader());
+                params.ndc = Some(NamedDataCache::clone(&tracker));
+                params.tracker = Some(TrackerCache::clone(&tracker));
             }, 
             _ => unreachable!()
         }
@@ -2370,7 +2479,7 @@ impl Peer {
                                         //down_file_path.push(String::from(entry.path().as_os_str().to_str().expect(""))); 
                                         //单个文件chunk生成
                                         let chunkids = {
-                                            let chunk_size: usize = c.chunk_size * 1024 * 1024;
+                                            let chunk_size: usize = c.chunk_size;
                                             let mut chunkids = Vec::new();
                                             let mut file =  File::open(file_path.clone()).await.unwrap();
                                             loop {

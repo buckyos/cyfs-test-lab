@@ -2,7 +2,7 @@
 import { sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./baseAction"
-import * as path from "path"
+import * as path from "../path";
 export class SendFileRedirectAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
@@ -16,10 +16,6 @@ export class SendFileRedirectAction extends BaseAction implements ActionAbstract
         if (RN.err) {
             return { err: RN.err, log: `${this.action.RN} bdt client not exist` }
         }
-        let ndn_event_target = CacheNode.bdtClient!.peerid!
-        let ndn_event_type = this.action.config.restart!.ndn_event
-        let add_cache = await RN.bdtClient!.restart(ndn_event_type,ndn_event_target)
-
         // (2) 构造测试数据
         // RN生成测试文件
         let randFile = await RN.bdtClient!.util_client!.createFile(this.action.fileSize!);
@@ -28,7 +24,9 @@ export class SendFileRedirectAction extends BaseAction implements ActionAbstract
         let CacheNodecachePath = await CacheNode.bdtClient!.util_client!.getCachePath();
         // LN cache RN device 对象信息
         let prev = await LN.bdtClient!.addDevice(RN.bdtClient!.device_object!);
-        if(prev){
+        let prev2 = await CacheNode.bdtClient!.addDevice(RN.bdtClient!.device_object!);
+        let prev3 = await LN.bdtClient!.addDevice(CacheNode.bdtClient!.device_object!);
+        if(prev || prev2 || prev3){
             return { err: prev, log: `SendFileAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         
@@ -55,6 +53,10 @@ export class SendFileRedirectAction extends BaseAction implements ActionAbstract
             let download = await CacheNode.bdtClient!.downloadFile(calculate.file!, savePath, RN.bdtClient!.peerid!)
             if(download.err){
                 return { err: download.err, log: `SendFileAction run failed, CacheNode downloadFile err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            }
+            let check = await CacheNode.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
+            if(check.err){
+                return { err: check.err, log: `SendFileAction run failed, CacheNode downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
         }
         // LN 下载文件

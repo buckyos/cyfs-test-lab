@@ -15,7 +15,7 @@ async fn main() {
     .arg(
         Arg::with_name("in")
             .long("in")
-            .takes_value(false)
+            .takes_value(true)
             .help("input json file"),
     )
     .arg(
@@ -32,13 +32,11 @@ async fn main() {
     );
 
     let matches = app.get_matches();
-    let proc_in = matches.is_present("in");
+    let mut proc_in = matches.is_present("in");
     let proc_out = matches.is_present("out");
-    let proc_file = matches.value_of("json_file").unwrap_or("a.json");
+    let proc_file = matches.value_of("json_file").unwrap_or("people/people08.json");
 
-    debug!("{}, {}, {}", proc_in, proc_out, proc_file);
-
-
+    println!("in: {}, out: {}, proc_file: {}", proc_in, proc_out, proc_file);
     let mut procss = Process::new(proc_in, proc_out, proc_file);
     if let Err(e) = procss.init().await {
         println!("{}", e);

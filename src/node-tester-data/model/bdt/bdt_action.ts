@@ -19,6 +19,7 @@ export interface ActionModel{
   expect?: string 
   result?: string 
   result_log?: string 
+  date?:string,
 }
 
 
@@ -49,6 +50,7 @@ export class BdtAction{
             result:action.result,
             resultLog : action.result_log!,
             expect:action.expect,
+            date : action.date,
             createTime: Date.now().toString(),
           }})
           

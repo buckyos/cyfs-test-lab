@@ -28,6 +28,7 @@ router.post('/add',
             set_time:req.body.set_time ,
             result:req.body.result,
             result_log:req.body.result_log,
+            date : req.body.date,
             expect:req.body.expect,
         };
         let model = new BdtAction();

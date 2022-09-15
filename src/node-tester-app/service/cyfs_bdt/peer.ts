@@ -42,6 +42,9 @@ export class BdtPeer extends EventEmitter  {
         fs.mkdirpSync(this.cache_path.file_upload);
         fs.mkdirpSync(this.cache_path.file_download);
         fs.mkdirpSync(this.cache_path.NamedObject);
+        fs.mkdirpSync(path.join(this.cache_path.NamedObject,"dir_obj"));
+        fs.mkdirpSync(path.join(this.cache_path.NamedObject,"file_obj"));
+        fs.mkdirpSync(path.join(this.cache_path.NamedObject,"dir_map"));
         this.peer_name = options.peer_name;
         this.m_handler = new Map(); // handler list
         this.m_handler.set('ping', async (lpc: BdtLpc, c: BdtLpcCommand) => {

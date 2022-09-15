@@ -15,6 +15,7 @@ export class AgentClient {
     private m_interface: TaskClientInterface;
     private logger : Logger;
     private ipInfo?:{IPv4:Array<string>,IPv6:Array<string>}
+    private state? : number;
     
     constructor(_interface: TaskClientInterface,agent:Agent){
         this.m_interface = _interface;
@@ -24,28 +25,38 @@ export class AgentClient {
         this.bdtPeerMap = new Map();
         this.agentMult = 0;
         this.is_run = false;
+        this.state = 0;
     }
-    async init():Promise<{err:ErrorCode,log:string}> {
-        let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
-        if (agent.err || agent.agentid == undefined ) {
-            return {err:ErrorCode.netError,log:`${this.tags} connect bdt agent failed`}
-        }
-        this.m_agentid = agent.agentid!;
-        //启动测试服务
-        let err = await this.m_interface.startService([], this.m_agentid!, 10*1000);
-        if (err) {
-            return {err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}
-        }
-        await sleep(2000);
-        let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "getIPInfo"
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} get ipinfo = ${JSON.stringify(IPInfo)}`)
-        if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
-            return {err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}
-        }
-        this.ipInfo = IPInfo.value.ipInfo;
-        return {err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}
+    async init():Promise<{err:number,log:string}> {
+        return new Promise(async(V)=>{
+                setTimeout(()=>{
+                    if(this.state==0){
+                        V({err:BDTERROR.timeout,log:`init client timeout`})
+                    }
+                },20*1000)
+                let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
+                if (agent.err || agent.agentid == undefined ) {
+                    V({err:ErrorCode.netError,log:`${this.tags} connect bdt agent failed`}) 
+                }
+                this.m_agentid = agent.agentid!;
+                //启动测试服务
+                let err = await this.m_interface.startService([], this.m_agentid!, 10*1000);
+                if (err) {
+                    V({err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}) 
+                }
+                await sleep(2000);
+                let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+                    name : "getIPInfo"
+                }, this.m_agentid!, 10*1000);
+                this.logger.info(`${this.tags} get ipinfo = ${JSON.stringify(IPInfo)}`)
+                if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
+                    V({err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}) 
+                }
+                this.ipInfo = IPInfo.value.ipInfo;
+                this.state = 1;
+                V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
+            })
+        
     } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         if(!this.is_run){

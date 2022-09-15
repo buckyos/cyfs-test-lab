@@ -13,23 +13,9 @@ export const BDTERROR = {
     reportDataFailed: 3, //报存测试数据报错
     testDataError: 4 ,//使用测试数据校验失败报错
     timeout: 5, //执行用例超时报错
-    connnetFailed: 6, //调用BDT connnet接口，BDT报错
-    acceptFailed: 7, //调用BDT accept接口，BDT报错
-    confirmFailed: 8, //调用BDT confirm接口，BDT报错
-    sendDataFailed: 9,//调用BDT sendData接口，BDT报错
-    recvDataFailed: 10, //调用BDT recvData接口，BDT报错
-    initPeerFailed: 11, //初始化BDT协议栈报错
-    destoryPeerFailed: 12, //释放BDT节点报错
-    setChunckFailed:13, //local 创建 chunk失败
-    interestChunkFailed:14, //romte 接收chunk失败
+    Expection: 6,
     NATExpectError:15, //目前NAT端口类型不支持连接
     optExpectError:16, // 异常操作导致失败
-    craeteHubError:17, //创建hub失败
-    hubDownloadFailed:18, //hub 下载文件失败  
-    sendFileByChunkFailed:19,//chunk传输文件报错  
-    CloseConnectionFailed:100,//关闭连接错误
-    DestoryStackFailed:101,//关闭连接错误
-    RNCheckConnFailed:102,//RN 检查连接错误
     NotFound :104,
     ConnCloesd : 105,
     ExpectionResult : 500, //错误结果
@@ -41,6 +27,19 @@ export const BDTERROR = {
     SetChunkError : 1004,
     InterestChunkError : 1005,
     CheckChunkError : 1005,
+    connnetFailed: 1006, //调用BDT connnet接口，BDT报错
+    acceptFailed: 1007, //调用BDT accept接口，BDT报错
+    confirmFailed: 1008, //调用BDT confirm接口，BDT报错
+    sendDataFailed: 1009,//调用BDT sendData接口，BDT报错
+    recvDataFailed: 1010, //调用BDT recvData接口，BDT报错
+    initPeerFailed: 1011, //初始化BDT协议栈报错
+    destoryPeerFailed: 1012, //释放BDT节点报错
+    setChunckFailed:1013, //local 创建 chunk失败
+    interestChunkFailed:1014, //romte 接收chunk失败
+    sendFileByChunkFailed:1015,//chunk传输文件报错  
+    CloseConnectionFailed:1016,//关闭连接错误
+    DestoryStackFailed:1017,//关闭连接错误
+    RNCheckConnFailed:1018,//RN 检查连接错误
     // 测试数据生成类型的报错
     RandFileError : 20000,
     GetCachePathError : 20001,
@@ -123,6 +122,7 @@ export type Action ={
     LN : string, //LN 设备
     RN? : string,  // RN 设备
     Users? : Array<string>, 
+    date  ? : string , //执行日期
     config : {
        timeout : number, //超时时间
        known_eps?:number,
@@ -196,6 +196,6 @@ export abstract  class ActionAbstract{
     abstract  start(): Promise<{err:number,log:string}>;
     abstract  run(): Promise<{err:number,log:string}>;
     abstract  save(): Promise<{err:number,log:string}>;
-    abstract  init(_interface:TaskClientInterface,task?:Task,index?:number): Promise<{err:number,log:string}>;
+    abstract  init(_interface:TaskClientInterface,task?:Task,index?:number,date?:string): Promise<{err:number,log:string}>;
     abstract  record():any;
 }

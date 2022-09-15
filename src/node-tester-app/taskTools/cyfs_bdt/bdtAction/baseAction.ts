@@ -2,6 +2,7 @@ import { ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode
 import { AgentManager } from '../agentManager'
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import { request, ContentType } from "../request"
+var date = require("silly-datetime");
 export class BaseAction implements ActionAbstract{
     public action: Action
     public m_interface?: TaskClientInterface;
@@ -19,9 +20,10 @@ export class BaseAction implements ActionAbstract{
         this.state = "ready";
         await this.agentManager!.checkBdtPeerClient(this.action.LN)
     }
-    async init(_interface: TaskClientInterface,task:Task,index?:number): Promise<{ err: number, log: string }> {
+    async init(_interface: TaskClientInterface,task:Task,index?:number,date?:string): Promise<{ err: number, log: string }> {
         this.action.testcaseId = task!.testcaseId;
         this.action.task_id = task!.task_id;
+        this.action.date = date,
         this.action.action_id = `${this.action.task_id!}_action${index}_${this.action.type}`;
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
@@ -48,6 +50,7 @@ export class BaseAction implements ActionAbstract{
             set_time : this.action.set_time,
             send_time : this.action.send_time,
             expect:String(this.action.expect!.err),
+            date:this.action.date,
             result: String(this.action.result!.err),
             result_log: String(this.action.result!.log),
         },ContentType.json);
@@ -77,6 +80,7 @@ export class BaseAction implements ActionAbstract{
         }
     }
     async start(): Promise<{ err: number, log: string }> {
+        this.logger!.info(`##### ${this.action.action_id} start running , date = ${this.action.date} `)
         return new Promise(async(V)=>{
             try {
                 this.state = "running";
@@ -106,6 +110,8 @@ export class BaseAction implements ActionAbstract{
                 V(result)
             } catch (error) {
                 //测试程序异常，进行捕获
+                this.logger?.error(error);
+                this.action.result = { err: BDTERROR.optExpectError, log: `${JSON.stringify(error)}`};
                 V({ err: BDTERROR.optExpectError, log: `${error}` })
             }
             

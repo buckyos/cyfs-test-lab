@@ -197,12 +197,12 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
     }
 
     if (except.public_key) {
-        let e_key = public_key(except.public_key).toHex().unwrap()
+        let e_key = public_key(except.public_key).to_base_58();
         if (!actual.desc().public_key()) {
             output_check_err("public_key", except.public_key, "undefined")
             return false;
         }
-        let a_key = actual.desc().public_key()!.toHex().unwrap()
+        let a_key = actual.desc().public_key()!.to_base_58()
         if (e_key !== a_key && except.public_key.split(":")[0] !== "random") {
             output_check_err("public_key", e_key, a_key)
             return false;
@@ -353,8 +353,8 @@ function process_simpleGroup(obj: any) {
                     return false;
                 }
                 for (let j in pklist) {
-                    let e_key = public_key(obj.owners[j]).toHex().unwrap();
-                    let a_key = pklist[j].toHex().unwrap()
+                    let e_key = public_key(obj.owners[j]).to_base_58();
+                    let a_key = pklist[j].to_base_58()
                     if (e_key !== a_key && obj.owners[j].split(":")[0] !== "random") {
                         output_check_err("public_key", e_key, a_key)
                         return false;

@@ -147,6 +147,17 @@ const shuffle = function (arr:Array<any>) {
     }
     return newArr
 }
+export function randShuffle(len:number){
+    let result = [];
+    for(let i = 0;i<len;i++){
+        for(let j = 0;j<len;j++){
+            result.push([i,j]);
+        } 
+    }
+    result =  shuffle(result);
+    return result
+
+}
 
 // 将测试节点数据乱序
 export const labAgent : Array<{
@@ -170,8 +181,9 @@ export type BdtPeerClientConfig={
     SN : Array<string>,
     logType? : string,
     firstQA_answer? : string,
-    resp_ep_type? :string,
-    udp_sn_only?:number,
+    resp_ep_type? : string,
+    udp_sn_only? : number,
+    chunk_cache? : string,
     tcp_port_mapping? : string,
 }
 export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientConfig):Promise<Peer>  {
@@ -183,6 +195,7 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if (config.LW_type) {
         LW_type = config.LW_type;
     }
+    
     if (config.eps.ipv4) {
         if (config.eps.ipv4.tcp) {
             for (let j in agent.ipv4) {
@@ -213,6 +226,10 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if(!config.udp_sn_only){
         config.udp_sn_only = 0; 
     }
+    let chunk_cache = "file";
+    if(config.chunk_cache){
+        chunk_cache = config.chunk_cache
+    }
     return {
         agent: agent,
         addrInfo: epList,
@@ -225,6 +242,7 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
         ep_type: config.resp_ep_type,
         udp_sn_only:config.udp_sn_only,
         tcp_port_mapping: config.tcp_port_mapping,
+        chunk_cache
     };
 }
 
