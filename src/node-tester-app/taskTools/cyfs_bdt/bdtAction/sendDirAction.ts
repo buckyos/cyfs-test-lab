@@ -11,7 +11,7 @@ export class SendDirAction extends BaseAction implements ActionAbstract {
         if (LN_connInfo.err || RN_connInfo.err) {
             return { err: BDTERROR.optExpectError, log: `conn not found,LN err = ${LN_connInfo.err} ,RN err = ${RN_connInfo.err}` }
         }
-        let filePath = LN.util_client!.cachePath?.NamedObject!
+        let filePath = LN.util_client!.cachePath!.NamedObject!
         if(obj_type == 2){
             filePath = path.join(filePath,"file_obj")
         }else if(obj_type == 3){

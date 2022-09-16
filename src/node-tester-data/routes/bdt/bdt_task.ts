@@ -20,6 +20,7 @@ router.post('/add',
             state:req.body.state,
             date : req.body.date,
             expect_status:req.body.expect_status,
+            environment : req.body.environment,
         };
         let model = new BdtTask();
         let result =await  model.add(testcaseInfo);
@@ -42,6 +43,7 @@ router.post('/addList',
                 state:taskInfoList[i].state,
                 date : taskInfoList[i].date,
                 expect_status:taskInfoList[i].expect_status,
+                environment : req.body.environment,
             };
             let model = new BdtTask();
             let result =await  model.add(testcaseInfo);
@@ -66,6 +68,7 @@ router.post('/add_action',
               state:req.body.state,
               date :req.body.date,
               expect_status:req.body.expect_status,
+              environment : req.body.environment,
         };
         let model = new BdtTask();
         let result =await  model.add(testcaseInfo);

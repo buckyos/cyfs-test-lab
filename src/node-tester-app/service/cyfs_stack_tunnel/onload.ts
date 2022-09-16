@@ -1,5 +1,5 @@
 import { ErrorCode, Namespace, Logger, ServiceClientInterface, RandomGenerator } from '../../base';
-import {ProxyManager}  from './proxyManager';
+import { ProxyManager } from './proxyManager';
 
 
 
@@ -30,16 +30,16 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
     _interface.registerApi('utilRequest', async (from: Namespace, bytes: Buffer, param: any): Promise<any> => {
         _interface.getLogger().debug(`remote ${from.agentid} call utilRequest ${param.name}`);
         _interface.getLogger().debug(`remote call createBdtLpcListener ${param.name} `);
-        let result =  await manager.utilRequest({json:param,bytes})
+        let result = await manager.utilRequest({ json: param, bytes })
         // set resp package
-        let  respBytes = Buffer.from('');
+        let respBytes = Buffer.from('');
         let respJson = {};
-        if(result.resp?.bytes){
+        if (result.resp?.bytes) {
             respBytes = result.resp?.bytes;
         }
-        if(result.resp?.json){
+        if (result.resp?.json) {
             respJson = result.resp?.json;
         }
-        return {err: result.err, bytes: respBytes, value: respJson};
+        return { err: result.err, bytes: respBytes, value: respJson };
     });
 }

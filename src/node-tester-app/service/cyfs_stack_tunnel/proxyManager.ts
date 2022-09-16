@@ -1,8 +1,8 @@
 import { ErrorCode, Namespace, Logger, ServiceClientInterface, RandomGenerator } from '../../base';
 import * as net from 'net';
 import { EventEmitter } from 'events';
-import {UtilTool} from "./util"
-import { BdtLpc, BdtLpcCommand ,BdtLpcResp} from './lpc';
+import { UtilTool } from "./util"
+import { BdtLpc, BdtLpcCommand, BdtLpcResp } from './lpc';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 export function Uint8ArrayToString(fileData: Uint8Array) {
@@ -27,8 +27,8 @@ export class ProxyManager extends EventEmitter {
     private m_interface: ServiceClientInterface;
     private stack_http_port?: number;
     private stack_ws_port?: number;
-    private utilTool? : UtilTool;
-    public cache_path : {file_upload:string,file_download:string,NamedObject:string};
+    private utilTool?: UtilTool;
+    public cache_path: { file_upload: string, file_download: string, NamedObject: string };
     //本地socket 代理池 seq : SDK 到 协议栈序列号 , r_seq 协议栈到SDK序列号
     private socketList: Array<{ socket: net.Socket, type: string, remoteAddress: string, remotePort: number, seq?: number, r_seq?: number }>;
     private cacheName: string;
@@ -48,17 +48,17 @@ export class ProxyManager extends EventEmitter {
         this.cacheName = RandomGenerator.string(10);
         this.state = 0;
         this.socketList = [];
-        this.utilTool = new UtilTool(_interface,this.log);
+        this.utilTool = new UtilTool(_interface, this.log);
         this.cache_path = {
-            file_upload:path.join(this.log.dir(),`../${this.cacheName}_cache`,"file_upload"),
-            file_download:path.join(this.log.dir(),`../${this.cacheName}_cache`,"file_download"),
-            NamedObject:path.join(this.log.dir(),`../${this.cacheName}_cache`,"NamedObject")
+            file_upload: path.join(this.log.dir(), `../${this.cacheName}_cache`, "file_upload"),
+            file_download: path.join(this.log.dir(), `../${this.cacheName}_cache`, "file_download"),
+            NamedObject: path.join(this.log.dir(), `../${this.cacheName}_cache`, "NamedObject")
         }
         fs.mkdirpSync(this.cache_path.file_upload);
         fs.mkdirpSync(this.cache_path.file_download);
         fs.mkdirpSync(this.cache_path.NamedObject);
     }
-    init(stack_type: string): { err: ErrorCode, log?: string,cacheName:string } {
+    init(stack_type: string): { err: ErrorCode, log?: string, cacheName: string } {
         this.log.info(`init cyfs stack ProxyManager type =${stack_type}`)
         this.stack_type = stack_type;
         if (stack_type == "runtime") {
@@ -68,7 +68,7 @@ export class ProxyManager extends EventEmitter {
             this.stack_http_port = 1318;
             this.stack_ws_port = 1319;
         }
-        return { err: ErrorCode.succ, log: "start success",cacheName:this.cacheName }
+        return { err: ErrorCode.succ, log: "start success", cacheName: this.cacheName }
     }
     async build_tunnel(type: string, remoteAddress: string, remotePort: number) {
         let port = this.stack_ws_port!
@@ -89,7 +89,7 @@ export class ProxyManager extends EventEmitter {
                     r_seq: 0,
                 })
                 let r_seq = 0;
-                client.setKeepAlive(true,2000)
+                client.setKeepAlive(true, 2000)
                 client.on('data', async (buf) => {
                     r_seq = r_seq + 1;
                     this.log.info(` ${this.cacheName} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
@@ -120,7 +120,7 @@ export class ProxyManager extends EventEmitter {
         }
         return ErrorCode.notFound
     }
-    async utilRequest(command:BdtLpcCommand):Promise<BdtLpcResp>{
+    async utilRequest(command: BdtLpcCommand): Promise<BdtLpcResp> {
         return await this.utilTool!.utilRequest(command);
     }
 }

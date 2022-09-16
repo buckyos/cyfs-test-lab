@@ -1,16 +1,16 @@
-import {ErrorCode, Logger} from '../../base';
+import { ErrorCode, Logger } from '../../base';
 import * as net from 'net';
-import {EventEmitter} from 'events';
+import { EventEmitter } from 'events';
 
 export type BdtLpcCommand = {
     seq?: number;
     bytes: Buffer;
-    json: {name: string, id: string} & any
+    json: { name: string, id: string } & any
 };
 
 export type BdtLpcResp = {
-    err:ErrorCode,
-    resp?:BdtLpcCommand
+    err: ErrorCode,
+    resp?: BdtLpcCommand
 };
 
 export type BdtLpcOptions = {
@@ -75,16 +75,16 @@ export class BdtLpc extends EventEmitter {
         return this._send(info.buffer!);
     }
 
-    async wait_resp(command: BdtLpcCommand): Promise<{err: ErrorCode, resp?: BdtLpcCommand}> {
+    async wait_resp(command: BdtLpcCommand): Promise<{ err: ErrorCode, resp?: BdtLpcCommand }> {
         let err = this.send(command);
         if (err !== ErrorCode.succ) {
-            return {err};
+            return { err };
         }
-        return await new Promise<{err: ErrorCode, resp?: BdtLpcCommand}>((v) => {
+        return await new Promise<{ err: ErrorCode, resp?: BdtLpcCommand }>((v) => {
             let onFunc = (lpc: BdtLpc, resp: BdtLpcCommand) => {
                 if (resp.json.name !== "ping" && resp.seq! === command.seq!) {
                     lpc.removeListener('command', onFunc);
-                    v({err: ErrorCode.succ, resp})
+                    v({ err: ErrorCode.succ, resp })
                 }
             };
             this.on('command', onFunc);
@@ -134,7 +134,7 @@ export class BdtLpc extends EventEmitter {
                     }
                     break;
                 }
-                
+
                 this.emit('command', this, msgInfo.command!);
             }
         });
@@ -149,18 +149,18 @@ export class BdtLpc extends EventEmitter {
         });
     }
 
-    private _decodeMsg(): {err: ErrorCode, command?: BdtLpcCommand} {
+    private _decodeMsg(): { err: ErrorCode, command?: BdtLpcCommand } {
         try {
             let decodeOffset: number = 0;
             if (this.m_recvCache!.length < 4) {
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4+decodeOffset}`);
+                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             let length = this.m_recvCache!.readUInt32LE(decodeOffset);
             decodeOffset += 4;
 
             if (this.m_recvCache!.length < 4 + length) {
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4+decodeOffset}`);
+                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
 
@@ -171,8 +171,7 @@ export class BdtLpc extends EventEmitter {
             decodeOffset += 4;
 
             let bytes: Buffer = Buffer.from('');
-            if (bytesLength)
-            {
+            if (bytesLength) {
                 bytes = this.m_recvCache!.slice(decodeOffset, decodeOffset + bytesLength);
                 decodeOffset += bytesLength;
             }
@@ -182,14 +181,14 @@ export class BdtLpc extends EventEmitter {
             decodeOffset += jsonLength;
             this.m_recvCache = this.m_recvCache!.slice(decodeOffset);
             //this.m_logger.debug(`-----------------${jsonBuffer.toString('utf-8')}, decodeOffset=${decodeOffset}, length=${this.m_recvCache!.length}`);
-            
+
             let json = JSON.parse(jsonBuffer.toString('utf-8'));
 
-            let command: BdtLpcCommand = {seq, bytes, json};
-            return { err: ErrorCode.succ,  command}; 
+            let command: BdtLpcCommand = { seq, bytes, json };
+            return { err: ErrorCode.succ, command };
         } catch (e) {
             this.m_logger.error(`bdtlpc decode msg exception, e=${e}`);
-            return {err: ErrorCode.exception};
+            return { err: ErrorCode.exception };
         }
     }
 
@@ -202,13 +201,13 @@ export class BdtLpc extends EventEmitter {
             buffer.writeUInt32LE(total, 0);
             buffer.writeUInt32LE(command.seq!, 4);
             buffer.writeUInt32LE(command.bytes.length, 8);
-            
+
             buffer = Buffer.concat([buffer, command.bytes, Buffer.from(jsonStr)]);
 
             return { err: ErrorCode.succ, buffer };
         } catch (e) {
             this.m_logger.error(`bdtlpc encode msg exception, e=${e}`);
-            return {err: ErrorCode.exception};
+            return { err: ErrorCode.exception };
         }
     }
 }

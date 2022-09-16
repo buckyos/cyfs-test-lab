@@ -18,8 +18,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
         remark: `# 操作流程：\n
         + （1）LN/RN 初始化本地BDT协议栈
         + （2）LN 向 RN 发起首次连接。
-        + （3）LN 向 RN 发送10M大小 文件 数据
-        + （4）RN 向 LN 发送10M大小 文件 数据 `,
+        + （3）LN 向 RN 发送10M大小 文件 数据 Range(4*1024*1024,6*1024*1024)
+        + （4）RN 向 LN 发送10M大小 文件 数据 Range(4*1024*1024,6*1024*1024) `,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);

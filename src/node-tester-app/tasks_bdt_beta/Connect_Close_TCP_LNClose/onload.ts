@@ -74,7 +74,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     type : ActionType.send_stream,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                    fileSize : 1*1024*1024,
                     config:{
                         conn_tag: connect_1,
                         timeout : 30*1000,
@@ -86,7 +86,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     type : ActionType.send_stream_reverse,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                    fileSize : 1*1024*1024,
                     config:{
                         conn_tag: connect_1,
                         timeout : 30*1000,
@@ -108,7 +108,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     type : ActionType.send_stream,
                     LN : `${labAgent[j].tags[0]}$1`,
                     RN : `${labAgent[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
+                    fileSize : 1*1024*1024,
                     config:{
                         conn_tag: connect_1,
                         timeout : 30*1000,

@@ -123,6 +123,7 @@ export type Action ={
     RN? : string,  // RN 设备
     Users? : Array<string>, 
     date  ? : string , //执行日期
+    environment? : string; //环境
     config : {
        timeout : number, //超时时间
        known_eps?:number,
@@ -176,6 +177,8 @@ export type Task ={
    action:Array<ActionAbstract>, // 操作集合
    result?:{err:number,log:string}; //实际结果 
    state?:string; 
+   date  ? : string , //执行日期
+   environment? : string; //环境
    expect_status? : string,
 }
  export type Testcase ={

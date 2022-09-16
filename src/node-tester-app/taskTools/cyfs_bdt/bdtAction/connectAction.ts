@@ -21,6 +21,8 @@ export class ConnectAction extends BaseAction implements ActionAbstract {
             FirstQ = this.action.config!.firstQA_question!;
             this.action.fileSize = Buffer.byteLength(this.action.config!.firstQA_question!)
             this.logger?.info(`Set FirstQ question size ${this.action.fileSize}`)
+        }else{
+            this.action.fileSize = 0;
         }
         // 判断RN是否要进行FristQA,answer 数据设置
         if (this.action.config!.firstQA_answer) {

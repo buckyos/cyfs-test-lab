@@ -46,6 +46,10 @@ export class TestRunner{
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
         this.begin_time = Date.now();
         this.Testcase!.errorList = [];
+        if(fs.existsSync(path.join(__dirname,"dev.js"))){
+            this.Testcase.environment = "dev";
+        }
+        
     }
 
     createPrevTask(task:Task):{err:number,log:string}{
@@ -153,6 +157,7 @@ export class TestRunner{
                 result:JSON.stringify(this.taskList[i].result!.err),
                 state : this.taskList[i]!.state,
                 date:this.Testcase!.date,
+                environment:this.Testcase!.environment,
             })
         }
         return

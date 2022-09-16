@@ -1,4 +1,4 @@
-use rust_bdt::{Stack, StackGuard, StreamListenerGuard, BuildTunnelParams, TempSeqGenerator, StreamGuard,
+use cyfs_bdt::{Stack, StackGuard, StreamListenerGuard, BuildTunnelParams, TempSeqGenerator, StreamGuard,
      DownloadTask, DownloadTaskControl, TaskControlState, StackOpenParams, ChunkDownloadConfig};
 
 use cyfs_base::{self, *};

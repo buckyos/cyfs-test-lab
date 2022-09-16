@@ -16,10 +16,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `# 操作流程：\n
-        + （1）LN/RN 初始化本地BDT协议栈
-        + （2）LN 向 RN 发起首次连接。
-        + （3）LN 向 RN 发送10M大小 文件 数据
-        + （4）RN 向 LN 发送10M大小 文件 数据 `,
+        + （1）LN/RN/User0 初始化本地BDT协议栈
+        + （2）RN 上传 10Mb 大小文件。
+        + （3）User0 从RN进行下载
+        + （4）LN 从 RN和User0 两个源进行下载 `,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);

@@ -25,11 +25,13 @@ router.post('/add',
             chunkSize:req.body.chunkSize ,
             connect_time:req.body.connect_time ,
             send_time:req.body.send_time ,
+            calculate_time : req.body.calculate_time,
             set_time:req.body.set_time ,
             result:req.body.result,
             result_log:req.body.result_log,
             date : req.body.date,
             expect:req.body.expect,
+            environment : req.body.environment,
         };
         let model = new BdtAction();
         let result =await  model.add(testcaseInfo);

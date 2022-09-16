@@ -255,3 +255,21 @@ systemctl enable pn_miner.service
 systemctl start pn_miner.service
 systemctl status pn_miner.service
 ```
+
+## 测试数据统计Grafana
+```
+sudo apt-get install -y adduser libfontconfig1
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise_9.1.5_amd64.deb
+sudo dpkg -i grafana-enterprise_9.1.5_amd64.deb
+```
+
+```
+ sudo /bin/systemctl daemon-reload
+ sudo /bin/systemctl enable grafana-server
+ sudo /bin/systemctl start grafana-server
+
+```
+
+```
+http://192.168.100.254:3000/bucky
+```

@@ -10,6 +10,7 @@ export type TaskModel = {
   expect_status: string 
   state: string 
   date?:string,
+  environment?:string
 }
 export class BdtTask{
     private prisma :PrismaClient
@@ -29,6 +30,7 @@ export class BdtTask{
               state:task.state,
               expect_status:task.expect_status,
               date : task.date,
+              environment : task.environment,
               createTime: Date.now().toString(),
           }})
           return {err:0,log:`${task.task_id} add record success`}

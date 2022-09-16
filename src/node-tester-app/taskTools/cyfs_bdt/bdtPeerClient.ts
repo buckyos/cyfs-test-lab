@@ -4,6 +4,7 @@ import {Agent,Peer,BDTERROR} from './type'
 import {UtilClient} from "./utilClient"
 import {request,ContentType} from "./request";
 import * as path from "./path";
+import * as config from "./config";
 export class BdtPeerClient extends EventEmitter{
     public peerName?: string; //  
     private m_agentid: string; 
@@ -49,6 +50,9 @@ export class BdtPeerClient extends EventEmitter{
     
     async init():Promise<{err:number,log?:string}> {
         // 1. start bdt-tool
+        if(config.RUST_LOG){
+            this.cache_peer_info!.RUST_LOG = config.RUST_LOG;
+        }
         let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
             RUST_LOG : this.cache_peer_info!.RUST_LOG!
         }, this.m_agentid!, 10*1000);
@@ -344,7 +348,36 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err};
     }
-    async interestChunkList(remote:Buffer ,task_name:string,chunk_list: Array<string>): Promise<{err: ErrorCode,session?:string}>{
+    async checkChunk(chunk_id:string): Promise<{err: ErrorCode,state?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'check-chunk',
+            peerName: this.peerName,
+            chunk_id,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} checkChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,state:info.value?.state};
+    }
+    async checkChunkListener(chunk_id:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
+        let begin = Date.now();
+        let await_interval = 200;
+        while(Date.now() - timeout < begin){
+            let check = await this.checkChunk(chunk_id);
+            if( !check.state || !check.state.includes("Pending")){
+                let time = Date.now() - begin;
+                return {err:check.err,state:check.state,time:time*1000}
+            }
+            if(await_interval<interval){
+                await sleep(await_interval);
+                await_interval = await_interval * 2;
+            }else{
+                await sleep(interval);
+            }
+        }
+        return {err: BDTERROR.timeout};
+    }
+    async interestChunkList(remote:Buffer ,task_name:string,chunk_list: Array<{chunk_id:string}>): Promise<{err: ErrorCode,session?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
             name: 'interest-chunk-list',
             peerName: this.peerName,
@@ -370,40 +403,26 @@ export class BdtPeerClient extends EventEmitter{
     }
     async checkChunkListListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
         let begin = Date.now();
+        let await_interval = 200;
         while(Date.now() - timeout < begin){
             let check = await this.checkChunkList(session);
-            if( !check.state || !check.state.includes("Pending")){
+            if( !check.state  || (!check.state.includes("Downloading") && !check.state.includes("OnAir"))){
                 let time = Date.now() - begin;
-                return {err:check.err,state:check.state,time}
+                if(check.state!.includes("Finished")){
+                    return {err:BDTERROR.success,state:check.state,time:time*1000}
+                }
+                return {err:BDTERROR.interestChunkFailed,state:check.state,time:time*1000}
             }
-            await sleep(interval);
+            if(await_interval<interval){
+                await sleep(await_interval);
+                await_interval = await_interval * 2;
+            }else{
+                await sleep(interval);
+            }
         }
         return {err: BDTERROR.timeout};
-    }
-    async checkChunk(chunk_id:string): Promise<{err: ErrorCode,state?:string}>{
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
-            name: 'check-chunk',
-            peerName: this.peerName,
-            chunk_id,
-        }, this.m_agentid, 0);
-        if (info.err) {
-            this.logger.error(`${this.tags} checkChunk failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return {err: info.err,state:info.value?.state};
     }
     
-    async checkChunkListener(chunk_id:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number}>{
-        let begin = Date.now();
-        while(Date.now() - timeout < begin){
-            let check = await this.checkChunk(chunk_id);
-            if( !check.state || !check.state.includes("Pending")){
-                let time = Date.now() - begin;
-                return {err:check.err,state:check.state,time:time*1000}
-            }
-            await sleep(interval);
-        }
-        return {err: BDTERROR.timeout};
-    }
     async calculateFile(path:string,chunk_size:number): Promise<{err: ErrorCode, calculate_time?: number, file?: Buffer,ObjectId?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'calculate-file',
@@ -427,6 +446,71 @@ export class BdtPeerClient extends EventEmitter{
             this.logger.error(`${this.tags} setFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
         return {err: info.err,set_time: info.value?.set_time,file:info.bytes,ObjectId:info.value?.ObjectId};
+    }
+    async downloadFile(file:Buffer ,save_path:string,peer_id:string,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
+            name: 'start-download-file',
+            peerName: this.peerName,
+            peer_id,
+            path:save_path,
+            second_peer_id
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,file:info.bytes,session:info.value?.session};
+    }
+    async downloadFileRange(file:Buffer ,save_path:string,peer_id:string,ranges:Array<{begin:number,end:number}> ,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
+            name: 'start-download-file-range',
+            peerName: this.peerName,
+            peer_id,
+            ranges,
+            path:save_path,
+            second_peer_id
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,file:info.bytes,session:info.value?.session};
+    }
+    async downloadTaskState(session:string): Promise<{err: ErrorCode,state?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'download-file-state',
+            peerName: this.peerName,
+            session,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} downloadFileState failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,state:info.value?.state};
+    }
+    async downloadTaskListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number,record?:Array<{time:number,speed:string,progress:string}>}>{
+        let begin = Date.now();
+        let record:Array<{time:number,speed:string,progress:string}> = [{time:Date.now(),speed:"0",progress:"0"}];
+        while(Date.now() - timeout < begin){
+            let check = await this.downloadTaskState(session);
+            let await_interval = 200;
+            if( !check.state || (!check.state.includes("Downloading") && !check.state.includes("OnAir"))){
+                let time = Date.now() - begin;
+                if(check.state!.includes("Finished")){
+                    return {err:BDTERROR.success,state:check.state,record,time:time*1000}
+                }
+                return {err:BDTERROR.sendDataFailed,state:check.state,record,time:time*1000}
+            }
+            record.push({
+                time: Date.now(),
+                speed : check.state!.split("(")[1].split(")")[0].split(",")[0],
+                progress:check.state!.split("(")[1].split(")")[0].split(",")[1]
+            })
+            if(await_interval<interval){
+                await sleep(await_interval);
+                await_interval = await_interval * 2;
+            }else{
+                await sleep(interval);
+            }
+        }
+        return {err: BDTERROR.timeout};
     }
     async setDir(path:string,object_path:string,chunk_size:number): Promise<{err: ErrorCode,dir_object_path?:string,session?:string,dir_id?:string,dir_map?:Array<{name:string,file_id:string}>}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
@@ -478,6 +562,7 @@ export class BdtPeerClient extends EventEmitter{
     async downloadDirTaskListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number,record?:Array<{time:number,speed:string,progress:string}>}>{
         let begin = Date.now();
         let record:Array<{time:number,speed:string,progress:string}> = [{time:Date.now(),speed:"0",progress:"0"}];
+        let await_interval = 200;
         while(Date.now() - timeout < begin){
             let check = await this.downloadDirTaskState(session);
             if( !check.state  || (!check.state.includes("Downloading") && !check.state.includes("OnAir"))){
@@ -492,7 +577,13 @@ export class BdtPeerClient extends EventEmitter{
                 speed : check.state!.split("(")[1].split(")")[0].split(",")[0],
                 progress:check.state!.split("(")[1].split(")")[0].split(",")[1]
             })
-            await sleep(interval);
+            if(await_interval<interval){
+                await sleep(await_interval);
+                await_interval = await_interval * 2;
+            }else{
+                await sleep(interval);
+            }
+            
         }
         return {err: BDTERROR.timeout};
     }
@@ -507,66 +598,6 @@ export class BdtPeerClient extends EventEmitter{
             this.logger.error(`${this.tags} uploadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
         }
         return {err: info.err,set_time: info.value?.set_time,file:info.bytes,ObjectId:info.value?.ObjectId,calculate_time: info.value?.calculate_time};
-    }
-
-    async downloadFile(file:Buffer ,save_path:string,peer_id:string,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
-            name: 'start-download-file',
-            peerName: this.peerName,
-            peer_id,
-            path:save_path,
-            second_peer_id
-        }, this.m_agentid, 0);
-        if (info.err) {
-            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return {err: info.err,file:info.bytes,session:info.value?.session};
-    }
-    async downloadFileRange(file:Buffer ,save_path:string,peer_id:string,ranges:Array<{begin:number,end:number}> ,second_peer_id?:string): Promise<{err: ErrorCode, file?: Buffer,session?:string}>{
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
-            name: 'start-download-file-range',
-            peerName: this.peerName,
-            peer_id,
-            ranges,
-            path:save_path,
-            second_peer_id
-        }, this.m_agentid, 0);
-        if (info.err) {
-            this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return {err: info.err,file:info.bytes,session:info.value?.session};
-    }
-    async downloadTaskState(session:string): Promise<{err: ErrorCode,state?:string}>{
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
-            name: 'download-file-state',
-            peerName: this.peerName,
-            session,
-        }, this.m_agentid, 0);
-        if (info.err) {
-            this.logger.error(`${this.tags} downloadFileState failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-        }
-        return {err: info.err,state:info.value?.state};
-    }
-    async downloadTaskListener(session:string,interval:number,timeout:number): Promise<{err: ErrorCode,state?:string,time?:number,record?:Array<{time:number,speed:string,progress:string}>}>{
-        let begin = Date.now();
-        let record:Array<{time:number,speed:string,progress:string}> = [{time:Date.now(),speed:"0",progress:"0"}];
-        while(Date.now() - timeout < begin){
-            let check = await this.downloadTaskState(session);
-            if( !check.state || (!check.state.includes("Downloading") && !check.state.includes("OnAir"))){
-                let time = Date.now() - begin;
-                if(check.state!.includes("Finished")){
-                    return {err:BDTERROR.success,state:check.state,record,time:time*1000}
-                }
-                return {err:BDTERROR.sendDataFailed,state:check.state,record,time:time*1000}
-            }
-            record.push({
-                time: Date.now(),
-                speed : check.state!.split("(")[1].split(")")[0].split(",")[0],
-                progress:check.state!.split("(")[1].split(")")[0].split(",")[1]
-            })
-            await sleep(interval);
-        }
-        return {err: BDTERROR.timeout};
     }
 }
 export class BdtConnection extends EventEmitter {
