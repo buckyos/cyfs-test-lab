@@ -15,11 +15,13 @@ export interface ActionModel{
   chunkSize?: number
   connect_time?: number 
   set_time?: number 
+  calculate_time?:number
   send_time?: number 
   expect?: string 
   result?: string 
   result_log?: string 
   date?:string,
+  environment?:string,
 }
 
 
@@ -47,10 +49,12 @@ export class BdtAction{
             connect_time:action.connect_time ,
             send_time:action.send_time ,
             set_time:action.set_time ,
+            calculate_time:action.calculate_time,
             result:action.result,
             resultLog : action.result_log!,
             expect:action.expect,
             date : action.date,
+            environment: action.environment,
             createTime: Date.now().toString(),
           }})
           
