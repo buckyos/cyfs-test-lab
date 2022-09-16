@@ -143,9 +143,7 @@ impl DirTaskMap {
     pub fn get_task(&self, file_name: &str) -> Option<&DirTask> {
         self.tasks_map.get(file_name).map(|v| v.clone())
     }
-    // pub fn get_task(&self, file_name: &str) -> Option<DirTaskPathControl>{
-    //     self.tasks_map.get(file_name).map(|v| v.clone())
-    // }
+
 
     pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<DirTaskPathControl>) -> BuckyResult<()> {
         match self.tasks_map.entry(file_name.to_owned()) {
@@ -1292,9 +1290,18 @@ impl Peer {
                                 log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 let calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32;
                                 let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                let resp = match cyfs_bdt::download::track_chunk_in_path(&*stack, &chunk_id,path.clone()).await {
+                                let resp =  match cyfs_bdt::download::track_chunk_to_path(&*stack, &chunk_id,Arc::new(buf),path.as_path()).await {
                                     Ok(_) => {
                                         let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                                        let request = cyfs_util::UpdateChunkStateRequest {
+                                            chunk_id: chunk_id.clone(),
+                                            current_state : None,
+                                            state: ChunkState::Ready,
+            
+                                        };
+                                        let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                                        let chunk_exists = stack.ndn().chunk_manager().store().exists( &chunk_id).await;
+                                        log::info!("chunk is exists {}",chunk_exists);
                                         TrackChunkLpcCommandResp {
                                             seq, 
                                             result: 0 as u16,
@@ -1416,6 +1423,9 @@ impl Peer {
                     stack.device_cache().add(&remote_id, &c.remote);
 
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                    if(!dir.as_path().exists()){
+                        let _ = std::fs::create_dir_all(dir.clone());
+                    }
                     let mut writers : Vec<Box<dyn ChunkWriter>> = Vec::new();
                     let writer = LocalChunkListWriter::new(
                         dir.clone(), 
@@ -2701,7 +2711,7 @@ impl Peer {
                     let task = tasks.get_task_state(&task_id.clone().as_str());
                     let dir_tasks = peer.0.dir_tasks.lock().unwrap();
                     let dir_task = dir_tasks.get_task(&task_id.clone().as_str()).unwrap();
-                    match task {
+                    match task  {
                         Some(state) => {
                             let state_str = match state {
                                 TaskControlState::Downloading(speed, progress) => {

@@ -1229,9 +1229,11 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                 "name": "check-chunk-list-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished(_) => String::from("Ready"),
-                    TaskControlState::Paused => String::from("Pending"),
+                    TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
+                    TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    TaskControlState::Paused => String::from("Paused"),
+                    TaskControlState::Canceled => String::from("Canceled"),
+                    TaskControlState::Err(errorCode)=>format!("Err({})", errorCode),
                     _ => String::from("unkown"),
                 }
             }),
@@ -2541,9 +2543,11 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                 "name": "download-dir-state-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished(_) => String::from("Ready"),
-                    TaskControlState::Paused => String::from("Pending"),
+                    TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
+                    TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    TaskControlState::Paused => String::from("Paused"),
+                    TaskControlState::Canceled => String::from("Canceled"),
+                    TaskControlState::Err(code) =>  format!("Finished({})", code),
                     _ => String::from("unkown"),
                 }
             }),
