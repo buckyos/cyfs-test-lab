@@ -31,7 +31,7 @@ export class AgentClient {
         return new Promise(async(V)=>{
                 setTimeout(()=>{
                     if(this.state==0){
-                        V({err:BDTERROR.timeout,log:`init client timeout`})
+                        V({err:BDTERROR.timeout,log:`${this.tags} init client timeout`})
                     }
                 },20*1000)
                 let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);

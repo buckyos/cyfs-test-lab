@@ -17,10 +17,9 @@ export async function TaskMain(_interface: TaskClientInterface) {
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `# 操作流程：\n
         + （1）LN/RN 初始化本地BDT协议栈
-        + （2）LN 向 RN 发起首次连接，发送10M大小chunk 数据
-        + （3）LN 向 RN 发起二次连接，发送10M大小chunk 数据
-        + （4）RN 向 LN 发起反向连接，发送10M大小chunk 数据
-        +  (5) 关闭所有连接 `,
+        + （2）LN 向 RN 发起首次连接
+        + （3）LN -> RN 发送10M大小chunk 数据
+        + （4）RN -> LN 发送10M大小chunk 数据`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);

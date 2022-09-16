@@ -2,6 +2,8 @@ import { ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode
 import { AgentManager } from '../agentManager'
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import { request, ContentType } from "../request"
+import * as fs from 'fs';
+import * as path from 'path';
 var date = require("silly-datetime");
 export class BaseAction implements ActionAbstract{
     public action: Action
@@ -29,6 +31,9 @@ export class BaseAction implements ActionAbstract{
         this.logger = _interface.getLogger();
         this.agentManager = AgentManager.createInstance(_interface);
         this.state = "init";
+        if(fs.existsSync(path.join(__dirname,"../dev.js"))){
+            this.action.environment = "dev";
+        }
         await this.checkAgent();
         return { err: BDTERROR.success, log: "task run success" }
     }
@@ -53,6 +58,7 @@ export class BaseAction implements ActionAbstract{
             date:this.action.date,
             result: String(this.action.result!.err),
             result_log: String(this.action.result!.log),
+            environment : this.action.environment,
         },ContentType.json);
         this.logger!.info(`api/bdt/action/add resp:  ${JSON.stringify(run_action)}`)
         return {err:BDTERROR.success,log:`reportAgent to server success`}
@@ -73,6 +79,8 @@ export class BaseAction implements ActionAbstract{
             chunkSize : this.action.chunkSize,
             connect_time : this.action.connect_time,
             set_time : this.action.set_time,
+            date:this.action.date,
+            environment : this.action.environment,
             send_time : this.action.send_time,
             expect:String(this.action.expect!.err),
             result: String(this.action.result!.err),

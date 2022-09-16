@@ -7,8 +7,15 @@ export function join(...paths: string[]): string{
     if(paths[0].includes("/")){
         chart = "/"
     }
+    let frist = true;
     for(let index of paths){
-        data = data + chart + index
+        if(frist){
+            data = index;
+            frist = false;
+        }else{
+            data = data + chart + index;
+        }
+        
     }
     return data;
 }

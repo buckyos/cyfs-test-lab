@@ -47,7 +47,7 @@ export class SendChunkListAction extends BaseAction implements ActionAbstract {
             }
             calculate_time = calculate_time + trackChunk.calculate_time!;
             set_time = set_time + trackChunk.set_time!;
-            chunk_list.push(trackChunk.chunk_id!)
+            chunk_list.push({chunk_id :trackChunk.chunk_id!} )
         }
         let task_name = RandomGenerator.string(15); 
         let download = await LN.bdtClient!.interestChunkList(RN.bdtClient!.device_object!, task_name,chunk_list);
