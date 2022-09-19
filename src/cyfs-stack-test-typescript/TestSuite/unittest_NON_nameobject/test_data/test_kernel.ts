@@ -57,14 +57,17 @@ function public_key_list(params: string[]): cyfs.PublicKey[] {
 }
 
 
-function get_len_buf(len: number, str: string) {
+function get_len_buf(len: number) {
+    let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
     const arr: number[] = []
-    for (let i = 0, j = str.length; i < j; ++i) {
-        arr.push(str.charCodeAt(i))
+    let maxnum = basestr.length
+    for (let i = 0; i < len; i++) {
+        arr.push(basestr.charCodeAt(Math.floor(Math.random() * (maxnum - 0)) + 0))
     }
-
-
-    return new Uint8Array(arr)
+    let buf = new Uint8Array(arr)
+    console.log(buf.byteLength)
+    // console.log(buf)
+    return buf
 }
 
 function exercise(num: number) {
@@ -197,12 +200,12 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
     }
 
     if (except.public_key) {
-        let e_key = public_key(except.public_key).to_base_58();
+        let e_key = public_key(except.public_key).toHex().unwrap()
         if (!actual.desc().public_key()) {
             output_check_err("public_key", except.public_key, "undefined")
             return false;
         }
-        let a_key = actual.desc().public_key()!.to_base_58()
+        let a_key = actual.desc().public_key()!.toHex().unwrap()
         if (e_key !== a_key && except.public_key.split(":")[0] !== "random") {
             output_check_err("public_key", e_key, a_key)
             return false;
@@ -353,8 +356,8 @@ function process_simpleGroup(obj: any) {
                     return false;
                 }
                 for (let j in pklist) {
-                    let e_key = public_key(obj.owners[j]).to_base_58();
-                    let a_key = pklist[j].to_base_58()
+                    let e_key = public_key(obj.owners[j]).toHex().unwrap()
+                    let a_key = pklist[j].toHex().unwrap()
                     if (e_key !== a_key && obj.owners[j].split(":")[0] !== "random") {
                         output_check_err("public_key", e_key, a_key)
                         return false;
@@ -559,7 +562,6 @@ function process_unionAccount(obj: any) {
     }
 }
 
-
 function process_file(obj: any) {
     let filepath = save_path("file", obj.file)
     if (proc_in) {
@@ -581,9 +583,9 @@ function process_file(obj: any) {
                     output_check_err("len", obj.len, "undefined")
                     return;
                 }
-                let delen = file.desc().content().len
-                if (delen !== cyfs.JSBI.BigInt(obj.len)) {
-                    output_check_err("len", obj.len, delen.toString())
+                let delen = file.desc().content().len.toString()
+                if (delen !== obj.len) {
+                    output_check_err("len", obj.len, delen)
                     return;
                 }
             }
@@ -592,8 +594,8 @@ function process_file(obj: any) {
                     output_check_err("hash", obj.hash, "undefined")
                     return;
                 }
-                if (file.desc().content().hash.to_base_58() !== obj.hash) {
-                    output_check_err("hash", obj.hash, file.desc().content().hash.to_base_58())
+                if (file.desc().content().hash.to_hex_string() !== obj.hash) {
+                    output_check_err("hash", obj.hash, file.desc().content().hash.to_hex_string())
                     return;
                 }
             }
@@ -603,51 +605,239 @@ function process_file(obj: any) {
                     return;
                 }
                 let dechunk_list = file.body_expect().content().chunk_list
-                let dechunk_list_bundle = dechunk_list.chunk_in_bundle?.chunk_list!
-                for (let i in dechunk_list_bundle) {
-                    if (dechunk_list_bundle[i].to_base_58() !== obj.chunk_list.chunk_in_bundle.chunk_list[i]) {
-                        output_check_err("chunk_in_bundle", obj.chunk_list.chunk_in_bundle.chunk_list[i], dechunk_list_bundle[i].to_base_58())
+                if (obj.chunk_list.chunk_in_list) {
+                    console.log("obj.chunk_list.chunk_in_list")
+                    let dechunk_in_list = dechunk_list.chunk_in_list!
+                    for (let j in dechunk_in_list) {
+                        if (dechunk_in_list[j].to_base_58() !== obj.chunk_list.chunk_in_list[j]) {
+                            output_check_err("chunk_in_list", obj.chunk_list.chunk_in_list[j], dechunk_in_list[j].to_base_58())
+                            return;
+                        }
                     }
                 }
-                let dechunk_in_list = dechunk_list.chunk_in_list!
-                for (let j in dechunk_in_list) {
-                    if (dechunk_in_list[j].to_base_58() !== obj.chunk_list.chunk_in_list[j]) {
-                        output_check_err("chunk_in_list", obj.chunk_list.chunk_in_list[j], dechunk_in_list[j].to_base_58())
+                else if (obj.chunk_list.chunk_in_bundle) {
+                    console.log("obj.chunk_list.chunk_in_bundle")
+                    let dechunk_list_bundle = dechunk_list.chunk_in_bundle?.chunk_list!
+                    for (let i in dechunk_list_bundle) {
+                        if (dechunk_list_bundle[i].to_base_58() !== obj.chunk_list.chunk_in_bundle.chunk_list[i]) {
+                            output_check_err("chunk_in_bundle", obj.chunk_list.chunk_in_bundle.chunk_list[i], dechunk_list_bundle[i].to_base_58())
+                            return;
+                        }
                     }
                 }
-                let defile_id = dechunk_list.file_id!.to_base_58()
-                if (defile_id !== obj.chunk_list.file_id){
-                    output_check_err("file_id", obj.chunk_list.file_id, defile_id)
-                }
-                if (!dechunk_list.chunk_in_bundle?.hash_method){
-                    output_check_err("hash_method", obj.chunk_list.chunk_in_bundle.hash_method, "undefined")
-
+                else if (obj.chunk_list.file_id) {
+                    console.log("obj.chunk_list.file_id")
+                    let defile_id = dechunk_list.file_id!.to_base_58()
+                    if (defile_id !== obj.chunk_list.file_id) {
+                        output_check_err("file_id", obj.chunk_list.file_id, defile_id)
+                        return;
+                    }
                 }
             }
             console.log(`解码成功 casename is (${obj.casename})`)
         }
     } else {
         // 从json创建对象
-        let ood_list: cyfs.DeviceId[] = [];
-        if (obj.ood_list) {
-            for (const ood of obj.ood_list) {
-                ood_list.push(cyfs.DeviceId.from_base_58(ood).unwrap())
+        let len: cyfs.JSBI
+        if (obj.len) {
+            len = cyfs.JSBI.BigInt(obj.len)
+        }
+        let hash: cyfs.HashValue;
+        if (obj.hash) {
+            hash = cyfs.HashValue.from_hex_string(obj.hash).unwrap()
+        }
+        let chunk_list: cyfs.ChunkList
+        if (obj.chunk_list) {
+            let chunk_in_list: cyfs.ChunkId[] = []
+            let file_id
+            let chunk_in_bundle
+
+            if (obj.chunk_list.chunk_in_list) {
+                for (let j of obj.chunk_list.chunk_in_list) {
+                    chunk_in_list.push(cyfs.ChunkId.from_base_58(j).unwrap())
+                }
+                chunk_list = new cyfs.ChunkList(chunk_in_list)
+            }
+            else if (obj.chunk_list.file_id) {
+                file_id = cyfs.FileId.from_base_58(obj.chunk_list.file_id).unwrap()
+                chunk_list = new cyfs.ChunkList(undefined, file_id)
+
+            }
+            else if (obj.chunk_list.chunk_in_bundle) {
+                let chunk_bundle_list: cyfs.ChunkId[] = []
+                for (let j of obj.chunk_list.chunk_in_bundle.chunk_list) {
+                    chunk_bundle_list.push(cyfs.ChunkId.from_base_58(j).unwrap())
+                }
+                chunk_in_bundle = new cyfs.ChunkBundle(chunk_bundle_list, cyfs.ChunkBundleHashMethod.Serial)
+                chunk_list = new cyfs.ChunkList(undefined, undefined, chunk_in_bundle)
             }
         }
-        let icon;
-        if (obj.icon) {
-            icon = cyfs.FileId.from_base_58(obj.icon).unwrap()
-        }
-        let ood_work_mode
-        if (obj.ood_work_mode === cyfs.OODWorkMode.Standalone || obj.ood_work_mode === cyfs.OODWorkMode.ActiveStandby) {
-            ood_work_mode = obj.ood_work_mode as cyfs.OODWorkMode;
-        }
-        let name
-        if (obj.name.split(":")[1] === "mb") { name = get_big_str(obj, "name") } else { name = obj.name }
-        let builder = new cyfs.PeopleBuilder(new cyfs.PeopleDescContent(), new cyfs.PeopleBodyContent(ood_list, name, icon, ood_work_mode));
-        let people = process_common(builder, obj, cyfs.People);
 
-        fs.outputFileSync(filepath, people.to_vec().unwrap());
+        let builder = new cyfs.FileBuilder(new cyfs.FileDescContent(len!, hash!), new cyfs.FileBodyContent(chunk_list!));
+        let file = process_common(builder, obj, cyfs.File);
+
+        fs.outputFileSync(filepath, file.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+
+function process_dir(obj: any) {
+    let filepath = save_path("dir", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let dir_r = new cyfs.DirDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (dir_r.err) {
+            console.error(`decode file from file ${obj.file} err ${dir_r.val}`)
+            ret = dir_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let dir = dir_r.unwrap()
+        if (check_common(dir, obj)) {
+            // 再检测content数据
+            if (obj.attributes) {
+                if (!dir.desc().content().attributes().flags) {
+                    output_check_err("attributes", obj.attributes, "undefined")
+                    return;
+                }
+                let deattributes = dir.desc().content().attributes().flags
+                if (deattributes !== obj.deattributes) {
+                    output_check_err("attributes", obj.attributes.toString(), deattributes.toString())
+                    return;
+                }
+            }
+            if (obj.obj_list) {
+                if (!dir.desc().content().obj_list()) {
+                    output_check_err("hash", obj.hash, "undefined")
+                    return;
+                }
+
+                if (dir.desc().content().obj_list().match({
+                    Chunk: (chunk_id: cyfs.ChunkId) => chunk_id.raw_measure().unwrap(),
+                    ObjList: (obj_list: cyfs.NDNObjectList) => obj_list.raw_measure().unwrap(),
+                })) {
+                    // output_check_err("obj_list", obj.obj_list, "obj_list属性不一致")
+                    // return;
+                }
+            }
+            if (obj.body) {
+                if (!dir.body_expect().content()) {
+                    output_check_err("body", obj.body, "undefined")
+                    return;
+                }
+                dir.body_expect().content().match({
+                    Chunk: (chunk) => {
+                        if (chunk.to_base_58() !== obj.body.chunck_id) {
+                            output_check_err("body.chunck_id", obj.body.chunck_id, chunk.to_base_58())
+                            return;
+                        }
+                    },
+                    ObjList: (list) => {
+                        for (let j of list.entries()) {
+                            if (j[0].to_base_58() !== obj.body.obj_list.fileid || j[1].size !== obj.body.obj_list.buckybuffer) {
+                                output_check_err("body.obj_list", obj.body.obj_list, j.toString())
+                                return;
+                            }
+                        }
+
+                    }
+                })
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let attributes: cyfs.Attributes
+        if (obj.attributes) {
+            attributes = new cyfs.Attributes(obj.attributes)
+            console.log("-----------------------1/" + attributes)
+        }
+        let obj_list: cyfs.NDNObjectInfo
+        if (obj.obj_list) {
+            let info = {}
+
+            if (obj.obj_list.info.chunck_id) {
+                let chunk_id = cyfs.ChunkId.from_base_58(obj.obj_list.info.chunck_id).unwrap()
+                info = { chunk_id }
+                console.log("-----------------------2/info.chunck_id" + info)
+
+            }
+            else if (obj.obj_list.info.obj_list) {
+                let parent_chunk: cyfs.Option<cyfs.ChunkId>
+                let object_map = new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo>()
+
+                if (obj.obj_list.info.obj_list.parent_chunk) {
+                    parent_chunk = cyfs.Some(cyfs.ChunkId.from_base_58(obj.obj_list.info.obj_list.parent_chunk).unwrap())
+                } else { parent_chunk = cyfs.None }
+
+                if (obj.obj_list.info.obj_list.object_map) {
+                    let buckystring = new cyfs.BuckyString(obj.obj_list.info.obj_list.object_map.buckystring)
+                    let id = {}
+                    let jobject_id = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id
+                    let jchunk_id = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.chunk_id
+                    let jindex = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.index
+                    if (jobject_id) {
+                        let fileid = cyfs.ObjectId.from_base_58(jobject_id).unwrap()
+                        id = {
+                            fileid
+                        }
+                        console.log("-----------------------6/objectmap.id" + id)
+
+                    }
+                    else if (jchunk_id) {
+                        let chunkid = cyfs.ChunkId.from_base_58(jchunk_id).unwrap()
+                        id = {
+                            chunkid
+                        }
+                        console.log("-----------------------7/objectmap.id" + id)
+                    }
+                    else if (jindex) {
+
+                        let index = { offset: jindex.offset, size: jindex.size }
+                        id = {
+                            index
+                        }
+                        console.log("-----------------------8/objectmap.id" + id)
+                    }
+                    else { console.error("-----------> json文件缺少InnerNode所必需的id对象参数！") }
+                    object_map.set(buckystring, new cyfs.InnerNodeInfo(new cyfs.Attributes(obj.obj_list.info.obj_list.object_map.innernodeinfo.attributes), new cyfs.InnerNode(id)))
+                }
+                let obj_list = new cyfs.NDNObjectList(
+                    parent_chunk,
+                    object_map
+                )
+                info = { obj_list }
+                console.log("-----------------------3/info.obj_list" + info)
+            }
+            obj_list = new cyfs.NDNObjectInfo(info)
+        }
+        let body = {}
+        if (obj.body) {
+            if (obj.body.chunck_id) {
+                let chunk_id = cyfs.ChunkId.from_base_58(obj.body.chunck_id).unwrap()
+                body = { chunk_id }
+                console.log("-----------------------4/body.chunck_id" + body)
+
+            }
+            else if (obj.body.obj_list) {
+                let obj_list = new cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer>()
+                obj_list.set(cyfs.ObjectId.from_base_58(obj.body.obj_list.fileid).unwrap(), new cyfs.BuckyBuffer(get_len_buf(obj.body.obj_list.buckybuffer)))
+                body = {
+                    obj_list
+                }
+                console.log("-----------------------5/body.obj_list" + body)
+            }
+
+        }
+
+
+
+        let builder = new cyfs.DirBuilder(new cyfs.DirDescContent(attributes!, obj_list!), new cyfs.DirBodyContent(body));
+        let dir = process_common(builder, obj, cyfs.Dir);
+
+        fs.outputFileSync(filepath, dir.to_vec().unwrap());
         console.log(`编码输出路径：${filepath}`)
     }
 }
@@ -670,7 +860,9 @@ function main() {
         case "unionaccount":
             process_unionAccount(obj)
             break;
-        case "dir": break;
+        case "dir":
+            process_dir(obj)
+            break;
         case "file":
             process_file(obj)
             break;

@@ -1,0 +1,15 @@
+{
+    "stack_type": "simulator",
+    "type": "file",
+    "casename": "Ts编解码:正常输入file包含的所有参数",
+    "file": "file_test_main.desc",
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
+    "len": "18446744073709551615",
+    "hash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "chunk_list": {
+        "chunk_in_list": [
+            "Ua1Fgkj3oyPyVztLZ3bt7NEiPUGSX7hTTuZZXs4HGyz",
+            "Ua1Fgkj3oyPyVztLZ3bt7NEiPUGSX7hTTuZZXs4HGyz"
+        ]
+    }
+}
