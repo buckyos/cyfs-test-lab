@@ -4,3 +4,5 @@ src/cyfs-stack-test-rust/unittest_nameobject/target/
 src/cyfs-stack-test-rust/profile/target/
 src/cyfs-tools/target/
 /.history/
+src/cyfs-stack-test-typescript/TestSuite/unittest_object_map/mochawesome-report
+
