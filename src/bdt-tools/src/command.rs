@@ -1230,7 +1230,8 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    // TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    TaskControlState::Finished => format!("Finished"),
                     TaskControlState::Paused => String::from("Paused"),
                     TaskControlState::Canceled => String::from("Canceled"),
                     TaskControlState::Err(errorCode)=>format!("Err({})", errorCode),
@@ -1585,7 +1586,7 @@ impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    TaskControlState::Finished(_) => String::from("Ready"),
+                    TaskControlState::Finished => String::from("Ready"),
                     TaskControlState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
@@ -2002,7 +2003,8 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    TaskControlState::Finished(speed) => format!("Finished({})",speed),
+                    //TaskControlState::Finished(speed) => format!("Finished({})",speed),
+                    TaskControlState::Finished => format!("Finished"),
                     TaskControlState::Paused => String::from("Paused"),
                     TaskControlState::Canceled => String::from("Canceled"),
                     TaskControlState::Err(err) => format!("Err({})",err),
@@ -2544,7 +2546,8 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
                     TaskControlState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    //TaskControlState::Finished(speed) => format!("Finished({})", speed),
+                    TaskControlState::Finished => format!("Finished"),
                     TaskControlState::Paused => String::from("Paused"),
                     TaskControlState::Canceled => String::from("Canceled"),
                     TaskControlState::Err(code) =>  format!("Finished({})", code),

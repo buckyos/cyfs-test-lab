@@ -133,11 +133,13 @@ async fn main()->Result<(), BuckyError> {
             peer.on_download_dir_state(c, lpc.clone());
         }else if name == String::from("get_system_info") {
             peer.on_get_system_info(c, lpc.clone());
-        }else if name == String::from("send-datagram") {
-            peer.on_send_datagram(c, lpc.clone());
-        }else if name == String::from("recv-datagram") {
-            peer.on_recv_datagram(c, lpc.clone());
-        } else if name == String::from("exit") {
+        }
+        // else if name == String::from("send-datagram") {
+        //     peer.on_send_datagram(c, lpc.clone());
+        // }else if name == String::from("recv-datagram") {
+        //     peer.on_recv_datagram(c, lpc.clone());
+        // }
+         else if name == String::from("exit") {
             break;
         }else {
             log::warn!("unknown command, name={}", &name);
