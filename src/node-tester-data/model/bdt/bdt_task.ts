@@ -10,6 +10,7 @@ export type TaskModel = {
   expect_status: string 
   state: string 
   date?:string,
+  resultLog ?:string
   environment?:string
 }
 export class BdtTask{
@@ -31,6 +32,7 @@ export class BdtTask{
               expect_status:task.expect_status,
               date : task.date,
               environment : task.environment,
+              resultLog: task.resultLog,
               createTime: Date.now().toString(),
           }})
           return {err:0,log:`${task.task_id} add record success`}
