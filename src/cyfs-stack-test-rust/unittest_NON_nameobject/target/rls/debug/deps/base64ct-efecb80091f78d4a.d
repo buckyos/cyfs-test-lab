@@ -1,0 +1,12 @@
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\base64ct-efecb80091f78d4a.rmeta: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\encoding.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\errors.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\bcrypt.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\crypt.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\standard.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\url.rs
+
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\base64ct-efecb80091f78d4a.d: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\encoding.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\errors.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\bcrypt.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\crypt.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\standard.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\url.rs
+
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\lib.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\encoding.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\errors.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\bcrypt.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\crypt.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\standard.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\base64ct-1.0.1\src\variant\url.rs:

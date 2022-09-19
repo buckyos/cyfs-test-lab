@@ -1,0 +1,13 @@
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\toml-79d16924e9620dff.rmeta: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\map.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\value.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\datetime.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\ser.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\de.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\tokens.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\macros.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\spanned.rs
+
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\toml-79d16924e9620dff.d: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\map.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\value.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\datetime.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\ser.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\de.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\tokens.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\macros.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\spanned.rs
+
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\lib.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\map.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\value.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\datetime.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\ser.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\de.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\tokens.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\macros.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\toml-0.5.9\src\spanned.rs:

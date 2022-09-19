@@ -39,7 +39,7 @@ describe("#op-env 初始化方式", function () {
         //         console.info(`${JSON.stringify(state)}`)
         //     })
         // })
-        describe("### create_path_op_env 接口测试", async () => {
+        describe("### create_path_op_env root-state的同zone的跨dec操作 需要配合权限 接口测试", async () => {
             it("全部参数正常流程-path-target为空", async () => {
                 //let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT2ze").unwrap();
                 //const target_dec_id = dec_id || cyfs.get_system_dec_app().object_id
@@ -75,7 +75,7 @@ describe("#op-env 初始化方式", function () {
 
             })
         })
-        describe("### create_single_op_env 接口测试", async () => {
+        describe("### create_single_op_env root-state的同zone的跨dec操作 需要配合权限接口测试", async () => {
             let target_dec_id = ZoneSimulator.zone1_device2_stack.root_state().get_dec_id();
 
             const stub = new cyfs.GlobalStateStub(stack.root_state(), ZoneSimulator.zone1_device1_stack.local_device_id().object_id, target_dec_id);
@@ -102,6 +102,65 @@ describe("#op-env 初始化方式", function () {
             await cyfs.sleep(3 * 1000)
             // 提交object_map 操作事务
             let result3 = await op_env.commit();
+            console.info(`####### process1 commit:${JSON.stringify(result3)}`)
+            assert.ok(!result3.err)
+        })
+
+        describe("### create_op_env 接口测试", async () => {
+            let target_dec_id = ZoneSimulator.zone1_device2_stack.root_state().get_dec_id();
+            let req: cyfs.RootStateCreateOpEnvOutputRequest = {
+                common: {
+                    dec_id: stack.root_state().get_dec_id(),
+                    target_dec_id: target_dec_id,
+                    target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
+                    flags: 0,
+                },
+                op_env_type: cyfs.ObjectMapOpEnvType.Path,
+                access: {
+                    path: "/",
+                    access: cyfs.AccessPermissions.ReadOnly
+                }
+            };
+            let result =  await stack.root_state().create_op_env(req);
+            assert.ok(!result.err)
+            let op_env = result.unwrap();
+            let key = RandomGenerator.string(10);
+            let obj_id1: cyfs.ObjectId
+            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+            obj_id1 = obj1.desc().object_id();
+
+            let pathA = `/qatest/${RandomGenerator.string(10)}`;
+            // path
+            let pathB = pathA + `/${RandomGenerator.string(10)}`;
+
+            const insert_req: cyfs.OpEnvInsertWithKeyOutputRequest = {
+                common: {
+                    flags: 0,
+                    target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
+                    target_dec_id: target_dec_id,
+                    sid: cyfs.JSBI.BigInt(0),
+                },
+                key,
+                value: obj_id1,
+            };
+
+            let result1 = await op_env.insert_with_key(insert_req)
+            console.info(`####### process1 insert:${JSON.stringify(result1)}}`)
+            assert.ok(!result1.err)
+            // 模拟业务处理时间 3s
+            await cyfs.sleep(3 * 1000)
+            // 提交object_map 操作事务
+            const commit_req: cyfs.OpEnvCommitOutputRequest = {
+                common: {
+                    flags: 0,
+                    target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
+                    target_dec_id: target_dec_id,
+                    sid: cyfs.JSBI.BigInt(0),
+                },
+                op_type: cyfs.OpEnvCommitOpType.Update,
+            };
+
+            let result3 = await op_env.commit(commit_req);
             console.info(`####### process1 commit:${JSON.stringify(result3)}`)
             assert.ok(!result3.err)
         })

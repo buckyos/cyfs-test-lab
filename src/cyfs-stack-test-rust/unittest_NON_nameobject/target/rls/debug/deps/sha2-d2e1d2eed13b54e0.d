@@ -1,0 +1,12 @@
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\sha2-d2e1d2eed13b54e0.rmeta: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\consts.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\soft.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\x86.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\soft.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\x86.rs
+
+e:\git_test\cyfs-test-lab\src\cyfs-stack-test-rust\unittest_NON_nameobject\target\rls\debug\deps\sha2-d2e1d2eed13b54e0.d: C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\lib.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\consts.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\soft.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\x86.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\soft.rs C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\x86.rs
+
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\lib.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\consts.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\soft.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha256\x86.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\soft.rs:
+C:\Users\bucky\.cargo\registry\src\github.com-1ecc6299db9ec823\sha2-0.9.9\src\sha512\x86.rs:
