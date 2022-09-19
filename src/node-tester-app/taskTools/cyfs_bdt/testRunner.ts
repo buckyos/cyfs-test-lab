@@ -5,6 +5,7 @@ import {request,ContentType} from "./request";
 import * as config from "./config"
 import * as fs from 'fs';
 import * as path from 'path';
+import {testcase_version} from "./dev_config";
 var date = require("silly-datetime");
 const timeout = 300*1000;
 
@@ -46,8 +47,8 @@ export class TestRunner{
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
         this.begin_time = Date.now();
         this.Testcase!.errorList = [];
-        if(fs.existsSync(path.join(__dirname,"dev.js"))){
-            this.Testcase.environment = "dev";
+        if(testcase_version){
+            this.Testcase.environment = testcase_version;
         }
         
     }
@@ -155,6 +156,7 @@ export class TestRunner{
                 Users: JSON.stringify(this.taskList[i].Users),
                 expect_status : this.taskList[i].expect_status,
                 result:JSON.stringify(this.taskList[i].result!.err),
+                resultLog : JSON.stringify(this.taskList[i].result!.log),
                 state : this.taskList[i]!.state,
                 date:this.Testcase!.date,
                 environment:this.Testcase!.environment,

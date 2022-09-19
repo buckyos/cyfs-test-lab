@@ -73,6 +73,16 @@ export class AgentClient {
         this.logUrl = result.value.upload?.url;
         return {err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}
     }
+    async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "removeNdcData",
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} removeNdcData = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        return {err:ErrorCode.succ,remove_list:result.value.remove_list}
+    }  
     
     async startPeerClient(config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
         

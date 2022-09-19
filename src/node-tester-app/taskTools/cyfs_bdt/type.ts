@@ -176,6 +176,7 @@ export type Task ={
    Users? : Array<string>, 
    action:Array<ActionAbstract>, // 操作集合
    result?:{err:number,log:string}; //实际结果 
+   resultLog? : string,
    state?:string; 
    date  ? : string , //执行日期
    environment? : string; //环境

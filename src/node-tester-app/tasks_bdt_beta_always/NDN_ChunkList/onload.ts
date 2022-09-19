@@ -67,7 +67,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 fileNum : 5,
                 config:{
                     conn_tag: connect_1,
-                    timeout : 30*1000,
+                    timeout : 160*1000,
                 },
                 expect : {err:0},      
             }))
@@ -80,7 +80,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 fileNum : 5,
                 config:{
                     conn_tag: connect_1,
-                    timeout : 30*1000,
+                    timeout : 160*1000,
                 },
                 expect : {err:0},      
             }))

@@ -22,7 +22,7 @@ export class BdtPeerClient extends EventEmitter{
     public sn_resp_eps? : string;
     public tags:string;
     public util_client? :UtilClient;
-    public state : number;
+    public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁  
     public NAT? : number;
     on(event: 'unlive', listener: () => void): this;
     on(event: string, listener: (...args: any[]) => void): this {
@@ -42,64 +42,75 @@ export class BdtPeerClient extends EventEmitter{
         this.logger = _interface.getLogger();
         this.cache_peer_info = peer
         this.m_conns = new Map;
-        this.state = 0;
+        this.state = 0; 
         this.m_timeout = 60*1000;
         
     }
 
     
     async init():Promise<{err:number,log?:string}> {
-        // 1. start bdt-tool
-        if(config.RUST_LOG){
-            this.cache_peer_info!.RUST_LOG = config.RUST_LOG;
-        }
-        let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
-            RUST_LOG : this.cache_peer_info!.RUST_LOG!
-        }, this.m_agentid!, 10*1000);
-        if(start_tool.err){
-            this.logger.error(`${this.tags} start bdt-tools failed`)
-            return  {err:start_tool.err,log:`${this.tags} start bdt-tools failed`}
-        }
-        this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
-        this.peerName = start_tool.value.peerName;
-        this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
-        await this.util_client.getCachePath();
-        await sleep(2000)
-        // 2. start bdt stack
-        let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
-            name: 'create',
-            peerName:this.peerName,
-            addrInfo:this.cache_peer_info!.addrInfo,
-            sn_files: this.cache_peer_info!.sn_files,
-            active_pn_files: this.cache_peer_info!.active_pn_files,
-            passive_pn_files:this.cache_peer_info!.passive_pn_files,
-            known_peer_files:this.cache_peer_info!.known_peer_files,
-            local:this.cache_peer_info!.local,
-            chunk_cache:this.cache_peer_info!.chunk_cache,
-            ep_type:this.cache_peer_info!.ep_type,
-            ndn_event:this.cache_peer_info!.ndn_event,
-            ndn_event_target:this.cache_peer_info!.ndn_event_target,
-            sn_only:this.cache_peer_info.udp_sn_only,
-            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
-        }, this.m_agentid!, 10*1000);
-        if(start_stack.err){
-            this.logger.error(`${this.tags} start bdt stack failed`)
-            return  {err:start_tool.err,log:`${this.tags} start bdt stack failed`}
-        }
-        this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
-        this.device_object = start_stack.bytes;
-        this.sn_resp_eps = start_stack.value.ep_resp;
-        this.peerid = start_stack.value.id
-        this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
-        // 3. attachEvent bdt-tool unlive
-        let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
-            this.state = -1;
-            this.logger.error(`${this.tags} unlive_${this.peerName}`)
-        }, this.m_agentid, this.m_timeout);
-        this.m_unliveCookie = info.cookie;
-        // 4. bdt client start autoAccept
-        await this.autoAccept();
-        return  {err:BDTERROR.success,log:`${this.tags} start bdt stack success`}
+        return new Promise(async(resolve)=>{
+            // 1. start bdt-tool
+            if(config.RUST_LOG){
+                this.cache_peer_info!.RUST_LOG = config.RUST_LOG;
+            }
+            setTimeout(()=>{
+                if(this.state<2){
+                    resolve({err:BDTERROR.timeout,log:`${this.tags} start bdt-tools timeout ,state = ${this.state}`})
+                }
+            },20*1000)
+            let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
+                RUST_LOG : this.cache_peer_info!.RUST_LOG!
+            }, this.m_agentid!, 10*1000);
+            this.state = 1;
+            if(start_tool.err){
+                this.logger.error(`${this.tags} start bdt-tools failed`)
+                resolve({err:start_tool.err,log:`${this.tags} start bdt-tools failed`})  
+            }
+            
+            this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
+            this.peerName = start_tool.value.peerName;
+            this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
+            await this.util_client.getCachePath();
+            await sleep(2000)
+            // 2. start bdt stack
+            let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
+                name: 'create',
+                peerName:this.peerName,
+                addrInfo:this.cache_peer_info!.addrInfo,
+                sn_files: this.cache_peer_info!.sn_files,
+                active_pn_files: this.cache_peer_info!.active_pn_files,
+                passive_pn_files:this.cache_peer_info!.passive_pn_files,
+                known_peer_files:this.cache_peer_info!.known_peer_files,
+                local:this.cache_peer_info!.local,
+                chunk_cache:this.cache_peer_info!.chunk_cache,
+                ep_type:this.cache_peer_info!.ep_type,
+                ndn_event:this.cache_peer_info!.ndn_event,
+                ndn_event_target:this.cache_peer_info!.ndn_event_target,
+                sn_only:this.cache_peer_info.udp_sn_only,
+                tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
+            }, this.m_agentid!, 10*1000);
+            this.state = 2;
+            if(start_stack.err){
+                this.logger.error(`${this.tags} start bdt stack failed`)
+                resolve({err:start_tool.err,log:`${this.tags} start bdt stack failed`})
+            }
+            this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
+            this.device_object = start_stack.bytes;
+            this.sn_resp_eps = start_stack.value.ep_resp;
+            this.peerid = start_stack.value.id
+            this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
+            // 3. attachEvent bdt-tool unlive
+            let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
+                this.state = -1;
+                this.logger.error(`${this.tags} unlive_${this.peerName}`)
+            }, this.m_agentid, this.m_timeout);
+            this.m_unliveCookie = info.cookie;
+            // 4. bdt client start autoAccept
+            await this.autoAccept();
+            resolve({err:BDTERROR.success,log:`${this.tags} start bdt stack success`})  
+        })
+        
     }
     async reportAgent(testcaseId:string) :Promise<{err:ErrorCode,log:string}>{
         let run_action =await request("POST","api/bdt/client/add",{
@@ -126,6 +137,7 @@ export class BdtPeerClient extends EventEmitter{
             this.logger.error(`${this.tags} start bdt-tools failed`)
             return  {err:start_tool.err,log:`${this.tags} start bdt-tools failed`}
         }
+        this.state = 1;
         this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
         this.peerName = start_tool.value.peerName;
         this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
@@ -155,6 +167,7 @@ export class BdtPeerClient extends EventEmitter{
         this.device_object = start_stack.bytes;
         this.sn_resp_eps = start_stack.value.ep_resp;
         this.peerid = start_stack.value.id
+        this.state = 2;
         // 3. attachEvent bdt-tool unlive
         let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
             this.state = -1;

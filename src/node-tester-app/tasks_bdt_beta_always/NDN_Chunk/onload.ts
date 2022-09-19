@@ -66,7 +66,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 chunkSize : 10*1024*1024,
                 config:{
                     conn_tag: connect_1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},      
             }))
@@ -78,7 +78,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 chunkSize : 10*1024*1024,
                 config:{
                     conn_tag: connect_1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},      
             }))

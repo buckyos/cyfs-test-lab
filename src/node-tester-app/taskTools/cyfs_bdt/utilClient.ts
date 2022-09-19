@@ -76,5 +76,16 @@ export class UtilClient {
         }
         this.cachePath = result.value.cache_path;
         return {err:ErrorCode.succ,cache_path:result.value.cache_path}
+    }
+    async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "removeNdcData",
+            peerName: this.peerName,
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} removeNdcData = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
 }

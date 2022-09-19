@@ -50,10 +50,37 @@ export class UtilTool {
             };
             case "getCachePath":{
                 return await this.getCachePath(command);
+            };
+            case "removeNdcData":{
+                return await this.removeNdcData(command);
             }
         }
         this.m_logger.info(`#### not found utilRequest req_path `)
         return {err:ErrorCode.notFound}
+    }
+    async removeNdcData(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        let platform = this.m_interface.getPlatform();
+        let cyfs_data = "/cyfs/data"
+        if(platform == 'win32'){
+            cyfs_data = "c:\\cyfs\\data"
+        }else if(platform == 'win32'){
+            cyfs_data = "/cyfs/data"
+        }
+        let remove_list = [];
+        let dir_list = fs.readdirSync(cyfs_data);
+        for(let cache_path of dir_list){
+            if(cache_path.includes("5a")){
+                let r_path = path.join(cyfs_data,cache_path)
+                fs.removeSync(r_path);
+                remove_list.push(r_path)
+            }
+        }
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                remove_list
+            },
+            bytes : Buffer.from("")
+        }}
     }
     async _createFile(filePath:string,fileSize:number){
         if(!this.cacheSomeBuffer){

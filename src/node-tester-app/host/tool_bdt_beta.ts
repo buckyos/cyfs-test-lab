@@ -204,7 +204,8 @@ async function main() {
         console.info(`runner error ${error}`)
         process.exit(0);
     })
-    while(true){
+    let run_time = 1;
+    while(run_time--){
         console.info(`Restart all task`)
         for(let i in taskList){
             console.info(`${taskList[i]} is running`)
