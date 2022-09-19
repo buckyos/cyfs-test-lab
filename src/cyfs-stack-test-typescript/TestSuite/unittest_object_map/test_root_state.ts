@@ -138,7 +138,7 @@ describe("#op-env 初始化方式", function () {
                     flags: 0,
                     target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
                     target_dec_id: target_dec_id,
-                    sid: cyfs.JSBI.BigInt(0),
+                    sid: op_env.get_sid(),
                 },
                 key,
                 value: obj_id1,
@@ -155,7 +155,7 @@ describe("#op-env 初始化方式", function () {
                     flags: 0,
                     target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
                     target_dec_id: target_dec_id,
-                    sid: cyfs.JSBI.BigInt(0),
+                    sid: op_env.get_sid(),
                 },
                 op_type: cyfs.OpEnvCommitOpType.Update,
             };
@@ -165,5 +165,76 @@ describe("#op-env 初始化方式", function () {
             assert.ok(!result3.err)
         })
 
+        describe("### create_op_env path_stub接口测试", async () => {
+            let target_dec_id = ZoneSimulator.zone1_device2_stack.root_state().get_dec_id();
+            let req: cyfs.RootStateCreateOpEnvOutputRequest = {
+                common: {
+                    dec_id: stack.root_state().get_dec_id(),
+                    target_dec_id: target_dec_id,
+                    target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
+                    flags: 0,
+                },
+                op_env_type: cyfs.ObjectMapOpEnvType.Path,
+                access: {
+                    path: "/",
+                    access: cyfs.AccessPermissions.ReadOnly
+                }
+            };
+            let result =  await stack.root_state().create_op_env(req);
+            assert.ok(!result.err)
+            let op_env = result.unwrap();
+            const stub = new cyfs.PathOpEnvStub(op_env, ZoneSimulator.zone1_device1_stack.local_device_id().object_id, target_dec_id);
+            let key = RandomGenerator.string(10);
+            let obj_id1: cyfs.ObjectId
+            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+            obj_id1 = obj1.desc().object_id();
+
+            let pathA = `/qatest/${RandomGenerator.string(10)}`;
+            // path
+            let pathB = pathA + `/${RandomGenerator.string(10)}`;
+
+            let result1 = await stub.insert_with_key(pathB, key, obj_id1)
+            console.info(`####### process1 insert:${JSON.stringify(result1)}}`)
+            assert.ok(!result1.err)
+            // 模拟业务处理时间 3s
+            await cyfs.sleep(3 * 1000)
+            let result3 = await stub.commit();
+            console.info(`####### process1 commit:${JSON.stringify(result3)}`)
+            assert.ok(!result3.err)
+        })
+
+        describe("### create_op_env single_stub接口测试", async () => {
+            let target_dec_id = ZoneSimulator.zone1_device2_stack.root_state().get_dec_id();
+            let req: cyfs.RootStateCreateOpEnvOutputRequest = {
+                common: {
+                    dec_id: stack.root_state().get_dec_id(),
+                    target_dec_id: target_dec_id,
+                    target: ZoneSimulator.zone1_device1_stack.local_device_id().object_id,
+                    flags: 0,
+                },
+                op_env_type: cyfs.ObjectMapOpEnvType.Single,
+                access: {
+                    path: "/",
+                    access: cyfs.AccessPermissions.ReadOnly
+                }
+            };
+            let result =  await stack.root_state().create_op_env(req);
+            assert.ok(!result.err)
+            let op_env = result.unwrap();
+            const stub = new cyfs.SingleOpEnvStub(op_env, ZoneSimulator.zone1_device1_stack.local_device_id().object_id, target_dec_id);
+            let key = RandomGenerator.string(10);
+            let obj_id1: cyfs.ObjectId
+            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+            obj_id1 = obj1.desc().object_id();
+
+            let result1 = await stub.insert_with_key(key, obj_id1)
+            console.info(`####### process1 insert:${JSON.stringify(result1)}}`)
+            assert.ok(!result1.err)
+            // 模拟业务处理时间 3s
+            await cyfs.sleep(3 * 1000)
+            let result3 = await stub.commit();
+            console.info(`####### process1 commit:${JSON.stringify(result3)}`)
+            assert.ok(!result3.err)
+        })
     })
 })
