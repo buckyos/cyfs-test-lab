@@ -1,8 +1,0 @@
-cargo:rerun-if-env-changed=VERSION
-cargo:rerun-if-env-changed=CHANNEL
-cargo:rerun-if-env-changed=TARGET
-cargo:rustc-env=VERSION=0
-cargo:rustc-env=CHANNEL=nightly
-cargo:rustc-env=TARGET=x86_64-pc-windows-msvc
-cargo:rustc-env=BUILDDATE=22-08-30
-cargo:rerun-if-changed=protos
