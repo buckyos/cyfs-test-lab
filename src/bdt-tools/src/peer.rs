@@ -34,10 +34,10 @@ use cyfs_bdt::{
     BuildTunnelParams, 
     TempSeqGenerator, 
     StreamGuard,
-    DownloadTaskControl, 
-    TaskControlState, 
+    DownloadTask, 
+    DownloadTaskState, 
     StackOpenParams, 
-    ChunkDownloadConfig, 
+    SingleDownloadContext, 
     download::DirTaskPathControl,
     local_chunk_store::LocalChunkWriter,
     local_chunk_store::LocalChunkListWriter,
@@ -63,7 +63,7 @@ use walkdir::WalkDir;
 //
 #[derive(Clone)]
 struct Task {
-    task: Arc<Box<dyn DownloadTaskControl>>,
+    task: Arc<Box<dyn DownloadTask>>,
 }
 
 struct TaskMap {
@@ -82,10 +82,10 @@ impl TaskMap {
         self.tasks_map.contains_key(file_name)
     }
 
-    pub fn get_task_state(&self, file_name: &str) -> Option<TaskControlState> {
+    pub fn get_task_state(&self, file_name: &str) -> Option<DownloadTaskState> {
         let task = self.get_task(file_name);
         if task.is_some() {
-            Some(task.unwrap().task.control_state())
+            Some(task.unwrap().task.state())
         } else {
             None
         }
@@ -95,7 +95,7 @@ impl TaskMap {
         self.tasks_map.get(file_name).map(|v| v.clone())
     }
 
-    pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<Box<dyn DownloadTaskControl>>) -> BuckyResult<()> {
+    pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<Box<dyn DownloadTask>>) -> BuckyResult<()> {
         match self.tasks_map.entry(file_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
                 let info = Task { 
@@ -115,7 +115,7 @@ impl TaskMap {
         }
     }
 
-    pub fn remove_task(&mut self, file_name: &str) -> Option<Arc<Box<dyn DownloadTaskControl>>> {
+    pub fn remove_task(&mut self, file_name: &str) -> Option<Arc<Box<dyn DownloadTask>>> {
         self.tasks_map.remove(file_name).map(|v| v.task)
     }
 }
@@ -1379,7 +1379,7 @@ impl Peer {
 
                     let ret = cyfs_bdt::download::download_chunk_to_path(&stack, 
                         c.chunk_id.clone(), 
-                        ChunkDownloadConfig::force_stream(remote_id), 
+                        SingleDownloadContext::streams(None, vec![remote_id]), 
                         path.as_path()).await;
                     match ret {
                         Ok(_) => {
@@ -1437,7 +1437,7 @@ impl Peer {
                     let task = cyfs_bdt::download::download_chunk_list(&stack, 
                         c.task_name.clone(),
                         &c.chunk_list.clone(), 
-                        ChunkDownloadConfig::force_stream(remote_id), 
+                        SingleDownloadContext::streams(None, vec![remote_id]), 
                         writers).await.unwrap();
                     let mut tasks = peer.0.tasks.lock().unwrap();
                     let _ =  tasks.add_task(c.task_name.clone().as_str(), Arc::new(task)).unwrap();
@@ -1526,9 +1526,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(speed,progress) => "downloading",
-                                TaskControlState::Finished => "finished",
-                                TaskControlState::Paused => "paused",
+                                DownloadTaskState::Downloading(speed,progress) => "downloading",
+                                DownloadTaskState::Finished => "finished",
+                                DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_download_file_state: session {} {}", task_id, state_str);
@@ -1636,7 +1636,7 @@ impl Peer {
                         if let Some(file) = c.file.as_ref() {
                             let task = cyfs_bdt::download::download_file_to_path(&stack, 
                                 file.clone(), 
-                                ChunkDownloadConfig::force_stream(c.default_hub), 
+                                SingleDownloadContext::streams(None, vec![c.default_hub]), 
                                 c.path.as_path()).await.unwrap();
                                                         
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -1681,7 +1681,7 @@ impl Peer {
                 Ok(_) => {
                     GetTransSessionStateCommandResp {
                         seq, 
-                        state: Ok(TaskControlState::Downloading(0,0)),
+                        state: Ok(DownloadTaskState::Downloading(0,0.0)),
                     }
                 }
             };
@@ -1713,9 +1713,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(speed, progress) => "downloading",
-                                TaskControlState::Finished => "finished",
-                                TaskControlState::Paused => "paused",
+                                DownloadTaskState::Downloading(speed, progress) => "downloading",
+                                DownloadTaskState::Finished => "finished",
+                                DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_get_trans_session_state: session {} {}", task_id, state_str);
@@ -2295,7 +2295,7 @@ impl Peer {
                         if let Some(file) = c.file.as_ref() {
                             let task = cyfs_bdt::download::download_file_to_path(&stack, 
                                 file.clone(), 
-                                ChunkDownloadConfig::from(src), 
+                                SingleDownloadContext::streams(None, src), 
                                 c.path.as_path()).await.unwrap();
                                                         
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -2374,7 +2374,7 @@ impl Peer {
                             let task = cyfs_bdt::download::download_file_with_ranges(&stack, 
                                 file.clone(), 
                                 c.ranges.clone(),
-                                ChunkDownloadConfig::from(src), 
+                                SingleDownloadContext::streams(None, src),  
                                 vec![writer]).await.unwrap();
                                                         
                             //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -2427,9 +2427,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(speed, progress) => "downloading",
-                                TaskControlState::Finished => "finished",
-                                TaskControlState::Paused => "paused",
+                                DownloadTaskState::Downloading(speed, progress) => "downloading",
+                                DownloadTaskState::Finished => "finished",
+                                DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_download_file_state: session {} {}", task_id, state_str);
@@ -2638,7 +2638,7 @@ impl Peer {
                             let download_dir =  match cyfs_bdt::download::download_dir_to_path(
                                 &stack,
                                 dir.clone().desc().dir_id(),
-                                ChunkDownloadConfig::from(src),
+                                SingleDownloadContext::streams(None, src), 
                                 down_dir.as_path(),
                             ){
                                 Ok((task, dir_task_control)) => {
@@ -2714,17 +2714,17 @@ impl Peer {
                     match task  {
                         Some(state) => {
                             let state_str = match state {
-                                TaskControlState::Downloading(speed, progress) => {
-                                    if progress == 100 {
+                                DownloadTaskState::Downloading(speed, progress) => {
+                                    if progress == 100 as f32 {
                                         let _ = dir_task.task.finish();
                                     }
                                     "downloading"
                                 },
-                                TaskControlState::Finished => {
+                                DownloadTaskState::Finished => {
                                     "finished"
                                 },
 
-                                TaskControlState::Paused => "paused",
+                                DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_download_file_state: session {} {}", task_id, state_str);
