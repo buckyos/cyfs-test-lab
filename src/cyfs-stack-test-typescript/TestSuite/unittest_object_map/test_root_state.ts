@@ -76,31 +76,34 @@ describe("#op-env 初始化方式", function () {
             })
         })
         describe("### create_single_op_env 接口测试", async () => {
-            // it("全部参数正常流程-single-target为空", async () => {
-            //     let result = await stack.root_state_stub().create_single_op_env();
-            //     console.info(JSON.stringify(result))
-            //     assert.ok(!result.err)
-            // })
-            // it("全部参数正常流程-single-target指定本地", async () => {
-            //     let result = await stack.root_state_stub(ZoneSimulator.zone1_device1_stack.local_device_id().object_id).create_single_op_env();
-            //     console.info(JSON.stringify(result))
-            //     assert.ok(!result.err)
-            // })
-            // it("全部参数正常流程-single-target指定其他device", async () => {
-            //     let result = await stack.root_state_stub(ZoneSimulator.zone1_device2_stack.local_device_id().object_id).create_single_op_env();
-            //     console.info(JSON.stringify(result))
-            //     assert.ok(!result.err)
-            // })
-            // it("全部参数正常流程-single-target指定主OOD", async () => {
-            //     let result = await stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_single_op_env();
-            //     console.info(JSON.stringify(result))
-            //     assert.ok(!result.err)
-            // })
-            // it("全部参数正常流程-single-target指定从OOD", async () => {
-            //     let result = await stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_single_op_env();
-            //     console.info(JSON.stringify(result))
-            //     assert.ok(!result.err)
-            // })
+            let target_dec_id = ZoneSimulator.zone1_device2_stack.root_state().get_dec_id();
+
+            const stub = new cyfs.GlobalStateStub(stack.root_state(), ZoneSimulator.zone1_device1_stack.local_device_id().object_id, target_dec_id);
+            let access: cyfs.RootStateOpEnvAccess = {
+                path: "/",
+                access: cyfs.AccessPermissions.ReadOnly
+            }
+            let result = await stub.create_single_op_env_with_access(access);
+            assert.ok(!result.err)
+            let op_env = result.unwrap();
+            let key = RandomGenerator.string(10);
+            let obj_id1: cyfs.ObjectId
+            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+            obj_id1 = obj1.desc().object_id();
+
+            let pathA = `/qatest/${RandomGenerator.string(10)}`;
+            // path
+            let pathB = pathA + `/${RandomGenerator.string(10)}`;
+
+            let result1 = await op_env.insert_with_key('/qatest/WxmGQ6hRWN/rQ1ad7fYeA', obj_id1)
+            console.info(`####### process1 insert:${JSON.stringify(result1)}}`)
+            assert.ok(!result1.err)
+            // 模拟业务处理时间 3s
+            await cyfs.sleep(3 * 1000)
+            // 提交object_map 操作事务
+            let result3 = await op_env.commit();
+            console.info(`####### process1 commit:${JSON.stringify(result3)}`)
+            assert.ok(!result3.err)
         })
 
     })
