@@ -246,16 +246,29 @@ impl Peer {
                         local: None,
                         ep_info: BTreeSet::new(),
                         ep_resp:Vec::new(),
+                        online_time : 0,
                     }
                 },
                 Ok(_) => {
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let mut local = peer.get_stack().local();
                     log::info!("on create succ, local: {}", local.desc().device_id());
                     // 如果配置SN 等待sn上线
+                    let mut result = 0 ;
                     if sn.len()>0{
                         log::info!("peer sn list len={},wait for sn online",sn.len());
-                        let _ = peer.get_stack().net_manager().listener().wait_online().await;
+                        let result = match future::timeout(Duration::from_secs(30), peer.get_stack().net_manager().listener().wait_online()).await {
+                            Err(_) => {
+                                log::error!("sn online timeout");
+                                1000
+                            },
+                            Ok(_) => {
+                                log::info!("sn online success");
+                                0
+                            }
+                        };
                     }
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                     // 获取所有ep列表数据
                     let ep_list =  peer.get_stack().net_manager().listener().endpoints();
                     for ep in ep_list.clone(){
@@ -304,10 +317,11 @@ impl Peer {
                     let ep_resp =  local.mut_connect_info().mut_endpoints().clone();
                     CreateLpcCommandResp {
                         seq, 
-                        result: 0 as u16,
+                        result: result as u16,
                         local: Some(local),
                         ep_info : ep_list,
                         ep_resp,
+                        online_time : online_time as u32,
                     }
                     
                 }
@@ -976,135 +990,135 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
-    // pub fn on_send_datagram(&self, c: LpcCommand, lpc: Lpc) {
-    //     log::info!("on send datagram, c={:?}", &c);
-    //     let seq = c.seq();
-    //     let peer = self.clone();
-    //     async_std::task::spawn(async move {
-    //         let resp = match SendDatagramLpcCommandReq::try_from(c) {
-    //             Err(e) => {
-    //                 log::error!("convert command to SendDatagramLpcCommandReq failed, e={}", &e);
-    //                 SendDatagramLpcCommandResp {
-    //                     seq, 
-    //                     result: e.code().as_u16(),
-    //                     time: 0,
-    //                     hash: HashValue::default(),
-    //                     create_time : None,
-    //                     send_time : None,
-    //                 }
-    //             },
-    //             Ok(c) => {
-    //                 let stack = peer.get_stack();
-    //                 let mut options = cyfs_bdt::DatagramOptions::default();
-    //                 // 要强转数据类型
-    //                 let _ = match c.sequence.clone() {
-    //                     Some(v) => {
-    //                         options.sequence = Some(cyfs_bdt::TempSeq::from(v as u32));
-    //                     },
-    //                     None => {
+    pub fn on_send_datagram(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on send datagram, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let resp = match SendDatagramLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to SendDatagramLpcCommandReq failed, e={}", &e);
+                    SendDatagramLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        time: 0,
+                        hash: HashValue::default(),
+                        create_time : None,
+                        send_time : None,
+                    }
+                },
+                Ok(c) => {
+                    let stack = peer.get_stack();
+                    let mut options = cyfs_bdt::DatagramOptions::default();
+                    // 要强转数据类型
+                    let _ = match c.sequence.clone() {
+                        Some(v) => {
+                            options.sequence = Some(cyfs_bdt::TempSeq::from(v as u32));
+                        },
+                        None => {
 
-    //                     }
-    //                 };
-    //                 options.create_time = c.create_time.clone();
-    //                 options.send_time = c.send_time.clone();
-    //                 options.author_id = c.author_id;
-    //                 options.plaintext = c.plaintext;
-    //                 let hash = hash_data(&c.content);
-    //                 let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-    //                 let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
-    //                 let create_time = c.create_time;
-    //                 let send_time = c.send_time;
-    //                 let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
-    //                     Ok(c) =>{
-    //                         log::info!("Send Datagram succcess ");
-    //                         SendDatagramLpcCommandResp {
-    //                             seq, 
-    //                             result: 0,
-    //                             time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
-    //                             hash:hash,
-    //                             create_time,
-    //                             send_time,
-    //                         }
-    //                     },
-    //                     Err(e) =>{
-    //                         log::error!("Send Datagram error, e={}", &e);
-    //                         SendDatagramLpcCommandResp {
-    //                             seq, 
-    //                             result: 1,
-    //                             time: 0,
-    //                             hash: HashValue::default(),
-    //                             create_time : None,
-    //                             send_time : None,
-    //                         }
-    //                     }
-    //                 };
-    //                 resp
+                        }
+                    };
+                    options.create_time = c.create_time.clone();
+                    options.send_time = c.send_time.clone();
+                    options.author_id = c.author_id;
+                    options.plaintext = c.plaintext;
+                    let hash = hash_data(&c.content);
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
+                    let create_time = c.create_time;
+                    let send_time = c.send_time;
+                    let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
+                        Ok(c) =>{
+                            log::info!("Send Datagram succcess ");
+                            SendDatagramLpcCommandResp {
+                                seq, 
+                                result: 0,
+                                time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                hash:hash,
+                                create_time,
+                                send_time,
+                            }
+                        },
+                        Err(e) =>{
+                            log::error!("Send Datagram error, e={}", &e);
+                            SendDatagramLpcCommandResp {
+                                seq, 
+                                result: 1,
+                                time: 0,
+                                hash: HashValue::default(),
+                                create_time : None,
+                                send_time : None,
+                            }
+                        }
+                    };
+                    resp
                     
-    //             }
-    //         };
+                }
+            };
 
-    //         let mut lpc = lpc;
-    //         let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
-    //     });
-    // }
-    // pub fn on_recv_datagram(&self, c: LpcCommand, lpc: Lpc) {
-    //     log::info!("on send datagram, c={:?}", &c);
-    //     let seq = c.seq();
-    //     {
-    //         let peer = self.clone();
-    //         let mut lpc = lpc.clone();
-    //         let resp = match RecvDatagramMonitorLpcCommandReq::try_from(c) {
-    //             Err(e) => {
-    //                 log::error!("convert command to RecvDatagramMonitorLpcCommandReq failed, e={}", &e);
-    //                 RecvDatagramMonitorLpcCommandResp {
-    //                     seq, 
-    //                     result: e.code().as_u16(),
-    //                 }
-    //             },
-    //             Ok(c) => {
-    //                 let stack = peer.get_stack();
-    //                 task::spawn(async move {
-    //                     let mut lpc1 = lpc.clone();
-    //                     let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
-    //                     loop {
-    //                         let datagrams  = datagram.recv_v().await.unwrap();
-    //                         for datagramData in datagrams {
-    //                             let sequence = datagramData.options.sequence.unwrap().value() as u64;
-    //                             let remote_id = Some(datagramData.source.remote);
-    //                             let content = datagramData.data;
-    //                             let hash = hash_data(&content);
-    //                             let notify = RecvDatagramLpcCommandResp {
-    //                                 seq, 
-    //                                 result: 0 as u16,
-    //                                 content,
-    //                                 remote_id,
-    //                                 sequence,
-    //                                 hash,
-    //                             };
-    //                             let _ = lpc1.send_command(LpcCommand::try_from(notify).unwrap()).await;
-    //                         }
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+    pub fn on_recv_datagram(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on send datagram, c={:?}", &c);
+        let seq = c.seq();
+        {
+            let peer = self.clone();
+            let mut lpc = lpc.clone();
+            let resp = match RecvDatagramMonitorLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to RecvDatagramMonitorLpcCommandReq failed, e={}", &e);
+                    RecvDatagramMonitorLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                    }
+                },
+                Ok(c) => {
+                    let stack = peer.get_stack();
+                    task::spawn(async move {
+                        let mut lpc1 = lpc.clone();
+                        let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
+                        loop {
+                            let datagrams  = datagram.recv_v().await.unwrap();
+                            for datagramData in datagrams {
+                                let sequence = datagramData.options.sequence.unwrap().value() as u64;
+                                let remote_id = Some(datagramData.source.remote);
+                                let content = datagramData.data;
+                                let hash = hash_data(&content);
+                                let notify = RecvDatagramLpcCommandResp {
+                                    seq, 
+                                    result: 0 as u16,
+                                    content,
+                                    remote_id,
+                                    sequence,
+                                    hash,
+                                };
+                                let _ = lpc1.send_command(LpcCommand::try_from(notify).unwrap()).await;
+                            }
                             
-    //                     }
-    //                 });
-    //                 RecvDatagramMonitorLpcCommandResp{
-    //                     seq, 
-    //                     result: 0,
-    //                 }
+                        }
+                    });
+                    RecvDatagramMonitorLpcCommandResp{
+                        seq, 
+                        result: 0,
+                    }
                     
-    //             }
-    //         };
+                }
+            };
 
-    //     }
-    //     let resp  = RecvDatagramMonitorLpcCommandResp{
-    //         seq, 
-    //         result: 0,
-    //     };
-    //     task::spawn(async move {
-    //         let mut lpc = lpc.clone();
-    //         let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
-    //     }); 
+        }
+        let resp  = RecvDatagramMonitorLpcCommandResp{
+            seq, 
+            result: 0,
+        };
+        task::spawn(async move {
+            let mut lpc = lpc.clone();
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        }); 
          
-    // }
+    }
 
 
     pub fn on_calculate_chunk(&self, c: LpcCommand, lpc: Lpc) {
@@ -2028,29 +2042,29 @@ impl Peer {
         params.passive_pn = Some(passive_pn);
         params.config.interface.udp.sn_only = c.sn_only;
         params.tcp_port_mapping = c.tcp_port_mapping;
-        // let _ = match &c.ndn_event{
-        //     Some(s) =>{
-        //         let _ = match &c.ndn_event_target{
-        //             Some(d) =>{
-        //                 if s.clone() == "Redirect" {
-        //                     log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
-        //                     //params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
-        //                 }else if s.clone() == "Forward"{
-        //                     log::info!("set ndn_event handler = Forward,target = {}",d.clone());
-        //                     params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));
-        //                 }
-        //             },
-        //             None => {
-        //                 params.ndn_event = None;
-        //             }
+        let _ = match &c.ndn_event{
+            Some(s) =>{
+                let _ = match &c.ndn_event_target{
+                    Some(d) =>{
+                        if s.clone() == "Redirect" {
+                            log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
+                            //params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::RedirectHandle::new(d.clone())));
+                        }else if s.clone() == "Forward"{
+                            log::info!("set ndn_event handler = Forward,target = {}",d.clone());
+                            params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));
+                        }
+                    },
+                    None => {
+                        params.ndn_event = None;
+                    }
             
-        //         };
+                };
                 
-        //     },  
-        //     None => {
-        //         params.ndn_event = None;
-        //     }
-        // };
+            },  
+            None => {
+                params.ndn_event = None;
+            }
+        };
 
         let stack = Stack::open(
             local, 

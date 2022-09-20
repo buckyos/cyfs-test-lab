@@ -305,6 +305,7 @@ pub struct CreateLpcCommandResp {
     pub local: Option<Device>,
     pub ep_info : BTreeSet<cyfs_base::Endpoint>,
     pub ep_resp : Vec<cyfs_base::Endpoint>,
+    pub online_time : u32,
 }
 
 impl TryFrom<CreateLpcCommandResp> for LpcCommand {
@@ -334,6 +335,7 @@ impl TryFrom<CreateLpcCommandResp> for LpcCommand {
             "id": id.as_str(),
             "ep_info" : ep_info,
             "ep_resp" : ep_resp,
+            "online_time" : value.online_time,
         });
 
         log::debug!(
