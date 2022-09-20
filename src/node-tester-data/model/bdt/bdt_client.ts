@@ -6,6 +6,7 @@ export interface BDTClientModel{
   peerid?: string 
   peerInfo?: string 
   sn_resp_eps?: string
+  online_time?:number
 }
 
 
@@ -23,6 +24,7 @@ export class BDTClient{
             peerid : action.peerid ,
             peerInfo : action.peerInfo , 
             sn_resp_eps : action.sn_resp_eps ,
+            online_time : action.online_time,
           }})
           return {err:0,log:` ${action.name} add record success`}
         } catch (error) {
