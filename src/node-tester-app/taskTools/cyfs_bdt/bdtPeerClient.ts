@@ -20,6 +20,7 @@ export class BdtPeerClient extends EventEmitter{
     private m_acceptCookie?: number;
     public cache_peer_info: Peer;
     public sn_resp_eps? : string;
+    public sn_online_time?:number;
     public tags:string;
     public util_client? :UtilClient;
     public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁  
@@ -97,6 +98,7 @@ export class BdtPeerClient extends EventEmitter{
             }
             this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
             this.device_object = start_stack.bytes;
+            this.sn_online_time = start_stack.value.online_time;
             this.sn_resp_eps = start_stack.value.ep_resp;
             this.peerid = start_stack.value.id
             this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
@@ -120,9 +122,21 @@ export class BdtPeerClient extends EventEmitter{
             peerid : this.peerid,
             peerInfo : JSON.stringify(this.cache_peer_info),
             sn_resp_eps : JSON.stringify(this.sn_resp_eps) ,
+            online_time : this.sn_online_time,
         },ContentType.json)
         this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
         return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
+    getReportData(testcaseId:string){
+        return{
+            name : this.tags,
+            testcaseId : testcaseId,
+            peerName : this.peerName,
+            peerid : this.peerid,
+            peerInfo : JSON.stringify(this.cache_peer_info),
+            sn_resp_eps : JSON.stringify(this.sn_resp_eps) ,
+            online_time : this.sn_online_time,
+        }
     }
     async restart(ndn_event?:string,ndn_event_target?:string):Promise<{err:number,log?:string}> {
         this.cache_peer_info.ndn_event = ndn_event;

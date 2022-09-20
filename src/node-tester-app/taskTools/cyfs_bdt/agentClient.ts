@@ -129,9 +129,14 @@ export class AgentClient {
             this.logger.info(`api/bdt/agent/add resp:  ${JSON.stringify(run_action)}`)
         }
         if(report_bdtClient){
-            for(let client of  this.bdtPeerMap.values()){
-                await client.reportAgent(testcaseId);
+            let list = [];
+            for(let client of this.bdtPeerMap.values()){
+                list.push(client.getReportData(testcaseId));
             }
+            let run_action =await request("POST","api/bdt/client/addList",{
+                list
+            },ContentType.json)
+            this.logger.info(`api/bdt/client/addList resp:  ${JSON.stringify(run_action)}`)
         }
         return {err:BDTERROR.success,log:`reportAgent to server success`}
     }
