@@ -109,6 +109,16 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
+    async removeNdcData():Promise<{err:ErrorCode,log:string}>{
+        let taskList = []
+        for(let agent of this.agentMap.values()){
+            taskList.push(agent.removeNdcData());
+        }
+        for(let i in taskList){
+            await taskList[i]
+        }
+        return {err:BDTERROR.success,log:`removeNdcData success `}
+    }
     async reportAgent(testcaseId: string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){

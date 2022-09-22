@@ -19,8 +19,9 @@ export const BDTERROR = {
     NotFound :104,
     ConnCloesd : 105,
     ExpectionResult : 500, //错误结果
-    perfTestError : 1000, //性能测试出现bug，退出
+    perfTestError : 501, //性能测试出现bug，退出
     // BDT 操作报错
+    BDTTimeout: 1000, //执行用例超时报错
     AddDeviceError : 1001,
     BDTClientTimeout : 1002,
     CalculateChunkError : 1003,
@@ -176,6 +177,7 @@ export type Task ={
    Users? : Array<string>, 
    action:Array<ActionAbstract>, // 操作集合
    result?:{err:number,log:string}; //实际结果 
+   resultLog? : string,
    state?:string; 
    date  ? : string , //执行日期
    environment? : string; //环境

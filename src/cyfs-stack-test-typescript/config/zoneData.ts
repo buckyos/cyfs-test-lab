@@ -26,7 +26,7 @@ device2:5aSixgRxra4hgcmSt1vVqq34XrxBPy2zw7fG5GFV8dHf
 
 **/ 
 // simulator 模拟器存放位置E:\git_test\cyfs_stack2\src\cyfs_stack_ts\cyfs_node
-export const simulatorPath = `E:\\git_test\\cyfs_stack2\\src\\cyfs_stack_ts\\cyfs_node\\zone-simulator.exe`
+export const simulatorPath = `E:\\cyfs-test-lab\\src\\cyfs-stack-test-typescript\\cyfs_node\\zone-simulator.exe`
 
 // 模拟器配置目录自动生成（不需要修改）
 export const DATA_PATH = "C:\\cyfs\\\data\\zone-simulator";

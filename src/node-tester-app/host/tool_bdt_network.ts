@@ -187,14 +187,12 @@ async function main() {
     const serviceid = "4";
     
     const taskList = [
-        "Stream_AllEP_TunnelSelect",
-        "Stream_FristQA",
-        "Stream_TCP_IPV4",
-        "Stream_UDP_IPV4",
-        "NDN_Chunk",
-        "NDN_ChunkList",
-        "NDN_File",
-        "NDN_FileRange",
+        "Connect_TCPTunnel_NetworkSimulate",
+        "Connect_UDPTunnel_NetworkSimulate",
+        "NDN_TCPChannel_NetworkSimulate",
+        "NDN_UDPChannel_NetworkSimulate",
+        "Stream_TCPTunnel_NetworkSimulate",
+        "Stream_UDPTunnel_NetworkSimulate",
     ];
     runner.process.on(`exit`,async()=>{
         console.info(`runner exit`)
@@ -204,8 +202,7 @@ async function main() {
         console.info(`runner error ${error}`)
         process.exit(0);
     })
-    let run_time = 1;
-    while(run_time--){
+    while(true){
         console.info(`Restart all task`)
         for(let i in taskList){
             console.info(`${taskList[i]} is running`)
@@ -221,7 +218,7 @@ async function main() {
         }
         await sleep(5000);
         console.info(`all task run finished`)
-
+        break;
     }
 }
 

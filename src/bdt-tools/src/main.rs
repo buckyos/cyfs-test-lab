@@ -137,7 +137,8 @@ async fn main()->Result<(), BuckyError> {
             peer.on_send_datagram(c, lpc.clone());
         }else if name == String::from("recv-datagram") {
             peer.on_recv_datagram(c, lpc.clone());
-        } else if name == String::from("exit") {
+        }
+         else if name == String::from("exit") {
             break;
         }else {
             log::warn!("unknown command, name={}", &name);
