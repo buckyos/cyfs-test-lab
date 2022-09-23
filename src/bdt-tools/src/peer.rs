@@ -257,13 +257,13 @@ impl Peer {
                     let mut result = 0 ;
                     if sn.len()>0{
                         log::info!("peer sn list len={},wait for sn online",sn.len());
-                        let result = match future::timeout(Duration::from_secs(30), peer.get_stack().net_manager().listener().wait_online()).await {
-                            Err(_) => {
-                                log::error!("sn online timeout");
+                        result = match future::timeout(Duration::from_secs(20), peer.get_stack().net_manager().listener().wait_online()).await {
+                            Err(err) => {
+                                log::error!("sn online timeout {}.err= {}", local.desc().device_id(),err);
                                 1000
                             },
                             Ok(_) => {
-                                log::info!("sn online success");
+                                log::info!("sn online success {}", local.desc().device_id());
                                 0
                             }
                         };
@@ -380,10 +380,12 @@ impl Peer {
                     };
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let mut answer = [0;128];
-                    if(c.accept_answer){
-                        match stack.stream_manager().connect(0, c.question, param).await {
-                            Ok(mut stream) => {
-                                let len = match stream.read(&mut answer).await{
+                    match stack.stream_manager().connect(0, c.question, param).await {
+                        Ok(mut stream) => {
+                            let mut len = 0;
+                            // 接收answer
+                            if(c.accept_answer){
+                                len = match stream.read(&mut answer).await{
                                     Ok(len) => {
                                         log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
                                         len
@@ -394,51 +396,57 @@ impl Peer {
                                         len
                                     }
                                 };
-                                let conn = peer.add_stream(stream);
-                                
-                                ConnectLpcCommandResp {
-                                    seq, 
-                                    result: 0 as u16,
-                                    stream_name: conn.get_name().clone(),
-                                    answer: answer[..len].to_vec(),
-                                    time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
-                                }
-                            },
-                            Err(e) => {
-                                log::error!("connect failed, e={}", &e);
-                                ConnectLpcCommandResp {
-                                    seq, 
-                                    result: e.code().as_u16(),
-                                    stream_name: String::new(),
-                                    answer : Vec::new(),
-                                    time: 0,
-                                }
                             }
-                        }
-                    }else {
-                        match stack.stream_manager().connect(0, c.question, param).await {
-                            Ok(mut stream) => {
-                                let conn = peer.add_stream(stream);
-                                ConnectLpcCommandResp {
-                                    seq, 
-                                    result: 0 as u16,
-                                    stream_name: conn.get_name().clone(),
-                                    answer: Vec::new(),
-                                    time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
-                                }
-                            },
-                            Err(e) => {
-                                log::error!("connect failed, e={}", &e);
-                                ConnectLpcCommandResp {
-                                    seq, 
-                                    result: e.code().as_u16(),
-                                    stream_name: String::new(),
-                                    answer : Vec::new(),
-                                    time: 0,
-                                }
+                            // 删除cache
+                            // let mut cache = stack.device_cache ;
+                            
+                            let conn = peer.add_stream(stream);
+                            
+                            ConnectLpcCommandResp {
+                                seq, 
+                                result: 0 as u16,
+                                stream_name: conn.get_name().clone(),
+                                answer: answer[..len].to_vec(),
+                                time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                            }
+                        },
+                        Err(e) => {
+                            log::error!("connect failed, e={}", &e);
+                            ConnectLpcCommandResp {
+                                seq, 
+                                result: e.code().as_u16(),
+                                stream_name: String::new(),
+                                answer : Vec::new(),
+                                time: 0,
                             }
                         }
                     }
+                    // if(c.accept_answer){
+                        
+                    // }else {
+                    //     match stack.stream_manager().connect(0, c.question, param).await {
+                    //         Ok(mut stream) => {
+                    //             let conn = peer.add_stream(stream);
+                    //             ConnectLpcCommandResp {
+                    //                 seq, 
+                    //                 result: 0 as u16,
+                    //                 stream_name: conn.get_name().clone(),
+                    //                 answer: Vec::new(),
+                    //                 time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                    //             }
+                    //         },
+                    //         Err(e) => {
+                    //             log::error!("connect failed, e={}", &e);
+                    //             ConnectLpcCommandResp {
+                    //                 seq, 
+                    //                 result: e.code().as_u16(),
+                    //                 stream_name: String::new(),
+                    //                 answer : Vec::new(),
+                    //                 time: 0,
+                    //             }
+                    //         }
+                    //     }
+                    // }
                     
                 }
             };
@@ -447,7 +455,101 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
+    pub fn on_connect_list(&self, c: LpcCommand, lpc: Lpc) {
 
+        log::info!("on connect, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        task::spawn(async move {
+            let stack = peer.get_stack();
+            let resp = match ConnectListLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
+                    ConnectListLpcCommandResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        records: vec![],
+                    }
+                },
+                Ok(c) => {
+                    let mut record : Vec<ConnectRecord> = vec![];
+                    for remote_desc in c.remote_desc_list {
+                        let mut wan_addr = false;
+                        for addr in remote_desc.connect_info().endpoints().iter() {
+                            if addr.is_static_wan() {
+                                wan_addr = true;
+                            }
+                        }
+                        if(c.known_eps){
+                            wan_addr = true;
+                        }
+                        let remote_sn = match remote_desc.body().as_ref() {
+                            None => {
+                                Vec::new()
+                            },
+                            Some(b) => {
+                                b.content().sn_list().clone()
+                            },
+                        };
+                        let param = BuildTunnelParams {
+                            remote_const: remote_desc.desc().clone(),
+                            remote_sn,
+                            remote_desc: if wan_addr {
+                                Some(remote_desc.clone())
+                            } else {
+                                None
+                            }
+                        };
+                        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                        let mut answer = [0;128];
+                        match stack.stream_manager().connect(0, c.question.clone(), param).await {
+                        Ok(mut stream) => {
+                            let mut len = 0;
+                            // 接收answer
+                            if(c.accept_answer){
+                                len = match stream.read(&mut answer).await{
+                                    Ok(len) => {
+                                        log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
+                                        len
+                                    },
+                                    Err(e) => {
+                                        log::error!("Read answer faild");
+                                        let len : usize = 0;
+                                        len
+                                    }
+                                };
+                            }
+                            let conn = peer.add_stream(stream);
+                            let time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32;
+                            let answer_info =  String::from_utf8(answer[..len].to_vec()).unwrap();
+                            let stream_name = conn.get_name().clone().as_str().to_string();
+                            let info : ConnectRecord = ConnectRecord {
+                                device_id : remote_desc.clone().desc().calculate_id().to_string(),
+                                stream_name,
+                                answer:answer_info,
+                                time,
+                            };
+                            record.push(info);
+                        },
+                        Err(e) => {
+                            log::error!("connect failed, e={}", &e);  
+                        }
+                    }
+                    
+                    
+                    } 
+                    ConnectListLpcCommandResp {
+                        seq, 
+                        result: 0 as u16,
+                        records: record,
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
     pub fn on_auto_accept(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on auto accept, c={:?}", &c);
         let seq = c.seq();
@@ -1860,7 +1962,8 @@ impl Peer {
         let (local, key) = match &c.local {
             Some(v) => {
         
-                let public_key_path = format!("{}.desc", v.as_str());                
+                let public_key_path = format!("{}.desc", v.as_str()); 
+                let private_key_path = format!("{}.key", v.as_str());               
                 let (device, key) = match std::path::Path::new(&public_key_path).exists(){
                     true =>{
                         let mut file = std::fs::File::open(public_key_path.clone()).map_err(|e| {
@@ -1870,9 +1973,6 @@ impl Peer {
                         let mut buf = Vec::<u8>::new();
                         let _ = file.read_to_end(&mut buf)?;
                         let (device, _) = Device::raw_decode(buf.as_slice())?;
-        
-                        let private_key_path = format!("{}.key", v.as_str());
-
                         let path = format!("{:?}", &private_key_path);
                         let mut file = std::fs::File::open(private_key_path).map_err(|e| {
                             log::error!("open key file failed on create, path={:?}, e={}", path.as_str(), &e);
@@ -1923,23 +2023,23 @@ impl Peer {
                         let id = device.desc().device_id();
                         let mut buffer = [0u8; 4096];
                         // let exe_folder = std::path::Path::new(&self.0.temp_dir);
-                        let s = format!("{}.desc", id);
-                        let file_path = self.temp_dir().join(s.as_str());
-                        let path = format!("{:?}", &file_path);
+                        // let s = format!("{}.desc", id);
+                        // let file_path = self.temp_dir().join(s.as_str());
+                        // let path = format!("{:?}", &file_path);
                         let other = device.raw_encode(buffer.as_mut(), &None)?;
-                        let mut file = std::fs::File::create(file_path).map_err(|e| {
-                            log::error!("create new desc file failed on create, path={:?}, e={}", path.as_str(), &e);
+                        let mut file = std::fs::File::create(public_key_path.clone()).map_err(|e| {
+                            log::error!("create new desc file failed on create, path={:?}, e={}", public_key_path.as_str(), &e);
                             e
                         })?;
                         let len = 4096-other.len();
                         file.write_all(&buffer[0..len])?;
 
-                        let s = format!("{}.key", id);
-                        let file_path = self.temp_dir().join(s.as_str());
-                        let path = format!("{:?}", &file_path);
+                        // let s = format!("{}.key", id);
+                        // let file_path = self.temp_dir().join(s.as_str());
+                        // let path = format!("{:?}", &file_path);
                         let other = private_key.raw_encode(buffer.as_mut(), &None)?;
-                        let mut file = std::fs::File::create(file_path).map_err(|e| {
-                            log::error!("create private key file failed on create, path={:?}, e={}", path.as_str(), &e);
+                        let mut file = std::fs::File::create(private_key_path.clone()).map_err(|e| {
+                            log::error!("create private key file failed on create, path={:?}, e={}", private_key_path.as_str(), &e);
                             e
                         })?;
                         let len = 4096-other.len();
