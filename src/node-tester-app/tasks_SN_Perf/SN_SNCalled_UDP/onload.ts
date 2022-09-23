@@ -11,11 +11,11 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "SN_Online_DeviceNum"
+    let testcaseName = "SN_SNCalled_UDP"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `# 测试SN 在线Device 数量`,
+        remark: `SN 打洞流程性能测试`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -27,39 +27,43 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }
             },
             logType:"info",
-            SN : LabSnList,
-            //SN :['sn-miner_xiao.desc',],
-            resp_ep_type:Resp_ep_type.SN_Resp, 
+            SN :LabSnList,
+            resp_ep_type:Resp_ep_type.Empty, 
     }
     // 每台机器运行一个bdt 客户端
-    let agent_num = 1 ;
-    let stack_num = 20;
+    let agent_num = 2;
     await agentManager.allAgentStartBdtPeer(config,agent_num)
+    
+    //(4) 测试用例执行器添加测试任务
 
-    let mult =5;
-    while(mult--){
-        for(let i = 0;i< labAgent.length;i++){
+    for(let [i,j] of randShuffle(labAgent.length*agent_num)){
+        let LN_index = i % labAgent.length;  
+        let RN_index = j % labAgent.length; 
+        let LN_client = (i - LN_index ) /labAgent.length + 1;  
+        let RN_client = (j - RN_index) /labAgent.length + 1; 
+        if(i != j && i>j &&labAgent[LN_index].NAT + labAgent[RN_index].NAT < 5 ){
+            
             let info = await testRunner.createPrevTask({
-                LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[i].tags[0]}$1`,
-                timeout : 20*30*1000,
+                LN : `${labAgent[LN_index].tags[0]}$${LN_client}`,
+                RN : `${labAgent[RN_index].tags[0]}$${RN_client}`,
+                timeout : 5*30*1000,
                 action : []
             })
             // 1.1 LN 连接 RN
-            for(let x=0;x<stack_num;x++){
-                info = await testRunner.prevTaskAddAction(new BDTAction.CreateBDTStackAction({
-                    type : ActionType.start,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    config:{
-                        timeout : 40*1000,
-                    },
-                    expect : {err:0},    
-                }))
-            }
+            let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectPerfAction({
+                type : ActionType.connect,
+                LN : `${labAgent[LN_index].tags[0]}$${LN_client}`,
+                RN : `${labAgent[RN_index].tags[0]}$${RN_client}`,
+                config:{
+                    conn_tag: connect_1,
+                    timeout : 30*1000,
+                },
+                expect : {err:0},    
+            })) 
             await testRunner.prevTaskRun();
         }
     }
-    
     await testRunner.waitFinished(20)
     
     

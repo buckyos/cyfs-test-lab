@@ -109,8 +109,8 @@ export class AgentClient {
         return {err:BDTERROR.success,log:`${this.tags} ${index} get success`,bdtClient}
     }
     
-    async reportAgent(testcaseId:string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
-        if(!this.is_run){
+    async reportAgent(testcaseId:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
+        if(!this.is_run && check_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
         if(report_agent){

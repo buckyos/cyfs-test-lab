@@ -91,9 +91,18 @@ export class AgentManager {
     async allAgentStartBdtPeer(config:BdtPeerClientConfig,num:number=1){
         let taskList = []
         for(let agent of this.agentMap.values()){
-            for(let j=0;j<num;j++){
-                taskList.push(agent.startPeerClient(config))
-            }
+            taskList.push(new Promise(async(V)=>{
+                let taskAgent = []
+                for(let j=0;j<num;j++){
+                    taskAgent.push(agent.startPeerClient(config))
+                    await sleep(100);
+                }
+                for(let i in taskAgent){
+                    await taskAgent[i]
+                }
+                V("run finished")
+            }))
+            
         } 
         for(let i in taskList){
             await taskList[i]
@@ -119,10 +128,10 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,log:`removeNdcData success `}
     }
-    async reportAgent(testcaseId: string,report_agent:boolean,report_bdtClient:boolean) :Promise<{err:ErrorCode,log:string}>{
+    async reportAgent(testcaseId: string,report_agent:boolean,report_bdtClient:boolean,check_run?:boolean) :Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.reportAgent(testcaseId,report_agent,report_bdtClient));
+            taskList.push(agent.reportAgent(testcaseId,report_agent,report_bdtClient,check_run));
         }
         for(let i in taskList){
             await taskList[i]

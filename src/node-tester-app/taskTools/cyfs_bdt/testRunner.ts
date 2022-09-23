@@ -242,7 +242,7 @@ export class TestRunner{
     async saveRecord() {
         await this.saveTestcase();
         await this.saveTask();
-        await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer);
+        await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
         await this.saveJson();
         await this.saveMysql();
         return;
@@ -270,9 +270,7 @@ export class TestRunner{
         this.m_interface.exit(err,log);
     }
 
-    async waitFinished(){
-        //1.检查次数
-        let check = 5;
+    async waitFinished(check:number = 5){
         while(true){
             if(this.activeTaskNum == 0){
                 check--

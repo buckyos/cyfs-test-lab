@@ -77,6 +77,37 @@ export class UtilClient {
         this.cachePath = result.value.cache_path;
         return {err:ErrorCode.succ,cache_path:result.value.cache_path}
     }
+    async loadAgentCache(agentName:string,init?:string):Promise<{err:ErrorCode,LocalDeviceCache?:string,RemoteDeviceCache?:string,local_list?: Array<string>,remote_list?:Array<string>}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "loadAgentCache",
+            peerName: this.peerName,
+            agentName,
+            init
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} loadAgentCache = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        let LocalDeviceCache = result.value.LocalDeviceCache
+        let RemoteDeviceCache = result.value.RemoteDeviceCache
+        let local_list = result.value.local_list
+        let remote_list = result.value.remote_list
+        return {err:ErrorCode.succ,LocalDeviceCache,RemoteDeviceCache,local_list,remote_list}
+    }
+    async removeAgentCache(agentName:string):Promise<{err:ErrorCode,cachePath?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "removeAgentCache",
+            peerName: this.peerName,
+            agentName
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} removeAgentCache = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        let cachePath = result.value.cachePath
+
+        return {err:ErrorCode.succ,cachePath}
+    }
     async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "removeNdcData",

@@ -1,1 +1,1 @@
-export const testcase_version = "CYFS_Beta_sn_perf_01"
+export const testcase_version = "CYFS_Beta_PN"

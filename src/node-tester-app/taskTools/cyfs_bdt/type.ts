@@ -101,6 +101,7 @@ export type Peer ={
     sn_files: string[], 
     knownPeer?: Buffer[],
     RUST_LOG?:string,
+    local_device_list? : Array<string>,
     active_pn_files?:Array<string>, 
     passive_pn_files?:Array<string>,
     known_peer_files?:Array<string>,

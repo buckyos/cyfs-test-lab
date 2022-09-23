@@ -72,7 +72,17 @@ export class BdtPeerClient extends EventEmitter{
             this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
             this.peerName = start_tool.value.peerName;
             this.util_client = new UtilClient(this.m_interface,this.m_agentid,this.tags,this.peerName!)
-            await this.util_client.getCachePath();
+            
+            let info1 = await this.util_client.getCachePath();
+            if(info1.err){
+                this.logger.error(`${this.tags} start bdt-tools failed`)
+                resolve({err:start_tool.err,log:`${this.tags} start bdt-tools failed,get cahce path error`})
+            }
+            // 设置 desc/sec 存放路径
+            let local =  this.cache_peer_info!.local;
+            if(!local){
+                local = path.join(this.util_client!.cachePath!.NamedObject,this.peerName!) 
+            }
             await sleep(2000)
             // 2. start bdt stack
             let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
@@ -83,7 +93,7 @@ export class BdtPeerClient extends EventEmitter{
                 active_pn_files: this.cache_peer_info!.active_pn_files,
                 passive_pn_files:this.cache_peer_info!.passive_pn_files,
                 known_peer_files:this.cache_peer_info!.known_peer_files,
-                local:this.cache_peer_info!.local,
+                local,
                 chunk_cache:this.cache_peer_info!.chunk_cache,
                 ep_type:this.cache_peer_info!.ep_type,
                 ndn_event:this.cache_peer_info!.ndn_event,
@@ -101,7 +111,7 @@ export class BdtPeerClient extends EventEmitter{
             this.sn_online_time = start_stack.value.online_time;
             this.sn_resp_eps = start_stack.value.ep_resp;
             this.peerid = start_stack.value.id
-            this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
+            //this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
             // 3. attachEvent bdt-tool unlive
             let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
                 this.state = -1;
@@ -113,6 +123,34 @@ export class BdtPeerClient extends EventEmitter{
             resolve({err:BDTERROR.success,log:`${this.tags} start bdt stack success`})  
         })
         
+    }
+    async create_new_stack():Promise<{err:number,log?:string,sn_online_time?:number,sn_resp_eps?:string,peerid?:string}> {
+        let local = path.join(this.util_client!.cachePath!.NamedObject,"Device_"+RandomGenerator.string(10)) 
+        this.logger.info(`${this.tags} start run create_new_stack , local = ${local}  `)
+        let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
+            name: 'create',
+            peerName:this.peerName,
+            addrInfo:this.cache_peer_info!.addrInfo,
+            sn_files: this.cache_peer_info!.sn_files,
+            active_pn_files: this.cache_peer_info!.active_pn_files,
+            passive_pn_files:this.cache_peer_info!.passive_pn_files,
+            known_peer_files:this.cache_peer_info!.known_peer_files,
+            chunk_cache:this.cache_peer_info!.chunk_cache,
+            ep_type:this.cache_peer_info!.ep_type,
+            local,
+            ndn_event:this.cache_peer_info!.ndn_event,
+            ndn_event_target:this.cache_peer_info!.ndn_event_target,
+            sn_only:this.cache_peer_info.udp_sn_only,
+            tcp_port_mapping: this.cache_peer_info.tcp_port_mapping,
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} start run create_new_stack , result = ${start_stack}`)
+        if(start_stack.err){
+            return {err : start_stack.err}
+        }
+        let sn_online_time = start_stack.value.online_time;
+        let sn_resp_eps = JSON.stringify({ep:start_stack.value.ep_resp}) ;
+        let peerid = start_stack.value.id
+        return {err:BDTERROR.success,log:`create bdt stack success`,sn_online_time,sn_resp_eps,peerid}
     }
     async reportAgent(testcaseId:string) :Promise<{err:ErrorCode,log:string}>{
         let run_action =await request("POST","api/bdt/client/add",{

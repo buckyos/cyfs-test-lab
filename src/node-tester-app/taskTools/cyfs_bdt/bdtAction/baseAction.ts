@@ -95,7 +95,7 @@ export class BaseAction implements ActionAbstract{
                 setTimeout(async ()=>{
                     if(this.state == "running"){
                         // 实际超时 预期失败
-                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`};
+                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} ${this.action.LN} ${this.action.RN} run timeout`};
                         if(this.action.expect.err){
                             V({ err: BDTERROR.success, log: "action expect err" })
                         }
