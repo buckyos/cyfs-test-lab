@@ -24,7 +24,7 @@ async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, acc
     const req: cyfs.NONPutObjectOutputRequest = {
         common: {
             req_path: req_path,
-            dec_id: saveobjectOwner,
+            dec_id: undefined,
             flags: 0,
             target: cyfs.ObjectId.from_base_58(peerId).unwrap(),
             level: cyfs.NONAPILevel.NOC //设置路由类型
@@ -35,7 +35,7 @@ async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, acc
     const put_ret = await stack.non_service().put_object(req);
     //校验结果
     console.info('put_object result:', put_ret);
-    assert(!put_ret.err);
+    assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`);
     return { saveobject, saveObjectId, saveobjectOwner, object_raw }
 }
 
@@ -49,26 +49,49 @@ let zone2ood: cyfs.SharedCyfsStack
 let zone2device1: cyfs.SharedCyfsStack
 let zone2device2: cyfs.SharedCyfsStack
 
+let zone1device1_dec_id: cyfs.ObjectId
+let zone1device2_dec_id: cyfs.ObjectId
+let zone1ooddec_id: cyfs.ObjectId
+
+let zone2ooddec_id: cyfs.ObjectId
+let zone2device1_dec_id: cyfs.ObjectId
+let zone2device2_dec_id: cyfs.ObjectId
+
+
+
+
 
 describe("SharedCyfsStack NON相关接口测试", function () {
     this.timeout(0);
     this.beforeAll(async function () {
 
         await ZoneSimulator.init();
-        zone1device1 = ZoneSimulator.zone1_device1_stack!;
-        zone1device2 = ZoneSimulator.zone1_device2_stack!;
-        zone1ood = ZoneSimulator.zone1_ood_stack!;
-        zone1sood = ZoneSimulator.zone1_standby_ood_stack!;
-        zone2ood = ZoneSimulator.zone2_ood_stack!;
-        zone2device1 = ZoneSimulator.zone2_device1_stack!;
-        zone2device2 = ZoneSimulator.zone2_device2_stack!;
+        zone1device1_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
+        zone1device2_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
+        zone1ooddec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1ooddecapp")
+        zone2ooddec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone2ooddecapp")
+        zone2device1_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone2device1decapp")
+        zone2device2_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone2device2decapp")
+
+        zone1device1 = ZoneSimulator.zone1_device1_stack!.fork_with_new_dec(zone1device1_dec_id)
+        zone1device2 = ZoneSimulator.zone1_device2_stack!.fork_with_new_dec(zone1device2_dec_id);
+        zone1ood = ZoneSimulator.zone1_ood_stack!.fork_with_new_dec(zone1ooddec_id);
+        zone1sood = ZoneSimulator.zone1_standby_ood_stack
+
+        zone2ood = ZoneSimulator.zone2_ood_stack!.fork_with_new_dec(zone2ooddec_id);
+        zone2device1 = ZoneSimulator.zone2_device1_stack!.fork_with_new_dec(zone2device1_dec_id);
+        zone2device2 = ZoneSimulator.zone2_device2_stack!.fork_with_new_dec(zone2device2_dec_id);
+
+
+
+
 
 
     })
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
         ZoneSimulator.stopZoneSimulator();
-        
+        process.exit(1)
 
     })
 
@@ -85,7 +108,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -104,7 +127,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -115,7 +138,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -140,7 +163,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -159,7 +182,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -170,7 +193,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -195,7 +218,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -214,7 +237,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone1ooddec_id,
                     flags: 0,
                 }
             };
@@ -225,7 +248,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone1ooddec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -247,7 +270,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone2device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
                     flags: 0,
                 }
             };
@@ -267,7 +290,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone2ood.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -287,7 +310,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone2ood.local_device_id().object_id,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone1ooddec_id,
                     flags: 0,
                 }
             };
@@ -310,7 +333,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: undefined,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -329,7 +352,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -340,7 +363,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1ooddec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: undefined,
@@ -420,7 +443,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone2device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -447,7 +470,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1ood.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -462,7 +485,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone2ooddec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -485,7 +508,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone2ood.local_device_id().object_id,
-                    dec_id: zone1ood.local_device_id().object_id,
+                    dec_id: zone1ooddec_id,
                     flags: 0,
                 }
             };
@@ -505,7 +528,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone2device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -528,7 +551,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -546,7 +569,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -557,7 +580,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -579,7 +602,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone2device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
                     flags: 0,
                 }
             };
@@ -598,7 +621,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1ood.local_device_id().object_id,
-                    dec_id: zone2device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
                     flags: 0,
                 }
             };
@@ -617,7 +640,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1sood.local_device_id().object_id,
-                    dec_id: zone2ood.local_device_id().object_id,
+                    dec_id: zone2ooddec_id,
                     flags: 0,
                 }
             };
@@ -632,7 +655,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone2ood.local_device_id().object_id,
+                    dec_id: zone2ooddec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -657,7 +680,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone2device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -684,7 +707,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -703,7 +726,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -714,7 +737,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -739,7 +762,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -759,7 +782,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone2device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
                     flags: 0,
                 }
             };
@@ -770,7 +793,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device2.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -795,7 +818,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -814,7 +837,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -825,7 +848,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -845,12 +868,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -858,7 +881,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.None)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.None)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -871,7 +894,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -882,7 +905,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -902,12 +925,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -915,7 +938,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.CallOnly)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.CallOnly)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -928,7 +951,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -939,7 +962,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -959,12 +982,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -972,7 +995,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.WriteOnly)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.WriteOnly)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -985,7 +1008,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -996,7 +1019,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -1009,7 +1032,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
 
-//待添加call请求
+        //待添加call请求
         it("设置组合权限-当前设备由full到writeAndCall", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
@@ -1017,12 +1040,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -1030,7 +1053,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.WriteOnly)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.WriteOnly)
+            console.log(rwx)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -1043,7 +1067,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -1054,7 +1078,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -1074,12 +1098,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -1087,7 +1111,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.ReadOnly)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.ReadOnly)
+            console.log(rwx)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -1100,7 +1125,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -1111,7 +1136,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -1123,7 +1148,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.info('delete_object result:', delete_ret);
             assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
-//待添加call
+        //待添加call
         it("设置组合权限-当前设备由full到readAndCall", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
@@ -1131,12 +1156,12 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -1144,7 +1169,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.ReadAndCall)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.ReadAndCall)
+            console.log(rwx)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -1157,7 +1183,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
@@ -1168,7 +1194,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
@@ -1181,19 +1207,19 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
 
-        it.only("设置组合权限-当前设备由full到readAndWrite", async () => {
+        it("设置组合权限-当前设备由full到readAndWrite", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.full()    
+            let rwx = cyfs.AccessString.full()
             console.log(rwx)
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
@@ -1201,7 +1227,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
                 access: rwx
             };
-            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.ReadAndWrite)
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.ReadAndWrite)
+            console.log(rwx)
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device1.non_service().put_object(put_req);
             console.log(put_ret3)
@@ -1214,13 +1241,252 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
                     target: zone1device1.local_device_id().object_id,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
             };
             const get_ret = await zone1device1.non_service().get_object(get_req);
             console.info('get_object result:', get_ret);
-            assert(get_ret.err);
+            assert(!get_ret.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+        it("设置组合权限-当前设备重复设置为full", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.full()
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.Full)
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone2device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret = await zone2device1.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret);
+            assert(!get_ret.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+
+        it("设置组合权限-当前设备none权限设置为full", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = new cyfs.AccessString(0o000000)
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentDevice, cyfs.AccessPermissions.Full)
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone2device1.non_service().get_object(get_req);
+            const get_ret1 = await zone1device1.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err);
+            assert(get_ret2.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+
+        it("设置组合权限-当前zone权限为full", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = new cyfs.AccessString(0o000000)
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            rwx.set_group_permissions(cyfs.AccessGroup.CurrentZone, cyfs.AccessPermissions.Full)
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err);
+            assert(get_ret2.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+
+
+        it.only("多个分组设置组合权限-当前zone和OwnerDec权限为full", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OwnerDec, permissions: cyfs.AccessPermissions.Full }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret1);
+            assert(!get_ret1.err);
+            assert(!get_ret2.err);
 
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
@@ -1237,8 +1503,6 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.info('delete_object result:', delete_ret);
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
-
-
 
     })
 
