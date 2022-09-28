@@ -8,6 +8,7 @@ export class AgentManager {
     private m_interface: TaskClientInterface;
     public agentMap : Map<string,AgentClient>
     public agentListState : Array<{name:string,state:string}>
+   
     constructor(_interface: TaskClientInterface){
         this.m_interface = _interface;
         this.agentMap = new Map();
@@ -59,6 +60,21 @@ export class AgentManager {
         }
         return this.agentMap.get(agentName)!.getBdtPeerClient(BDTIndex);
     }
+
+    async getAgent(name:string):Promise<{err:number,log?:string,agent?:AgentClient}>{
+        if(!this.agentMap.has(name)){
+            this.m_interface.getLogger().error(`agent ${name} not exsit , agent list = ${this.agentMap.keys()}`)
+            return {err:BDTERROR.AgentError,log:` agent ${name} not exsit`}
+        }
+        return {err:BDTERROR.success,agent:this.agentMap.get(name),log:`get ${name} success`};
+    } 
+    async getRunningBDTClient():Promise<{err:number,log?:string,BDTClientInfo:Array<{name:string,device_list:Array<string>}>}>{
+        let BDTClientInfo = [];
+        for(let agent of this.agentMap.values()){
+            BDTClientInfo.push({name:agent.tags,device_list:agent.running_device});
+        }
+        return {err:BDTERROR.success,BDTClientInfo,log:`get success`};
+    } 
     async checkBdtPeerClientList(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
         let result = await this.checkBdtPeerClient(LN);
         if(result.err){
@@ -88,18 +104,35 @@ export class AgentManager {
         return this.agentMap.get(agentName)!.startPeerClient(config)
 
     }
-    async allAgentStartBdtPeer(config:BdtPeerClientConfig,num:number=1){
+    async allAgentCleanCache(type:string="all"){
+        for(let agent of this.agentMap.values()){
+            await  agent.removeAgentCache(type);
+            agent.cacheInfo!.local_list = [];
+        }
+    }
+    async allAgentStartBdtPeer(config:BdtPeerClientConfig, num:number=1,clean:boolean=false){
         let taskList = []
+        if(clean == true){
+            await this.allAgentCleanCache(); 
+        }
         for(let agent of this.agentMap.values()){
             taskList.push(new Promise(async(V)=>{
+                
                 let taskAgent = []
                 for(let j=0;j<num;j++){
-                    taskAgent.push(agent.startPeerClient(config))
+                    let peer_name = agent.cacheInfo!.local_list[j]
+                    
+                    if(!peer_name){
+                        peer_name = agent.tags + "_" + RandomGenerator.string(10);
+                    }
+                    this.m_interface.getLogger().info(`start peer ${peer_name}`)
+                    taskAgent.push(agent.startPeerClient(config,peer_name))
                     await sleep(100);
                 }
                 for(let i in taskAgent){
                     await taskAgent[i]
                 }
+                await agent.loadAgentCache("init");
                 V("run finished")
             }))
             

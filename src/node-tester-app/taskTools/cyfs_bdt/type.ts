@@ -82,6 +82,7 @@ export const enum  ActionType {
     effectiveEP_WAN = "effectiveEP_WAN",  
     default = "default", 
     SN_Resp = "SN_Resp",
+    Auto = "Auto"
  }
 
 export type Agent = {
@@ -98,6 +99,7 @@ export type Peer ={
     agent : Agent,
     addrInfo: string[], 
     local?: string, 
+    device_tag?:string,
     sn_files: string[], 
     knownPeer?: Buffer[],
     RUST_LOG?:string,

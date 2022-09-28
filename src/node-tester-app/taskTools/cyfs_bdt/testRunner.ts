@@ -90,7 +90,7 @@ export class TestRunner{
             let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
             task.state = "run" ;
             if(!task.timeout){
-                task.timeout = 60*1000;
+                task.timeout = 5*60*1000;
             }
             let record : {taskId:string,data:Array<any>} = {taskId:task.task_id!,data:[]}
             setTimeout(() => {
@@ -196,7 +196,7 @@ export class TestRunner{
             task.result = result;
             this.JSONReport.actionList.push(result.record)
             if(result.err){
-                this.logger.info(`#####${task.task_id} 运行失败，err = ${result.log}`)
+                this.logger.error(`#####${task.task_id} ${task.LN} 运行失败，err = ${result.log}`)
                 this.failed++ 
                 this.errorList.push({taskId:result.record.taskId,error:result.log})
                 this.logger.error(result.log);

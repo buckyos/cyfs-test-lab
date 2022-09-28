@@ -169,17 +169,23 @@ export class UtilTool {
         let cachePath = path.join(this.m_logger.dir(),`../../${command.json.agentName}`)
         let LocalDeviceCache =  path.join(cachePath,"LocalDevice")
         let RemoteDeviceCache =  path.join(cachePath,"RemoteDevice")
-        if(command.json.init){
-            if(!fs.existsSync(cachePath)){
-                fs.mkdirpSync(cachePath);
-                fs.mkdirpSync(LocalDeviceCache);
-                fs.mkdirpSync(RemoteDeviceCache);
-            }
+        if(!fs.existsSync(cachePath)){
+            fs.mkdirpSync(cachePath);
+            fs.mkdirpSync(LocalDeviceCache);
+            fs.mkdirpSync(RemoteDeviceCache);
+        }
+        if(!fs.existsSync(LocalDeviceCache)){
+            fs.mkdirpSync(LocalDeviceCache);
+        }
+        if(!fs.existsSync(RemoteDeviceCache)){
+            fs.mkdirpSync(RemoteDeviceCache);
         }
         let local_list = []
         let remote_list = []
         for(let device of fs.readdirSync(LocalDeviceCache)){
-            local_list.push(device);
+            if(device.includes("desc")){
+                local_list.push(device);
+            }
         }
         for(let device of fs.readdirSync(RemoteDeviceCache)){
             remote_list.push(device);
@@ -200,8 +206,18 @@ export class UtilTool {
             return {err:ErrorCode.unknownCommand}
         }
         let cachePath = path.join(this.m_logger.dir(),`../../${command.json.agentName}`)
-        if(fs.existsSync(cachePath)){
+        let LocalDeviceCache =  path.join(cachePath,"LocalDevice")
+        let RemoteDeviceCache =  path.join(cachePath,"RemoteDevice")
+        if(command.json.type == "all"){
+            fs.removeSync(LocalDeviceCache);
+            fs.removeSync(RemoteDeviceCache);
             fs.removeSync(cachePath);
+        }
+        if(command.json.type  == "local"){
+            fs.removeSync(LocalDeviceCache);
+        }
+        if(command.json.type  == "remote"){
+            fs.removeSync(RemoteDeviceCache);
         }
         return {err:ErrorCode.succ,resp:{
             json : {

@@ -3,12 +3,14 @@ import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
 import {request,ContentType} from "./request";
 import {BdtPeerClient} from "./bdtPeerClient"
+import * as mypath from "./path"
 export class AgentClient {
-    private tags : string; // 机器名称 tags
-    private agentInfo : Agent;
+    public tags : string; // 机器名称 tags
+    public agentInfo : Agent;
     private ip? : Array<string>;// ip信息
     private m_agentid? : string; //节点对应的自动化测试框架节点
     public bdtPeerMap : Map<string,BdtPeerClient>
+    public running_device : Array<string>;
     private agentMult : number;
     private logUrl? : string; //日志下载
     private is_run : boolean;
@@ -16,6 +18,7 @@ export class AgentClient {
     private logger : Logger;
     private ipInfo?:{IPv4:Array<string>,IPv6:Array<string>}
     private state? : number;
+    public cacheInfo? : {LocalDeviceCache:string,RemoteDeviceCache:string,local_list: Array<string>,remote_list:Array<string>};
     
     constructor(_interface: TaskClientInterface,agent:Agent){
         this.m_interface = _interface;
@@ -26,36 +29,38 @@ export class AgentClient {
         this.agentMult = 0;
         this.is_run = false;
         this.state = 0;
+        this.running_device = []
     }
     async init():Promise<{err:number,log:string}> {
         return new Promise(async(V)=>{
-                setTimeout(()=>{
-                    if(this.state==0){
-                        V({err:BDTERROR.timeout,log:`${this.tags} init client timeout`})
-                    }
-                },20*1000)
-                let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
-                if (agent.err || agent.agentid == undefined ) {
-                    V({err:ErrorCode.netError,log:`${this.tags} connect bdt agent failed`}) 
+            setTimeout(()=>{
+                if(this.state == 0){
+                    V({err:BDTERROR.timeout,log:`${this.tags} init client timeout`})
                 }
-                this.m_agentid = agent.agentid!;
-                //启动测试服务
-                let err = await this.m_interface.startService([], this.m_agentid!, 10*1000);
-                if (err) {
-                    V({err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}) 
-                }
-                await sleep(2000);
-                let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-                    name : "getIPInfo"
-                }, this.m_agentid!, 10*1000);
-                this.logger.info(`${this.tags} get ipinfo = ${JSON.stringify(IPInfo)}`)
-                if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
-                    V({err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}) 
-                }
-                this.ipInfo = IPInfo.value.ipInfo;
-                this.state = 1;
-                V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
-            })
+            },20*1000)
+            let agent = await this.m_interface.getAgent({} as any, [this.tags ],[],[], 10*1000);
+            if (agent.err || agent.agentid == undefined ) {
+                V({err:ErrorCode.netError,log:`${this.tags} connect bdt agent failed`}) 
+            }
+            this.m_agentid = agent.agentid!;
+            //启动测试服务
+            let err = await this.m_interface.startService([], this.m_agentid!, 10*1000);
+            if (err) {
+                V({err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}) 
+            }
+            await sleep(2000);
+            let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+                name : "getIPInfo"
+            }, this.m_agentid!, 10*1000);
+            this.logger.info(`${this.tags} get ipinfo = ${JSON.stringify(IPInfo)}`)
+            if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
+                V({err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}) 
+            }
+            this.ipInfo = IPInfo.value.ipInfo;
+            let loadAgentCache = await this.loadAgentCache("init");
+            this.state = 1;
+            V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
+        })
         
     } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
@@ -84,10 +89,14 @@ export class AgentClient {
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
     
-    async startPeerClient(config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
-        
+    async startPeerClient(config:BdtPeerClientConfig,local?:string):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
         let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
         let bdtClient = new BdtPeerClient(this.m_interface,this.m_agentid!,this.tags,peer)
+        if(local){
+            bdtClient.cache_peer_info.local =this.tags;
+            bdtClient.cache_peer_info.device_tag =  local.split(".")[0];
+            this.running_device.push(local);
+        }
         let result = await bdtClient.init();
         if(result.err){
             return result
@@ -139,6 +148,37 @@ export class AgentClient {
             this.logger.info(`api/bdt/client/addList resp:  ${JSON.stringify(run_action)}`)
         }
         return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
+
+    async loadAgentCache(init?:string):Promise<{err:ErrorCode,LocalDeviceCache?:string,RemoteDeviceCache?:string,local_list?: Array<string>,remote_list?:Array<string>}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "loadAgentCache",
+            agentName: this.tags,
+            init
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} loadAgentCache = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        let LocalDeviceCache = result.value.LocalDeviceCache
+        let RemoteDeviceCache = result.value.RemoteDeviceCache
+        let local_list = result.value.local_list
+        let remote_list = result.value.remote_list
+        this.cacheInfo = {LocalDeviceCache,RemoteDeviceCache,local_list,remote_list};
+        return {err:ErrorCode.succ,LocalDeviceCache,RemoteDeviceCache,local_list,remote_list}
+    }
+    async removeAgentCache(type:string):Promise<{err:ErrorCode,cachePath?:string}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "removeAgentCache",
+            agentName: this.tags,
+            type
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} removeAgentCache = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        let cachePath = result.value.cachePath
+        return {err:ErrorCode.succ,cachePath}
     }
 
 }

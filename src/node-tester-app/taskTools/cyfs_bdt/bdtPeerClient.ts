@@ -80,8 +80,10 @@ export class BdtPeerClient extends EventEmitter{
             }
             // 设置 desc/sec 存放路径
             let local =  this.cache_peer_info!.local;
+            let device_tag = this.cache_peer_info!.device_tag;
             if(!local){
-                local = path.join(this.util_client!.cachePath!.NamedObject,this.peerName!) 
+                local = this.tags; 
+                device_tag = this.peerName;
             }
             await sleep(2000)
             // 2. start bdt stack
@@ -93,7 +95,8 @@ export class BdtPeerClient extends EventEmitter{
                 active_pn_files: this.cache_peer_info!.active_pn_files,
                 passive_pn_files:this.cache_peer_info!.passive_pn_files,
                 known_peer_files:this.cache_peer_info!.known_peer_files,
-                local,
+                local:local,
+                device_tag,
                 chunk_cache:this.cache_peer_info!.chunk_cache,
                 ep_type:this.cache_peer_info!.ep_type,
                 ndn_event:this.cache_peer_info!.ndn_event,
@@ -124,8 +127,9 @@ export class BdtPeerClient extends EventEmitter{
         })
         
     }
-    async create_new_stack():Promise<{err:number,log?:string,sn_online_time?:number,sn_resp_eps?:string,peerid?:string}> {
-        let local = path.join(this.util_client!.cachePath!.NamedObject,"Device_"+RandomGenerator.string(10)) 
+    async create_new_stack(local:string,device_tag:string):Promise<{err:number,log?:string,sn_online_time?:number,sn_resp_eps?:string,peerid?:string}> {
+        // let local = path.join(this.util_client!.)
+        // let device_tag =  "Device_"+RandomGenerator.string(10) 
         this.logger.info(`${this.tags} start run create_new_stack , local = ${local}  `)
         let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
             name: 'create',
@@ -138,6 +142,7 @@ export class BdtPeerClient extends EventEmitter{
             chunk_cache:this.cache_peer_info!.chunk_cache,
             ep_type:this.cache_peer_info!.ep_type,
             local,
+            device_tag,
             ndn_event:this.cache_peer_info!.ndn_event,
             ndn_event_target:this.cache_peer_info!.ndn_event_target,
             sn_only:this.cache_peer_info.udp_sn_only,
@@ -204,6 +209,7 @@ export class BdtPeerClient extends EventEmitter{
             passive_pn_files:this.cache_peer_info!.passive_pn_files,
             known_peer_files:this.cache_peer_info!.known_peer_files,
             local:this.cache_peer_info!.local,
+            device_tag : this.cache_peer_info!.device_tag,
             chunk_cache:this.cache_peer_info!.chunk_cache,
             ep_type:this.cache_peer_info!.ep_type,
             ndn_event:this.cache_peer_info!.ndn_event,
@@ -269,6 +275,28 @@ export class BdtPeerClient extends EventEmitter{
         });
         this.m_conns.set(info.value.stream_name,conn);
         return {err: ErrorCode.succ, time: info.value.time, conn,answer:info.value.answer};
+    }
+    async connectList(remote_desc_list: Array<{device_path:string}>, question: string, known_eps: number,accept_answer: number, conn_tag:string, remote_sn?: string,): Promise<{err: ErrorCode,records?:string}> {
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'connect-list',
+            remote_desc_list,
+            peerName: this.peerName,
+            question,
+            known_eps: known_eps?1:0,
+            remote_sn,
+            accept_answer : accept_answer?1:0,
+        }, this.m_agentid, 0);
+        if (info.err || info.value.result) {
+            this.logger.error(`${this.tags} connect failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: BDTERROR.connnetFailed};
+        }
+        if (!info.value || !info.value.stream_name) {
+            this.m_interface.getLogger().error(`connect, service return invalid param,log = ${JSON.stringify(info.value)}`);
+            return {err: ErrorCode.invalidParam};
+        }
+        this.logger.info(`${this.tags} connect success ,stream name = ${info.value.records}`)
+
+        return {err: ErrorCode.succ,records:info.value.records};
     }
     async set_answer(answer: string): Promise<ErrorCode> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
@@ -773,11 +801,12 @@ export class BdtConnection extends EventEmitter {
     }
     
 
-    async recv_object(obj_path:string): Promise<{err: ErrorCode, size?: number, hash?: string}> {
+    async recv_object(obj_path:string,file_name?:string): Promise<{err: ErrorCode, size?: number, hash?: string}> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'recv_object',
             peerName: this.peerName,
             stream_name: this.stream_name,
+            file_name,
             obj_path,
         }, this.m_agentid, 0);
         if (info.err) {

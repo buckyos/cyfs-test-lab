@@ -38,7 +38,6 @@ export let labAgentData = [
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.236'],
-        ipv6: ['[::]'],
         router: "Router8",
     },
     {
@@ -46,7 +45,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.199.189'],
-        ipv6: ['[::]'],
         router: "Router2",
     },
     {
@@ -54,7 +52,6 @@ export let labAgentData = [
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.199'],
-        ipv6: ['[::]'],
         router: "Router3",
     },
     {
@@ -62,7 +59,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.199.132', '10.1.1.131'],
-        ipv6: ['[::]'],
         router: "Router2&Router6",
     },
     {
@@ -70,7 +66,6 @@ export let labAgentData = [
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.137'],
-        ipv6: ['[::]'],
         router: "Router5",
     },
     {
@@ -102,7 +97,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.Symmetric,
         ipv4: ['192.168.1.139'],
-        ipv6: ['[::]'],
         router: "Router7",
     },
     {
@@ -110,7 +104,6 @@ export let labAgentData = [
         OS: "Windows7",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.145'],
-        ipv6: ['[::]'],
         router: "Router6",
     },
     {
@@ -118,7 +111,6 @@ export let labAgentData = [
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.142'],
-        ipv6: ['[::]'],
         router: "Router6",
     },
     {
