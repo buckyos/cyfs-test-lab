@@ -34,6 +34,7 @@ pub struct CreateLpcCommandReq {
     pub passive_pn: Vec<String>, 
     pub addrs: Vec<String>,
     pub local: Option<String>, 
+    pub device_tag : Option<String>, 
     pub chunk_cache: String,
     pub ep_type :  Option<String>,
     pub ndn_event : Option<String>,
@@ -168,7 +169,19 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             },
             _ => None,
         };
-
+        let device_tag = match json.get("device_tag") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
+        };
         let mut addrs = Vec::new();
         match json.get("addrInfo") {
             Some(v) => match v {
@@ -288,6 +301,7 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             active_pn, 
             passive_pn,
             local,
+            device_tag,
             addrs,
             chunk_cache,
             ep_type,
@@ -2788,7 +2802,8 @@ impl TryFrom<SendObjectLpcCommandResp> for LpcCommand {
 pub struct RecvObjectLpcCommandReq {
     pub seq: u32,
     pub stream_name: String,
-    pub obj_path:PathBuf  
+    pub obj_path:PathBuf,
+    pub file_name : Option<String>,
 }
 impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
     type Error = BuckyError;
@@ -2801,6 +2816,19 @@ impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
                 _ => String::new(),
             },
             _ => String::new(),
+        };
+        let file_name = match json.get("file_name") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
         };
         let obj_path = match json.get("obj_path") {
             Some(v) => match v {
@@ -2817,7 +2845,8 @@ impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
         Ok(Self {
             seq: value.seq(),
             stream_name,
-            obj_path
+            obj_path,
+            file_name
         })
     }
 }

@@ -69,6 +69,8 @@ async fn main()->Result<(), BuckyError> {
             peer.on_create(c, lpc.clone());
         } else if name == String::from("connect") {
             peer.on_connect(c, lpc.clone());
+        }else if name == String::from("connect_list") {
+            peer.on_connect_list(c, lpc.clone());
         } else if name == String::from("auto_accept") {
             peer.on_auto_accept(c, lpc.clone());
         } else if name == String::from("accept") {
