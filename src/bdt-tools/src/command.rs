@@ -33,6 +33,7 @@ pub struct CreateLpcCommandReq {
     pub active_pn: Vec<String>, 
     pub passive_pn: Vec<String>, 
     pub addrs: Vec<String>,
+    pub bdt_port : Option<u32>,
     pub local: Option<String>, 
     pub device_tag : Option<String>, 
     pub chunk_cache: String,
@@ -41,6 +42,7 @@ pub struct CreateLpcCommandReq {
     pub ndn_event_target : Option<DeviceId>,
     pub sn_only : bool,
     pub tcp_port_mapping : Option<Vec<(cyfs_base::Endpoint, u16)>>,
+    
 }
 
 impl TryFrom<LpcCommand> for CreateLpcCommandReq {
@@ -199,6 +201,16 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             },
             _ => {}
         }
+        let bdt_port = match json.get("bdt_port") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) =>{
+                    Some(n.as_u64().unwrap() as u32)
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+        
         let mut buffer = value.as_buffer();
         let mut known_peers = Vec::new();
         while buffer.len() > 0 {
@@ -303,6 +315,7 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             local,
             device_tag,
             addrs,
+            bdt_port,
             chunk_cache,
             ep_type,
             ndn_event,
