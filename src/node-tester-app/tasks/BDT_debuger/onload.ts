@@ -31,7 +31,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     tcp:true,
                 }
             },
-            logType:"info",
+            logType:"trace",
             udp_sn_only : 1,
             SN :LabSnList,
             resp_ep_type:Resp_ep_type.SN_Resp, 

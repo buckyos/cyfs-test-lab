@@ -187,37 +187,43 @@ async function main() {
     const serviceid = "4";
     
     const taskList = [
-        "Connect_Close_TCP_LNClose",
-        "Connect_Close_TCP_LNUnlive",
-        "Connect_Close_TCP_RNClose",
-        "Connect_Close_TCP_RNUnlive",
-        "Connect_Close_UDP_LNClose",
-        "Connect_Close_UDP_LNUnlive",
-        "Connect_Close_UDP_RNClose",
-        "Connect_Close_UDP_RNUnlive",
-        "Connect_Endpoint_Port_TCP_direct",
-        "Connect_Endpoint_Port_TCP_SN",
-        "Connect_Endpoint_Port_UDP_direct",
-        "Connect_Endpoint_Port_UDP_SN",
-        "Connect_FristQA_TCP_direct",
-        "Connect_FristQA_TCP_PackageSize_answer",
-        "Connect_FristQA_TCP_PackageSize_question",
-        "Connect_FristQA_TCP_SN",
-        "Connect_FristQA_UDP_direct",
-        "Connect_FristQA_UDP_PackageSize_answer",
-        "Connect_FristQA_UDP_PackageSize_question",
-        "Connect_FristQA_UDP_SN",
-        "Connect_IPV4_TCPTunnel_direct_effectiveEP_AbnormalNAT",
-        "Connect_IPV4_TCPTunnel_direct_effectiveEP_LAN",
-        "Connect_IPV4_TCPTunnel_direct_effectiveEP_WAN",
-        "Connect_IPV4_TCPTunnel_SN_EmptyEP",
-        "Connect_IPV4_TCPTunnel_SN_invalidEP",
-        "Connect_IPV4_TCPTunnel_SN_TCPReverse",
-        "Connect_IPV4_UDPTunnel_direct_effectiveEP_AbnormalNAT",
-        "Connect_IPV4_UDPTunnel_direct_effectiveEP_LAN",
-        "Connect_IPV4_UDPTunnel_direct_effectiveEP_WAN",
-        "Connect_IPV4_UDPTunnel_SN_EmptyEP",
-        "Connect_IPV4_UDPTunnel_SN_invalidEP"
+        // "Connect_Close_TCP_LNClose",
+        // "Connect_Close_TCP_LNUnlive",
+        // "Connect_Close_TCP_RNClose",
+        // "Connect_Close_TCP_RNUnlive",
+        // "Connect_Close_UDP_LNClose",
+        // "Connect_Close_UDP_LNUnlive",
+        // "Connect_Close_UDP_RNClose",
+        // "Connect_Close_UDP_RNUnlive",
+        // "Connect_Endpoint_Port_TCP_direct",
+        // "Connect_Endpoint_Port_TCP_SN",
+        // "Connect_Endpoint_Port_UDP_direct",
+        // "Connect_Endpoint_Port_UDP_SN",
+        // "Connect_FristQA_TCP_direct",
+        // "Connect_FristQA_TCP_PackageSize_answer",
+        // "Connect_FristQA_TCP_PackageSize_question",
+        // "Connect_FristQA_TCP_SN",
+        // "Connect_FristQA_UDP_direct",
+        // "Connect_FristQA_UDP_PackageSize_answer",
+        // "Connect_FristQA_UDP_PackageSize_question",
+        // "Connect_FristQA_UDP_SN",
+        // "Connect_IPV4_TCPTunnel_direct_effectiveEP_AbnormalNAT",
+        // "Connect_IPV4_TCPTunnel_direct_effectiveEP_LAN",
+        // "Connect_IPV4_TCPTunnel_direct_effectiveEP_WAN",
+        // "Connect_IPV4_TCPTunnel_SN_EmptyEP",
+        // "Connect_IPV4_TCPTunnel_SN_invalidEP",
+        // "Connect_IPV4_TCPTunnel_SN_TCPReverse",
+        // "Connect_IPV4_UDPTunnel_direct_effectiveEP_AbnormalNAT",
+        // "Connect_IPV4_UDPTunnel_direct_effectiveEP_LAN",
+        // "Connect_IPV4_UDPTunnel_direct_effectiveEP_WAN",
+        // "Connect_IPV4_UDPTunnel_SN_EmptyEP",
+        // "Connect_IPV4_UDPTunnel_SN_invalidEP",
+        "Connect_IPV6_TCPTunnel_direct_effectiveEP",
+        "Connect_IPV6_TCPTunnel_SN_EmptyEP",
+        "Connect_IPV6_TCPTunnel_SN_invalidEP",
+        "Connect_IPV6_UDPTunnel_direct_effectiveEP",
+        "Connect_IPV6_UDPTunnel_SN_EmptyEP",
+        "Connect_IPV6_UDPTunnel_SN_invalidEP",
     ];
     runner.process.on(`exit`,async()=>{
         console.info(`runner exit`)
@@ -242,7 +248,7 @@ async function main() {
             await runner.check_state();
             console.info(`${taskList[i]} run finished`)
         }
-        await sleep(5000);
+        await sleep(30000);
         console.info(`all task run finished`)
 
     }

@@ -162,9 +162,20 @@ export const labAgent : Array<{
 }> = shuffle(labAgentData)
 
 
+export async function IPv6Agent() {
+    let ipv6_list = []
+    for(let agent of labAgent){
+        if(agent.ipv6){
+            ipv6_list.push(agent)
+        }
+    }
+    return ipv6_list
+}
+
 export type BdtPeerClientConfig={
     LW_type? :string,
     eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}
+    bdt_port? : number,
     PN? : {
         activePnFiles: Array<string>,
         passivePnFiles: Array<string>,
@@ -245,7 +256,7 @@ export  function SameRouter(routerA:String, routerB:String) {
         for (let j in listB) {
             if (listA[i] == listB[j]) {
                 // 暂时不支持同路由器通过Endpoint L 类型建立连接
-                return false;
+                return true;
             }
         }
     }

@@ -169,6 +169,11 @@ export class UtilTool {
         let cachePath = path.join(this.m_logger.dir(),`../../${command.json.agentName}`)
         let LocalDeviceCache =  path.join(cachePath,"LocalDevice")
         let RemoteDeviceCache =  path.join(cachePath,"RemoteDevice")
+        if(command.json.init == "clean"){
+            fs.removeSync(LocalDeviceCache);
+            fs.removeSync(RemoteDeviceCache);
+            fs.removeSync(cachePath);
+        }
         if(!fs.existsSync(cachePath)){
             fs.mkdirpSync(cachePath);
             fs.mkdirpSync(LocalDeviceCache);

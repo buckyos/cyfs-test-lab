@@ -12,6 +12,7 @@ export class AgentClient {
     public bdtPeerMap : Map<string,BdtPeerClient>
     public running_device : Array<string>;
     private agentMult : number;
+    public bdt_port? : number; 
     private logUrl? : string; //日志下载
     private is_run : boolean;
     private m_interface: TaskClientInterface;
@@ -57,7 +58,7 @@ export class AgentClient {
                 V({err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}) 
             }
             this.ipInfo = IPInfo.value.ipInfo;
-            let loadAgentCache = await this.loadAgentCache("init");
+            let loadAgentCache = await this.loadAgentCache("clean");
             this.state = 1;
             V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
         })
@@ -67,16 +68,26 @@ export class AgentClient {
         if(!this.is_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
-        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "uploadLog",
-            logName : `${testcaseId}_${this.tags}.zip`
-        }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} uploadLog = ${JSON.stringify(result)}`)
-        if(result.value.upload?.err ){  
-            return {err:ErrorCode.exception,log:`${this.tags} uploadLog failed`}
-        }
-        this.logUrl = result.value.upload?.url;
-        return {err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}
+        return new Promise(async(V)=>{
+            let wait =true;
+            setTimeout(async()=>{
+                if(wait){
+                    V({err:ErrorCode.timeout,log:`${this.tags} uploadLog timeout`}) 
+                }
+            },60*1000)
+            let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+                name : "uploadLog",
+                logName : `${testcaseId}_${this.tags}.zip`
+            }, this.m_agentid!, 10*1000);
+            this.logger.info(`${this.tags} uploadLog = ${JSON.stringify(result)}`)
+            wait = false;
+            if(result.value.upload?.err ){  
+                V({err:ErrorCode.exception,log:`${this.tags} uploadLog failed`}) 
+            }
+            this.logUrl = result.value.upload?.url;
+            V({err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}) 
+        })
+        
     }
     async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
@@ -89,8 +100,10 @@ export class AgentClient {
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
     
-    async startPeerClient(config:BdtPeerClientConfig,local?:string):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
+    async startPeerClient(config:BdtPeerClientConfig,local?:string,bdt_port:number=50000):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
         let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
+        peer.bdt_port = bdt_port;
+        this.bdt_port = bdt_port;
         let bdtClient = new BdtPeerClient(this.m_interface,this.m_agentid!,this.tags,peer)
         if(local){
             bdtClient.cache_peer_info.local =this.tags;

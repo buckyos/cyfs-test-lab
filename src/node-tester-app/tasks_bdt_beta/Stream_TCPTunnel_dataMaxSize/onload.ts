@@ -11,16 +11,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "Stream_TCPTunnel_10con_both_10MBData"
+    let testcaseName = "Stream_TCPTunnel_dataMaxSize"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `前置条件：
+        remark: `# 前置条件：
         （1）LN/RN 网络可以基于TCP建立连接
     操作步骤：
-        （1）LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*10MB 大小的字节流数据
+         (1) LN 和 RN 建立T连接
+         (2) 发送2GB有效数据
     预期结果：
-        (1) 数据发送成功，Stream数据发送未产生拥塞`,
+        (1) 数据发送成功`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -52,7 +53,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,
             RN : `${WAN}$1`,
-            timeout : 5*30*1000,
+            timeout : 50*30*1000,
             action : []
         })
         info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
@@ -65,19 +66,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
             },
             expect : {err:0},    
         }))
-        for(let x=0;x<10;x++){
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                type : ActionType.send_stream,
-                LN : `${LN}$1`,
-                RN : `${WAN}$1`,
-                fileSize : 2000*1024*1024 + 1000*x*1024*1024 ,
-                config:{
-                    conn_tag: connect_1,
-                    timeout : 1000*1000,
-                },
-                expect : {err:0},    
-            }))
-        }
+        info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+            type : ActionType.send_stream,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            fileSize : 2048 * 1024*1024 ,
+            config:{
+                conn_tag: connect_1,
+                timeout : 1000*1000,
+            },
+            expect : {err:0},    
+        }))
         await testRunner.prevTaskRun();
     }
     await testRunner.waitFinished()

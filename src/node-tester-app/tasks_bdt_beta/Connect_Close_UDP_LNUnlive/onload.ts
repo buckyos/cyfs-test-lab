@@ -53,7 +53,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    timeout : 3*60*1000,
+                    timeout : 60*1000,
                     action : []
                 })
                 // 1.1 LN 连接 RN

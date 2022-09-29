@@ -119,6 +119,10 @@ export class AgentManager {
             taskList.push(new Promise(async(V)=>{
                 
                 let taskAgent = []
+                let bdt_port = 50000;
+                if(config.bdt_port){
+                    bdt_port = config.bdt_port;
+                }
                 for(let j=0;j<num;j++){
                     let peer_name = agent.cacheInfo!.local_list[j]
                     
@@ -126,7 +130,8 @@ export class AgentManager {
                         peer_name = agent.tags + "_" + RandomGenerator.string(10);
                     }
                     this.m_interface.getLogger().info(`start peer ${peer_name}`)
-                    taskAgent.push(agent.startPeerClient(config,peer_name))
+                    taskAgent.push(agent.startPeerClient(config,peer_name,bdt_port))
+                    bdt_port = bdt_port + 10;
                     await sleep(100);
                 }
                 for(let i in taskAgent){

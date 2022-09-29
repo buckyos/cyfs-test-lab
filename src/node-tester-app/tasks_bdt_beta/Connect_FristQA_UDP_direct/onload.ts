@@ -77,24 +77,24 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }
                 
                 // 1.2 RN -> LN 连接10次
-                for(let x=0;x<10;x++){
-                    let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                    info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                        type : ActionType.connect,
-                        LN : `${labAgent[j].tags[0]}$1`,
-                        RN : `${labAgent[i].tags[0]}$1`,
+                // for(let x=0;x<10;x++){
+                //     let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+                //     info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+                //         type : ActionType.connect,
+                //         LN : `${labAgent[j].tags[0]}$1`,
+                //         RN : `${labAgent[i].tags[0]}$1`,
                         
-                        config:{
+                //         config:{
                             
-                            conn_tag: connect_2,
-                            timeout : 30*1000,
-                            firstQA_answer : RandomGenerator.string(100),
-                            firstQA_question : RandomGenerator.string(100),
-                            accept_answer : 1,
-                        },
-                        expect : {err:0},      
-                    }))
-                }
+                //             conn_tag: connect_2,
+                //             timeout : 30*1000,
+                //             firstQA_answer : RandomGenerator.string(100),
+                //             firstQA_question : RandomGenerator.string(100),
+                //             accept_answer : 1,
+                //         },
+                //         expect : {err:0},      
+                //     }))
+                // }
                 await testRunner.prevTaskRun();
             }
         }

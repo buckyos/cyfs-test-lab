@@ -98,6 +98,7 @@ export type Agent = {
 export type Peer ={
     agent : Agent,
     addrInfo: string[], 
+    bdt_port? : number,
     local?: string, 
     device_tag?:string,
     sn_files: string[], 

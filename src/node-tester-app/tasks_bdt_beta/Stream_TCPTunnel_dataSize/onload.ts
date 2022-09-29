@@ -1,140 +1,117 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
-
-
-
+import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
+import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
+import {labAgent,BdtPeerClientConfig,LabSnList,AgentList_LAN_WAN} from "../../taskTools/cyfs_bdt/labAgent"
+import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
+import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
-    let testcaseName = "Stream_TCPTunnel_dataMaxSize"
-    let agentList:Array<Agent> = [];
-    let taskList : Array<Task> = [];
-    let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0006,
-        labAgent.PC_0007,
-        labAgent.PC_0008,
-        labAgent.PC_0009,
-        labAgent.PC_0010,
-        labAgent.PC_0011,
-        labAgent.PC_0012,
-        labAgent.PC_0013,
-        labAgent.PC_0014,
-        labAgent.PC_0015,
-        labAgent.PC_0016,
-        labAgent.PC_0017,
-        labAgent.PC_0018,
-    ]
-    let firstQA_answer= "";
-    agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{tcp:true}},"info",1,[],{},firstQA_answer,Resp_ep_type.effectiveEP_WAN))
-    for(let i in agentList){
-        for(let j in agentList){
-            if(i != j){
-                // RN 为外网，可以直连
-                if(agentList[j].NAT == 0 ){
-                    taskList.push(
-                        {
-                            LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                            RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                            timeout : 5*60*1000,
-                            expect_status : BDTERROR.success,
-                            action:[
-                                //一、首次建立连接
-                                //(1) 建立连接
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.connect,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 5*60*1000,
-                                    },
-                                    fileSize : 0,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                //(2) 正向发送1M 数据
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 5*60*1000,
-                                    },
-                                    fileSize : 1,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 5*60*1000,
-                                    },
-                                    fileSize : 1500,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 5*60*1000,
-                                    },
-                                    fileSize : 1*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 300*1000, 
-                                    },
-                                    fileSize : 100*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                                {
-                                    LN:{name:`${testAgent[i].tags[0]}_0`,type : testAgent[i].type},
-                                    RN:{name:`${testAgent[j].tags[0]}_0`,type : testAgent[j].type},
-                                    type : taskType.send_stream,
-                                    config : {
-                                        conn_tag : "connect_frist" ,
-                                        timeout : 500*1000, 
-                                    },
-                                    fileSize : 1000*1024*1024,
-                                    expect:{err:BDTERROR.success} 
-                                },
-                            ]
-                        }
-                    )
-                }
-            }
-        }
-    }
-    
-
-    await sleep(2000);
+    //(1) 连接测试节点
+    let agentManager = AgentManager.createInstance(_interface);
+    await agentManager.initAgentList(labAgent);
+    //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
+    let testcaseName = "Stream_TCPTunnel_dataSize"
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
-                remark : `# 操作步骤：
-                （1）LN 和 RN 建立BDT连接。
-                （2）LN 和 RN 之间传输1 bytes 数据。
-                （3）LN 和 RN 之间传输1500 bytes 数据。
-                （4）LN 和 RN 之间传输1 MB 数据。
-                （5）LN 和 RN 之间传输100 MB 数据。
-                （6）LN 和 RN 之间传输1000 MB 数据。\n`,
-        environment : "lab",
-        agentList,
-        taskList,
-        taskMult:1
+        TestcaseName: testcaseName,
+        testcaseId: `${testcaseName}_${Date.now()}`,
+        remark: `# 前置条件：
+        （1）LN/RN 网络可以基于TCP建立连接
+    操作步骤：
+         (1) LN 和 RN 建立T连接
+         (2) 发送2GB有效数据
+    预期结果：
+        (1) 数据发送成功`,
+        environment: "lab",
+    };
+    await testRunner.initTestcase(testcase);
+    //(3) 创建BDT测试客户端
+    let config : BdtPeerClientConfig = {
+            eps:{
+                ipv4:{
+                    udp:true,
+                    tcp:true,
+                },
+                ipv6:{
+                    udp:true,
+                    tcp:true,
+                }
+            },
+            logType:"info",
+            udp_sn_only : 1,
+            SN :LabSnList,
+            resp_ep_type:Resp_ep_type.effectiveEP_WAN, 
     }
-    
-    await testRunner.testCaseRunner(testcase);
+    // 每台机器运行一个bdt 客户端
+    let agent_list = await AgentList_LAN_WAN(labAgent);
+    let LN = agent_list.LAN[0].tags[0];
+    let WAN = agent_list.WAN[0].tags[0];
+    await agentManager.allAgentStartBdtPeer(config)
+    //(4) 测试用例执行器添加测试任务
+    for(let i =0;i<1;i++){
+        let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+        let info = await testRunner.createPrevTask({
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            timeout : 50*30*1000,
+            action : []
+        })
+        info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+            type : ActionType.connect,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            config:{
+                conn_tag: connect_1,
+                timeout : 20*1000,
+            },
+            expect : {err:0},    
+        }))
+        info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+            type : ActionType.send_stream,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            fileSize : 1,
+            config:{
+                conn_tag: connect_1,
+                timeout : 30*1000,
+            },
+            expect : {err:0},    
+        }))
+        info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+            type : ActionType.send_stream,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            fileSize : 500,
+            config:{
+                conn_tag: connect_1,
+                timeout : 30*1000,
+            },
+            expect : {err:0},    
+        }))
+        info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+            type : ActionType.send_stream,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            fileSize : 1500,
+            config:{
+                conn_tag: connect_1,
+                timeout : 30*1000,
+            },
+            expect : {err:0},    
+        }))
+        info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+            type : ActionType.send_stream,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            fileSize : 10*1024*1024,
+            config:{
+                conn_tag: connect_1,
+                timeout : 30*1000,
+            },
+            expect : {err:0},    
+        }))
+        await testRunner.prevTaskRun();
+    }
+    await testRunner.waitFinished()
+  
 }

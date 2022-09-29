@@ -91,6 +91,7 @@ export class BdtPeerClient extends EventEmitter{
                 name: 'create',
                 peerName:this.peerName,
                 addrInfo:this.cache_peer_info!.addrInfo,
+                bdt_port : this.cache_peer_info!.bdt_port,
                 sn_files: this.cache_peer_info!.sn_files,
                 active_pn_files: this.cache_peer_info!.active_pn_files,
                 passive_pn_files:this.cache_peer_info!.passive_pn_files,
@@ -127,7 +128,7 @@ export class BdtPeerClient extends EventEmitter{
         })
         
     }
-    async create_new_stack(local:string,device_tag:string):Promise<{err:number,log?:string,sn_online_time?:number,sn_resp_eps?:string,peerid?:string}> {
+    async create_new_stack(local:string,device_tag:string,bdt_port:number):Promise<{err:number,log?:string,sn_online_time?:number,sn_resp_eps?:string,peerid?:string}> {
         // let local = path.join(this.util_client!.)
         // let device_tag =  "Device_"+RandomGenerator.string(10) 
         this.logger.info(`${this.tags} start run create_new_stack , local = ${local}  `)
@@ -135,6 +136,7 @@ export class BdtPeerClient extends EventEmitter{
             name: 'create',
             peerName:this.peerName,
             addrInfo:this.cache_peer_info!.addrInfo,
+            bdt_port : bdt_port,
             sn_files: this.cache_peer_info!.sn_files,
             active_pn_files: this.cache_peer_info!.active_pn_files,
             passive_pn_files:this.cache_peer_info!.passive_pn_files,
@@ -204,6 +206,7 @@ export class BdtPeerClient extends EventEmitter{
             name: 'create',
             peerName:this.peerName,
             addrInfo:this.cache_peer_info!.addrInfo,
+            bdt_port : this.cache_peer_info!.bdt_port,
             sn_files: this.cache_peer_info!.sn_files,
             active_pn_files: this.cache_peer_info!.active_pn_files,
             passive_pn_files:this.cache_peer_info!.passive_pn_files,
@@ -767,8 +770,9 @@ export class BdtConnection extends EventEmitter {
             stream_name: this.stream_name,
             size: fileSize,
         }, this.m_agentid, 0);
-        if (info.err) {
+        if (info.err || info.value.result) {
             this.logger.error(`${this.tags} ${this.stream_name} send failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: BDTERROR.sendDataFailed,time: info.value?.time,hash:  info.value?.hash};
         }
         return {err: info.err,time: info.value?.time,hash:  info.value?.hash};
     }
@@ -782,6 +786,7 @@ export class BdtConnection extends EventEmitter {
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} ${this.stream_name} recv failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return {err: BDTERROR.recvDataFailed,size: info.value?.size,hash:  info.value?.hash};
         }
         return {err: info.err,size: info.value?.size,hash:  info.value?.hash};
         

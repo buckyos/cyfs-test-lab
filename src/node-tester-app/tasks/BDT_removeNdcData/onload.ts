@@ -19,6 +19,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
+    let re = await agentManager.allAgentCleanCache("all");
     let remove = await agentManager.removeNdcData();
     await testRunner.waitFinished()
     
