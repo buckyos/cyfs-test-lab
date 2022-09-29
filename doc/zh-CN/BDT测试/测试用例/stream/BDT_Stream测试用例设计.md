@@ -696,11 +696,11 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用TCP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起连接，Sync 包question 带有50字节数据
+    (1) LN向RN发起连接，Sync 包question 带有100字节数据
 测试节点数据限制：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (2) LN向RN发起二次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (3) RN向LN发起反向连接，RN Sync 包question 带有50字节数据 ,LN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (3) RN向LN发起反向连接，RN Sync 包question 带有100字节数据 ,LN ACK包 answer带有100字节数据
 预期结果：
     (1) LN 连接RN成功，连接过程中实现首次数据包发送
 ```
@@ -709,13 +709,13 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 前置条件：
     （1）LN/RN 同时使用TCP协议EP
 操作步骤：
-    (1) LN向RN发起连接，Sync 包question 带有50字节数据
+    (1) LN向RN发起连接，Sync 包question 带有100字节数据
 测试节点数据限制：
     (1) 节点使用TCP通过SN连接
 预期结果：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (2) LN向RN发起二次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (3) RN向LN发起反向连接，RN Sync 包question 带有50字节数据 ,LN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (3) RN向LN发起反向连接，RN Sync 包question 带有100字节数据 ,LN ACK包 answer带有100字节数据
 ```
 + Connect_FristQA_UDP_direct
  ```
@@ -723,9 +723,9 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用UDP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (2) LN向RN发起二次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (3) RN向LN发起反向连接，RN Sync 包question 带有50字节数据 ,LN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (3) RN向LN发起反向连接，RN Sync 包question 带有100字节数据 ,LN ACK包 answer带有100字节数据
 测试节点数据限制：
     (1) 节点使用UDP直连
 预期结果：
@@ -736,9 +736,9 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 前置条件：
     （1）LN/RN 同时使用UDP协议EP
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (2) LN向RN发起二次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
-    (3) RN向LN发起反向连接，RN Sync 包question 带有50字节数据 ,LN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (2) LN向RN发起二次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+    (3) RN向LN发起反向连接，RN Sync 包question 带有100字节数据 ,LN ACK包 answer带有100字节数据
 测试节点数据限制：
     (1) 节点使用UDP通过SN连接
 预期结果：
@@ -751,7 +751,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用TCP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有100字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
     (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
     (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
     (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
@@ -767,7 +767,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用TCP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
     (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
     (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
     (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
@@ -783,7 +783,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用UDP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
     (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
     (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
     (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
@@ -799,7 +799,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     （1）LN/RN 同时使用UDP协议EP
      (2) LN 可以直连RN
 操作步骤：
-    (1) LN向RN发起首次连接，LN Sync 包question 带有50字节数据 ,RN ACK包 answer带有50字节数据
+    (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
     (2) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie-1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie-1字节数据
     (3) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
     (4) LN向RN发起二次连接，LN Sync 包question 带有MTU-BDT_head_szie+1字节数据 ,RN ACK包 answer带有MTU-BDT_head_szie字节数据
@@ -955,50 +955,100 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 
 
 
-### 实验室Stream传输数据拥塞控制
-+ Stream_TCPTunnel_10con_single_1MbData_10
+
+
+### Stream
++ Stream_TCPTunnel_dataSize
 ```
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
 操作步骤：
-    （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*1Mb 大小的字节流数据
+     (1) LN 和 RN 建立T连接
+     (2) 发送1字节有效数据
+     (3) 发送500字节有效数据
+     (4) 发送1500字节有效数据
+     (4) 发送10MB有效数据
+预期结果：
+    (1) 数据发送成功
+```
++ Stream_TCPTunnel_dataMaxSize
+```
+前置条件：
+    （1）LN/RN 网络可以基于TCP建立连接
+操作步骤：
+     (1) LN 和 RN 建立T连接
+     (2) 发送2GB有效数据
+预期结果：
+    (1) 数据发送成功
+```
++ Stream_UDPTunnel_dataSize
+```
+前置条件：
+    （1）LN/RN 网络可以基于UDP建立连接
+操作步骤：
+     (1) LN 和 RN 建立T连接
+     (2) 发送1字节有效数据
+     (3) 发送500字节有效数据
+     (4) 发送1500字节有效数据
+     (4) 发送10MB有效数据
+预期结果：
+    (1) 数据发送成功
+```
++ Stream_UDPTunnel_dataMaxSize
+```
+前置条件：
+    （1）LN/RN 网络可以基于UDP建立连接
+操作步骤：
+     (1) LN 和 RN 建立T连接
+     (2) 发送2GB有效数据
+预期结果：
+    (1) 数据发送成功
+```
+
+#### 实验室Stream传输数据拥塞控制
++ Stream_TCPTunnel_10con_single_1MBData_10
+```
+前置条件：
+    （1）LN/RN 网络可以基于TCP建立连接
+操作步骤：
+    （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，Stream数据发送未产生拥塞
 ```
 
-+ Stream_TCPTunnel_10con_both_1MbData
++ Stream_TCPTunnel_10con_both_10MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
 操作步骤：
-    （1）LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*10MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，Stream数据发送未产生拥塞
 ```
 
 
-+ Stream_TCPTunnel_5RN_10con_1MbData
++ Stream_TCPTunnel_5RN_10con_1MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
 操作步骤：
-    （1）LN 和 5个RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）LN 和 5个RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，LN Stream数据发送未产生拥塞
 ```
 
-+ Stream_TCPTunnel_5LN_10con_1MbData
++ Stream_TCPTunnel_5LN_10con_1MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
 操作步骤：
-    （1）5个LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）5个LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，RN Stream数据接收未产生拥塞
 
 ```
 
-+ Stream_TCPTunnel_1000_1kbData
++ Stream_TCPTunnel_1000_1KBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
@@ -1008,48 +1058,48 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
     (1) 数据发送成功，RN Stream数据接收未产生拥塞
 ```
 
-+ Stream_UDPTunnel_10con_single_1MbData_10
++ Stream_UDPTunnel_10con_single_10MBData_10
 ```
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
 操作步骤：
-    （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*1Mb 大小的字节流数据
+    （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，Stream数据发送未产生拥塞
 ```
 
-+ Stream_UDPTunnel_10con_both_1MbData
++ Stream_UDPTunnel_10con_both_1MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
 操作步骤：
-    （1）LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，Stream数据发送未产生拥塞
 ```
 
-+ Stream_UDPTunnel_5RN_10con_1MbData
++ Stream_UDPTunnel_5RN_10con_1MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
 操作步骤：
-    （1）LN 和 5个RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）LN 和 5个RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，LN Stream数据发送未产生拥塞
 ```
 
-+ Stream_UDPTunnel_5LN_10con_1MbData
++ Stream_UDPTunnel_5LN_10con_1MBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
 操作步骤：
-    （1）5个LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1Mb 大小的字节流数据
+    （1）5个LN 和 RN 建立10个BDT连接，每个连接LN/RN双向持续发送10*1MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功，RN Stream数据接收未产生拥塞
 
 ```
 
-+ Stream_UDPTunnel_1000_1kbData
++ Stream_UDPTunnel_1000_1KBData
 ```
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
@@ -1110,25 +1160,25 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 
 
 覆盖测试场景：
-+ 网络带宽：10MbPs 、100MbPs、1000MbPs
++ 网络带宽：10MBPs 、100MBPs、1000MBPs
 + 网络时延：+0ms、+10ms、+50ms、+100ms、200ms、500ms
 + 丢包率：0%、5%、10%、20%、50%
 + MTU值设置：BDT_头部最小值、1100、1300、1499、1500
 
 模拟线路
-+ 线路1：网络带宽10MbPs、网络时延+0ms、丢包率0%
-+ 线路2：网络带宽100MbPs、网络时延+0ms、丢包率0%
-+ 线路3：网络带宽1000MbPs、网络时延+0ms、丢包率0%
-+ 线路4：网络带宽1000MbPs、网络时延+10ms、丢包率0%
-+ 线路5：网络带宽1000MbPs、网络时延+50ms、丢包率0%
-+ 线路6：网络带宽1000MbPs、网络时延+100ms、丢包率0%
-+ 线路7：网络带宽1000MbPs、网络时延+200ms、丢包率0%
-+ 线路9：网络带宽1000MbPs、网络时延+200ms、丢包率0%
-+ 线路10：网络带宽1000MbPs、网络时延+500ms、丢包率0%
-+ 线路11：网络带宽100MbPs、网络时延+200ms、丢包率5%
-+ 线路12：网络带宽100MbPs、网络时延+200ms、丢包率10%
-+ 线路13：网络带宽100MbPs、网络时延+200ms、丢包率20%
-+ 线路14：网络带宽100MbPs、网络时延+200ms、丢包率50%
++ 线路1：网络带宽10MBPs、网络时延+0ms、丢包率0%
++ 线路2：网络带宽100MBPs、网络时延+0ms、丢包率0%
++ 线路3：网络带宽1000MBPs、网络时延+0ms、丢包率0%
++ 线路4：网络带宽1000MBPs、网络时延+10ms、丢包率0%
++ 线路5：网络带宽1000MBPs、网络时延+50ms、丢包率0%
++ 线路6：网络带宽1000MBPs、网络时延+100ms、丢包率0%
++ 线路7：网络带宽1000MBPs、网络时延+200ms、丢包率0%
++ 线路9：网络带宽1000MBPs、网络时延+200ms、丢包率0%
++ 线路10：网络带宽1000MBPs、网络时延+500ms、丢包率0%
++ 线路11：网络带宽100MBPs、网络时延+200ms、丢包率5%
++ 线路12：网络带宽100MBPs、网络时延+200ms、丢包率10%
++ 线路13：网络带宽100MBPs、网络时延+200ms、丢包率20%
++ 线路14：网络带宽100MBPs、网络时延+200ms、丢包率50%
 
 测试用例操作
 
@@ -1138,7 +1188,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 前置条件：
     （1）LN/RN 网络可以基于UDP建立连接
 操作步骤：
-    （1）LN 和 RN 建立1个BDT连接，每个连接LN/RN双向持续发送100*10Mb 大小的字节流数据
+    （1）LN 和 RN 建立1个BDT连接，每个连接LN/RN双向持续发送100*10MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功
 ```
@@ -1147,7 +1197,7 @@ BDT 中协议栈使用的PeerId是不变的，理论上应该可以实现
 前置条件：
     （1）LN/RN 网络可以基于TCP建立连接
 操作步骤：
-    （1）LN 和 RN 建立1个BDT连接，每个连接LN/RN双向持续发送100*10Mb 大小的字节流数据
+    （1）LN 和 RN 建立1个BDT连接，每个连接LN/RN双向持续发送100*10MB 大小的字节流数据
 预期结果：
     (1) 数据发送成功
 ```

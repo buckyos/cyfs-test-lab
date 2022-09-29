@@ -485,7 +485,7 @@ ndn: ndn::Config {
 
 #### 双源传输
 // 传输最小单位piece  下载最小单位Chunk。其实多源只需要关注单个chunk和File(chunk list )
-+ NDN_DualSource_InterestChunk
++ NDN_Dual_DualSource_InterestChunk
 ```
 前置条件：
     (1)LN/RN 同时使用IPv4/IPv6、TCP/UDP 协议EP
@@ -498,7 +498,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_SingleSource_InterestChunk
++ NDN_Dual_SingleSource_InterestChunk
 ```
 前置条件：
     (1)LN/RN 同时使用IPv4/IPv6、TCP/UDP 协议EP
@@ -511,7 +511,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_DualSource_InterestFile
++ NDN_Dual_DualSource_InterestFile
 
 ```
 前置条件：
@@ -525,7 +525,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_SingleSource_InterestFile
++ NDN_Dual_SingleSource_InterestFile
 
 ```
 前置条件：
