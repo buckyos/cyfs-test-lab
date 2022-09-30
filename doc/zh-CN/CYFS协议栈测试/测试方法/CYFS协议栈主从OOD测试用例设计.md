@@ -2,48 +2,48 @@
 
 ### 测试点
 #### 环境类型
-dec_app真机环境
-模拟器环境
+* dec_app真机环境
+* 模拟器环境
 
 #### Object Map 类型
-MAP| 插入,更新,删除
-Set| 插入,更新，删除
+* MAP| 插入,更新,删除
+* Set| 插入,更新，删除
 
 #### Name Object类型
-标准对象|
-核心对象|
-扩展对象|
-自定义对象|
+* 标准对象
+* 核心对象
+* 扩展对象
+* 自定义对象
 
 #### Name Object关联类型
-单级关联
-多级关联
+* 单级关联
+* 多级关联
 
 #### GlobalStateStub类型
-Local_cache
-root_state
+* Local_cache
+* root_state
 
 #### OpEnvStub类型
-PathOpEnvStub
-SingleOpEnvStub
+* PathOpEnvStub
+* SingleOpEnvStub
 
 #### 同步Object数据量
-总同步10万
-总同步100万
-单新增次同步10万
-单新增次同步100万
+* 总同步10万
+* 总同步100万
+* 单新增次同步10万
+* 单新增次同步100万
 
 #### OOD工作模式
-Standalone 独立工作模式
-ActiveStandby 主从工作模式
+* Standalone 独立工作模式
+* ActiveStandby 主从工作模式
 
 #### 主从OOD切换
-主OOD读写|对象同步
-主OOD只读|对象同步
-从OOD读写|对象同步
-从OOD只读|对象同步
-两个主OOD
-两个从OOD
+* 主OOD读写|对象同步
+* 主OOD只读|对象同步
+* 从OOD读写|对象同步
+* 从OOD只读|对象同步
+* 两个主OOD
+* 两个从OOD
 
 ### 测试用例
 * 主从OOD#数据同步业务流程冒烟测试
