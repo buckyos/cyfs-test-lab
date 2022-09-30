@@ -1,721 +1,177 @@
 ##Trans测试用例设计
-
-
-
-
-
-
-
 ###Trans相关接口:
+* SharedCyfsStack::TransRequestor::encode_common_headers
+* SharedCyfsStack::TransRequestor::get_context
+* SharedCyfsStack::TransRequestor::put_context
+* SharedCyfsStack::TransRequestor::create_task
+* SharedCyfsStack::TransRequestor::start_task
+* SharedCyfsStack::TransRequestor::stop_task
+* SharedCyfsStack::TransRequestor::delete_task
+* SharedCyfsStack::TransRequestor::control_task
+* SharedCyfsStack::TransRequestor::get_task_state
+* SharedCyfsStack::TransRequestor::query_tasks
+* SharedCyfsStack::TransRequestor::publish_file
 
-
-
-SharedCyfsStack::TransRequestor::encode_common_headers
-
-
-
-SharedCyfsStack::TransRequestor::get_context
-
-
-
-SharedCyfsStack::TransRequestor::put_context
-
-
-
-SharedCyfsStack::TransRequestor::create_task
-
-
-
-SharedCyfsStack::TransRequestor::start_task
-
-
-
-SharedCyfsStack::TransRequestor::stop_task
-
-
-
-SharedCyfsStack::TransRequestor::delete_task
-
-
-
-SharedCyfsStack::TransRequestor::control_task
-
-
-
-SharedCyfsStack::TransRequestor::get_task_state
-
-
-
-SharedCyfsStack::TransRequestor::query_tasks
-
-
-
-SharedCyfsStack::TransRequestor::publish_file
-
-
-
-
-
-
-
-###Trans测试点
-
-
-
-####环境类型
-
-
-
+### 测试点
+#### 环境类型
 * dec_app真机环境
-
-
-
 * 模拟器环境
 
-
-
-
-
-
-
-####必填项
-
-
-
+#### 必填项
 * 必填
-
-
-
 * 非必填
 
-
-
-
-
-
-
-####target
-
-
-
+#### target
 * 指定target
-
-
-
 * 未指定target
-
-
-
 * target等于源设备
-
-
-
 * target不等于源设备
 
-
-
-
-
-
-
-####设备类型
-
-
-
+#### 设备类型
 * OOD
-
-
-
 * Device
 
-
-
-
-
-
-
-####请求路径
-
-
-
+#### 请求路径
 * 空
-
-
-
 * 非空
-
-
-
 * 合法
-
-
-
 * 非法
 
-
-
-
-
-
-
-####关联对象
-
-
-
+#### 关联对象
 * 结构化关联对象
-
-
-
 * 非结构化关联对象
 
-
-
-
-
-
-
-####传输对象
-
-
-
+#### 传输对象
 * file
-
-
-
 * chunk
 
-
-
-
-
-
-
-####Zone类型
-
-
-
+#### Zone类型
 * 同zone
-
-
-
 * 跨zone
 
-
-
-
-
-
-
-####task类型
-
-
-
+#### task类型
 * 新建
-
-
-
 * 已存在
-
-
-
 * 不存在
 
-
-
-
-
-
-
-####task状态
-
-
-
+#### task状态
 * Stopped
-
-
-
 * Running
-
-
-
 * Finished
-
-
-
 * Failed
 
-
-
-
-
-
-
-
-
-
-
-####task操作
-
-
-
+#### task操作
 * 创建
-
-
-
 * 开始
-
-
-
 * 停止
-
-
-
 * 删除
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####文件大小
-
-
-
+#### 文件大小
 * 0 byte
-
-
-
 * 1 byte
-
-
-
 * 1 Kb
-
-
-
 * 1 Mb
-
-
-
 * 4 Mb
-
-
-
 * 8 Mb
-
-
-
 * 16 Mb
-
-
-
 * 32 Mb
-
-
-
 * 64 Mb
-
-
-
 * 128 Mb
 
-
-
-
-
-
-
-####文件数量
-
-
-
+#### 文件数量
 * 1
-
-
-
 * 10
-
-
-
 * 100
-
-
-
 * 1000
-
-
-
 * 10000
 
-
-
-
-
-
-
-####chunk大小
-
-
-
+#### chunk大小
 * 1 Mb
-
-
-
 * 4 Mb
-
-
-
 * 8 Mb
-
-
-
 * 16 Mb
-
-
-
 * 32 Mb
-
-
-
 * 64 Mb
-
-
-
 * 128 Mb
 
-
-
-
-
-
-
-###Trans测试用例
-
-
-
+### 测试用例
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,本地设备进行并下载
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,非本地设备进行并下载
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,不存在设备进行并下载
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,重复进行并下载
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,随机chukid
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,随机file文件
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,随机file对象
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,关联结构化对象
-
-
-
 * SharedCyfsStack Trans相关接口测试，publish_file 接口调用,关联非结构化对象
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,本地设备创建任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,非设备创建任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,不存在设备创建任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,自动开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,非自动开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,多设备含本地设备列表
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,多设备不含本地设备列表
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,多设备含不存在设备列表
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,关联结构化对象
-
-
-
 * SharedCyfsStack Trans相关接口测试，create_task 接口调用,关联非结构化对象
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,不存在设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,已删除的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，start_task 接口调用,已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,不存在设备开始任务
-
-
-
 * haredCyfsStack Trans相关接口测试，stop_task 接口调用,已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,已删除的任务
-
-
-
 * haredCyfsStack Trans相关接口测试，stop_task 接口调用,已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，stop_task 接口调用,已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,不存在设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,已删除的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，delete_task 接口调用,已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,不存在设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,开始任务，已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,开始任务，已删除的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,开始任务，已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,开始任务，不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,开始任务，已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,停止任务，已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,停止任务，已删除的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,停止任务，已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,停止任务，不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,停止任务，已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,删除任务，已停止的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,删除任务，已删除的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,删除任务，已开始的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,删除任务，不存在的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，control_task 接口调用,删除任务，已结束的任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,不存在设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,未开始任务后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,开始任务后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,暂停任务后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,任务结束后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,删除任务后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，get_task_state 接口调用,任务失败后查询状态
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,本地设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,非设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,不存在设备开始任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询进行中任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询已停止任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询已完成任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询已失败任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询最新任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询最早任务
-
-
-
 * SharedCyfsStack Trans相关接口测试，query_tasks 接口调用,查询所有任务
