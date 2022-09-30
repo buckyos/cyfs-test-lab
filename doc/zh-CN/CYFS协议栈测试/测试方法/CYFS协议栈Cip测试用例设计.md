@@ -1,103 +1,105 @@
-####CYFS协议栈Cip测试用例设计
-###Cip测试点
+#CYFS协议栈Cip测试用例设计
+##Cip测试点
 
-####环境类型
+##环境类型
 * dec_app真机环境
 * 模拟器环境
 
-####必填项
+##必填项
 * 必填
 * 非必填
 
-####助记词
+##助记词
 * 长度12的英文字符串
 
-####设备类型
+##设备类型
 * OOD
 * Device
 
-####密钥类型
+##密钥类型
 * people
 * device
 
-####密钥数量
+##密钥数量
 * 1
 * n
 
-####密码类型
+##密码类型
 * 固定
 * 随机
 
-随机助记词：长度小于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk生成一枚私钥
+* 随机助记词：长度小于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk生成一枚私钥
 
-随机助记词：长度大于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk生成一枚私钥
+* 随机助记词：长度大于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk生成一枚私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成一枚私钥
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成一枚私钥
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成多枚不同私钥
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成多枚不同私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成一枚device私钥
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成一枚device私钥
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成多枚不同device私钥
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成多枚不同device私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成一枚私钥
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用TS_SDk多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成一枚私钥
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成一枚device私钥
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成一枚device私钥
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成一枚私钥
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用TS_SDk多次生成同1枚device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成多枚不同私钥
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成一枚私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成多枚不同私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成一枚device私钥
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成多枚不同device私钥
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成一枚device私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成多枚不同device私钥
 
-随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成一枚私钥
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 随机密码,Test网络,使用RUST多次生成不同device私钥对自定义对象加密，Rust端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成一枚私钥
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成一枚device私钥
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，Rust端使用同样的英文助记词及密码多次生成1枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚people私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
 
-随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成一枚device私钥
+
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成1枚公钥解密自定义对象
+
+* 随机助记词：长度等于12的英文句子 密码:9hmQPiN9vivT36YhxUYN9ZPCYao01ykDd6tkFhzgEGYMK0pF68DEKERRZox2fNY6CACTR7tRaAJgvgQRDkUPc5DjnXEbzmzdsU68,Test网络,使用RUST多次生成同1枚device私钥对自定义对象加密，TS_SDk端使用同样的英文助记词及密码生成多枚公钥解密自定义对象
