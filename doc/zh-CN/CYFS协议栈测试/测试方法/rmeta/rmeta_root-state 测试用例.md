@@ -47,7 +47,7 @@
 * OthersDec
 
 ## 测试用例
-### create_path_op_env root-state
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.full()权限组
@@ -120,7 +120,7 @@
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -193,7 +193,7 @@
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -266,8 +266,7 @@
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-### create_path_op_env local_cache
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.full()权限组
@@ -340,7 +339,7 @@
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -413,7 +412,7 @@
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -486,8 +485,7 @@
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_path_op_env local_cache的同zone多节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
-### create_single_op_env root-state
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.full()权限组
@@ -560,7 +558,7 @@
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_single_op_env root-state的同zone单节点单dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -633,7 +631,7 @@
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_single_op_env root-state的同zone单节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -706,8 +704,7 @@
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_single_op_env root-state的同zone多节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
-### create_path_op_env local_cache
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-None-AccessString.full()权限组
@@ -780,7 +777,7 @@
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_single_op_env local_cache的同zone单节点单dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-None-AccessString.full()权限组
@@ -853,7 +850,7 @@
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.set_group_permissions()权限组设定
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.make()权限组设定
 * create_single_op_env local_cache的同zone单节点多dec,AccessPermissions-Full-AccessString.constructor()权限组初始化
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * create_single_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_single_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.default()权限组
 * create_single_op_env local_cache的同zone多节点多dec,AccessPermissions-None-AccessString.full()权限组
