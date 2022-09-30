@@ -34,6 +34,7 @@
 * full()
 * full_except_write()
 * set_group_permission()
+* set_group_permissions()
 * full_except_write()
 * make()
 * constructor()
