@@ -1,6 +1,6 @@
 ## NDN测试用例设计
 
-### NDN相关接口
+### 相关接口
 * SharedCyfsStack::NDNRequestor::put_data
 * SharedCyfsStack::NDNRequestor::prepare_download_data
 * SharedCyfsStack::NDNRequestor::get_data
@@ -115,7 +115,7 @@
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 同Zone 发送端为 device1 接收端为OOD  正常流程
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 本地传输 正常流程
 * SharedCyfsStack NDN相关接口测试chunk 通过NDC 调用get_data 本地传输 正常流程
-* 
+
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为1000
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为1000
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为100
