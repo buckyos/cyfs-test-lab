@@ -1,303 +1,157 @@
-##NDN测试用例设计
+## NDN测试用例设计
 
-
-
-###NDN相关接口:
-
+### NDN相关接口
 * SharedCyfsStack::NDNRequestor::put_data
-
 * SharedCyfsStack::NDNRequestor::prepare_download_data
-
 * SharedCyfsStack::NDNRequestor::get_data
-
 * SharedCyfsStack::NDNRequestor::delete_data
-
 * SharedCyfsStack::NDNRequestor::encode_query_file_request
-
 * SharedCyfsStack::NDNRequestor::query_file
 
-
-
-###NDN测试点
-
-####环境类型
-
+### 测试点
+#### 环境类型
 * dec_app真机环境
-
 * 模拟器环境
 
-
-
-####必填项
-
+#### 必填项
 * 必填
-
 * 非必填
 
-
-
-####target
-
+#### target
 * 指定target
-
 * 未指定target
-
 * target等于源设备
-
 * target不等于源设备
 
-
-
-####设备类型
-
+#### 设备类型
 * OOD
-
 * Device
 
-
-####请求路径
-
+#### 请求路径
 * 空
-
 * 非空
-
 * 合法
-
 * 非法
 
-
-####chunk对象
-
+#### chunk对象
 * 空chunk
-
 * 非空chunk
-
 * 已存在chunk
-
 * 不存在chunk
 
-
-####传输对象
-
+#### 传输对象
 * file
-
 * chunk
-
 * Dir
 
-####Zone类型
-
+#### Zone类型
 * 同zone
-
 * 跨zone
 
-
-####文件大小
-
+#### 文件大小
 * 0B
-
 * 256B
-
 * 2kB
-
 * 2MB
-
 * 4 Mb
-
 * 256MB
-
 * 1GB
 
-####文件数量
-
+#### 文件数量
 * 1
-
 * 10
-
 * 100
-
 * 1000
-
 * 10000
 
-
-
-####chunk大小
-
+#### chunk大小
 * 1 MB
-
 * 2 MB
-
 * 8 MB
-
 * 128 MB
 
-
-
-
-###NDN测试用例
-
+### 测试用例
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data router级别target不指定设备
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data 请求路径为空
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data 不定义应用id
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data NDN级别target为空默认本地
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data 传入空字符生成的chunk
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data  空字符对象的chunk
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data  传入结构化关联对象
-
 * SharedCyfsStack NDN相关接口测试，put_data 接口调用，put_data  传入非结构化关联对象
-
 * SharedCyfsStack NDN相关接口测试，get_data接口调用，get_data 无请求路径
-
 * SharedCyfsStack NDN相关接口测试，get_data接口调用，get_data 无dec id
-
 * SharedCyfsStack NDN相关接口测试，get_data接口调用，get_data 无target指定
-
 * SharedCyfsStack NDN相关接口测试，get_data接口调用，get_data 空字符对象的chunk
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 接口调用
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 无请求路径
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 无dec id
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 无target指定
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 空字符对象的chunk
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 删除本地存在Chunk
-
 * SharedCyfsStack NDN相关接口测试，delete_data接口调用，delete_data 删除本地不存在Chunk
-
 * SharedCyfsStack NDN相关接口测试，query_file接口调用，query_file 不定义fileid
-
 * SharedCyfsStack NDN相关接口测试，prepare_download_data接口调用，query_file 不定义fileid
 
-
-* SharedCyfsStack NDN相关接口测试chunk 大小设置为 1 MB
-
+* SharedCyfsStack NDN相关接口测试chunk 大小设置为 1 M
 * SharedCyfsStack NDN相关接口测试chunk 大小设置为 2 MB
-
 * SharedCyfsStack NDN相关接口测试chunk 大小设置为 8 MB
-
 * SharedCyfsStack NDN相关接口测试chunk 大小设置为 128 MB
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用put_data 非本地传输 接口暂时不支持
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用put_data 本地传输  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 发送端为 device1 接收端为 OOD 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 本地传输  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 跨Zone 发送端为 zone1_device1 接收端为 zone2_ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 跨Zone 发送端为 zone1_ood 接收端为 zone2_device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 跨Zone 发送端为 zone1_ood 接收端为 zone2_ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 跨Zone 发送端为 zone1_device1 接收端为 zone2_device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 跨Zone 发送端为 zone1_device1 接收端为 zone2_ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 发送端为 ood 接收端为 device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 发送端为 device1 接收端为 device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 发送端为 device1 接收端为 OOD 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过Router 调用get_data 同Zone 本地传输  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 同Zone 发送端为 OOD 接收端为 device1  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 同Zone 发送端为 device1 接收端为 device2  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 同Zone 发送端为 device1 接收端为OOD  正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过NDN 调用get_data 本地传输 正常流程
-
 * SharedCyfsStack NDN相关接口测试chunk 通过NDC 调用get_data 本地传输 正常流程
-
-
-* SharedCyfsStack NDN相关接口测试dir 下载,文件数量为10000
-
+* 
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为1000
-
+* SharedCyfsStack NDN相关接口测试dir 下载,文件数量为1000
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为100
-
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为10
-
 * SharedCyfsStack NDN相关接口测试dir 下载,文件数量为1
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端:zone2ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone2ood 下载端: zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1ood 下载端:zone2ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1ood 下载端:zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端:zone2device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端:zone2ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端:zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端: zone1ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1device1 下载端：zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过Router下载，上传端：zone1ood 下载端：zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过NDN下载，上传端：zone1device1 下载端：zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过NDN 下载，上传端：zone1device1 下载端：zone1OOD 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过NDN下载，上传端：zone1device1 下载端：zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试dir 通过NDC下载，上传端：zone1device1 下载端：zone1device1 正常流程
 
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 0B
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 256B
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 2kB
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 2MB
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 256MB
-
 * SharedCyfsStack NDN相关接口测试file 大小设置为 1GB
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1ood 接收端:zone2ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1ood 接收端:zone2device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1ood 接收端:zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1ood 接收端:zone2device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1device1 接收端:zone2ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1device1 接收端:zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router  下载 发送端:zone1device1 接收端:zone1ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过Router 下载 发送端:zone1device1 接收端:zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过NDN 下载 发送端:zone1ood 接收端:zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过NDN 下载 发送端:zone1device1 接收端:zone1device2 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过NDN 下载 发送端:zone1device1 接收端zone1ood 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过NDN 下载 发送端:zone1device1 接收端:zone1device1 正常流程
-
 * SharedCyfsStack NDN相关接口测试file 通过NDC下载 发送端:zone1device1 接收端:zone1device1 正常流程
