@@ -1,51 +1,50 @@
-##Meta测试用例设计
+## Meta测试用例设计
 
+### Meta测试点
 
-
-###Meta测试点
-####环境类型
+#### 环境类型
 * dec_app真机环境
 * 模拟器环境
 
-####必填项
+#### 必填项
 * 必填
 * 非必填
 
-####target
+#### target
 * 指定target
 * 未指定target
 * target等于源设备
 * target不等于源设备
 
-####设备类型
+#### 设备类型
 * OOD
 * Device
 
-####请求路径
+#### 请求路径
 * 空
 * 非空
 * 合法
 * 非法
 
-####chunk对象
+#### chunk对象
 * 空chunk
 * 非空chunk
 * 已存在chunk
 * 不存在chunk
 
-####关联对象
+#### 关联对象
 * 结构化关联对象
 * 非结构化关联对象
 
-####传输对象
+#### 传输对象
 * file
 * chunk
 
-####Zone类型
+#### Zone类型
 * 同zone
 * 跨zone
 
-####文件大小
+#### 文件大小
 * 0 byte
 * 1 byte
 * 1 Kb
@@ -57,14 +56,14 @@
 * 64 Mb
 * 128 Mb
 
-####文件数量
+#### 文件数量
 * 1
 * 10
 * 100
 * 1000
 * 10000
 
-####chunk大小
+#### chunk大小
 * 1 Mb
 * 4 Mb
 * 8 Mb
@@ -73,7 +72,7 @@
 * 64 Mb
 * 128 Mb
 
-###NDN测试用例
+### 测试用例
 * SharedCyfsStack Meta相关接口测试，TS meta_client 接口测试,meta接口测试, get_meta_miner_host 接口,target 为Dev 链
 * SharedCyfsStack Meta相关接口测试，TS meta_client 接口测试,meta接口测试,get_meta_miner_host 接口,target Test 链
 * SharedCyfsStack Meta相关接口测试，TS meta_client 接口测试,meta接口测试,get_meta_spv_host 接口,target 为Dev 链
