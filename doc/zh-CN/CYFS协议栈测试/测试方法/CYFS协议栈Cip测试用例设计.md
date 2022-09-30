@@ -1,32 +1,34 @@
 # CYFS协议栈Cip测试用例设计
-## Cip测试点
 
-## 环境类型
+## 测试点
+### 环境类型
 * dec_app真机环境
 * 模拟器环境
 
-## 必填项
+### 必填项
 * 必填
 * 非必填
 
-## 助记词
+### 助记词
 * 长度12的英文字符串
 
-## 设备类型
+### 设备类型
 * OOD
 * Device
 
-## 密钥类型
+### 密钥类型
 * people
 * device
 
-## 密钥数量
+### 密钥数量
 * 1
 * n
 
-## 密码类型
+### 密码类型
 * 固定
 * 随机
+
+## 测试用例
 
 * 随机助记词：长度小于12的英文句子 密码:Incumber-betroth-imperil-pitiful-incense-stanford-pry-vendetta-murmur-sapwood-rump-petulant-entrain-taffeta-tense,Test网络,使用TS_SDk生成一枚私钥
 
