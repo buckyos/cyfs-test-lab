@@ -47,7 +47,7 @@
 * OthersDec
 
 ## 测试用例
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+***
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.dec_default()权限组
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.default()权限组
 * create_path_op_env root-state的同zone单节点单dec,AccessPermissions-None-AccessString.full()权限组
