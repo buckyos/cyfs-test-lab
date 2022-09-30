@@ -1,6 +1,6 @@
-##ObjectMap测试用例设计
+## ObjectMap测试用例设计
 
-###ObjectMap相关接口:
+### 相关接口:
 * SharedCyfsStack::GlobalStateStub::get_current_root
 * SharedCyfsStack::GlobalStateStub::get_dec_root
 * SharedCyfsStack::GlobalStateStub::create_path_op_env
@@ -46,26 +46,26 @@
 * SharedCyfsStack::PathOpEnvStub::list
 * SharedCyfsStack::PathOpEnvStub::metadata
 
-###ObjectMap测试点
-####环境类型
+### 测试点
+#### 环境类型
 * dec_app真机环境
 * 模拟器环境
 
-####设备类型
+#### 设备类型
 * OOD
 * Device
 
-####必填项
+#### 必填项
 * 必填
 * 非必填
 
-####target
+#### target
 * 指定target
 * 未指定target
 * target等于源设备
 * target不等于源设备
 
-####请求路径
+#### 请求路径
 * 空
 * 非空
 * 合法
@@ -96,35 +96,35 @@
 #### 特殊字符
 * "","/"," "
 
-####Zone类型
+#### Zone类型
 * 同zone
 * 跨zone
 
-####ACL配置
+#### ACL配置
 * 配置ACL可以访问
 * 未配置ACL禁止访问
 
-####Object Map 类型
+#### ObjectMap 类型
 * MAP| insert_with_key,set_with_key,remove_with_key,get_by_key,update,commit
 * Set| insert,remove,contains,update,commit
 
-####GlobalStateStub类型
+#### GlobalStateStub类型
 * Local_cache
 * root_state
 
-####OpEnvStub类型
+#### OpEnvStub类型
 * PathOpEnvStub
 * SingleOpEnvStub
 
-####加锁机制
+#### 加锁机制
 * 乐观锁
 * 悲观锁
 
-####path层级
+#### path层级
 * 同层path
 * 子层path
 
-###ObjectMap测试用例
+### 测试用例
 * 语言类别-Map数据获取-get_object_by_path 接口
 * 语言类别-Map数据获取-list 接口
 * 语言类别-Set数据获取-接口调用正常流程
