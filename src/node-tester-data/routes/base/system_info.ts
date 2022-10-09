@@ -31,4 +31,14 @@ router.post('/report',
         return res.json(result)
     }
 );
-
+router.post('/getRecords',
+    async (req, res) => {
+        console.info(`#receive system_info getRecords request,body = ${JSON.stringify(req.body)} `)
+        if( !req.body.name || !req.body.testcaseId){
+            return res.json({err:true,log:"缺少输入参数"})
+        }
+        let model = new SystemInfo();
+        let result =await  model.getRecords(req.body.name,req.body.testcaseId);
+        return res.json(result)
+    }
+);

@@ -38,5 +38,13 @@ export type SystemInfoModel =  {
         }})
         return result;
     }
+
+    async getRecords(name:string,testcaseId:string){
+      const result = await this.prisma.agent_system_info.findMany({
+        where: { name,testcaseId },orderBy:[{create_time : "asc"}]  
+      });
+      return result
+
+    }
   
   }

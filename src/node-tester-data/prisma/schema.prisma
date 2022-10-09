@@ -46,26 +46,29 @@ model agent_system_info {
 }
 
 model bdt_action {
-  id            Int     @id @default(autoincrement())
-  testcaseId    String? @db.VarChar(255)
-  task_id       String? @db.VarChar(255)
-  action_id     String? @db.VarChar(255)
-  type          String? @db.VarChar(255)
-  LN            String? @db.VarChar(255)
-  RN            String? @db.VarChar(255)
-  Users         String? @db.Text
-  parent_action String? @db.VarChar(255)
-  config        String? @db.Text
-  info          String? @db.Text
-  fileSize      Float?
-  chunkSize     Float?
-  connect_time  Int?
-  set_time      Int?
-  send_time     Int?
-  expect        String? @db.VarChar(255)
-  result        String? @db.VarChar(255)
-  resultLog     String? @db.VarChar(255)
-  createTime    String? @db.VarChar(255)
+  id             Int     @id @default(autoincrement())
+  testcaseId     String? @db.VarChar(255)
+  task_id        String? @db.VarChar(255)
+  action_id      String? @db.VarChar(255)
+  type           String? @db.VarChar(255)
+  LN             String? @db.VarChar(255)
+  RN             String? @db.VarChar(255)
+  Users          String? @db.Text
+  parent_action  String? @db.VarChar(255)
+  config         String? @db.Text
+  info           String? @db.Text
+  fileSize       Float?
+  chunkSize      Float?
+  connect_time   Int?
+  calculate_time Int?
+  set_time       Int?
+  send_time      Int?
+  expect         String? @db.VarChar(255)
+  result         String? @db.VarChar(255)
+  resultLog      String? @db.VarChar(255)
+  createTime     String? @db.VarChar(255)
+  date           String? @db.VarChar(255)
+  environment    String? @db.VarChar(255)
 }
 
 model bdt_agent {
@@ -88,6 +91,7 @@ model bdt_client {
   peerid      String? @db.VarChar(255)
   peerInfo    String? @db.Text
   sn_resp_eps String? @db.Text
+  online_time Float?  @db.Float
 }
 
 model bdt_task {
@@ -101,6 +105,9 @@ model bdt_task {
   expect_status String? @db.VarChar(255)
   state         String? @db.VarChar(255)
   createTime    String? @db.VarChar(255)
+  resultLog     String? @db.VarChar(255)
+  date          String? @db.VarChar(255)
+  environment   String? @db.VarChar(255)
 }
 
 model bdt_testcase {
@@ -117,7 +124,8 @@ model bdt_testcase {
   createTime   String? @db.VarChar(255)
   date         String? @db.VarChar(255)
   result       String? @db.VarChar(255)
-  errorList    String? @db.Text
+  errorList    String? @db.LongText
+  reason       String? @db.Text
 }
 
 model cyfs_action {
