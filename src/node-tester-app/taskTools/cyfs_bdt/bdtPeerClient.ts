@@ -695,6 +695,25 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: info.err,set_time: info.value?.set_time,file:info.bytes,ObjectId:info.value?.ObjectId,calculate_time: info.value?.calculate_time};
     }
+    async uploadSystemInfo(testcaseId:string,interval:number): Promise<{err: ErrorCode}>{
+        return new Promise(async (V)=>{
+            setTimeout(async()=>{
+                V({err:ErrorCode.timeout}) 
+            },10000)
+            let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+                name: 'upload_system_info',
+                agent_name : this.tags,
+                peerName: this.peerName,
+                testcaseId,
+                interval,
+            }, this.m_agentid, 0);
+            if (info.err || info.value.result) {
+                this.logger.error(`${this.tags} uploadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            }
+            V({err:info.value.result}) 
+        })
+        
+    }
 }
 export class BdtConnection extends EventEmitter {
     public local:string;

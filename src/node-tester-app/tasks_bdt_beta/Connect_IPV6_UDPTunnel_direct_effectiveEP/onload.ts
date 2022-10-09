@@ -1,7 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
 import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
 import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {BdtPeerClientConfig,LabSnList,IPv6Agent} from "../../taskTools/cyfs_bdt/labAgent"
+import {BdtPeerClientConfig,LabSnList,IPv6Agent, labAgent} from "../../taskTools/cyfs_bdt/labAgent"
 import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
 import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
 
@@ -38,8 +38,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }
             },
             logType:"info",
-            SN :[],
-            resp_ep_type:Resp_ep_type.Auto, 
+            SN :LabSnList,
+            resp_ep_type:Resp_ep_type.SN_Resp, 
     }
     // 每台机器运行一个bdt 客户端
     await agentManager.allAgentStartBdtPeer(config)
@@ -90,138 +90,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     },
                     expect : {err:0},      
                 }))
-                // 1.4 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 1.5 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.1 LN 连接 RN
-                let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                    type : ActionType.connect_second,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    RN : `${agent_ipv6[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},    
-                }))
-                // 2.2 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    RN : `${agent_ipv6[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.3 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream_reverse,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    RN : `${agent_ipv6[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 2.4 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                })) 
-                // 2.5 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_2,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                })) 
-                // 3.1 RN 连接 LN
-                let connect_3 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                    type : ActionType.connect_reverse,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    RN : `${agent_ipv6[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},    
-                }))
-                // 3.2 RN -> LN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    RN : `${agent_ipv6[i].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 3.3 LN -> RN 发送数据
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
-                    type : ActionType.send_stream_reverse,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    RN : `${agent_ipv6[j].tags[0]}$1`,
-                    fileSize : 10*1024*1024,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 3.4 RN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))  
-                // 3.5 LN 关闭连接
-                info = await testRunner.prevTaskAddAction(new BDTAction.CloseConnectAction({
-                    type : ActionType.close_connect,
-                    LN : `${agent_ipv6[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_3,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))  
+                
                 await testRunner.prevTaskRun();
             }
         }

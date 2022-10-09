@@ -51,7 +51,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let i in labAgent){
         for(let j in labAgent){
-            if(i != j && labAgent[i].NAT * labAgent[j].NAT < 6 ){
+            if(i != j && labAgent[i].NAT * labAgent[j].NAT == 0 ){
                 let info = await testRunner.createPrevTask({
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
@@ -72,7 +72,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     type : ActionType.send_file,
                     LN : `${labAgent[i].tags[0]}$1`,
                     RN : `${labAgent[j].tags[0]}$1`,
-                    fileSize : 0,
+                    fileSize : 1,
                     chunkSize : 10*1024*1024,
                    config:{
                         timeout : 60*1000,

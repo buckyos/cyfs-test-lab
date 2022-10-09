@@ -49,14 +49,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let WAN = agent_list.WAN[0].tags[0];
     await agentManager.allAgentStartBdtPeer(config)
     //(4) 测试用例执行器添加测试任务
-    for(let i =0;i<10;i++){
+    for(let i =0;i<50;i++){
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,
             RN : `${WAN}$1`,
             timeout : 5*30*1000,
             action : []
         })
-        for(let x=0;x<100;x++){
+        for(let x=0;x<200;x++){
             let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                 type : ActionType.connect,
@@ -64,9 +64,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 RN : `${WAN}$1`,
                 config:{
                     conn_tag: connect_1,
-                    firstQA_answer : RandomGenerator.string(100),
-                    firstQA_question : RandomGenerator.string(100),
-                    accept_answer : 1,
                     timeout : 20*1000,
                 },
                 expect : {err:0},    

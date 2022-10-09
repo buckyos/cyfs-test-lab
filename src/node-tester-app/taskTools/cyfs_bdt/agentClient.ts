@@ -3,6 +3,7 @@ import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
 import {request,ContentType} from "./request";
 import {BdtPeerClient} from "./bdtPeerClient"
+
 import * as mypath from "./path"
 export class AgentClient {
     public tags : string; // 机器名称 tags
@@ -20,7 +21,7 @@ export class AgentClient {
     private ipInfo?:{IPv4:Array<string>,IPv6:Array<string>}
     private state? : number;
     public cacheInfo? : {LocalDeviceCache:string,RemoteDeviceCache:string,local_list: Array<string>,remote_list:Array<string>};
-    
+    private is_report_perf : boolean;
     constructor(_interface: TaskClientInterface,agent:Agent){
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
@@ -30,7 +31,8 @@ export class AgentClient {
         this.agentMult = 0;
         this.is_run = false;
         this.state = 0;
-        this.running_device = []
+        this.running_device = [];
+        this.is_report_perf = false;
     }
     async init():Promise<{err:number,log:string}> {
         return new Promise(async(V)=>{
@@ -119,6 +121,7 @@ export class AgentClient {
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
         return {err:result.err,log:result.log,bdtClient}
     }
+
     async getBdtPeerClient(index:string):Promise<{err:ErrorCode,log?:string,bdtClient?:BdtPeerClient}>{
         this.is_run = true;
         if(!this.bdtPeerMap.has(index)){
@@ -161,6 +164,18 @@ export class AgentClient {
             this.logger.info(`api/bdt/client/addList resp:  ${JSON.stringify(run_action)}`)
         }
         return {err:BDTERROR.success,log:`reportAgent to server success`}
+    }
+    async uploadSystemInfo(testcaseId:string,interval: number) :Promise<{err:ErrorCode}>{
+        if(!this.is_report_perf){
+            this.is_report_perf = true;
+            for(let client of this.bdtPeerMap.values()){
+                let result =  await client.uploadSystemInfo(testcaseId,interval);
+                if(result.err == 0){
+                    break;
+                }
+            }
+        }
+        return {err:ErrorCode.succ}
     }
 
     async loadAgentCache(init?:string):Promise<{err:ErrorCode,LocalDeviceCache?:string,RemoteDeviceCache?:string,local_list?: Array<string>,remote_list?:Array<string>}>{

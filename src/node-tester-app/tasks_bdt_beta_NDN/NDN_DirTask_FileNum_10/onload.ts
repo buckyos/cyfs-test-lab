@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_AllEP_ChannelSelect"
+    let testcaseName = "NDN_DirTask_FileNum_10"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,

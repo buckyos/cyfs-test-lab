@@ -37,6 +37,9 @@ export class SendFileAction extends BaseAction implements ActionAbstract {
         let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
         if (!this.action.config.not_wait_upload_finished) {
             let setResult = await setRunning;
+            if(this.action.fileSize!>100*1024*1024){
+                await sleep(10*1000);
+            }
             if(setResult.err){
                 return { err: setResult.err, log: `SendFileAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
