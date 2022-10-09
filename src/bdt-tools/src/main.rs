@@ -1,6 +1,7 @@
 mod connection;
 mod peer;
 mod command;
+mod http;
 mod lib;
 use peer::Peer;
 
@@ -135,6 +136,8 @@ async fn main()->Result<(), BuckyError> {
             peer.on_download_dir_state(c, lpc.clone());
         }else if name == String::from("get_system_info") {
             peer.on_get_system_info(c, lpc.clone());
+        }else if name == String::from("upload_system_info") {
+            peer.on_upload_system_info(c, lpc.clone());
         }else if name == String::from("send-datagram") {
             peer.on_send_datagram(c, lpc.clone());
         }else if name == String::from("recv-datagram") {

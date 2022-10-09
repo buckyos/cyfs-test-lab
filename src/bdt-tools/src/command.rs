@@ -1413,7 +1413,7 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
                     DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
-                    _ => String::from("unkown"),
+                    _ => String::from("unkown")
                 }
             }),
             Err(err) => serde_json::json!({
@@ -1481,7 +1481,67 @@ impl TryFrom<GetSystemInfoLpcCommandResp> for LpcCommand {
 }
 
 
+pub struct UploadSystemInfoLpcCommandReq {
+    pub seq: u32,
+    pub agent_name : String,
+    pub testcaseId : String,
+    pub interval : u64,
+}
+impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+        let interval = match json.get("interval") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => s.as_u64().unwrap(),
+                _ => 2000,
+            },
+            _ => 2000,
+        };
+        let agent_name = match json.get("agent_name") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.clone()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "agent_name format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "name lost")),
+        }?;
+        let testcaseId = match json.get("testcaseId") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.clone()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "testcaseId format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "testcaseId lost")),
+        }?;
+        Ok(Self {
+            seq: value.seq(),
+            agent_name,
+            testcaseId,
+            interval,
+        })
+    }
+}
+pub struct UploadSystemInfoLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+}
+impl TryFrom<UploadSystemInfoLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: UploadSystemInfoLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "upload_system_info_resp",
+            "result": value.result,
 
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
 pub struct CheckChunkLpcCommandReq {
     pub seq: u32,
     pub chunk_id: ChunkId,

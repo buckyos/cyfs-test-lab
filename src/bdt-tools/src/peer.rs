@@ -51,15 +51,17 @@ use cyfs_bdt::{
 use crate::lib::{LpcCommand, Lpc};
 use crate::{
     command::{*}, 
-    connection::TestConnection
+    connection::TestConnection,
+    http::{*},
 };
 
 
 use cyfs_util::SYSTEM_INFO_MANAGER;
 
 use walkdir::WalkDir;
-
-
+use hyper::{body::Buf};
+use hyper::{Body, Method,Client,  Request};
+use serde::{Deserialize,Serialize};
 //
 #[derive(Clone)]
 struct Task {
@@ -2949,6 +2951,56 @@ impl Peer {
                     }
                 }
             };
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+
+    }
+    pub fn on_upload_system_info(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on get_system_info, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        let resp = match UploadSystemInfoLpcCommandReq::try_from(c) {
+            Err(e) => {
+                log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
+                UploadSystemInfoLpcCommandResp {
+                    seq, 
+                    result : 1,
+                }
+            },
+            Ok(c) => {
+                task::spawn(async move {
+                    let url = "http://192.168.100.254:5000/api/base/system_info/report";
+                    loop {
+                        let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
+                        let sysInfo = BDTTestSystemInfo {
+                            name : c.agent_name.clone(),
+                            testcaseId : c.testcaseId.clone(),
+                            cpu_usage: ret.cpu_usage,
+                            total_memory: ret.total_memory,
+                            used_memory: ret.used_memory,
+                            received_bytes: ret.received_bytes,
+                            transmitted_bytes: ret.transmitted_bytes,
+                            ssd_disk_total: ret.ssd_disk_total,
+                            ssd_disk_avail:ret.ssd_disk_avail,
+                            hdd_disk_total: ret.hdd_disk_total,
+                            hdd_disk_avail: ret.hdd_disk_avail,
+                        };
+                        let json_body = serde_json::to_vec(&sysInfo).unwrap();
+                        //log::info!("start upload_system_info to server {:#?} ",json_body.clone());
+                        let get_json = request_json_post(url.clone(),Body::from(json_body)).await.unwrap();
+                        log::info!("report bdt agent perf result = {:#?}", get_json);
+                        async_std::task::sleep(Duration::from_millis(c.interval.clone())).await; 
+                    }
+                });
+                UploadSystemInfoLpcCommandResp {
+                    seq, 
+                    result: 0 as u16,
+                }
+            }
+        };
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack();
             let mut lpc = lpc;
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
