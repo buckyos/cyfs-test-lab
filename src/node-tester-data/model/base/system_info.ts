@@ -40,10 +40,16 @@ export type SystemInfoModel =  {
     }
 
     async getRecords(name:string,testcaseId:string){
-      const result = await this.prisma.agent_system_info.findMany({
-        where: { name,testcaseId },orderBy:[{create_time : "asc"}]  
-      });
-      return result
+      try {
+        const result = await this.prisma.agent_system_info.findMany({
+          where: { name,testcaseId },orderBy:[{create_time : "asc"}]  
+        });
+        return {err:0,log:"getRecords success",result}
+      } catch (error) {
+        return {err:1,log:`${error}`}
+      }
+      
+      
 
     }
   
