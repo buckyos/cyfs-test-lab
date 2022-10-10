@@ -5,6 +5,7 @@ import * as myHandler from "./handler"
 
 import * as path from "path"
 import * as fs from 'fs-extra';
+import { access } from 'fs';
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -39,6 +40,7 @@ async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, acc
     return { saveobject, saveObjectId, saveobjectOwner, object_raw }
 }
 
+const handlerManager = new myHandler.handlerManager(); //用来回收handler 和监听校验handler触发
 
 let zone1device1: cyfs.SharedCyfsStack;
 let zone1device2: cyfs.SharedCyfsStack;
@@ -48,6 +50,7 @@ let zone1sood: cyfs.SharedCyfsStack
 let zone2ood: cyfs.SharedCyfsStack
 let zone2device1: cyfs.SharedCyfsStack
 let zone2device2: cyfs.SharedCyfsStack
+let system_stack: cyfs.SharedCyfsStack
 
 let zone1device1_dec_id: cyfs.ObjectId
 let zone1device2_dec_id: cyfs.ObjectId
@@ -82,16 +85,13 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         zone2device1 = ZoneSimulator.zone2_device1_stack!.fork_with_new_dec(zone2device1_dec_id);
         zone2device2 = ZoneSimulator.zone2_device2_stack!.fork_with_new_dec(zone2device2_dec_id);
 
-
-
-
-
+        system_stack = ZoneSimulator.zone1_device1_stack.fork_with_new_dec(cyfs.get_system_dec_app().object_id)
 
     })
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
         ZoneSimulator.stopZoneSimulator();
-        process.exit(1)
+        process.exit(0)
 
     })
 
@@ -342,7 +342,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 access: rwx
             };
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
-            const put_ret3 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
             assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
             assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
             // get
@@ -351,7 +351,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 common: {
                     req_path: undefined,
                     level: cyfs.NONAPILevel.Router,
-                    target: undefined,
+                    target: zone1ood.local_device_id().object_id,
                     dec_id: zone1device1_dec_id,
                     flags: 0,
                 }
@@ -517,6 +517,72 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(get_ret.err, `defalut permission get object cross zone success,err : ${JSON.stringify(get_ret)}`);
 
 
+        })
+
+        it("default权限-zone内发起请求指定了sourceDec与put时dec不同，能请求成功", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.default()
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            const put_ret1 = await zone1device1.non_service().put_object(put_req);
+            const put_ret2 = await zone1device2.non_service().put_object(put_req);
+            const put_ret3 = await zone1ood.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret1.err, `put object failed,err : ${JSON.stringify(put_ret1)}`)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: undefined,
+                    flags: 0,
+                }
+            };
+            const get_ret = await zone1device1.non_service().get_object(get_req);
+            const get_ret1 = await zone1ood.non_service().get_object(get_req);
+            const get_ret2 = await zone1device2.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret1);
+            assert(!get_ret.err);
+            assert(!get_ret1.err);
+            assert(!get_ret2.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret1 = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret2 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret3 = await zone1ood.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret1);
+            assert(!delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(!delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+            assert(!delete_ret3.err, `delete object failed ,err : ${JSON.stringify(delete_ret3)}`)
         })
 
         it("access不填权限为默认值跨zone-device访问失败", async () => {
@@ -1442,8 +1508,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
 
-
-        it.only("多个分组设置组合权限-当前zone和OwnerDec权限为full", async () => {
+        it("多个分组设置组合权限-当前zone和OwnerDec权限为full", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
@@ -1482,27 +1547,501 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     flags: 0,
                 }
             };
-            const get_ret2 = await zone1device1.non_service().get_object(get_req);
-            const get_ret1 = await zone1device2.non_service().get_object(get_req);
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
             console.info('get_object result:', get_ret1);
             assert(!get_ret1.err);
-            assert(!get_ret2.err);
+            assert(get_ret2.err);
 
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
                     req_path: undefined,
-                    dec_id: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
                     level: cyfs.NONAPILevel.Router,
                     flags: 0,
                     target: zone1device1.local_device_id().object_id,
                 },
                 object_id: object_id,
-
             };
             const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(!delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+
+        it("多个分组设置组合权限-当前zone为full和OwnerDec权限为None", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OwnerDec, permissions: cyfs.AccessPermissions.None }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err);
+            assert(get_ret2.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+        })
+        it("多个分组设置组合权限-otherZone和OtherDec权限为full", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OthersDec, permissions: cyfs.AccessPermissions.Full }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            const put_ret4 = await zone2device2.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(get_ret2.err);
+            assert(!get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device2_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+        })
+        it("多个分组设置组合权限-otherZone和OtherDec权限为none", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OthersDec, permissions: cyfs.AccessPermissions.None }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            const put_ret4 = await zone2device2.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(get_ret2.err);
+            assert(get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device2_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+        })
+
+        it("多个分组设置组合权限-重复设置同组不同权限", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.None },
+            { group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.WriteOnly },
+            { group: cyfs.AccessGroup.OwnerDec, permissions: cyfs.AccessPermissions.Full }, { group: cyfs.AccessGroup.CurrentDevice, permissions: cyfs.AccessPermissions.Full }, { group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.Full }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            const put_ret4 = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(!put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(get_ret2.err);
+            assert(get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device2_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+        })
+
+        it("多个分组设置组合权限-重复设置同组多组相同权限", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = cyfs.AccessString.make([{ group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.Full },
+            { group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.None },
+            { group: cyfs.AccessGroup.OthersZone, permissions: cyfs.AccessPermissions.WriteOnly },
+            { group: cyfs.AccessGroup.OwnerDec, permissions: cyfs.AccessPermissions.Full }, { group: cyfs.AccessGroup.CurrentDevice, permissions: cyfs.AccessPermissions.Full }, { group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.Full }, { group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.ReadOnly }, { group: cyfs.AccessGroup.CurrentZone, permissions: cyfs.AccessPermissions.ReadAndWrite }])
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            const put_ret4 = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(!put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(!put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(get_ret2.err);
+            assert(get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device2_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+        })
+
+        it("回收当前设备的读写权限其他zone的读权限", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = new cyfs.AccessString(0o777777)
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            rwx.clear_group_permission(cyfs.AccessGroup.CurrentZone, cyfs.AccessPermission.Write)
+            rwx.clear_group_permission(cyfs.AccessGroup.CurrentZone, cyfs.AccessPermission.Read)
+            rwx.clear_group_permission(cyfs.AccessGroup.OthersZone, cyfs.AccessPermission.Read)
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1device2.non_service().put_object(put_req);
+            const put_ret4 = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(!put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(!get_ret2.err);
+            assert(get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
             console.info('delete_object result:', delete_ret);
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
         })
+
+        it("回收othersZone和othersDec权限", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.log(object_id)
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+            let rwx = new cyfs.AccessString(0o777777)
+            console.log(rwx)
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: rwx
+            };
+            rwx.clear_group_permissions(cyfs.AccessGroup.OthersDec)
+            rwx.clear_group_permissions(cyfs.AccessGroup.OthersZone)
+            console.log(rwx)
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1ood.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device2_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
+            const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
+            const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
+            console.info('get_object result:', get_ret1);
+            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(get_ret2.err);
+            assert(get_ret3.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device2_dec_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: object_id,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
+            const delete_ret2 = await zone2device2.non_service().delete_object(del_req);  //不同zone
+            console.info('delete_object result:', delete_ret);
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret1)}`)
+            assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
+        })
+
+
 
     })
 
@@ -1511,30 +2050,135 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
 
 
-    describe("#put_object接口 req_path层权限", async () => {
-        it("NONRequestor调用put_object正常流程", async () => {
-            let req_path = new cyfs.RequestGlobalStatePath(cyfs.get_system_dec_app().object_id).toString()
-            console.log("------------------------>" + req_path)
-
+    describe("#NON接口 req_path层权限", async () => {
+        it("加入req_path后的主流场景", async () => {
 
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
-            console.log(object_id)
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
             const object_raw = obj.to_vec().unwrap();
-            let rwx = cyfs.AccessString.default()
-            console.log(rwx)
+
+            const first_delete: cyfs.NONDeleteObjectOutputRequest = {
+                common: {  //清理 local cache
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                },
+                object_id: object_id,
+
+            }
+            let del1_res = await zone1device1.non_service().delete_object(first_delete)
+            let del2_res = await zone1device2.non_service().delete_object(first_delete)
+            console.info('delete_object result:', first_delete);
+            assert(!del1_res.err, `delete1 object failed ,err : ${JSON.stringify(del1_res)}`)
+            assert(!del2_res.err, `delete2 object failed ,err : ${JSON.stringify(del2_res)}`)
+
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
+                    flags: 0,
+                    target: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                },
+                access: undefined,
+                object: new cyfs.NONObjectInfo(object_id, object_raw)
+            };
+            const put_ret = await zone1device2.non_service().put_object(put_req);
+            console.log(put_ret)
+            assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`)
+
+            //注册req_path
+            let path = "/test_non/reqpath"
+            let stub = zone1device2.root_state_stub(zone1device2.local_device_id().object_id, zone1device2_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            await op_env.set_with_path(path, object_id, undefined, true)
+            let o = (await op_env.commit()).unwrap()
+
+
+            //给指定设备dec授权该path,不指定默认当前source
+            let rwx = new cyfs.AccessString(0o777777)
+            console.log("---------------------------> " + rwx)
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path, rwx)
+            zone1device2.root_state_meta_stub(zone1device2_dec_id).add_access(item)
+
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device2_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+            console.log("------------------------> " + req_path)
+
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: req_path,
+                    level: cyfs.NONAPILevel.Router,
+                    target: undefined,
+                    dec_id: undefined,
+                    flags: 0,
+                }
+            };
+            const get_ret = await zone1device2.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret);
+            assert(!get_ret.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
                     req_path: undefined,
+                    dec_id: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: undefined,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device2.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+
+        })
+
+
+        it("NONRequestor调用put_object正常流程", async () => {
+
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+
+            //注入req_path及对象
+            let path = "/test_non/reqpath"
+            let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            op_env.set_with_path(path, object_id, undefined, true)
+            let root_info = (await op_env.commit()).unwrap()
+            root_info.dec_root
+            root_info.root
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+            let root_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.GlobalRoot(root_info.root)).toString()  //cyfs.get_system_dec_app().object_id
+            let decroot_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.DecRoot(root_info.dec_root)).toString()  //cyfs.get_system_dec_app().object_id
+
+            console.log("------------------------>" + req_path)
+
+            // //给指定设备dec授权该path,不指定默认当前source
+            // let rwx = cyfs.AccessString.default()
+            //console.log(rwx)
+            // let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path,rwx)
+            // zone1device1.root_state_meta_stub(zone2device1.local_device_id().object_id,zone1device1_dec_id).add_access(item)
+
+
+
+
+
+
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: path,
                     dec_id: zone1device1.local_device_id().object_id,
                     flags: 0,
                     target: zone1device1.dec_id,
                     level: cyfs.NONAPILevel.Router //设置路由类型
                 },
                 object: new cyfs.NONObjectInfo(object_id, object_raw),
-                access: rwx
+                access: undefined
             };
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1ood.non_service().put_object(put_req);
@@ -1571,5 +2215,146 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
 
         })
+
+        it("NONRequestor调用put_object正常流程", async () => {
+
+            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
+            const object_raw = obj.to_vec().unwrap();
+
+            //注册req_path
+            let path = "/test_non/reqpath"
+            let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            op_env.set_with_path(path, object_id, undefined, true)
+            let root_info = (await op_env.commit()).unwrap()
+            root_info.dec_root
+            root_info.root
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+            let root_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.GlobalRoot(root_info.root)).toString()  //cyfs.get_system_dec_app().object_id
+            let decroot_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.DecRoot(root_info.dec_root)).toString()  //cyfs.get_system_dec_app().object_id
+
+            console.log("------------------------>" + req_path)
+
+            // //给指定设备dec授权该path,不指定默认当前source
+            // let rwx = cyfs.AccessString.default()
+            //console.log(rwx)
+            // let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path,rwx)
+            // zone1device1.root_state_meta_stub(zone2device1.local_device_id().object_id,zone1device1_dec_id).add_access(item)
+
+
+
+
+
+
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: path,
+                    dec_id: zone1device1.local_device_id().object_id,
+                    flags: 0,
+                    target: zone1device1.dec_id,
+                    level: cyfs.NONAPILevel.Router //设置路由类型
+                },
+                object: new cyfs.NONObjectInfo(object_id, object_raw),
+                access: undefined
+            };
+            const put_ret2 = await zone1device1.non_service().put_object(put_req);
+            const put_ret3 = await zone1ood.non_service().put_object(put_req);
+            console.log(put_ret3)
+            assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: object_id,
+                common: {
+                    req_path: undefined,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.dec_id,
+                    dec_id: zone1device1.local_device_id().object_id,
+                    flags: 0,
+                }
+            };
+            const get_ret = await zone1device1.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret);
+            assert(!get_ret.err);
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.Router,
+                    flags: 0,
+                    target: zone1device1.dec_id,
+                },
+                object_id: object_id,
+
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+
+        })
+
+
+
+        it.only("NONRequestor调用post_object正常流程", async () => {
+            // let permission=cyfs.GlobalStatePathAccessItem.new_group("/9tGpLNncauC9kGhZ7GsztFvVegaKwBXoSDjkxGDHqrn6/.cyfs/api/handler/pre_router/post_object/",undefined,cyfs.DeviceZoneCategory.CurrentDevice,zone1device1_dec_id,0o777777)
+            // system_stack.root_state_meta_stub().add_access(permission)
+            let info = await createTestObject(zone1device1, zone1device1.local_device_id().to_base_58());
+            // const ret1 = await zone1device1.router_handlers().add_post_object_handler(
+            //     cyfs.RouterHandlerChain.PreRouter,
+            //     "post_handler_01",
+            //     1,
+            //     `dec_id == ${zone1device1_dec_id.to_base_58()}`,
+            //     undefined,
+            //     cyfs.RouterHandlerAction.Default,
+            //     undefined
+            // );
+            // assert(!ret1.err,`添加handler错误 ---> ${ret1}`)
+
+            // this.handlerList.push({deviceName,stack,chain,type,id,routine}) 
+            // if(routine!=cyfs.None){
+            //     this.checkList.push({deviceName,runSum,routineType,id})
+            // }
+            // let check = handlerManager.startHandlerCheck(10 * 1000);
+
+             // 注册req_path
+             let path = "/test_non/reqpath"
+             let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id,zone1device1_dec_id);
+             let op_env = (await stub.create_path_op_env()).unwrap()
+             await op_env.set_with_path(path, info.saveObjectId, undefined, true)
+             let o = (await op_env.commit()).unwrap()
+
+            //  //给指定设备dec授权该path,不指定默认当前source
+            //  let rwx = new cyfs.AccessString(0o777777)
+            //  console.log("---------------------------> "+rwx)
+            //  let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path, rwx)
+            //  zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id,zone1device1_dec_id).add_access(item)
+
+             let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+             console.log("------------------------> " + req_path)
+
+            const req1: cyfs.NONPostObjectOutputRequest = {
+
+                object: cyfs.NONObjectInfo.new_from_object_raw(info.object_raw).unwrap(),//info.saveObjectId,
+                common: {
+                    req_path: req_path,
+                    level: cyfs.NONAPILevel.Router,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const post_ret = await zone1device1.non_service().post_object(req1);
+            console.info('post_object result:', post_ret);
+            // //检查监听事件是否触发
+            // let handlerResult = await check
+            // console.info(`post_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            // assert(!handlerResult.err)
+        })
     })
+
 })
+
+

@@ -120,31 +120,31 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                     assert(!delete_ret.err);
                 }) 
             })
-            describe("#协议栈NONRequestor 内select_object接口",async()=>{
-                it("NONRequestor调用select_object正常流程",async()=>{
-                    //select 操作
-                    let filter: cyfs.SelectFilter = {
-                        obj_type: 41,
-                        obj_type_code:cyfs.ObjectTypeCode.Custom,
-                    }
-                    const req2: cyfs.NONSelectObjectOutputRequest = {
-                        common: {    
-                            dec_id:stackInfo.appID,
-                            level: cyfs.NONAPILevel.Router,               
-                            flags: 0,
-                            target: stack_ood.local_device_id().object_id,
-                        },
-                        filter,
-                        opt: {
-                            page_size : 10,
-                            page_index : 0
-                        }
-                    };
-                    const select_ret = await stack_runtime.non_service().select_object(req2);
-                    console.info('select_object result:', select_ret.unwrap());
-                    assert(!select_ret.err);
-                }) 
-            })
+            // describe("#协议栈NONRequestor 内select_object接口",async()=>{
+            //     it("NONRequestor调用select_object正常流程",async()=>{
+            //         //select 操作
+            //         let filter: cyfs.SelectFilter = {
+            //             obj_type: 41,
+            //             obj_type_code:cyfs.ObjectTypeCode.Custom,
+            //         }
+            //         const req2: cyfs.NONSelectObjectOutputRequest = {
+            //             common: {    
+            //                 dec_id:stackInfo.appID,
+            //                 level: cyfs.NONAPILevel.Router,               
+            //                 flags: 0,
+            //                 target: stack_ood.local_device_id().object_id,
+            //             },
+            //             filter,
+            //             opt: {
+            //                 page_size : 10,
+            //                 page_index : 0
+            //             }
+            //         };
+            //         const select_ret = await stack_runtime.non_service().select_object(req2);
+            //         console.info('select_object result:', select_ret.unwrap());
+            //         assert(!select_ret.err);
+            //     }) 
+            // })
             describe("#协议栈NONRequestor 内post_object接口",async()=>{
                 it("NONRequestor调用post_object正常流程",async()=>{
                     let info =  await createTestObject(stack_runtime,stack_runtime.local_device_id().to_base_58());
@@ -294,49 +294,49 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                     assert(!handlerResult.err)
                 }) 
             })
-            describe("#协议栈router_handlers 内add_select_object_handler接口",async()=>{
-                it("router_handlers调用add_select_object_handler正常流程",async()=>{
-                    const ret01 = await handlerManager.addHandler(
-                        `${stack_ood.local_device_id().to_base_58()}`,
-                        stack_ood,
-                        cyfs.RouterHandlerCategory.SelectObject,
-                        cyfs.RouterHandlerChain.PreRouter,
-                        "select-object-handler-001" ,
-                        -1,
-                        `dec_id == ${stackInfo.appID.to_base_58()}`,
-                        cyfs.RouterHandlerAction.Default,
-                        myHandler.SelectObjectHandlerDefault,
-                        "SelectObjectHandlerDefault",
-                        1,
-                    )
-                    let check =  handlerManager.startHandlerCheck(10*1000);  
-                    //select 操作
-                    let filter: cyfs.SelectFilter = {
-                        obj_type: 41,
-                        obj_type_code:cyfs.ObjectTypeCode.Custom,
-                    }
-                    const req2: cyfs.NONSelectObjectOutputRequest = {
-                        common: {    
-                            dec_id:stackInfo.appID,
-                            level: cyfs.NONAPILevel.Router,               
-                            flags: 0,
-                            target: stack_ood.local_device_id().object_id,
-                        },
-                        filter,
-                        opt: {
-                            page_size : 10,
-                            page_index : 0
-                        }
-                    };
-                    const select_ret = await stack_runtime.non_service().select_object(req2);
-                    console.info('select_object result:', select_ret.unwrap());
-                    assert(!select_ret.err);
-                    //检查监听事件是否触发
-                    let handlerResult = await check
-                    console.info(`post_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
-                    assert(!handlerResult.err)
-                }) 
-            })
+            // describe("#协议栈router_handlers 内add_select_object_handler接口",async()=>{
+            //     it("router_handlers调用add_select_object_handler正常流程",async()=>{
+            //         const ret01 = await handlerManager.addHandler(
+            //             `${stack_ood.local_device_id().to_base_58()}`,
+            //             stack_ood,
+            //             cyfs.RouterHandlerCategory.SelectObject,
+            //             cyfs.RouterHandlerChain.PreRouter,
+            //             "select-object-handler-001" ,
+            //             -1,
+            //             `dec_id == ${stackInfo.appID.to_base_58()}`,
+            //             cyfs.RouterHandlerAction.Default,
+            //             myHandler.SelectObjectHandlerDefault,
+            //             "SelectObjectHandlerDefault",
+            //             1,
+            //         )
+            //         let check =  handlerManager.startHandlerCheck(10*1000);  
+            //         //select 操作
+            //         let filter: cyfs.SelectFilter = {
+            //             obj_type: 41,
+            //             obj_type_code:cyfs.ObjectTypeCode.Custom,
+            //         }
+            //         const req2: cyfs.NONSelectObjectOutputRequest = {
+            //             common: {    
+            //                 dec_id:stackInfo.appID,
+            //                 level: cyfs.NONAPILevel.Router,               
+            //                 flags: 0,
+            //                 target: stack_ood.local_device_id().object_id,
+            //             },
+            //             filter,
+            //             opt: {
+            //                 page_size : 10,
+            //                 page_index : 0
+            //             }
+            //         };
+            //         const select_ret = await stack_runtime.non_service().select_object(req2);
+            //         console.info('select_object result:', select_ret.unwrap());
+            //         assert(!select_ret.err);
+            //         //检查监听事件是否触发
+            //         let handlerResult = await check
+            //         console.info(`post_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            //         assert(!handlerResult.err)
+            //     }) 
+            // })
             describe("#协议栈router_handlers 内add_post_object_handler接口",async()=>{
                 it("router_handlers调用add_post_object_handler正常流程",async()=>{
                     let info =  await createTestObject(stack_runtime,stack_runtime.local_device_id().to_base_58());
