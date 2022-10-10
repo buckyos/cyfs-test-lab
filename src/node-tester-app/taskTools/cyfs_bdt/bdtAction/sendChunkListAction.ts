@@ -57,7 +57,7 @@ export class SendChunkListAction extends BaseAction implements ActionAbstract {
         
         let check = await LN.bdtClient!.checkChunkListListener(download.session!, 2000, this.action.config.timeout);
         if (check.err) {
-            return { err: BDTERROR.CheckChunkError, log: `checkChunkListListener run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: BDTERROR.CheckChunkError, log: `checkChunkListListener run failed,checkChunkListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         // (4) 校验结果
         // chunk 本身id基于hash计算,不需要校验

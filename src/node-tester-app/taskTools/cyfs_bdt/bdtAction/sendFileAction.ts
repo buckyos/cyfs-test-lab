@@ -52,7 +52,7 @@ export class SendFileAction extends BaseAction implements ActionAbstract {
             
         let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
         if(check.err){
-            return { err: check.err, log: `SendFileAction run failed, downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: check.err, log: `SendFileAction run failed, downloadTaskListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let setResult = await setRunning;
         if(setResult.err){

@@ -103,6 +103,7 @@ export class TestRunner{
                 await task.action[i].init(this.m_interface,task,Number(i),this.Testcase!.date!);
                 let result = await task.action[i].start();
                 record.data.push(task.action[i].record());
+                record.data = record.data.concat(task.action[i].record_child());
                 if(result.err){
                     task.state = "failed"
                     return V({err:result.err,record,log:result.log});
@@ -186,6 +187,12 @@ export class TestRunner{
         }
         return;
     }
+    async saveAgentPerfInfo() {
+        if(config.ReportAgentPerfInfo){
+           await this.agentManager.saveAgentPerfInfo(this.Testcase!.testcaseId);
+        }
+        return;
+    }
     async saveJson(){
         fs.writeFileSync(path.join(this.logger.dir(),`./testReport.json`),JSON.stringify(this.JSONReport));
         return;
@@ -245,20 +252,26 @@ export class TestRunner{
         await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
         await this.saveJson();
         await this.saveMysql();
+        await this.saveAgentPerfInfo();
         return;
     }
     // 退出测试用例
     async exitTestcase(err:number,log:string){
         this.end_time = Date.now();
-       
+        setTimeout(()=>{
+            this.m_interface.exit(err,log);
+        },2*60*1000)
         if(this.failed==0){
             this.Testcase!.result = 0;
         }else{
             this.Testcase!.result = this.failed;
         }
-        
-        await this.agentManager.uploadLog(this.Testcase!.testcaseId)
-        await this.saveRecord();
+        try {
+            await this.agentManager.uploadLog(this.Testcase!.testcaseId)
+            await this.saveRecord();
+        } catch (error) {
+            this.logger.error(error);
+        }
         this.logger.info(`######## Tescase run finished ,testcaseId = ${this.Testcase!.testcaseId}`)
         this.logger.info(`######## run total = ${this.total}`)
         this.logger.info(`######## success = ${this.success} `)

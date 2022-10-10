@@ -56,7 +56,7 @@ export class SendChunkAction extends BaseAction implements ActionAbstract {
         }
         let check = await LN.bdtClient!.checkChunkListener(calculate.chunk_id!, 2000, this.action.config.timeout);
         if (check.err) {
-            return { err: BDTERROR.CheckChunkError, log: `SendChunkAction run failed,checkChunkListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: BDTERROR.CheckChunkError, log: `SendChunkAction run failed,checkChunkListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let setResult = await setRunning;
         this.logger?.info(`calculate = ${calculate.chunk_id},setResult = ${setResult.chunk_id}`)

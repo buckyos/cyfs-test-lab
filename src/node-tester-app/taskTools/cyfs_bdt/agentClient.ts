@@ -3,8 +3,11 @@ import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
 import {request,ContentType} from "./request";
 import {BdtPeerClient} from "./bdtPeerClient"
-
-import * as mypath from "./path"
+import {bdteEchartsCPU,bdteEchartsNetwork,bdteEchartsMem} from "./perfCharts"
+import * as path from "path"
+import * as fs from "fs-extra"
+import * as myconfig from "./config"
+var date = require("silly-datetime");
 export class AgentClient {
     public tags : string; // 机器名称 tags
     public agentInfo : Agent;
@@ -91,6 +94,63 @@ export class AgentClient {
         })
         
     }
+     async  BDTPerfReport(testcaseId:string,agent:string,save_path:string){
+        this.logger.info(`${this.tags} send api/base/system_info/getRecords req `)
+        let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcaseId},ContentType.json)
+        this.logger.info(`api/base/system_info/getRecords resp ${JSON.stringify(run.log)} `)
+        let timeList = [];
+        let cpuList =[];
+        let memList = [];
+        let receivedList = [];
+        let transmitted = [];
+        let maxMem = 1*1024*1024;
+        let maxNetworkSpeed = 1*1024*1024;
+        for(let data of run.result){
+            timeList.push(date.format(Number(data.create_time),'YYYY/MM/DD HH:mm:ss'));
+            cpuList.push(data.cpu_usage);
+            memList.push(data.used_memory);
+            receivedList.push(data.received_bytes);
+            transmitted.push(data.transmitted_bytes);
+            if(data.used_memory>maxMem){
+                maxMem = data.used_memory
+            }
+            if(data.received_bytes>maxNetworkSpeed){
+                maxNetworkSpeed = data.received_bytes
+            }
+            if(data.transmitted_bytes>maxNetworkSpeed){
+                maxNetworkSpeed = data.transmitted_bytes
+            }
+        }
+        let dirPath = path.join(save_path,testcaseId)
+        if(!fs.existsSync(dirPath)){
+            fs.mkdirSync(dirPath);
+        }
+        let agentPath = path.join(dirPath,agent);
+        if(!fs.existsSync(agentPath)){
+            fs.mkdirSync(agentPath);
+        }
+        let cpuImg =  path.join(agentPath,`${agent}_Perf_CPU.png`)
+        let memImg =  path.join(agentPath,`${agent}_Perf_MEM.png`)
+        let networkImg =  path.join(agentPath,`${agent}_Perf_Network.png`)
+        let test1 = bdteEchartsCPU(cpuImg,agent,timeList,cpuList,100);
+        let test2 = bdteEchartsMem(memImg,agent,timeList,memList,maxMem);
+        let test3 = bdteEchartsNetwork(networkImg,agent,timeList,receivedList,transmitted,maxNetworkSpeed);
+        this.logger.info(`${this.tags} save perf info to local success`)
+        if(myconfig.ReportAgentPerfWait){
+            await sleep(myconfig.ReportAgentPerfWait)
+        }else{
+            await sleep(1000)
+        }
+        return run.length;
+    }
+    async saveAgentPerfInfo(testcaseId:string):Promise<{err:ErrorCode,log?:string}>{
+        if(!this.is_run || !this.is_report_perf){
+            this.logger.error(`${this.tags} not run or not report perf info`)
+            return {err:ErrorCode.exception,log:`${this.tags}  not run`}
+        }
+        let result = await this.BDTPerfReport(testcaseId,this.tags,this.logger.dir());
+        return {err : ErrorCode.succ,log:"saveAgentPerfInfo"}
+    }
     async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "removeNdcData",
@@ -103,6 +163,10 @@ export class AgentClient {
     }  
     
     async startPeerClient(config:BdtPeerClientConfig,local?:string,bdt_port:number=50000):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
+        if(myconfig.AgentConcurrencyIgnoreWAN && this.agentMult > 0 && this.agentInfo.NAT == 0){
+            this.logger.error(`${this.tags} Perf test WAN agent Ignore WAN Concurrency BDT client`)
+            return {err:BDTERROR.success,log:"Perf test WAN agent Ignore WAN Concurrency BDT client"}
+        }
         let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
         peer.bdt_port = bdt_port;
         this.bdt_port = bdt_port;

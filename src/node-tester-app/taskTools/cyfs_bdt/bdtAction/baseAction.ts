@@ -28,7 +28,7 @@ export class BaseAction implements ActionAbstract{
         this.action.testcaseId = task!.testcaseId;
         this.action.task_id = task!.task_id;
         this.action.date = date,
-        this.action.action_id = `${this.action.task_id!}_action${index}_${this.action.type}`;
+        this.action.action_id = `${this.action.task_id!}_action${index}`;
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
         this.agentManager = AgentManager.createInstance(_interface);
@@ -90,6 +90,7 @@ export class BaseAction implements ActionAbstract{
         }
     }
     record_child(){
+        this.logger!.info(`record_child len = ${this.child_actions.length}`)
         let list = [];
         for(let action of this.child_actions){
             list.push( {

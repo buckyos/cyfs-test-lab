@@ -97,7 +97,12 @@ export class AgentManager {
         }
         return {err:BDTERROR.AgentError};
     }
-    
+    async saveAgentPerfInfo(testcaseId:string){
+        for(let agent of this.agentMap.values()){
+            let run = await agent.saveAgentPerfInfo(testcaseId)
+        }
+        return {err:BDTERROR.success,log:`save test log to server success`}
+    }
     async createBdtPeerClient(agentName:string,config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
         if(!this.agentMap.has(agentName)){
             return {err:BDTERROR.AgentError,log:`${agentName} not exsit`}

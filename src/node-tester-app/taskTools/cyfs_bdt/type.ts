@@ -63,6 +63,8 @@ export const enum  ActionType {
     send_stream_all = "send-stream-all",
     send_chunk = "send-chunk",
     send_file = "send-file" ,
+    send_file_group = "send-file-group",
+    send_file_list = "send-file-list",
     send_file_redirect = "send-file-redirect",
     send_file_mult = "send-file-mult",
     send_dir= "send-dir",
@@ -207,4 +209,5 @@ export abstract  class ActionAbstract{
     abstract  save(): Promise<{err:number,log:string}>;
     abstract  init(_interface:TaskClientInterface,task?:Task,index?:number,date?:string): Promise<{err:number,log:string}>;
     abstract  record():any;
+    abstract  record_child():any;
 }

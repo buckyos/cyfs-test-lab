@@ -22,21 +22,25 @@ export class SendFileGroupAction extends BaseAction implements ActionAbstract {
         // RN生成测试文件
         let randFile = await RN.bdtClient!.util_client!.createFile(this.action.fileSize!);
         let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
+        
         if(calculate.err){
             return  { err: calculate.err, log: `SendFileGroupAction run failed, calculateFile err = ${JSON.stringify(calculate)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
+        this.action.calculate_time = calculate.calculate_time;
         // RN 将文件保存到BDT NDN 中
         let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
         let setResult = await setRunning;
         if(setResult.err){
             return { err: setResult.err, log: `SendFileGroupAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}`} 
         }
+        this.action.set_time = setResult.set_time;
         let runList = []
+        let begin_time = Date.now();
         for(let LN of Users){
             runList.push(new Promise<{action:Action,err:number,log:string}>(async(V)=>{
-                let action  = this.action;
-                action.action_id = action.action_id + RandomGenerator.string(10);
-                
+                const action : Action  =  JSON.parse(JSON.stringify(this.action));
+                action.action_id = action.action_id + "_" + LN.bdtClient!.tags;
+                action.parent_action = this.action.action_id;
                 // LN获取本地下载缓存文件路径
                 let LNcachePath = await LN.bdtClient!.util_client!.getCachePath();
                 // LN cache RN device 对象信息
@@ -45,6 +49,7 @@ export class SendFileGroupAction extends BaseAction implements ActionAbstract {
                    V({ err: prev, log: `SendFileGroupAction run failed, addDevice err = ${JSON.stringify(prev)},LN = ${this.action.LN},RN = ${this.action.RN}`,action })
                 }
                 // (3) BDT 传输  File
+
                 // cyfs-base 计算文件Object 
                 
                 let savePath = path.join(LNcachePath.cache_path!.file_download, randFile.fileName!)
@@ -53,30 +58,29 @@ export class SendFileGroupAction extends BaseAction implements ActionAbstract {
                     V( { err: download.err, log: `SendFileGroupAction run failed, downloadFile err = ${JSON.stringify(download)},LN = ${this.action.LN},RN = ${this.action.RN}`,action }) 
                 }
                     
-                let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
+                let check = await LN.bdtClient!.downloadTaskListener(download.session!, 5000, this.action.config.timeout);
                 if(check.err){
-                    V( { err: check.err, log: `SendFileGroupAction run failed, downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}`,action })
-                }
-                // (4) 校验结果
-                let LN_hash = await LN.bdtClient!.util_client!.md5File(savePath);
-                if (LN_hash.md5 != randFile.md5) {
-                    V({ err: BDTERROR.recvDataFailed, log: `download file calculate md5 failed ,LN =${LN_hash.md5},RN = ${randFile.md5} `,action })
+                    V( { err: check.err, log: `SendFileGroupAction run failed, downloadTaskListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}`,action })
                 }
                 // (5) 保存数据
                 action.send_time = check.time
                 action.info = {}
-                action.info.hash_LN = LN_hash.md5
                 action.info.hash_RN = randFile.md5
                 action.calculate_time = calculate.calculate_time
                 action.set_time = setResult.set_time
+                V({err:BDTERROR.success,log:`SendFileGroupAction run success`,action})
             }));
             
         }
         for(let index in runList){
             let result =  await runList[index];
             result.action.result = {err:result.err,log:result.log}
+            this.logger?.info(`#### child_actions ${result.action.action_id} run finished`)
             this.child_actions.push(result.action)
-        } 
+        }
+        this.action.fileSize = this.action.fileSize! * this.action.Users!.length;
+        this.action.send_time = (Date.now() - begin_time)*1000;
+        this.action.type = ActionType.send_file_group; 
         return { err: BDTERROR.success, log: "SendFileGroupAction run success" }
     }
 }

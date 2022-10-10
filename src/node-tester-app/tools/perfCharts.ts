@@ -2,17 +2,23 @@
 
 //import * as echarts from "echarts"
 let node_echarts = require('node-echarts-canvas');
-
+import { fsOpenFiles } from "systeminformation";
+import {request,ContentType} from "./request_new";
+import * as fs from "fs-extra";
+import * as path from "path";
+var date = require("silly-datetime");
 function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,received:Array<number>,transmitted:Array<number>,maxNum:number){
     if(maxNum<100){
         maxNum = 100;
     }else{
         maxNum = Number(((maxNum * 1.2)/10).toFixed(0))*10
     }
+
+    let interval = Number((timeList.length/20).toFixed(0));
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 性能监测',
+          text: 'BDT 节点网络监控',
           subtext: `${agent} 节点数据统计 `,
           x: 'center'
         },
@@ -37,7 +43,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
         },
     
         xAxis: {
-          name: '时间',
+          name: '时间戳',
           type: 'category',
           axisLine: {
             lineStyle: {
@@ -48,7 +54,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
           // 设置X轴数据旋转倾斜
           axisLabel: {
             rotate: 30, // 旋转角度
-            interval: 0  //设置X轴数据间隔几个显示一个，为0表示都显示d
+            interval: interval  //设置X轴数据间隔几个显示一个，为0表示都显示d
             },
           // boundaryGap值为false的时候，折线第一个点在y轴上
           boundaryGap: false,
@@ -56,7 +62,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
         },
     
         yAxis: {
-          name: '传输速度',
+          name: '传输速度Bytes/s',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -129,10 +135,11 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
     }else{
         maxNum = Number(((maxNum * 1.2)/10).toFixed(0))*10
     }
+    let interval = Number((timeList.length/20).toFixed(0));
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 性能监测',
+          text: 'BDT 节点CPU使用率监控',
           subtext: `${agent} 节点数据统计 `,
           x: 'center'
         },
@@ -168,7 +175,7 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
           // 设置X轴数据旋转倾斜
           axisLabel: {
             rotate: 30, // 旋转角度
-            interval: 0  //设置X轴数据间隔几个显示一个，为0表示都显示d
+            interval  //设置X轴数据间隔几个显示一个，为0表示都显示d
             },
           // boundaryGap值为false的时候，折线第一个点在y轴上
           boundaryGap: false,
@@ -176,7 +183,7 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
         },
     
         yAxis: {
-          name: 'CPU/内存',
+          name: 'CPU(百分比)',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -226,10 +233,11 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
     }else{
         maxNum = Number(((maxNum * 1.2)/10).toFixed(0))*10
     }
+    let interval = Number((timeList.length/20).toFixed(0));
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 性能监测',
+          text: 'BDT 节点内存使用监控',
           subtext: `${agent} 节点数据统计 `,
           x: 'center'
         },
@@ -265,7 +273,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
           // 设置X轴数据旋转倾斜
           axisLabel: {
             rotate: 30, // 旋转角度
-            interval: 0  //设置X轴数据间隔几个显示一个，为0表示都显示d
+            interval  //设置X轴数据间隔几个显示一个，为0表示都显示d
             },
           // boundaryGap值为false的时候，折线第一个点在y轴上
           boundaryGap: false,
@@ -273,7 +281,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
         },
     
         yAxis: {
-          name: '内存',
+          name: '内存(KB)',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -317,9 +325,94 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
       enableAutoDispose: true //Enable auto-dispose echarts after the image is created.
     })
 }
+
+export async function BDTPerfReport(testcaseId:string,agent:string,save_path:string){
+    console.info(`send req api/base/system_info/getRecords ${testcaseId} ${agent}`)
+    let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcaseId},ContentType.json)
+    console.info(`api/base/system_info/getRecords resp ${JSON.stringify(run)}`)
+    let timeList = [];
+    let cpuList =[];
+    let memList = [];
+    let receivedList = [];
+    let transmitted = [];
+    let maxMem = 1*1024*1024;
+    let maxNetworkSpeed = 1*1024*1024;
+    for(let data of run.result){
+        timeList.push(date.format(Number(data.create_time),'YYYY/MM/DD HH:mm:ss'));
+        cpuList.push(data.cpu_usage);
+        memList.push(data.used_memory);
+        receivedList.push(data.received_bytes);
+        transmitted.push(data.transmitted_bytes);
+        if(data.used_memory>maxMem){
+            maxMem = data.used_memory
+        }
+        if(data.received_bytes>maxNetworkSpeed){
+            maxNetworkSpeed = data.received_bytes
+        }
+        if(data.transmitted_bytes>maxNetworkSpeed){
+            maxNetworkSpeed = data.transmitted_bytes
+        }
+    }
+    let dirPath = path.join(save_path,testcaseId)
+    if(!fs.existsSync(dirPath)){
+        fs.mkdirSync(dirPath);
+    }
+    let agentPath = path.join(dirPath,agent);
+    if(!fs.existsSync(agentPath)){
+        fs.mkdirSync(agentPath);
+    }
+    let cpuImg =  path.join(agentPath,`${agent}_Perf_CPU.png`)
+    let memImg =  path.join(agentPath,`${agent}_Perf_MEM.png`)
+    let networkImg =  path.join(agentPath,`${agent}_Perf_Network.png`)
+    let test1 = bdteEchartsCPU(cpuImg,agent,timeList,cpuList,100);
+    let test2 = bdteEchartsMem(memImg,agent,timeList,memList,maxMem);
+    let test3 = bdteEchartsNetwork(networkImg,agent,timeList,receivedList,transmitted,maxNetworkSpeed);
+    return;
+}
+
 async function main() {
-    //let test = bdteEcharts("E:\\test.png","test",[1,2,3],[111,123,123],[200,300,500],500);
-    let test = bdteEchartsCPU("E:\\test.png","test",[1,2,3],[111,123,123],200);
-    console.info("ssssss")
+  let testcaseList = [
+    "NDN_BBR_TCP_File_Concurrent10_download20_1665320327847",
+    "NDN_BBR_TCP_File_Concurrent10_download50_1665320382968",
+    "NDN_BBR_TCP_File_Concurrent10_download100_1665320663506",
+    "NDN_BBR_TCP_File_Concurrent10_upload20_1665320876631",
+    "NDN_BBR_TCP_File_Concurrent10_upload50_1665320941752",
+    "NDN_BBR_TCP_File_Concurrent10_upload100_1665321077752",
+    "NDN_BBR_UDP_File_Concurrent10_download20_1665326185355",
+    "NDN_BBR_UDP_File_Concurrent10_download50_1665326250240",
+    "NDN_BBR_UDP_File_Concurrent10_download100_1665326385447",
+    "NDN_BBR_UDP_File_Concurrent10_upload20_1665326615800",
+    "NDN_BBR_UDP_File_Concurrent10_upload50_1665326675905",
+    "NDN_BBR_UDP_File_Concurrent10_upload100_1665326771067",
+    "NDN_BBR_TCP_File_Concurrent20_upload_1665326986374",
+    "NDN_BBR_TCP_File_Concurrent50_upload_1665327036580",
+    "NDN_BBR_TCP_File_Concurrent100_upload_1665327071535",
+    "NDN_BBR_UDP_File_Concurrent20_upload_1665327111620",
+    "NDN_BBR_UDP_File_Concurrent50_upload_1665327156763",
+    "NDN_BBR_UDP_File_Concurrent100_upload_1665327201763",
+  ]
+    //let testcaseId = "NDN_BBR_File_Concurrent10_download100_1665307471629";
+  for(let testcaseId of testcaseList){
+    let agentList = [
+      "PC_0005",
+      "PC_0006",
+      "PC_0007",
+      "PC_0008",
+      "PC_0009",
+      "PC_0010",
+      "PC_0011",
+      "PC_0012",
+      "PC_0013",
+      "PC_0014",
+      "PC_0015",
+      "PC_0016",
+      "PC_0017",
+      "PC_0018",
+    ];
+    for(let agent of agentList){
+       let run = await BDTPerfReport(testcaseId,agent,__dirname);
+    }
+  }
+    
 }
 main();
