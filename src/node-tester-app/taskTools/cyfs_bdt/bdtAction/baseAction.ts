@@ -12,11 +12,13 @@ export class BaseAction implements ActionAbstract{
     public logger?: Logger;
     public state: string;
     public errorInfo: string;
+    public child_actions : Array<Action>
    
     constructor(action: Action) {
         this.action = action;
         this.state = "new";
         this.errorInfo = "";
+        this.child_actions = [];
     }
     async checkAgent() {
         this.state = "ready";
@@ -26,7 +28,7 @@ export class BaseAction implements ActionAbstract{
         this.action.testcaseId = task!.testcaseId;
         this.action.task_id = task!.task_id;
         this.action.date = date,
-        this.action.action_id = `${this.action.task_id!}_action${index}_${this.action.type}`;
+        this.action.action_id = `${this.action.task_id!}_action${index}`;
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
         this.agentManager = AgentManager.createInstance(_interface);
@@ -87,6 +89,35 @@ export class BaseAction implements ActionAbstract{
             result_log: String(this.action.result!.log),
         }
     }
+    record_child(){
+        this.logger!.info(`record_child len = ${this.child_actions.length}`)
+        let list = [];
+        for(let action of this.child_actions){
+            list.push( {
+                task_id:action.task_id ,
+                testcaseId:action!.testcaseId,
+                type: action.type,
+                action_id:action.action_id,
+                parent_action : action.parent_action,
+                LN:action.LN,
+                RN:action.RN,
+                Users: JSON.stringify(action.Users),
+                config:JSON.stringify(action.config),
+                info:JSON.stringify( action.info),
+                fileSize : action.fileSize,
+                chunkSize : action.chunkSize,
+                connect_time : action.connect_time,
+                set_time : action.set_time,
+                date: action.date,
+                environment : action.environment,
+                send_time : action.send_time,
+                expect:String(action.expect?.err),
+                result: String(action.result?.err),
+                result_log: String(action.result?.log),
+            })
+        }
+        return list;
+    }
     async start(): Promise<{ err: number, log: string }> {
         this.logger!.info(`##### ${this.action.action_id} start running , date = ${this.action.date} `)
         return new Promise(async(V)=>{
@@ -95,7 +126,7 @@ export class BaseAction implements ActionAbstract{
                 setTimeout(async ()=>{
                     if(this.state == "running"){
                         // 实际超时 预期失败
-                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} run timeout`};
+                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} ${this.action.LN} ${this.action.RN} run timeout`};
                         if(this.action.expect.err){
                             V({ err: BDTERROR.success, log: "action expect err" })
                         }
@@ -112,7 +143,7 @@ export class BaseAction implements ActionAbstract{
                 }
                 // 实际成功 预期失败
                 if(this.action.result.err == 0  && this.action.expect.err != 0){
-                    V({ err: BDTERROR.ExpectionResult, log: "action expect err" })
+                    V({ err: BDTERROR.ExpectionResult, log: "action expect err.return result ok" })
                 }
                 // 预期成功 返回实际结果
                 V(result)

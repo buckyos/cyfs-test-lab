@@ -54,6 +54,12 @@ export class UtilTool {
             case "removeNdcData":{
                 return await this.removeNdcData(command);
             }
+            case "loadAgentCache":{
+                return await this.loadAgentCache(command);
+            }
+            case "removeAgentCache":{
+                return await this.removeAgentCache(command);
+            }
         }
         this.m_logger.info(`#### not found utilRequest req_path `)
         return {err:ErrorCode.notFound}
@@ -151,6 +157,76 @@ export class UtilTool {
         return {err:ErrorCode.succ,resp:{
             json : {
                 cache_path : peer.cache_path,
+            },
+            bytes : Buffer.from("")
+        }}
+    }
+    async loadAgentCache(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        if( !command.json.agentName){
+            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            return {err:ErrorCode.unknownCommand}
+        }
+        let cachePath = path.join(this.m_logger.dir(),`../../${command.json.agentName}`)
+        let LocalDeviceCache =  path.join(cachePath,"LocalDevice")
+        let RemoteDeviceCache =  path.join(cachePath,"RemoteDevice")
+        if(command.json.init == "clean"){
+            fs.removeSync(LocalDeviceCache);
+            fs.removeSync(RemoteDeviceCache);
+            fs.removeSync(cachePath);
+        }
+        if(!fs.existsSync(cachePath)){
+            fs.mkdirpSync(cachePath);
+            fs.mkdirpSync(LocalDeviceCache);
+            fs.mkdirpSync(RemoteDeviceCache);
+        }
+        if(!fs.existsSync(LocalDeviceCache)){
+            fs.mkdirpSync(LocalDeviceCache);
+        }
+        if(!fs.existsSync(RemoteDeviceCache)){
+            fs.mkdirpSync(RemoteDeviceCache);
+        }
+        let local_list = []
+        let remote_list = []
+        for(let device of fs.readdirSync(LocalDeviceCache)){
+            if(device.includes("desc")){
+                local_list.push(device);
+            }
+        }
+        for(let device of fs.readdirSync(RemoteDeviceCache)){
+            remote_list.push(device);
+        }
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                LocalDeviceCache,
+                RemoteDeviceCache,
+                local_list,
+                remote_list,
+            },
+            bytes : Buffer.from("")
+        }}
+    }
+    async removeAgentCache(command:BdtLpcCommand):Promise<BdtLpcResp>{
+        if( !command.json.agentName){
+            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            return {err:ErrorCode.unknownCommand}
+        }
+        let cachePath = path.join(this.m_logger.dir(),`../../${command.json.agentName}`)
+        let LocalDeviceCache =  path.join(cachePath,"LocalDevice")
+        let RemoteDeviceCache =  path.join(cachePath,"RemoteDevice")
+        if(command.json.type == "all"){
+            fs.removeSync(LocalDeviceCache);
+            fs.removeSync(RemoteDeviceCache);
+            fs.removeSync(cachePath);
+        }
+        if(command.json.type  == "local"){
+            fs.removeSync(LocalDeviceCache);
+        }
+        if(command.json.type  == "remote"){
+            fs.removeSync(RemoteDeviceCache);
+        }
+        return {err:ErrorCode.succ,resp:{
+            json : {
+                cachePath,
             },
             bytes : Buffer.from("")
         }}

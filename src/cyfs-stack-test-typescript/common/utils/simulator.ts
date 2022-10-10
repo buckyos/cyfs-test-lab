@@ -59,9 +59,10 @@ export class ZoneSimulator {
         // (2) 读取模拟器的peerId 数据
         await this.getPeerId();
         ZoneSimulator.APPID = TEST_DEC_ID;
+
         // (3)连接协议栈,默认http方式
         console.info(`###连接协议栈`)
-        await this.connecStimulator("ws");
+        await this.connecStimulator("http");
 
     }
 
@@ -106,7 +107,7 @@ export class ZoneSimulator {
             zone1_ood_stack_conn.requestor_config = ws_param
         }
         this.zone1_ood_stack = cyfs.SharedCyfsStack.open(zone1_ood_stack_conn);
-        let res1 = await this.zone1_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(20000)));
+        let res1 = await this.zone1_ood_stack.wait_online(JSBI.BigInt(20000));
         return res1
     }
     //zone1_standby_ood 设备协议栈连接
@@ -122,7 +123,7 @@ export class ZoneSimulator {
             zone1_standby_ood_stack_conn.requestor_config = ws_param
         }
         this.zone1_standby_ood_stack = cyfs.SharedCyfsStack.open(zone1_standby_ood_stack_conn);
-        let res1 = await this.zone1_standby_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone1_standby_ood_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     //zone1_device1设备协议栈连接
@@ -138,7 +139,7 @@ export class ZoneSimulator {
             zone1_device1_stack_conn.requestor_config = ws_param
         }
         this.zone1_device1_stack = cyfs.SharedCyfsStack.open(zone1_device1_stack_conn);
-        let res1 = await this.zone1_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone1_device1_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     //zone1_device2设备协议栈连接
@@ -154,7 +155,7 @@ export class ZoneSimulator {
             zone1_device2_stack_conn.requestor_config = ws_param
         }
         this.zone1_device2_stack = cyfs.SharedCyfsStack.open(zone1_device2_stack_conn);
-        let res1 = await this.zone1_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone1_device2_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     //zone2_ood设备协议栈连接
@@ -170,7 +171,7 @@ export class ZoneSimulator {
             zone2_ood_stack_conn.requestor_config = ws_param
         }
         this.zone2_ood_stack = cyfs.SharedCyfsStack.open(zone2_ood_stack_conn);
-        let res1 = await this.zone2_ood_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone2_ood_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     //zone2_device2设备协议栈连接
@@ -186,7 +187,7 @@ export class ZoneSimulator {
             zone2_device2_stack_conn.requestor_config = ws_param
         }
         this.zone2_device2_stack = cyfs.SharedCyfsStack.open(zone2_device2_stack_conn);
-        let res1 = await this.zone2_device2_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone2_device2_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     //zone2_device1设备协议栈连接
@@ -202,7 +203,7 @@ export class ZoneSimulator {
             zone2_device1_stack_conn.requestor_config = ws_param
         }
         this.zone2_device1_stack = cyfs.SharedCyfsStack.open(zone2_device1_stack_conn);
-        let res1 = await this.zone2_device1_stack.wait_online(cyfs.Some(JSBI.BigInt(10000)));
+        let res1 = await this.zone2_device1_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
     static async connecStimulator(RequestorType = "http") {
@@ -273,7 +274,7 @@ export class ZoneSimulator {
             console.info(`zone2_device1_stack 连接 ${RequestorType} 成功`)
         } else {
             console.info(`连接失败7：${res1.val?.msg}`)
-            assert.equal(res2.val!.code, "0")
+            assert(res2.val!.code, "0")
         }
 
     }

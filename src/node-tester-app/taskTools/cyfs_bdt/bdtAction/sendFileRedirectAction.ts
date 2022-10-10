@@ -56,7 +56,7 @@ export class SendFileRedirectAction extends BaseAction implements ActionAbstract
             }
             let check = await CacheNode.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
             if(check.err){
-                return { err: check.err, log: `SendFileAction run failed, CacheNode downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+                return { err: check.err, log: `SendFileAction run failed, CacheNode downloadTaskListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
         }
         // LN 下载文件

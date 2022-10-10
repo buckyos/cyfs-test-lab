@@ -1,88 +1,82 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType,SameRouter,AgentList_LAN_WAN} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
-
-
-
+import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
+import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
+import {labAgent,BdtPeerClientConfig,LabSnList,AgentList_LAN_WAN} from "../../taskTools/cyfs_bdt/labAgent"
+import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
+import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
+    //(1) 连接测试节点
+    let agentManager = AgentManager.createInstance(_interface);
+    await agentManager.initAgentList(labAgent);
+    //(2) 创建测试用例执行器 TestRunner
+    let testRunner = new TestRunner(_interface);
     let testcaseName = "Stream_UDPTunnel_10con_single_10MBData"
-    let agentList:Array<Agent> = [];
-    let taskList : Array<Task> = [];
-    let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0006,
-        labAgent.PC_0007,
-        labAgent.PC_0008,
-        labAgent.PC_0009,
-        labAgent.PC_0010,
-        labAgent.PC_0011,
-        labAgent.PC_0012,
-        labAgent.PC_0013,
-        labAgent.PC_0014,
-        labAgent.PC_0015,
-        labAgent.PC_0016,
-        labAgent.PC_0017,
-        labAgent.PC_0018,
-    ]
-    let firstQA_answer= "";
-    agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{udp:true}},"info",1,[],{},firstQA_answer,Resp_ep_type.effectiveEP_WAN))
-    // 随机选择两个设备
-    let agenSplit = await AgentList_LAN_WAN(agentList);
-    let LN = agenSplit.LAN[RandomGenerator.integer(agenSplit.LAN.length-1)]
-    let RN = agenSplit.WAN[RandomGenerator.integer(agenSplit.WAN.length-1)]
-    for(let i =0;i<10;i++){
-        let task : Task = {
-            LN:{name:`${LN.name}_0`,type : LN.NAT},
-            RN:{name:`${RN.name}_0`,type : RN.NAT},
-            timeout : 15*60*1000,
-            expect_status : BDTERROR.success,
-            action:[
-                {
-                    LN:{name:`${LN.name}_0`,type : LN.NAT},
-                    RN:{name:`${RN.name}_0`,type : RN.NAT},
-                    type : taskType.connect,
-                    config : {
-                        conn_tag : `connect_frist_${i}` ,
-                        timeout : 300*1000, 
-                    },
-                    fileSize : 0,
-                    expect:{err:BDTERROR.success} 
-                },
-            ]
-        }
-        for(let j =0;j<10;j++){
-            task.action.push({
-                LN:{name:`${LN.name}_0`,type : LN.NAT},
-                RN:{name:`${RN.name}_0`,type : RN.NAT},
-                type : taskType.send_stream,
-                config : {
-                    conn_tag : `connect_frist_${i}` ,
-                    timeout : 300*1000, 
-                },
-                fileSize : 10*1024*1024,
-                expect:{err:BDTERROR.success} 
-            })
-        }
-        taskList.push(task);
-    }
-    await sleep(2000);
-    let testRunner = new TestRunner(_interface,true);
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
-                remark : `前置条件：
-                （1）LN/RN 网络可以基于TCP建立连接
-            操作步骤：
-                （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*10MB 大小的字节流数据
-            预期结果：
-                (1) 数据发送成功，Stream数据发送未产生拥塞\n`,
-        environment : "lab",
-        agentList,
-        taskList,
-        taskMult:10
+        TestcaseName: testcaseName,
+        testcaseId: `${testcaseName}_${Date.now()}`,
+        remark: `# 前置条件：
+        （1）LN/RN 网络可以基于UDP建立连接
+    操作步骤：
+        （1）LN 和 RN 建立10个BDT连接，每个连接LN持续发送10*1MB 大小的字节流数据
+    预期结果：
+        (1) 数据发送成功，Stream数据发送未产生拥塞`,
+        environment: "lab",
+    };
+    await testRunner.initTestcase(testcase);
+    //(3) 创建BDT测试客户端
+    let config : BdtPeerClientConfig = {
+            eps:{
+                ipv4:{
+                    udp:true,
+                },
+                ipv6:{
+                    udp:true,
+                }
+            },
+            logType:"info",
+            SN :LabSnList,
+            resp_ep_type:Resp_ep_type.effectiveEP_WAN, 
     }
-    
-    await testRunner.testCaseRunner(testcase);
+    // 每台机器运行一个bdt 客户端
+    let agent_list = await AgentList_LAN_WAN(labAgent);
+    let LN = agent_list.LAN[0].tags[0];
+    let WAN = agent_list.WAN[0].tags[0];
+    await agentManager.allAgentStartBdtPeer(config)
+    //(4) 测试用例执行器添加测试任务
+    for(let i =0;i<10;i++){
+        let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+        let info = await testRunner.createPrevTask({
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            timeout : 5*30*1000,
+            action : []
+        })
+        info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+            type : ActionType.connect,
+            LN : `${LN}$1`,
+            RN : `${WAN}$1`,
+            config:{
+                conn_tag: connect_1,
+                timeout : 20*1000,
+            },
+            expect : {err:0},    
+        }))
+        for(let x=0;x<10;x++){
+            info = await testRunner.prevTaskAddAction(new BDTAction.SendStreamAction({
+                type : ActionType.send_stream,
+                LN : `${LN}$1`,
+                RN : `${WAN}$1`,
+                fileSize : 10*1024*1024,
+                config:{
+                    conn_tag: connect_1,
+                    timeout : 30*1000,
+                },
+                expect : {err:0},    
+            }))
+        }
+        await testRunner.prevTaskRun();
+    }
+    await testRunner.waitFinished()
+  
 }

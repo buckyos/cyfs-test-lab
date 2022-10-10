@@ -38,7 +38,6 @@ export let labAgentData = [
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.236'],
-        ipv6: ['[::]'],
         router: "Router8",
     },
     {
@@ -46,7 +45,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.199.189'],
-        ipv6: ['[::]'],
         router: "Router2",
     },
     {
@@ -54,7 +52,6 @@ export let labAgentData = [
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.199'],
-        ipv6: ['[::]'],
         router: "Router3",
     },
     {
@@ -62,7 +59,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.199.132', '10.1.1.131'],
-        ipv6: ['[::]'],
         router: "Router2&Router6",
     },
     {
@@ -70,7 +66,6 @@ export let labAgentData = [
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.137'],
-        ipv6: ['[::]'],
         router: "Router5",
     },
     {
@@ -102,7 +97,6 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.Symmetric,
         ipv4: ['192.168.1.139'],
-        ipv6: ['[::]'],
         router: "Router7",
     },
     {
@@ -110,7 +104,6 @@ export let labAgentData = [
         OS: "Windows7",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.145'],
-        ipv6: ['[::]'],
         router: "Router6",
     },
     {
@@ -118,7 +111,6 @@ export let labAgentData = [
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.142'],
-        ipv6: ['[::]'],
         router: "Router6",
     },
     {
@@ -170,9 +162,20 @@ export const labAgent : Array<{
 }> = shuffle(labAgentData)
 
 
+export async function IPv6Agent() {
+    let ipv6_list = []
+    for(let agent of labAgent){
+        if(agent.ipv6){
+            ipv6_list.push(agent)
+        }
+    }
+    return ipv6_list
+}
+
 export type BdtPeerClientConfig={
     LW_type? :string,
     eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}
+    bdt_port? : number,
     PN? : {
         activePnFiles: Array<string>,
         passivePnFiles: Array<string>,
@@ -253,7 +256,7 @@ export  function SameRouter(routerA:String, routerB:String) {
         for (let j in listB) {
             if (listA[i] == listB[j]) {
                 // 暂时不支持同路由器通过Endpoint L 类型建立连接
-                return false;
+                return true;
             }
         }
     }

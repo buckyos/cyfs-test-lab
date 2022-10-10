@@ -1,6 +1,6 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
 import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
+import {Testcase,Task,ActionType,Resp_ep_type, BDTERROR} from "../../taskTools/cyfs_bdt/type"
 import {labAgent,BdtPeerClientConfig,LabSnList, PNType} from "../../taskTools/cyfs_bdt/labAgent"
 import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
 import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
@@ -112,7 +112,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         conn_tag: connect_1,
                         timeout : 30*1000,
                     },
-                    expect : {err:10},      
+                    expect : {err:BDTERROR.timeout},     
                 }))
                 await testRunner.prevTaskRun();
             }

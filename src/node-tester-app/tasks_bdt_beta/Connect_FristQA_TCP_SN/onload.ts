@@ -16,16 +16,15 @@ export async function TaskMain(_interface: TaskClientInterface) {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `前置条件：
-        （1）LN/RN 同时使用TCP 协议EP
+        （1）LN/RN 同时使用TCP协议EP
     操作步骤：
-        (1) LN向RN发起10次连接
-        (2) RN向LN发起10次连接
-        (3) 检查连接的EP端口分配
+        (1) LN向RN发起连接，Sync 包question 带有100字节数据
     测试节点数据限制：
-        (1) 节点使用TCP直连
+        (1) 节点使用TCP通过SN连接
     预期结果：
-        (1) 全部连接成功
-        (2) 每个连接LN和RN的EP符合预期 `,
+        (1) LN向RN发起首次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+        (2) LN向RN发起二次连接，LN Sync 包question 带有100字节数据 ,RN ACK包 answer带有100字节数据
+        (3) RN向LN发起反向连接，RN Sync 包question 带有100字节数据 ,LN ACK包 answer带有100字节数据`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -71,31 +70,31 @@ export async function TaskMain(_interface: TaskClientInterface) {
                             firstQA_answer : RandomGenerator.string(100),
                             firstQA_question : RandomGenerator.string(100),
                             accept_answer : 1,
-                            timeout : 30*1000,
+                            timeout : 20*1000,
                         },
                         expect : {err:0},    
                     }))
                 }
                 
                 // 1.2 RN -> LN 连接10次
-                for(let x=0;x<10;x++){
-                    let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                    info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                        type : ActionType.connect,
-                        LN : `${labAgent[j].tags[0]}$1`,
-                        RN : `${labAgent[i].tags[0]}$1`,
+                // for(let x=0;x<10;x++){
+                //     let connect_2 =  `${Date.now()}_${RandomGenerator.string(10)}`;
+                //     info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+                //         type : ActionType.connect,
+                //         LN : `${labAgent[j].tags[0]}$1`,
+                //         RN : `${labAgent[i].tags[0]}$1`,
                         
-                        config:{
+                //         config:{
                             
-                            conn_tag: connect_2,
-                            timeout : 30*1000,
-                            firstQA_answer : RandomGenerator.string(100),
-                            firstQA_question : RandomGenerator.string(100),
-                            accept_answer : 1,
-                        },
-                        expect : {err:0},      
-                    }))
-                }
+                //             conn_tag: connect_2,
+                //             timeout : 20*1000,
+                //             firstQA_answer : RandomGenerator.string(100),
+                //             firstQA_question : RandomGenerator.string(100),
+                //             accept_answer : 1,
+                //         },
+                //         expect : {err:0},      
+                //     }))
+                // }
                 await testRunner.prevTaskRun();
             }
         }

@@ -47,7 +47,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                                     type : taskType.connect,
                                     config:{
                                         conn_tag : "connect_frist" ,
-                                        firstQA_question : RandomGenerator.string(25),
+                                        firstQA_question : RandomGenerator.string(100),
+                                        firstQA_answer :RandomGenerator.string(100),
                                         accept_answer : 1,
                                         timeout : 30*1000, 
                                     },
@@ -63,7 +64,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                                     type : taskType.connect_second,
                                     config:{
                                         conn_tag : "connect_second" ,
-                                        firstQA_question : RandomGenerator.string(25),
+                                        firstQA_question : RandomGenerator.string(100),
+                                        firstQA_answer :RandomGenerator.string(100),
                                         accept_answer : 1,
                                         timeout : 30*1000, 
                                     },
@@ -79,7 +81,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                                     type : taskType.connect_reverse,
                                     config:{
                                         conn_tag : "connect_reverse" ,
-                                        firstQA_question : RandomGenerator.string(25),
+                                        firstQA_question : RandomGenerator.string(100),
+                                        firstQA_answer :RandomGenerator.string(100),
                                         accept_answer : 1,
                                         timeout : 30*1000, 
                                     },

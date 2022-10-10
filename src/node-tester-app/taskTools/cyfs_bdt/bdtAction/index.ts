@@ -13,3 +13,9 @@ export * from "./sendFileRedirectAction";
 export * from "./sendStreamAction";
 export * from "./sendStreamNotReadAction";
 export * from "./sendFileDualAction";
+export * from "./createBDTStackAction"
+export * from "./connectPerfAction"
+export * from "./streamSyncDeviceAction"
+export * from "./connectListAction"
+export * from "./sendFileGroupAction"
+export * from "./sendFileListAction"

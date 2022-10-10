@@ -63,6 +63,8 @@ export const enum  ActionType {
     send_stream_all = "send-stream-all",
     send_chunk = "send-chunk",
     send_file = "send-file" ,
+    send_file_group = "send-file-group",
+    send_file_list = "send-file-list",
     send_file_redirect = "send-file-redirect",
     send_file_mult = "send-file-mult",
     send_dir= "send-dir",
@@ -82,6 +84,7 @@ export const enum  ActionType {
     effectiveEP_WAN = "effectiveEP_WAN",  
     default = "default", 
     SN_Resp = "SN_Resp",
+    Auto = "Auto"
  }
 
 export type Agent = {
@@ -97,10 +100,13 @@ export type Agent = {
 export type Peer ={
     agent : Agent,
     addrInfo: string[], 
+    bdt_port? : number,
     local?: string, 
+    device_tag?:string,
     sn_files: string[], 
     knownPeer?: Buffer[],
     RUST_LOG?:string,
+    local_device_list? : Array<string>,
     active_pn_files?:Array<string>, 
     passive_pn_files?:Array<string>,
     known_peer_files?:Array<string>,
@@ -203,4 +209,5 @@ export abstract  class ActionAbstract{
     abstract  save(): Promise<{err:number,log:string}>;
     abstract  init(_interface:TaskClientInterface,task?:Task,index?:number,date?:string): Promise<{err:number,log:string}>;
     abstract  record():any;
+    abstract  record_child():any;
 }

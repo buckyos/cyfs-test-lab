@@ -90,7 +90,7 @@ export class TestRunner{
             let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
             task.state = "run" ;
             if(!task.timeout){
-                task.timeout = 60*1000;
+                task.timeout = 5*60*1000;
             }
             let record : {taskId:string,data:Array<any>} = {taskId:task.task_id!,data:[]}
             setTimeout(() => {
@@ -103,6 +103,7 @@ export class TestRunner{
                 await task.action[i].init(this.m_interface,task,Number(i),this.Testcase!.date!);
                 let result = await task.action[i].start();
                 record.data.push(task.action[i].record());
+                record.data = record.data.concat(task.action[i].record_child());
                 if(result.err){
                     task.state = "failed"
                     return V({err:result.err,record,log:result.log});
@@ -186,6 +187,12 @@ export class TestRunner{
         }
         return;
     }
+    async saveAgentPerfInfo() {
+        if(config.ReportAgentPerfInfo){
+           await this.agentManager.saveAgentPerfInfo(this.Testcase!.testcaseId);
+        }
+        return;
+    }
     async saveJson(){
         fs.writeFileSync(path.join(this.logger.dir(),`./testReport.json`),JSON.stringify(this.JSONReport));
         return;
@@ -196,7 +203,7 @@ export class TestRunner{
             task.result = result;
             this.JSONReport.actionList.push(result.record)
             if(result.err){
-                this.logger.info(`#####${task.task_id} 运行失败，err = ${result.log}`)
+                this.logger.error(`#####${task.task_id} ${task.LN} 运行失败，err = ${result.log}`)
                 this.failed++ 
                 this.errorList.push({taskId:result.record.taskId,error:result.log})
                 this.logger.error(result.log);
@@ -242,23 +249,29 @@ export class TestRunner{
     async saveRecord() {
         await this.saveTestcase();
         await this.saveTask();
-        await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer);
+        await this.agentManager.reportAgent(this.Testcase!.testcaseId,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
         await this.saveJson();
         await this.saveMysql();
+        await this.saveAgentPerfInfo();
         return;
     }
     // 退出测试用例
     async exitTestcase(err:number,log:string){
         this.end_time = Date.now();
-       
+        setTimeout(()=>{
+            this.m_interface.exit(err,log);
+        },2*60*1000)
         if(this.failed==0){
             this.Testcase!.result = 0;
         }else{
             this.Testcase!.result = this.failed;
         }
-        
-        await this.agentManager.uploadLog(this.Testcase!.testcaseId)
-        await this.saveRecord();
+        try {
+            await this.agentManager.uploadLog(this.Testcase!.testcaseId)
+            await this.saveRecord();
+        } catch (error) {
+            this.logger.error(error);
+        }
         this.logger.info(`######## Tescase run finished ,testcaseId = ${this.Testcase!.testcaseId}`)
         this.logger.info(`######## run total = ${this.total}`)
         this.logger.info(`######## success = ${this.success} `)
@@ -270,9 +283,7 @@ export class TestRunner{
         this.m_interface.exit(err,log);
     }
 
-    async waitFinished(){
-        //1.检查次数
-        let check = 5;
+    async waitFinished(check:number = 5){
         while(true){
             if(this.activeTaskNum == 0){
                 check--

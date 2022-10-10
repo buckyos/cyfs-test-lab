@@ -1,4 +1,4 @@
-import assert = require('assert'); 
+const assert = require('assert'); 
 import * as cyfs from '../../cyfs_node/cyfs_node';
 import * as myHandler from '../../common/utils/handler'
 import {TestcaseManger,testcaseInfo} from "../../common/models/testcaseInfo";
@@ -18,7 +18,7 @@ cyfs.clog.enable_file_log({
     file_max_count: 10,
 });
 //初始化测试工具
-const aclManager = new AclManager();
+// const aclManager = new AclManager();
 const handlerManager = new myHandler.handlerManager();
 //读取json 测试数据
 
@@ -39,12 +39,12 @@ describe("cyfs协议栈测试",async function(){
                     let testcaseInfo : testcaseInfo  = res.datas![0];
                     inputData = JSON.parse(testcaseInfo.input_data!.toString());
                     expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-                    //初始化ACL配置文件
-                    await ZoneSimulator.getPeerId();
-                    await ZoneSimulator.removeAllConfig();
-                    for(let j in inputData.stackCfgList){
-                        await aclManager.getdevice(inputData.stackCfgList[j].deviceName)!.initAcl({configFile:path.join(__dirname,"acl",inputData.stackCfgList[j].ACL.configFile!)})
-                    }
+                    // //初始化ACL配置文件
+                    // await ZoneSimulator.getPeerId();
+                    // await ZoneSimulator.removeAllConfig();
+                    // for(let j in inputData.stackCfgList){
+                    //     await aclManager.getdevice(inputData.stackCfgList[j].deviceName)!.initAcl({configFile:path.join(__dirname,"acl",inputData.stackCfgList[j].ACL.configFile!)})
+                    // }
                     //启动模拟器连接协议栈
                     await ZoneSimulator.init();
                 })
@@ -54,8 +54,8 @@ describe("cyfs协议栈测试",async function(){
                     await cyfs.sleep(2*1000);
                     await ZoneSimulator.stopZoneSimulator();
                     await cyfs.sleep(2*1000);
-                    //清除ACL配置文件
-                    await aclManager.removeAllAcl();
+                    // //清除ACL配置文件
+                    // await aclManager.removeAllAcl();
                 })
                 it(`${datas.testcaseList[j].name}`,async()=> {
                     // 异常用例阻塞暂时跳过
@@ -117,11 +117,11 @@ describe("cyfs协议栈测试",async function(){
                             await get_object(inputData,expectData);
                             break;
                         }
-                        case "select_object":{
-                            await initHandlerList(inputData);
-                            await select_object(inputData,expectData);
-                            break;
-                        }
+                        // case "select_object":{
+                        //     await initHandlerList(inputData);
+                        //     await select_object(inputData,expectData);
+                        //     break;
+                        // }
                         case "delect_object":{
                             await initHandlerList(inputData);
                             await delect_object(inputData,expectData);
@@ -142,7 +142,6 @@ describe("cyfs协议栈测试",async function(){
                 })
             
             })
-
         }
     })
     
@@ -498,57 +497,57 @@ async function get_object(inputData:InputInfo,expect:ResultInfo) {
     }
 }
 
-async function select_object(inputData:InputInfo,expect:ResultInfo) {
+// async function select_object(inputData:InputInfo,expect:ResultInfo) {
     
-    let source = ZoneSimulator.getStackByName(inputData.opt.source);
-    let target = ZoneSimulator.getStackByName(inputData.opt.target);
-    let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
-    let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
-    const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
-    const dec_id = TEST_DEC_ID;
-    //开始监听是否运行handler 
-    let check =  handlerManager.startHandlerCheck(10*1000);
+//     let source = ZoneSimulator.getStackByName(inputData.opt.source);
+//     let target = ZoneSimulator.getStackByName(inputData.opt.target);
+//     let targetPeerId = ZoneSimulator.getPeerIdByName(inputData.opt.target);
+//     let sourcePeerId = ZoneSimulator.getPeerIdByName(inputData.opt.source);
+//     const owner_id = cyfs.ObjectId.from_base_58(sourcePeerId).unwrap();
+//     const dec_id = TEST_DEC_ID;
+//     //开始监听是否运行handler 
+//     let check =  handlerManager.startHandlerCheck(10*1000);
 
-    //select 操作
-    //设置默认值
-    let filter: cyfs.SelectFilter = {
-    obj_type: 41,
-    obj_type_code:cyfs.ObjectTypeCode.Custom,
-    }
-    let opt = {
-        page_size : 5,
-        page_index : 0
-    }
-   if(inputData.opt.selectData){
-        filter = JSON.parse(inputData.opt.selectData!.filter)
-        opt = {
-            page_size : inputData.opt.selectData!.page_size,
-            page_index : inputData.opt.selectData!.page_index,
-        }
-   }
-   const req2: cyfs.NONSelectObjectOutputRequest = {
-       common: {    
-           dec_id,
-           level: inputData.opt.level,               
-           flags: 0,
-           target: cyfs.ObjectId.from_base_58(targetPeerId).unwrap(),
-       },
-       filter,
-       opt: {
-           page_size : 32,
-           page_index : 0
-       }
-   };
-   const select_ret = await source.non_service().select_object(req2);
-   console.info('select_object result:', select_ret);
-   assert.equal(select_ret.err,expect.err,"select 结果与预期不符");
-    //检查监听事件是否触发
-    let handlerResult = await check
-    console.info(`select_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
-    assert(!handlerResult.err,handlerResult.log)
+//     //select 操作
+//     //设置默认值
+//     let filter: cyfs.SelectFilter = {
+//     obj_type: 41,
+//     obj_type_code:cyfs.ObjectTypeCode.Custom,
+//     }
+//     let opt = {
+//         page_size : 5,
+//         page_index : 0
+//     }
+//    if(inputData.opt.selectData){
+//         filter = JSON.parse(inputData.opt.selectData!.filter)
+//         opt = {
+//             page_size : inputData.opt.selectData!.page_size,
+//             page_index : inputData.opt.selectData!.page_index,
+//         }
+//    }
+//    const req2: cyfs.NONSelectObjectOutputRequest = {
+//        common: {    
+//            dec_id,
+//            level: inputData.opt.level,               
+//            flags: 0,
+//            target: cyfs.ObjectId.from_base_58(targetPeerId).unwrap(),
+//        },
+//        filter,
+//        opt: {
+//            page_size : 32,
+//            page_index : 0
+//        }
+//    };
+//    const select_ret = await source.non_service().select_object(req2);
+//    console.info('select_object result:', select_ret);
+//    assert.equal(select_ret.err,expect.err,"select 结果与预期不符");
+//     //检查监听事件是否触发
+//     let handlerResult = await check
+//     console.info(`select_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+//     assert(!handlerResult.err,handlerResult.log)
     
     
-}
+// }
 
 async function getTestObject(stack:cyfs.SharedCyfsStack,peerId:string,objectId:cyfs.ObjectId) {
     const dec_id = TEST_DEC_ID;

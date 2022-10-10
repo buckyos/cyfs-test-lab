@@ -94,8 +94,10 @@ export class BdtPeerManager extends EventEmitter{
         // init BdtPeerManager,must kill other bdt-tools
         if (this.m_platform === 'win32') {
             await this.stopBdtWin32();
+            await sleep(2000)
         }else if (this.m_platform === 'linux'){
             await this.stopBdtLinux();
+            await sleep(2000)
         }
         // listener new connection from bdt-tools
         this.m_server.on('connection', (socket: net.Socket) => {

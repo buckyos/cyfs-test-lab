@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = { version = "*", features = ["unstable", "attributes"] }
+async-std = { version = "*", features = ["unstable", "attributes","tokio1"] }
 async-trait="*"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "*"
@@ -15,6 +15,9 @@ cyfs-base = {path = "../../CYFS/src/component/cyfs-base"}
 cyfs-debug = { path = "../../CYFS/src/component/cyfs-debug"}
 cyfs-util = { path="../../CYFS/src/component/cyfs-util"}
 cyfs-bdt = {path = "../../CYFS/src/component/cyfs-bdt"}
+hyper = { version = "0.14.19", features = ["full"] }
+tokio = { version = "1.x", features = ["macros", "rt-multi-thread"] }
+anyhow = "1.0.58"
 log = "0.4"
 rand = "0.7.3"
 futures = "0.3.5"

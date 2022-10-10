@@ -15,15 +15,19 @@ const port  = 5000
 
 
 export async function request(method:string,route:string,postData?:any,psotType?:string) {
+    
     let url = `${hostname}:${port}/${route}`
     let sendResp = false;
     const response = await fetch(url, {
         method: method,
         body: JSON.stringify(postData),
         headers: {'Content-Type': psotType!},
-        timeout : 10000
+        timeout : 20000
     });
     sendResp = true;
+    if(response.status !=200){
+        return {status:response.status }
+    }
     const data = await response.json()
     console.info(`${JSON.stringify(data)}`)
     return data

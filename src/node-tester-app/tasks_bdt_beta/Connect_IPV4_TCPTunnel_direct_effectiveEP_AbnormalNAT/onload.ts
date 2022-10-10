@@ -66,7 +66,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         conn_tag: connect_1,
                         timeout : 30*1000,
                     },
-                    expect : {err:10},    
+                    expect : {err:1004},    
                 }))
                 
                 

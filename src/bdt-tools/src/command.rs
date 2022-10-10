@@ -33,13 +33,16 @@ pub struct CreateLpcCommandReq {
     pub active_pn: Vec<String>, 
     pub passive_pn: Vec<String>, 
     pub addrs: Vec<String>,
+    pub bdt_port : Option<u32>,
     pub local: Option<String>, 
+    pub device_tag : Option<String>, 
     pub chunk_cache: String,
     pub ep_type :  Option<String>,
     pub ndn_event : Option<String>,
     pub ndn_event_target : Option<DeviceId>,
     pub sn_only : bool,
     pub tcp_port_mapping : Option<Vec<(cyfs_base::Endpoint, u16)>>,
+    
 }
 
 impl TryFrom<LpcCommand> for CreateLpcCommandReq {
@@ -168,7 +171,19 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             },
             _ => None,
         };
-
+        let device_tag = match json.get("device_tag") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
+        };
         let mut addrs = Vec::new();
         match json.get("addrInfo") {
             Some(v) => match v {
@@ -186,6 +201,16 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             },
             _ => {}
         }
+        let bdt_port = match json.get("bdt_port") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) =>{
+                    Some(n.as_u64().unwrap() as u32)
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+        
         let mut buffer = value.as_buffer();
         let mut known_peers = Vec::new();
         while buffer.len() > 0 {
@@ -288,7 +313,9 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             active_pn, 
             passive_pn,
             local,
+            device_tag,
             addrs,
+            bdt_port,
             chunk_cache,
             ep_type,
             ndn_event,
@@ -358,8 +385,30 @@ pub struct ConnectLpcCommandReq {
     pub known_eps: bool,
     //是否首次接收数据
     pub accept_answer:bool,
+    pub no_cache : bool,
+}
+pub struct ConnectLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub stream_name: String,
+    pub answer: Vec<u8>,
+    pub time: u32,
 }
 
+impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ConnectLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "connect_resp",
+            "result": value.result,
+            "stream_name": value.stream_name.as_str(),
+            "time": value.time,
+            "answer" : String::from_utf8(value.answer).unwrap(),
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
 impl TryFrom<LpcCommand> for ConnectLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
@@ -410,37 +459,165 @@ impl TryFrom<LpcCommand> for ConnectLpcCommandReq {
             },
             _ => false,
         };
-
+        let no_cache = match json.get("no_cache") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
         Ok(Self {
             seq: value.seq(),
             remote_desc: device,
             question,
             sn_files,
             known_eps,
-            accept_answer
+            accept_answer,
+            no_cache
         })
     }
 }
-
-pub struct ConnectLpcCommandResp {
+pub struct ConnectListLpcCommandReq {
     pub seq: u32,
-    pub result: u16,
-    pub stream_name: String,
-    pub answer: Vec<u8>,
-    pub time: u32,
+    //LpcCommand的buffer里面
+    pub remote_desc_list: Vec<Device>,
+    //LpcCommand的json里面
+    pub question: Vec<u8>,
+    //TODO 这个字段暂时是空，的remote的sn的deviceid从device里面去获取
+    pub sn_files: Vec<String>,
+    //标识链接过程中需要通过sn
+    pub known_eps: bool,
+    //是否首次接收数据
+    pub accept_answer:bool,
 }
 
-impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
+impl TryFrom<LpcCommand> for ConnectListLpcCommandReq {
     type Error = BuckyError;
-    fn try_from(value: ConnectLpcCommandResp) -> Result<Self, Self::Error> {
-        let json = serde_json::json!({
-            "name": "connect_resp",
-            "result": value.result,
-            "stream_name": value.stream_name.as_str(),
-            "time": value.time,
-            "answer" : String::from_utf8(value.answer).unwrap(),
-        });
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        
+        let json = value.as_json_value();
 
+        let question = match json.get("question") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => s.as_bytes().to_vec(),
+                _ => Vec::new(),
+            },
+            _ => Vec::new(),
+        };
+
+        let mut sn_files = Vec::new();
+        match json.get("sn_files") {
+            Some(v) => match v {
+                serde_json::Value::Array(files) => {
+                    for file in files {
+                        match file {
+                            serde_json::Value::String(s) => {
+                                if s.len() > 0 {
+                                    sn_files.push(s.clone());
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        };
+
+        let known_eps = match json.get("known_eps") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        let accept_answer = match json.get("accept_answer") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        let no_cache = match json.get("no_cache") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        let mut remote_desc_list: Vec<Device> = Vec::new();
+        match json.get("remote_desc_list"){
+            Some(v) => match v {
+                serde_json::Value::Array(infos) =>{
+                    for (fileInfo) in infos {
+                        let device = match fileInfo.get("device_path") {
+                            Some(v) => match v {
+                                serde_json::Value::String(s) => {
+                                    let device_path =  PathBuf::from_str(s.as_str()).unwrap();
+                                    let mut file = std::fs::File::open(device_path.as_path()).unwrap();
+                                    let mut buf = Vec::<u8>::new();
+                                    let _ = file.read_to_end(&mut buf)?;
+                                    let (device, _) = Device::raw_decode(buf.as_slice())?;
+                                    device  
+                                }
+                                _ => {
+                                    return Err(BuckyError::new(
+                                        BuckyErrorCode::InvalidData,
+                                        "chunk-id format err",
+                                    ))
+                                }
+                            },
+                            _ => return Err(BuckyError::new(BuckyErrorCode::NotFound, "remote_desc_list lost")),
+                        };
+                        remote_desc_list.push(device);
+                        
+                    }
+                    Ok("success")
+                },
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "remote_desc_list format err",
+                )),    
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        Ok(Self {
+            seq: value.seq(),
+            remote_desc_list: remote_desc_list,
+            question,
+            sn_files,
+            known_eps,
+            accept_answer,
+            
+        })
+    }
+}
+pub struct ConnectRecord{
+    pub device_id : String,
+    pub stream_name: String,
+    pub answer: String,
+    pub time: u32,
+}
+pub struct ConnectListLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub records : Vec<ConnectRecord>,
+}
+
+impl TryFrom<ConnectListLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ConnectListLpcCommandResp) -> Result<Self, Self::Error> {
+        let mut records = "".to_string();
+        for record in value.records{
+            let data = format!("{}#{}#{}#{}$",record.device_id,record.stream_name,record.answer,record.time);
+            records += &data;
+        }
+        let json = serde_json::json!({
+            "name": "connect_list_resp",
+            "result": value.result,
+            "records":  records
+        });
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
     }
 }
@@ -1236,7 +1413,7 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
                     DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
-                    _ => String::from("unkown"),
+                    _ => String::from("unkown")
                 }
             }),
             Err(err) => serde_json::json!({
@@ -1304,7 +1481,67 @@ impl TryFrom<GetSystemInfoLpcCommandResp> for LpcCommand {
 }
 
 
+pub struct UploadSystemInfoLpcCommandReq {
+    pub seq: u32,
+    pub agent_name : String,
+    pub testcaseId : String,
+    pub interval : u64,
+}
+impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+        let interval = match json.get("interval") {
+            Some(v) => match v {
+                serde_json::Value::Number(s) => s.as_u64().unwrap(),
+                _ => 2000,
+            },
+            _ => 2000,
+        };
+        let agent_name = match json.get("agent_name") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.clone()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "agent_name format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "name lost")),
+        }?;
+        let testcaseId = match json.get("testcaseId") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.clone()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "testcaseId format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "testcaseId lost")),
+        }?;
+        Ok(Self {
+            seq: value.seq(),
+            agent_name,
+            testcaseId,
+            interval,
+        })
+    }
+}
+pub struct UploadSystemInfoLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+}
+impl TryFrom<UploadSystemInfoLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: UploadSystemInfoLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "upload_system_info_resp",
+            "result": value.result,
 
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
 pub struct CheckChunkLpcCommandReq {
     pub seq: u32,
     pub chunk_id: ChunkId,
@@ -2638,7 +2875,8 @@ impl TryFrom<SendObjectLpcCommandResp> for LpcCommand {
 pub struct RecvObjectLpcCommandReq {
     pub seq: u32,
     pub stream_name: String,
-    pub obj_path:PathBuf  
+    pub obj_path:PathBuf,
+    pub file_name : Option<String>,
 }
 impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
     type Error = BuckyError;
@@ -2651,6 +2889,19 @@ impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
                 _ => String::new(),
             },
             _ => String::new(),
+        };
+        let file_name = match json.get("file_name") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+            _ => None,
         };
         let obj_path = match json.get("obj_path") {
             Some(v) => match v {
@@ -2667,7 +2918,8 @@ impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
         Ok(Self {
             seq: value.seq(),
             stream_name,
-            obj_path
+            obj_path,
+            file_name
         })
     }
 }

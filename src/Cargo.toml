@@ -3,6 +3,7 @@ resolver = "2"
 
 members=[
     "bdt-tools",
+    "perf-report-tool",
     "cyfs-tools",
     "cyfs-stack-test-rust/unittest_nameobject",
     "cyfs-stack-test-rust/profile",

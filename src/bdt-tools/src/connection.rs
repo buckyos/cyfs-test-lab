@@ -207,7 +207,7 @@ impl TestConnection {
         log::info!("recv file finish, hash={:?}", &hash);
         Ok((file_size, hash))
     }
-    pub async fn recv_object(&mut self, obj_path:PathBuf) -> Result<(u64, HashValue,String), BuckyError> {
+    pub async fn recv_object(&mut self, obj_path:PathBuf,file_name:Option<String>) -> Result<(u64, HashValue,String), BuckyError> {
         let mut hashs = Vec::<HashValue>::new();
         let mut recv_buffer = Vec::new();
         recv_buffer.resize(PIECE_SIZE, 0u8);
@@ -270,9 +270,30 @@ impl TestConnection {
         let hash = hash_data(total_hash.as_slice());
         let mut object_id = hash.to_string();
         log::info!("recv object finish, hash={:?}", &hash);
-        if obj_type == 2{
+        if obj_type == 1{
+            let (device_obj,device_raw) = cyfs_base::Device::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
+            let file_id = match file_name{
+                Some(name) =>{
+                    name
+                },
+                _ =>{
+                    format!("{}.device",device_obj.desc().calculate_id())
+                }
+            };
+            
+            object_id  = device_obj.desc().calculate_id().to_string();
+            let file_obj_path =  obj_path.clone().join(file_id);
+            match device_obj.encode_to_file(file_obj_path.clone().as_path(),true){
+                Ok(_) => {
+                    log::info!("succ encode file obj to {}", file_obj_path.clone().display());
+                },
+                Err(e) => {
+                    log::error!("encode file obj to file failed, err {}", e);
+                },
+            }
+        }else if obj_type == 2{
             let (file_obj,file_raw) = cyfs_base::File::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
-            let file_id = file_obj.desc().calculate_id();
+            let file_id = format!("{}",file_obj.desc().calculate_id()) ;
             object_id  = file_id.clone().to_string();
             let file_obj_path =  obj_path.clone().join("file_obj").join(file_id.to_string().as_str());
             match file_obj.encode_to_file(file_obj_path.clone().as_path(),true){
@@ -280,7 +301,7 @@ impl TestConnection {
                     log::info!("succ encode file obj to {}", file_obj_path.clone().display());
                 },
                 Err(e) => {
-                    log::error!("encode file obj to file failed, err {}", e);
+                    log::error!("encode file obj to file failed,path = {},err {}",file_obj_path.display(), e);
                 },
             }
         }else if obj_type == 3 {
@@ -296,7 +317,7 @@ impl TestConnection {
                     Err(e)
                 }
             }.unwrap();
-            let dir_id = dir_obj.desc().calculate_id();
+            let dir_id = format!("{}",dir_obj.desc().calculate_id()) ;
             object_id  = dir_id.clone().to_string();
             let file_obj_path =  obj_path.clone().join("dir_obj").join(dir_id.to_string().as_str());
             match dir_obj.encode_to_file(file_obj_path.clone().as_path(),true){

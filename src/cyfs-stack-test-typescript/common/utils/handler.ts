@@ -408,126 +408,6 @@ export class GetObjectHandlerNewObject implements cyfs.RouterHandlerGetObjectRou
 }
 
 
-
-
-
-export class SelectObjectHandlerPass implements cyfs.RouterHandlerSelectObjectRoutine {
-    private device: string;
-    private handlerId: string;
-    private chain: string
-    constructor(device: string, handlerId: string, chain: string) {
-        this.device = device;
-        this.handlerId = handlerId;
-        this.chain = chain;
-    }
-    async call(param: cyfs.RouterHandlerSelectObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSelectObjectResult>> {
-        Emitter.emit('handlerRunning', this.device, 'SelectObjectHandlerPass', this.handlerId, this.chain)
-        const codec = new cyfs.NONSelectObjectOutputRequestJsonCodec();
-        console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerSelectObjectResult = {
-            // 直接终止路由并以resp作为应答
-            // 如果需要同时保存，那么替换为ResponseAndSave即可
-            action: cyfs.RouterHandlerAction.Pass
-        };
-        return cyfs.Ok(result)
-    }
-}
-export class SelectObjectHandlerDrop implements cyfs.RouterHandlerSelectObjectRoutine {
-    private device: string;
-    private handlerId: string;
-    private chain: string
-    constructor(device: string, handlerId: string, chain: string) {
-        this.device = device;
-        this.handlerId = handlerId;
-        this.chain = chain;
-    }
-    async call(param: cyfs.RouterHandlerSelectObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSelectObjectResult>> {
-        Emitter.emit('handlerRunning', this.device, 'SelectObjectHandlerDrop', this.handlerId, this.chain)
-        const codec = new cyfs.NONSelectObjectOutputRequestJsonCodec();
-        console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerSelectObjectResult = {
-            // 直接终止路由并以resp作为应答
-            // 如果需要同时保存，那么替换为ResponseAndSave即可
-            action: cyfs.RouterHandlerAction.Drop
-        };
-        return cyfs.Ok(result)
-    }
-}
-export class SelectObjectHandlerReject implements cyfs.RouterHandlerSelectObjectRoutine {
-    private device: string;
-    private handlerId: string;
-    private chain: string
-    constructor(device: string, handlerId: string, chain: string) {
-        this.device = device;
-        this.handlerId = handlerId;
-        this.chain = chain;
-    }
-    async call(param: cyfs.RouterHandlerSelectObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSelectObjectResult>> {
-        Emitter.emit('handlerRunning', this.device, 'SelectObjectHandlerReject', this.handlerId, this.chain)
-        const codec = new cyfs.NONSelectObjectOutputRequestJsonCodec();
-        console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerSelectObjectResult = {
-            // 直接终止路由并以resp作为应答
-            // 如果需要同时保存，那么替换为ResponseAndSave即可
-            action: cyfs.RouterHandlerAction.Reject
-        };
-        return cyfs.Ok(result)
-    }
-}
-
-export class SelectObjectHandlerDefault implements cyfs.RouterHandlerSelectObjectRoutine {
-    private device: string;
-    private handlerId: string;
-    private chain: string
-    constructor(device: string, handlerId: string, chain: string) {
-        this.device = device;
-        this.handlerId = handlerId;
-        this.chain = chain;
-    }
-    async call(param: cyfs.RouterHandlerSelectObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSelectObjectResult>> {
-        Emitter.emit('handlerRunning', this.device, 'SelectObjectHandlerDefault', this.handlerId, this.chain)
-        const codec = new cyfs.NONSelectObjectOutputRequestJsonCodec();
-        console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerSelectObjectResult = {
-            // 直接终止路由并以resp作为应答
-            // 如果需要同时保存，那么替换为ResponseAndSave即可
-            action: cyfs.RouterHandlerAction.Default
-        };
-        return cyfs.Ok(result)
-    }
-}
-
-
-export class SelectObjectHandlerResponse implements cyfs.RouterHandlerSelectObjectRoutine {
-    private device: string;
-    private handlerId: string;
-    private chain: string
-    constructor(device: string, handlerId: string, chain: string) {
-        this.device = device;
-        this.handlerId = handlerId;
-        this.chain = chain;
-    }
-    async call(param: cyfs.RouterHandlerSelectObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSelectObjectResult>> {
-        Emitter.emit('handlerRunning', this.device, 'SelectObjectHandlerResponse', this.handlerId, this.chain)
-        const codec = new cyfs.NONSelectObjectOutputRequestJsonCodec();
-        console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerSelectObjectResult = {
-            // 直接终止路由并以resp作为应答
-            // 如果需要同时保存，那么替换为ResponseAndSave即可
-            action: cyfs.RouterHandlerAction.Response
-        };
-        return cyfs.Ok(result)
-    }
-}
-
-
-
-
 export class DeleteObjectHandlerPass implements cyfs.RouterHandlerDeleteObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -862,10 +742,10 @@ export class handlerManager {
     async addHandler(deviceName: string, stack: cyfs.SharedCyfsStack, type: cyfs.RouterHandlerCategory, chain: cyfs.RouterHandlerChain, id: string, index: number, filter: string, default_action: cyfs.RouterHandlerAction, myHandler: any, routineType: string, runSum: number = 1) {
         //添加handler 数据
         let routine
-        if (myHandler == cyfs.None || myHandler == undefined) {
-            routine = cyfs.None
+        if (myHandler == null || myHandler == undefined) {
+            routine = undefined
         } else {
-            routine = cyfs.Some(new myHandler(deviceName, id, `${chain}`))
+            routine = new myHandler(deviceName, id, `${chain}`)
         }
         let ret1: cyfs.BuckyResult<void> = cyfs.Ok(void (0));
         switch (type) {
@@ -875,6 +755,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    undefined,
                     default_action,
                     routine
                 );
@@ -917,18 +798,7 @@ export class handlerManager {
                 console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
                 break;
             }
-            case cyfs.RouterHandlerCategory.SelectObject: {
-                ret1 = await stack.router_handlers().add_select_object_handler(
-                    chain,
-                    id,
-                    index,
-                    filter,
-                    default_action,
-                    routine
-                );
-                console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
-                break;
-            }
+         
             case cyfs.RouterHandlerCategory.SignObject: {
                 ret1 = await stack.router_handlers().add_sign_object_handler(
                     chain,

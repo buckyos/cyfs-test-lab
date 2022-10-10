@@ -37,6 +37,9 @@ export class SendFileAction extends BaseAction implements ActionAbstract {
         let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
         if (!this.action.config.not_wait_upload_finished) {
             let setResult = await setRunning;
+            if(this.action.fileSize!>100*1024*1024){
+                await sleep(10*1000);
+            }
             if(setResult.err){
                 return { err: setResult.err, log: `SendFileAction run failed, setFile err = ${JSON.stringify(setResult)},LN = ${this.action.LN},RN = ${this.action.RN}` }
             }
@@ -49,7 +52,7 @@ export class SendFileAction extends BaseAction implements ActionAbstract {
             
         let check = await LN.bdtClient!.downloadTaskListener(download.session!, 2000, this.action.config.timeout);
         if(check.err){
-            return { err: check.err, log: `SendFileAction run failed, downloadTaskListener err = ${JSON.stringify(check)},LN = ${this.action.LN},RN = ${this.action.RN}` }
+            return { err: check.err, log: `SendFileAction run failed, downloadTaskListener err = ${JSON.stringify(check.state)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }
         let setResult = await setRunning;
         if(setResult.err){

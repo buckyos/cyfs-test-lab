@@ -1,0 +1,174 @@
+## CYFS协议栈Front测试用例设计
+
+### NDN测试点
+
+#### 环境类型
+* 真机环境
+* 模拟器环境
+
+#### 设备类型
+* OOD
+* Device
+
+
+#### 链类型
+* meta本地链
+* meta测试链
+
+
+#### 必填项
+* 必填
+* 非必填
+
+
+#### 请求路径
+* 空
+* 非空
+* 合法
+* 非法
+
+#### 标准对象
+* Chunk
+* File
+* Dir
+* Device
+
+#### 自定义对象
+* DecAPP
+* TextObject
+
+#### 关联对象
+* 结构化
+* 非结构化
+
+#### Mode
+* default
+* object
+* data
+
+#### Format
+* default
+* raw
+* json
+
+#### 协议格式
+* o协议基础范式：
+cyfs://o[/$ownerid]/$objectid[/$innerpath][?mode=object&format=json]
+* r协议基础范式:
+/r/{target}/{dec-id}/{inner-path}?action=list&page_index=0&page_size=1024&format=json
+    trget
+    - "c" 当前协议栈
+    - "$$" 当前zone的主OOD
+    - device_id/people_id 目标设备/目标zone
+    - host-name，走基于meta-chain的名字解析服务
+    dec-id 
+    - root 整个root-state
+    - system 内置的系统root-state子树
+    - {dec-id} 指定的dec的root-state子树
++ inner-path 需要读取的子树的子路径，可以为空，则表示读取对应的子树的根
+* l协议基础范式:
+cyfs://l/{target}/{dec-id}/{inner-path}?action=list&page_index=0&page_size=1024
+* a协议基础范式:
+cyfs://a/{dec-id|dec-name}/{inner-path}    // 打开当前安装的版本的指定内置页
+cyfs://a/{dec-id|dec-name}/{dir-id}/{inner-path}      // 打开目标dir-id对应的版本的内置页，用以唯一锁定目标版本
+cyfs://a/{dec-id|dec-name}/{version}/{inner-path}   // 打开指定version对应的版本的内置页
+
+### 测试用例
+##### o协议
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/objectid链接访问本地已有object对象，objectid为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/object_id/inner_path链接访问本地已有object对象，objectid为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/ownerid/objectid链接访问本地已有object对象，ownerid为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/owner_id/object_id/inner_path链接访问本地已有object对象，objectid为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/owner_id/object_id/inner_path链接访问本地已有object对象，inner_path为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/object_id/inner_path链接访问本地已有object对象，objectid为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/object_id/inner_path链接访问本地已有object对象，inner_path为空
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/ownerid/objectid/innerpath?mode=“”链接访问本地已有object对象
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/ownerid/objectid/innerpath?format=“”链接访问本地已有object对象
+* Front 相关 异常值校检，meta本地链，同zone cyfs://o/ownerid/objectid/innerpath?mode=“”&format=“”链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id，链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id/innerpath?mode=object&format=json链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id链接访问本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id/inner_path链接访问本地本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id/innerpath?mode=object&format=json链接访问本地本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/chunk_id，链接访问本地已有chunk数据
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/chunk_id/inner_path链接访问本地已有chunk数据
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/object_id/innerpath?mode=object&format=json链接访问本地已有chunk数据
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id/innerpath?mode=object&format=json链接访问本地已有chunk数据
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/file_id，链接访问本地已有file对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/file_id/inner_path链接访问本地已有file对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/file_id/innerpath?mode=object&format=json链接访问本地已有file对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/file_id/innerpath?mode=object&format=json链接访问本地已有file对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id/innerpath?mode=Data&format=json链接创建file对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/object_id/innerpath?mode=object&format=json链接访问已创建file对象
+
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectlist链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectlist/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectlist，链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectlist/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectlist/innerpath?mode=object&format=json链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectlist链接访问本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectlist/inner_path链接访问本地本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectlist/innerpath?mode=object&format=json链接访问本地本地没有，链上已有object对象
+
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectmapid链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectmapid/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectmapid，链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectmapid/inner_path链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectmapid/innerpath?mode=object&format=json链接访问本地已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/objectmapid链接访问本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectmapid/inner_path链接访问本地本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/objectmapid/innerpath?mode=object&format=json链接访问本地本地没有，链上已有object对象
+* Front 相关 正常流程，meta本地链，同zone cyfs://o/owner_id/newobjectmapid/innerpath?mode=object&format=json链接访问增量object对象
+* Front 相关 正常流程，meta本地链，跨zone执行以上操作
+
+##### r协议
+* Front 相关，异常值校检 meta本地链，同zoneDevice cyfs:/r/{target}/{dec-id}/{inner-path}链接访问已插入objectid，无target
+* Front 相关，异常值校检 meta本地链，同zoneDevice cyfs:/r/{target}/{dec-id}/{inner-path}链接访问已插入objectid，无dec-id
+* Front 相关，异常值校检 meta本地链，同zoneDevice cyfs:/r/{target}/{dec-id}/{inner-path}链接访问已插入objectid，无inner-path
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$/root/链接访问当前协议栈已插入objectid，根查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$$/root/链接访问当前zone的主OOD已插入objectid，根查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/device_id/root/链接访问当前目标设备已插入objectid，根查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/r/people_id /root/链接访问目标zone已插入objectid，根查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/r/host-name /root/链接通过host-name访问已插入objectid，根查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$/system/test链接访问当前协议栈已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$$/system/test链接访问当前zone的主OOD已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/device_id/system/test链接访问当前目标设备已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/r/people_id/system/test链接访问目标zone已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/r/host-name /system/test链接通过host-name访问已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$/dec-id/test链接访问当前协议栈已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/$$/dec-id/test链接访问当前zone的主OOD已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/device_id/dec-id/test链接访问当前目标设备已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/r/people_id/dec-id/test链接访问目标zone已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/r/host-name /dec-id/test链接通过host-name访问已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice /r/$/{dec-id}/{inner-path}?action=list&page_index=0&page_size=1024&format=json分页查询当前协议栈已插入的多个objectid，根查询
+
+##### l协议
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/$/system/test链接访问当前协议栈已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/$$/system/test链接访问当前zone的主OOD已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/device_id/system/test链接访问当前目标设备已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/l/people_id/system/test链接访问目标zone已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/l/host-name /system/test链接通过host-name访问已插入objectid，系统test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/$/dec-id/test链接访问当前协议栈已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/$$/dec-id/test链接访问当前zone的主OOD已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/device_id/dec-id/test链接访问当前目标设备已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，跨zoneDevice cyfs:/l/people_id/dec-id/test链接访问目标zone已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice cyfs:/l/host-name /dec-id/test链接通过host-name访问已插入objectid，指定设备test子树查询
+* Front 相关，正常流程 meta本地链，同zoneDevice /l/$/{dec-id}/{inner-path}?action=list&page_index=0&page_size=1024&format=json分页查询当前协议栈已插入的多个objectid，根查询
+* Front 相关 正常流程，meta本地链，跨zone执行以上操作
+
+##### a协议
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{inner-path} 链接缺少dec-id|dec-name,访问当前版本指定内置页
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{inner-path} 链接缺少inner-path,访问当前版本指定内置页
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{dir-id}/{inner-path}  链接缺少dec-id|dec-name, 打开目标dir-id对应的版本的内置页，用以唯一锁定目标版本
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{version}/{inner-path} 链接缺少version,打开指定version对应的版本的内置页
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{inner-path} 访问当前版本指定内置页
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{dir-id}/{inner-path}  打开目标dir-id对应的版本的内置页，用以唯一锁定目标版本
+* Front 相关，meta本地链，同zoneDevice  cyfs://a/{dec-id|dec-name}/{version}/{inner-path} 打开指定version对应的版本的内置页
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{version}/{inner-path}链接查看版本不存在的本地app
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/{dir-id}/{inner-path}链接查看dir-id不匹配的本地app
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/local_status?format=json链接查看指定本地app状态
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/local_status?format=json链接查看不存在本地的app
+* Front 相关，meta本地链，同zoneDevice cyfs://a/{dec-id|dec-name}/local_status?format=json链接查看未安装的本地app

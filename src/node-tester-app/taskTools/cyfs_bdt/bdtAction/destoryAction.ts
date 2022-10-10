@@ -15,6 +15,7 @@ export class DestoryAction extends BaseAction implements ActionAbstract {
         if(info){
             return { err: BDTERROR.success, log: `${this.action.LN} destory bdt client failed`}
         }
+        await sleep(2000);
         return { err: BDTERROR.success, log: "DestoryAction run success" }
     }
 }

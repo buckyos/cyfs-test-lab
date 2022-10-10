@@ -77,6 +77,7 @@ export class UtilClient {
         this.cachePath = result.value.cache_path;
         return {err:ErrorCode.succ,cache_path:result.value.cache_path}
     }
+    
     async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "removeNdcData",

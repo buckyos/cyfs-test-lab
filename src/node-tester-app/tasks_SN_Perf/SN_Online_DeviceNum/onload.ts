@@ -27,38 +27,40 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }
             },
             logType:"info",
-            SN :['sn-miner_xiao.desc',],
+            SN : LabSnList,
+            //SN :['sn-miner_xiao.desc',],
             resp_ep_type:Resp_ep_type.SN_Resp, 
     }
     // 每台机器运行一个bdt 客户端
-    await agentManager.allAgentStartBdtPeer(config,10)
-    //(4) 测试用例执行器添加测试任务
-    for(let [i,j] of randShuffle(labAgent.length)){
-        if(i != j && labAgent[i].NAT + labAgent[j].NAT < 5 ){
+    let agent_num = 1 ;
+    let stack_num = 20;
+    await agentManager.allAgentStartBdtPeer(config,agent_num)
+
+    let mult =5;
+    while(mult--){
+        for(let i = 0;i< labAgent.length;i++){
             let info = await testRunner.createPrevTask({
                 LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[j].tags[0]}$1`,
-                timeout : 5*30*1000,
+                RN : `${labAgent[i].tags[0]}$1`,
+                timeout : 20*30*1000,
                 action : []
             })
             // 1.1 LN 连接 RN
-            let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                type : ActionType.connect,
-                LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[j].tags[0]}$1`,
-                config:{
-                    conn_tag: connect_1,
-                    timeout : 30*1000,
-                },
-                expect : {err:0},    
-            })) 
+            for(let x=0;x<stack_num;x++){
+                info = await testRunner.prevTaskAddAction(new BDTAction.CreateBDTStackAction({
+                    type : ActionType.start,
+                    LN : `${labAgent[i].tags[0]}$1`,
+                    config:{
+                        timeout : 40*1000,
+                    },
+                    expect : {err:0},    
+                }))
+            }
             await testRunner.prevTaskRun();
         }
     }
-
-
-    await testRunner.waitFinished()
+    
+    await testRunner.waitFinished(20)
     
     
 }

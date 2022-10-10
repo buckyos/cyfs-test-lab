@@ -458,7 +458,43 @@ ndn: ndn::Config {
     (1) 符合P2P NAT穿透,传输成功
 ```
 
-#### 任务分发调度
+#### NDN 拥塞控制
+
++ NDN_BBR_TCP_1Channel_download10File
+```
+前置条件：
+    (1)LN/RN 同时使用IPv4 TCP 协议EP
+操作步骤：
+    (1) RN track_file_in_path  10个40Mb大小文件，chunk 大小 10Mb，LN 串行下载文件;
+测试节点数据限制：
+    (1) 所有机器组合
+预期结果：
+    (1) 符合P2P NAT穿透,传输成功，下载成功
+```
++ NDN_BBR_TCP_5Channel_download10File
+```
+前置条件：
+    (1)LN/RN 同时使用IPv4 TCP 协议EP
+操作步骤：
+    (1) RN 创建5个任务，每个任务track_file_in_path  10个40Mb大小文件，chunk 大小 10Mb，LN 并行5个channel下载文件;
+测试节点数据限制：
+    (1) 所有机器组合
+预期结果：
+    (1) 符合P2P NAT穿透,传输成功，下载成功
+```
++ NDN_BBR_TCP_10Channel_download10File
+```
+前置条件：
+    (1)LN/RN 同时使用IPv4 TCP 协议EP
+操作步骤：
+    (1) RN 创建10个任务，每个任务track_file_in_path  10个40Mb大小文件，chunk 大小 10Mb，LN 并行10个channel下载文件;
+测试节点数据限制：
+    (1) 所有机器组合
+预期结果：
+    (1) 符合P2P NAT穿透,传输成功，下载成功
+```
+
+
 + NDN_BBR_File_Concurrent10_download100
 ```
 前置条件：
@@ -470,6 +506,8 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功，下载成功
 ```
+
+
 + NDN_BBR_File_Concurrent10_upload100
 ```
 前置条件：
@@ -485,7 +523,7 @@ ndn: ndn::Config {
 
 #### 双源传输
 // 传输最小单位piece  下载最小单位Chunk。其实多源只需要关注单个chunk和File(chunk list )
-+ NDN_DualSource_InterestChunk
++ NDN_Dual_DualSource_InterestChunk
 ```
 前置条件：
     (1)LN/RN 同时使用IPv4/IPv6、TCP/UDP 协议EP
@@ -498,7 +536,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_SingleSource_InterestChunk
++ NDN_Dual_SingleSource_InterestChunk
 ```
 前置条件：
     (1)LN/RN 同时使用IPv4/IPv6、TCP/UDP 协议EP
@@ -511,7 +549,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_DualSource_InterestFile
++ NDN_Dual_DualSource_InterestFile
 
 ```
 前置条件：
@@ -525,7 +563,7 @@ ndn: ndn::Config {
 预期结果：
     (1) 符合P2P NAT穿透,传输成功
 ```
-+ NDN_SingleSource_InterestFile
++ NDN_Dual_SingleSource_InterestFile
 
 ```
 前置条件：
