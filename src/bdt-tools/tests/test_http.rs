@@ -1,7 +1,7 @@
 use hyper::{body::Buf};
 use serde::{Deserialize,Serialize};
 use hyper::{Body, Method,Client,  Request};
-
+use cyfs_util::SYSTEM_INFO_MANAGER;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetResult {
@@ -105,4 +105,39 @@ pub async fn request_json_post(uri:&str,json_body:Body) -> anyhow::Result<GetRes
     // try to parse as json with serde_json
     let get_result:GetResult = serde_json::from_reader(body.reader())?;
     Ok(get_result)
+}
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    // 注意这个惯用法：在 tests 模块中,从外部作用域导入所有名字.
+    use super::*;
+    #[tokio::test]
+    async fn test_json_post() {
+        println!("############# test_json_post ");
+        let url = "http://192.168.100.254:5000/api/base/system_info/report";
+        let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
+        let sysInfo = BDTTestSystemInfo {
+            name : "test".to_string(),
+            testcaseId : "ABC".to_string(),
+            cpu_usage: ret.cpu_usage,
+            total_memory: ret.total_memory,
+            used_memory: ret.used_memory,
+            received_bytes: ret.received_bytes,
+            transmitted_bytes: ret.transmitted_bytes,
+            ssd_disk_total: ret.ssd_disk_total,
+            ssd_disk_avail:ret.ssd_disk_avail,
+            hdd_disk_total: ret.hdd_disk_total,
+            hdd_disk_avail: ret.hdd_disk_avail,
+        };
+        let json_body = serde_json::to_vec(&sysInfo).unwrap();
+        let get_json = request_json_post(url,Body::from(json_body)).await.unwrap();
+        // print users
+        println!("users: {:#?}", get_json);
+    }
+
+
 }

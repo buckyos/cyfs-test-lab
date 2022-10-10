@@ -1516,7 +1516,8 @@ impl Peer {
 
                     let ret = cyfs_bdt::download::download_chunk_to_path(&stack, 
                         c.chunk_id.clone(), 
-                        SingleDownloadContext::streams(None, vec![remote_id]), 
+                        None,
+                        Some(SingleDownloadContext::streams(None, vec![remote_id])), 
                         path.as_path()).await;
                     match ret {
                         Ok(_) => {
@@ -1573,8 +1574,9 @@ impl Peer {
                     writers.push(writer);
                     let task = cyfs_bdt::download::download_chunk_list(&stack, 
                         c.task_name.clone(),
-                        &c.chunk_list.clone(), 
-                        SingleDownloadContext::streams(None, vec![remote_id]), 
+                        &c.chunk_list.clone(),
+                        None, 
+                        Some(SingleDownloadContext::streams(None, vec![remote_id])), 
                         writers).await.unwrap();
                     let mut tasks = peer.0.tasks.lock().unwrap();
                     let _ =  tasks.add_task(c.task_name.clone().as_str(), Arc::new(task)).unwrap();
@@ -1772,8 +1774,9 @@ impl Peer {
                     } else {
                         if let Some(file) = c.file.as_ref() {
                             let task = cyfs_bdt::download::download_file_to_path(&stack, 
-                                file.clone(), 
-                                SingleDownloadContext::streams(None, vec![c.default_hub]), 
+                                file.clone(),
+                                None, 
+                                Some(SingleDownloadContext::streams(None, vec![c.default_hub])), 
                                 c.path.as_path()).await.unwrap();
                                                         
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -2456,8 +2459,9 @@ impl Peer {
                         
                         if let Some(file) = c.file.as_ref() {
                             let task = cyfs_bdt::download::download_file_to_path(&stack, 
-                                file.clone(), 
-                                SingleDownloadContext::streams(None, src), 
+                                file.clone(),
+                                None, 
+                                Some(SingleDownloadContext::streams(None, src)) , 
                                 c.path.as_path()).await.unwrap();
                                                         
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -2536,7 +2540,8 @@ impl Peer {
                             let task = cyfs_bdt::download::download_file_with_ranges(&stack, 
                                 file.clone(), 
                                 c.ranges.clone(),
-                                SingleDownloadContext::streams(None, src),  
+                                None,
+                                Some(SingleDownloadContext::streams(None, src)),  
                                 vec![writer]).await.unwrap();
                                                         
                             //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
@@ -2800,7 +2805,8 @@ impl Peer {
                             let download_dir =  match cyfs_bdt::download::download_dir_to_path(
                                 &stack,
                                 dir.clone().desc().dir_id(),
-                                SingleDownloadContext::streams(None, src), 
+                                None,
+                                Some(SingleDownloadContext::streams(None, src)), 
                                 down_dir.as_path(),
                             ){
                                 Ok((task, dir_task_control)) => {
