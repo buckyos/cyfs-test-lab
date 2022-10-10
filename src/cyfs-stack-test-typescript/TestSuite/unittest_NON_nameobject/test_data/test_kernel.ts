@@ -47,7 +47,15 @@ function public_key(param: string): cyfs.PublicKey {
             throw new Error(`invalid public key protocol ${params[0]}`)
     }
 }
-
+function private_key(param: string): cyfs.PrivateKey {
+    let params = param.split(":");
+    if (params.length != 2) {
+        throw new Error(`invalid private key string ${param}`)
+    }
+    let bits = parseInt(params[1])
+    let pk = cyfs.PrivateKey.generate_rsa(bits).unwrap()
+    return pk
+}
 function public_key_list(params: string[]): cyfs.PublicKey[] {
     let pklist: cyfs.PublicKey[] = []
     for (let j of params) {
