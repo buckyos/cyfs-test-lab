@@ -1,0 +1,942 @@
+[2022-10-11 17:14:23.334928 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:201] arg: /node_tester_app/service/cyfs_bdt/bdt-tools
+[2022-10-11 17:14:23.336148 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:201] arg: 38167
+[2022-10-11 17:14:23.336194 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:201] arg: Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk
+[2022-10-11 17:14:23.336227 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:201] arg: /node_tester_app/blog/10-11-17-14-19-82-Q5xN
+[2022-10-11 17:14:23.336283 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:205] current dir: Ok("/node_tester_app/service/cyfs_bdt")
+[2022-10-11 17:14:23.336447 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-base/src/base/channel.rs:75] use default channel config: channel=nightly
+[2022-10-11 17:14:23.336492 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:207] current version: 1.0.0.0-nightly (22-10-10)
+[2022-10-11 17:14:23.336529 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:210] env: CYFS_CONSOLE_LOG_LEVEL: debug
+[2022-10-11 17:14:23.336564 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:210] env: CYFS_FILE_LOG_LEVEL_KEY: debug
+[2022-10-11 17:14:23.336598 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/log/cyfs_log.rs:210] env: RUST_LOG: debug
+[2022-10-11 17:14:23.336636 +08:00] INFO [bdt-tools/src/lib.rs:108] connect to remote,addr=127.0.0.1:38167
+[2022-10-11 17:14:27.362889 +08:00] INFO [bdt-tools/src/peer.rs:232] on create, c=json: Object {"active_pn_files": Array [], "addrInfo": Array [String("W4udp192.168.100.132"), String("L6udp[::]")], "bdt_port": Number(50000), "chunk_cache": String("file"), "device_tag": String("PC_0012_zYGYSnE5na"), "ep_type": String("effectiveEP_WAN"), "known_peer_files": Array [String("pn-miner.desc")], "local": String("PC_0012"), "name": String("create"), "passive_pn_files": Array [], "peerName": String("Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk"), "sn_files": Array [String("sn-miner.desc")], "sn_only": Number(0)}, buffer: []
+[2022-10-11 17:14:27.371654 +08:00] DEBUG [bdt-tools/src/command.rs:263] parse create command active pn 5aSixgMVzuUDztwzVPgpMkbkuTmG2SVLECYXzBuhFAjs
+[2022-10-11 17:14:27.372748 +08:00] DEBUG [bdt-tools/src/peer.rs:2057] ep=W4udp192.168.100.132:50000 on create
+[2022-10-11 17:14:27.372916 +08:00] DEBUG [bdt-tools/src/peer.rs:2057] ep=L6udp[::]:50001 on create
+[2022-10-11 17:14:27.509496 +08:00] INFO [bdt-tools/src/peer.rs:2083] succ encode file obj to /node_tester_app/PC_0012/LocalDevice/PC_0012_zYGYSnE5na.desc
+[2022-10-11 17:14:27.510365 +08:00] INFO [bdt-tools/src/peer.rs:2092] succ encode file obj to /node_tester_app/PC_0012/LocalDevice/PC_0012_zYGYSnE5na.key
+[2022-10-11 17:14:27.512981 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/manager.rs:101] NetListener{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} bind on Endpoint { is_sys_default: false, is_static_wan: true, protocol: Udp, addr: 192.168.100.132:50000 } success
+[2022-10-11 17:14:27.516140 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/manager.rs:104] NetListener{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} add local ip 192.168.100.132
+[2022-10-11 17:14:27.516262 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/manager.rs:101] NetListener{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} bind on Endpoint { is_sys_default: false, is_static_wan: false, protocol: Udp, addr: [::]:50001 } success
+[2022-10-11 17:14:27.517278 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/manager.rs:104] NetListener{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} add local ip ::
+[2022-10-11 17:14:27.528436 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:120] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} add-sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej
+[2022-10-11 17:14:27.528695 +08:00] WARN [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-debug/src/check/tracker.rs:7] tracker timer manager launched...
+[2022-10-11 17:14:27.530860 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/manager.rs:257] NetListener:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} online
+[2022-10-11 17:14:27.530983 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:94] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} starting.
+[2022-10-11 17:14:27.531399 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:102] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} started.
+[2022-10-11 17:14:27.531505 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stack.rs:400] BdtStack{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm}: opened, version 0.5.4
+[2022-10-11 17:14:27.531602 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stream/manager.rs:120] StreamManager {local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} listen on 0
+[2022-10-11 17:14:27.531818 +08:00] INFO [bdt-tools/src/peer.rs:257] on create succ, local: 5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm
+[2022-10-11 17:14:27.531768 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stack.rs:392] BdtStack{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} statistic: TunnelCount: 0, StreamCount: 0
+[2022-10-11 17:14:27.531895 +08:00] INFO [bdt-tools/src/peer.rs:261] peer sn list len=1,wait for sn online
+[2022-10-11 17:14:27.532035 +08:00] INFO [bdt-tools/src/peer.rs:268] sn online success 5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm
+[2022-10-11 17:14:27.532124 +08:00] INFO [bdt-tools/src/peer.rs:277] local ep info:W4udp192.168.100.132:50000
+[2022-10-11 17:14:27.532177 +08:00] INFO [bdt-tools/src/peer.rs:294] set resp endpoint list effectiveEP_WAN
+[2022-10-11 17:14:27.533604 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:719] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620670), endpoints: [Endpoint { is_sys_default: false, is_static_wan: true, protocol: Udp, addr: 192.168.100.132:50000 }]
+[2022-10-11 17:14:27.538427 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620670) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(856)
+[2022-10-11 17:14:27.538633 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620670) from L6udp[::]:50001 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W6udp[240e:3b3:30ce:d150:7559:6781:2740:4853]:8061, result: Ok(856)
+[2022-10-11 17:14:27.541327 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620670.
+[2022-10-11 17:14:27.541436 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/interface/udp.rs:256] UdpInterface {local:W4udp192.168.100.132:50000} update outer to L4udp192.168.100.132:50000
+[2022-10-11 17:14:27.541507 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stack.rs:616] 5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm sn online, please implement it if not.
+[2022-10-11 17:14:27.541623 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:164] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060 get new endpoint will update the desc and resend ping.
+[2022-10-11 17:14:27.543991 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:719] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620671), endpoints: [Endpoint { is_sys_default: false, is_static_wan: true, protocol: Udp, addr: 192.168.100.132:50000 }]
+[2022-10-11 17:14:27.544315 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620671) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(536)
+[2022-10-11 17:14:27.545742 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620671.
+[2022-10-11 17:14:28.232589 +08:00] DEBUG [bdt-tools/src/command.rs:368] convert CreateLpcCommandResp to LpcCommand, local: [0, 1, 82, 10, 0, 47, 73, 84, 252, 124, 166, 20, 0, 0, 0, 0, 0, 1, 0, 48, 129, 137, 2, 129, 129, 0, 205, 203, 239, 161, 185, 219, 129, 246, 60, 207, 112, 57, 198, 251, 141, 210, 60, 23, 4, 221, 150, 143, 174, 178, 146, 139, 41, 146, 59, 225, 134, 64, 68, 199, 148, 243, 247, 47, 122, 180, 110, 140, 193, 184, 206, 147, 220, 20, 193, 173, 113, 72, 251, 199, 104, 43, 182, 213, 2, 227, 117, 33, 244, 213, 201, 246, 227, 132, 11, 61, 236, 29, 202, 123, 218, 96, 57, 179, 16, 70, 238, 49, 47, 234, 222, 97, 216, 18, 41, 69, 162, 68, 186, 149, 94, 199, 225, 176, 216, 167, 119, 167, 161, 98, 213, 179, 205, 216, 209, 141, 71, 177, 214, 84, 244, 78, 119, 119, 49, 21, 78, 204, 15, 129, 181, 134, 54, 47, 2, 3, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 73, 84, 252, 124, 199, 237, 0, 1, 64, 77, 10, 7, 76, 80, 195, 192, 168, 100, 132, 18, 32, 68, 0, 0, 0, 1, 48, 238, 39, 217, 49, 71, 225, 160, 5, 245, 112, 222, 240, 203, 114, 142, 232, 14, 151, 243, 69, 193, 134, 65, 225, 30, 244, 18, 32, 68, 0, 0, 0, 1, 48, 238, 39, 217, 49, 71, 225, 160, 5, 245, 112, 222, 240, 203, 114, 142, 232, 14, 151, 243, 69, 193, 134, 65, 225, 30, 244, 1, 0, 255, 0, 47, 73, 84, 252, 124, 200, 7, 0, 177, 249, 179, 223, 55, 225, 57, 234, 102, 51, 138, 217, 216, 63, 23, 88, 97, 130, 16, 192, 64, 152, 7, 77, 164, 64, 84, 196, 150, 98, 105, 166, 229, 20, 150, 114, 88, 82, 78, 143, 31, 192, 83, 166, 24, 141, 85, 188, 129, 175, 103, 100, 173, 91, 86, 14, 223, 144, 233, 17, 147, 109, 177, 155, 106, 7, 22, 7, 162, 209, 44, 133, 2, 144, 253, 189, 44, 39, 63, 111, 104, 117, 149, 212, 80, 225, 116, 242, 150, 1, 64, 89, 196, 119, 139, 248, 202, 154, 191, 88, 135, 199, 169, 93, 81, 216, 99, 123, 144, 50, 240, 154, 52, 195, 88, 145, 249, 54, 97, 188, 100, 25, 165, 97, 236, 74, 220, 50]
+[2022-10-11 17:14:28.268296 +08:00] INFO [bdt-tools/src/peer.rs:561] on auto accept, c=json: Object {"eventName": String("autoAccept_5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm"), "eventType": String("confirm_resp"), "name": String("auto_accept"), "peerName": String("Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk")}, buffer: []
+[2022-10-11 17:14:28.565810 +08:00] INFO [bdt-tools/src/peer.rs:2966] on get_system_info, c=json: Object {"agent_name": String("PC_0012"), "interval": Number(2000), "name": String("upload_system_info"), "peerName": String("Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk"), "testcaseId": String("NDN_BBR_UDP_File_Concurrent10_upload20_1665479659982")}, buffer: []
+[2022-10-11 17:14:28.592784 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-util/src/util/system_info.rs:76] os name: "debian"
+[2022-10-11 17:14:28.593021 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-util/src/util/system_info.rs:205] start refresh system info...
+[2022-10-11 17:14:30.600017 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:32.604777 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:34.609945 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:36.615579 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:38.621171 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:40.628084 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:42.634663 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:44.640877 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:46.646613 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:48.670861 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:50.678454 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:52.683658 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:52.790074 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:720] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620672), endpoints: none
+[2022-10-11 17:14:52.790452 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620672) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(104)
+[2022-10-11 17:14:52.790625 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620672) from L6udp[::]:50001 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W6udp[240e:3b3:30ce:d150:7559:6781:2740:4853]:8061, result: Ok(104)
+[2022-10-11 17:14:52.791356 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620672.
+[2022-10-11 17:14:54.691890 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:56.696817 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:14:58.701793 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:00.708773 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:02.714661 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:04.718839 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:06.722692 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:08.727789 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:10.733311 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:12.737418 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:14.742172 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:16.747230 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:17.791112 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:720] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620673), endpoints: none
+[2022-10-11 17:15:17.791522 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620673) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(104)
+[2022-10-11 17:15:17.791703 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620673) from L6udp[::]:50001 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W6udp[240e:3b3:30ce:d150:7559:6781:2740:4853]:8061, result: Ok(104)
+[2022-10-11 17:15:17.792505 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620673.
+[2022-10-11 17:15:18.752309 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:20.758407 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:22.763089 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:24.768101 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:26.771723 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:27.532125 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stack.rs:392] BdtStack{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} statistic: TunnelCount: 0, StreamCount: 0
+[2022-10-11 17:15:28.776018 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:30.781989 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:31.417113 +08:00] INFO [bdt-tools/src/peer.rs:2239] on calculate_file, c=json: Object {"chunk_size": Number(1048576000), "name": String("calculate-file"), "path": String("/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"), "peerName": String("Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk")}, buffer: []
+[2022-10-11 17:15:32.790283 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:36.467268 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:38.494036 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:40.500820 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:42.507851 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:42.792997 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:720] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620674), endpoints: none
+[2022-10-11 17:15:42.794521 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620674) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(104)
+[2022-10-11 17:15:42.795904 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620674) from L6udp[::]:50001 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W6udp[240e:3b3:30ce:d150:7559:6781:2740:4853]:8061, result: Ok(104)
+[2022-10-11 17:15:42.797378 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620674.
+[2022-10-11 17:15:44.515593 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:46.524018 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:48.531520 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:50.538518 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:52.545879 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:54.553446 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:56.560319 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:15:58.570568 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:00.578054 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:02.584792 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:04.592061 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:06.599413 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:07.796304 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:720] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-req seq: TempSeq(4032620675), endpoints: none
+[2022-10-11 17:16:07.796860 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620675) from W4udp192.168.100.132:50000 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W4udp192.168.100.22:8060, result: Ok(104)
+[2022-10-11 17:16:07.797040 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:784] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping seq:TempSeq(4032620675) from L6udp[::]:50001 to 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/W6udp[240e:3b3:30ce:d150:7559:6781:2740:4853]:8061, result: Ok(104)
+[2022-10-11 17:16:07.797572 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/sn/client/ping.rs:150] PingManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} ping-resp, sn: 5aSixgMSzCTN6dUSVvxeogdy6rycjLZYZERvw1zdDTej/L4udp192.168.100.22:8060, seq: 4032620675.
+[2022-10-11 17:16:08.606235 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:10.613171 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:12.619672 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:14.627959 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:16.635136 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:18.641802 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:20.648630 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:22.655624 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:24.662874 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:26.670840 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:27.532413 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/stack.rs:392] BdtStack{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} statistic: TunnelCount: 0, StreamCount: 0
+[2022-10-11 17:16:27.977745 +08:00] INFO [bdt-tools/src/peer.rs:2291] sender: task_id 7Tk94YfggHytrDMSBC6KYT3LFE7FNM4i8APYcCbj14mW
+[2022-10-11 17:16:28.050510 +08:00] INFO [bdt-tools/src/peer.rs:2312] on set-file, c=json: Object {"dir_object_path": String("/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/NamedObject"), "name": String("set-file"), "path": String("/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"), "peerName": String("Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk")}, buffer-len: 163
+[2022-10-11 17:16:28.052658 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:136] insert chunk of file to ndc, chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, file:7Tk94YfggHytrDMSBC6KYT3LFE7FNM4i8APYcCbj14mW
+[2022-10-11 17:16:28.053086 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:136] insert chunk of file to ndc, chunk:7C8WUZmHznSeqzACK53wkifrasmecRh5wqKsE1m9Bs3E, file:7Tk94YfggHytrDMSBC6KYT3LFE7FNM4i8APYcCbj14mW
+[2022-10-11 17:16:28.053303 +08:00] INFO [bdt-tools/src/peer.rs:2336] sender: task_id 7Tk94YfggHytrDMSBC6KYT3LFE7FNM4i8APYcCbj14mW
+[2022-10-11 17:16:28.095487 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT
+[2022-10-11 17:16:28.096911 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.225:21652} 
+[2022-10-11 17:16:28.097622 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21652} change state from Connecting to Active with mix_key:39090b699ed6409c
+[2022-10-11 17:16:28.097703 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21652}
+[2022-10-11 17:16:28.097839 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21652} retain keeper
+[2022-10-11 17:16:28.098555 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe
+[2022-10-11 17:16:28.098727 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.27:50000} 
+[2022-10-11 17:16:28.098853 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50000} change state from Connecting to Active with mix_key:1f0436795c144789
+[2022-10-11 17:16:28.098940 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50000}
+[2022-10-11 17:16:28.099053 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50000} retain keeper
+[2022-10-11 17:16:28.101866 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva
+[2022-10-11 17:16:28.102041 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.209:3600} 
+[2022-10-11 17:16:28.102259 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.209:3600} change state from Connecting to Active with mix_key:6f028ea5df5feb14
+[2022-10-11 17:16:28.102351 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.209:3600}
+[2022-10-11 17:16:28.102465 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.209:3600} retain keeper
+[2022-10-11 17:16:28.105068 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW
+[2022-10-11 17:16:28.105534 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.27:50001} 
+[2022-10-11 17:16:28.105679 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50001} change state from Connecting to Active with mix_key:14fdb8bb4e503ca6
+[2022-10-11 17:16:28.105790 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50001}
+[2022-10-11 17:16:28.105900 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50001} retain keeper
+[2022-10-11 17:16:28.108562 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.27:28177} 
+[2022-10-11 17:16:28.108756 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:28177} change state from Connecting to Active with mix_key:14fdb8bb4e503ca6
+[2022-10-11 17:16:28.111850 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf
+[2022-10-11 17:16:28.112026 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.240:3092} 
+[2022-10-11 17:16:28.112183 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3092} change state from Connecting to Active with mix_key:3db5345a32c45b0b
+[2022-10-11 17:16:28.112268 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3092}
+[2022-10-11 17:16:28.112416 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3092} retain keeper
+[2022-10-11 17:16:28.117070 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw
+[2022-10-11 17:16:28.117247 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.240:1024} 
+[2022-10-11 17:16:28.117372 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:1024} change state from Connecting to Active with mix_key:5e07e98687adf70d
+[2022-10-11 17:16:28.117454 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:1024}
+[2022-10-11 17:16:28.117562 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:1024} retain keeper
+[2022-10-11 17:16:28.120376 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc
+[2022-10-11 17:16:28.120575 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.240:50000} 
+[2022-10-11 17:16:28.120704 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:50000} change state from Connecting to Active with mix_key:4f827d6da9822bf9
+[2022-10-11 17:16:28.120789 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:50000}
+[2022-10-11 17:16:28.120900 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:50000} retain keeper
+[2022-10-11 17:16:28.140008 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk
+[2022-10-11 17:16:28.140202 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.225:21653} 
+[2022-10-11 17:16:28.140383 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21653} change state from Connecting to Active with mix_key:0581baf067d57aa5
+[2022-10-11 17:16:28.140504 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21653}
+[2022-10-11 17:16:28.140615 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21653} retain keeper
+[2022-10-11 17:16:28.143236 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU
+[2022-10-11 17:16:28.143411 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.27:28268} 
+[2022-10-11 17:16:28.143535 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:28268} change state from Connecting to Active with mix_key:4795b251a1b75ec6
+[2022-10-11 17:16:28.143615 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:28268}
+[2022-10-11 17:16:28.143728 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:28268} retain keeper
+[2022-10-11 17:16:28.146583 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.240:1025} 
+[2022-10-11 17:16:28.146757 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:1025} change state from Connecting to Active with mix_key:4795b251a1b75ec6
+[2022-10-11 17:16:28.156568 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/manager.rs:86] TunnelManager{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} create new tunnel container of remote 5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD
+[2022-10-11 17:16:28.156765 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.240:3091} 
+[2022-10-11 17:16:28.156893 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3091} change state from Connecting to Active with mix_key:1ebfae35eb3ed3e9
+[2022-10-11 17:16:28.156979 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:785] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} connecting=>active with default UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3091}
+[2022-10-11 17:16:28.157095 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:381] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3091} retain keeper
+[2022-10-11 17:16:28.159522 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/container.rs:423] TunnelContainer{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} tunnel newly created on {W4udp192.168.100.132:50000,L4udp192.168.100.209:3601} 
+[2022-10-11 17:16:28.159686 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/tunnel/udp.rs:217] UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.209:3601} change state from Connecting to Active with mix_key:1ebfae35eb3ed3e9
+[2022-10-11 17:16:28.589199 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT
+[2022-10-11 17:16:28.589372 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21652}}}
+[2022-10-11 17:16:28.589954 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe
+[2022-10-11 17:16:28.590059 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50000}}}
+[2022-10-11 17:16:28.590297 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva
+[2022-10-11 17:16:28.590007 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.590402 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.209:3600}}}
+[2022-10-11 17:16:28.590415 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.590612 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.590415 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT
+[2022-10-11 17:16:28.590628 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe
+[2022-10-11 17:16:28.594723 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:181] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} will create chunk view of 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj
+[2022-10-11 17:16:28.590778 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva
+[2022-10-11 17:16:28.594807 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:181] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} will create chunk view of 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj
+[2022-10-11 17:16:28.594864 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/view.rs:242] ChunkView:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} will create uploader
+[2022-10-11 17:16:28.594975 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva}
+[2022-10-11 17:16:28.594989 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT}
+[2022-10-11 17:16:28.595098 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} started
+[2022-10-11 17:16:28.595129 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} started
+[2022-10-11 17:16:28.595142 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe}
+[2022-10-11 17:16:28.595213 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva}
+[2022-10-11 17:16:28.595237 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT}
+[2022-10-11 17:16:28.595357 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} will reset index
+[2022-10-11 17:16:28.595408 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} will reset index
+[2022-10-11 17:16:28.595270 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} started
+[2022-10-11 17:16:28.595553 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe}
+[2022-10-11 17:16:28.595692 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} will reset index
+[2022-10-11 17:16:28.599231 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW
+[2022-10-11 17:16:28.599332 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:50001}}}
+[2022-10-11 17:16:28.599499 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.599651 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW
+[2022-10-11 17:16:28.599727 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.599750 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW}
+[2022-10-11 17:16:28.599937 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.599990 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.600027 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} started
+[2022-10-11 17:16:28.600203 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW}
+[2022-10-11 17:16:28.600277 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.600338 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} will reset index
+[2022-10-11 17:16:28.605916 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf
+[2022-10-11 17:16:28.606237 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3092}}}
+[2022-10-11 17:16:28.606707 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} got interest Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.606879 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf
+[2022-10-11 17:16:28.606989 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf}
+[2022-10-11 17:16:28.607122 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} started
+[2022-10-11 17:16:28.607254 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} add upload session UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf}
+[2022-10-11 17:16:28.607399 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} will reset index
+[2022-10-11 17:16:28.607526 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.608081 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw
+[2022-10-11 17:16:28.608345 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:1024}}}
+[2022-10-11 17:16:28.609019 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} got interest Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.611981 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw
+[2022-10-11 17:16:28.613292 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw}
+[2022-10-11 17:16:28.613840 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} started
+[2022-10-11 17:16:28.615068 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} add upload session UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw}
+[2022-10-11 17:16:28.615303 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} will reset index
+[2022-10-11 17:16:28.615876 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.630587 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc
+[2022-10-11 17:16:28.631707 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:50000}}}
+[2022-10-11 17:16:28.632121 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} got interest Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.632398 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc
+[2022-10-11 17:16:28.632630 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc}
+[2022-10-11 17:16:28.632856 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} started
+[2022-10-11 17:16:28.634360 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} add upload session UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc}
+[2022-10-11 17:16:28.634682 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} will reset index
+[2022-10-11 17:16:28.634896 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.638510 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk
+[2022-10-11 17:16:28.638755 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.225:21653}}}
+[2022-10-11 17:16:28.639083 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU
+[2022-10-11 17:16:28.639237 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.27:28268}}}
+[2022-10-11 17:16:28.639736 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.640149 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk
+[2022-10-11 17:16:28.640314 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk}
+[2022-10-11 17:16:28.640467 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} started
+[2022-10-11 17:16:28.640622 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk}
+[2022-10-11 17:16:28.640815 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} will reset index
+[2022-10-11 17:16:28.640969 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.641187 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU
+[2022-10-11 17:16:28.641349 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU}
+[2022-10-11 17:16:28.641525 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} started
+[2022-10-11 17:16:28.641776 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU}
+[2022-10-11 17:16:28.642081 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} will reset index
+[2022-10-11 17:16:28.642362 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.642720 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.662299 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/manager.rs:81] ChannelManager create channel on 5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD
+[2022-10-11 17:16:28.662563 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:852] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} Unknown=>Active{tunnel:Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} {tunnel:UdpTunnel{local:W4udp192.168.100.132:50000,remote:L4udp192.168.100.240:3091}}}
+[2022-10-11 17:16:28.665118 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:28.665397 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/manager.rs:217] ChunkManager:{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm} try start upload type: Stream(None, None, None) to: 5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD
+[2022-10-11 17:16:28.665497 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/chunk/upload.rs:73] ChunkUploader:{chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj} try add new session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD}
+[2022-10-11 17:16:28.665600 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:99] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} started
+[2022-10-11 17:16:28.665746 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:114] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} add upload session UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD}
+[2022-10-11 17:16:28.665841 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} will reset index
+[2022-10-11 17:16:28.666139 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/utils/local_chunk_store.rs:44] begin read 7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj from file "/node_tester_app/blog/Je2MBYNd8BpxKbjyNiDedZYtCKiJ96Yk_cache/file_upload/e3hdC712WF.txt"
+[2022-10-11 17:16:28.715486 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}
+[2022-10-11 17:16:29.102818 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.103171 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.103326 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} will reset index
+[2022-10-11 17:16:29.111349 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.111441 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.111533 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.111640 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} will reset index
+[2022-10-11 17:16:29.111619 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.111708 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.111790 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.111867 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} will reset index
+[2022-10-11 17:16:29.111725 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} will reset index
+[2022-10-11 17:16:29.112022 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} got interest Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.112100 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} ignore Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.112176 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} will reset index
+[2022-10-11 17:16:29.115782 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} got interest Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.115953 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} ignore Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.116032 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} will reset index
+[2022-10-11 17:16:29.147093 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} got interest Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.147344 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} ignore Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.147454 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} will reset index
+[2022-10-11 17:16:29.153936 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.154260 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.154419 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} will reset index
+[2022-10-11 17:16:29.154515 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.154606 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.154689 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} will reset index
+[2022-10-11 17:16:29.162446 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.162782 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.162932 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} will reset index
+[2022-10-11 17:16:29.589377 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.589522 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.589635 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} will reset index
+[2022-10-11 17:16:29.591066 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.591216 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.591297 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} will reset index
+[2022-10-11 17:16:29.591868 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.592002 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.592080 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} will reset index
+[2022-10-11 17:16:29.593230 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.593369 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.593450 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} will reset index
+[2022-10-11 17:16:29.609258 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} got interest Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.609446 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} ignore Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.609527 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} will reset index
+[2022-10-11 17:16:29.625448 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} got interest Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.625563 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} ignore Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.625639 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} will reset index
+[2022-10-11 17:16:29.656804 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} got interest Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.656933 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} ignore Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.657008 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} will reset index
+[2022-10-11 17:16:29.669547 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.669549 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.669672 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.669729 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.669773 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} will reset index
+[2022-10-11 17:16:29.669803 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} will reset index
+[2022-10-11 17:16:29.675486 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:29.675640 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:29.675720 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} will reset index
+[2022-10-11 17:16:30.091131 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.091252 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.091329 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} will reset index
+[2022-10-11 17:16:30.093736 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.093837 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.093913 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} will reset index
+[2022-10-11 17:16:30.093973 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.094045 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.094118 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} will reset index
+[2022-10-11 17:16:30.089984 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.098110 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.098191 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} will reset index
+[2022-10-11 17:16:30.109291 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} got interest Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.109426 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} ignore Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.109549 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} will reset index
+[2022-10-11 17:16:30.135110 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} got interest Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.135260 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} ignore Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.135342 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} will reset index
+[2022-10-11 17:16:30.160341 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} got interest Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.160485 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} ignore Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.160566 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} will reset index
+[2022-10-11 17:16:30.175494 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.175644 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.175723 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} will reset index
+[2022-10-11 17:16:30.186253 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.186374 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.186451 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} will reset index
+[2022-10-11 17:16:30.186546 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.186625 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.186700 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} will reset index
+[2022-10-11 17:16:30.591691 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.591825 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.590146 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.591911 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7BbprMaztTJcfjCCR2msQR1eQFTFCacexYrYe} will reset index
+[2022-10-11 17:16:30.591949 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.592091 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMJoR9fNbGtQw9RAzoun6BgkGhDmRwaJWBpCVhT} will reset index
+[2022-10-11 17:16:30.592220 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.592346 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.592425 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLqusdKsTZ2qES78HJ7bbRNmRX2AbdccRudjjva} will reset index
+[2022-10-11 17:16:30.594410 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.594557 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.594636 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzDSaQXk1cAzPYYBzTSbkkQ7F8NqkNsPKhxNEW} will reset index
+[2022-10-11 17:16:30.610298 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} got interest Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.610505 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} ignore Interest { session_id: TempSeq(4032620740), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.610594 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620740), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLtKAvTPb4H5A3oeakUPB1FYXJGu2NqvVxL9cXw} will reset index
+[2022-10-11 17:16:30.646647 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} got interest Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.646777 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} ignore Interest { session_id: TempSeq(4032620750), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.646854 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620750), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgLzkJ64SK7CeiVVc1DrSBhd3i5uKtgmN39Uicnf} will reset index
+[2022-10-11 17:16:30.675691 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} got interest Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.675921 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} ignore Interest { session_id: TempSeq(4032620860), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.676019 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620860), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMK9ohmwpowditA6gRyUuhobAu6vzwG9fKvjtpc} will reset index
+[2022-10-11 17:16:30.684635 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.684795 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.684897 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgMHAsXau5pvUKNuFZkycTYaTM8AUGg5YPNesmNU} will reset index
+[2022-10-11 17:16:30.691287 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.691483 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.691570 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM7dv9Mnuy94rAfzHjzMo966h6QM8ptyGGpqoaD} will reset index
+[2022-10-11 17:16:30.701463 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:627] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} got interest Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None }
+[2022-10-11 17:16:30.701582 +08:00] INFO [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/channel.rs:632] Channel{local:5aSixgMK71sYkJKBUWdw36Y47Ebjs923SZCvfHQEYukm, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} ignore Interest { session_id: TempSeq(4032620670), chunk: ChunkId: "7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj", prefer_type: Stream(None, None, None), referer: None, from: None } for upload session exists
+[2022-10-11 17:16:30.701658 +08:00] DEBUG [/mnt/e/git_test/cyfs-test-lab/CYFS/src/component/cyfs-bdt/src/ndn/channel/upload.rs:196] UploadSession{session_id:TempSeq(4032620670), chunk:7C8WaPRsqhFJ38KrrZ5HeKSKaRgAGUgi6oRZmM9y38wj, remote:5aSixgM3chhC1WzcfiyKDCK22za4auRHv4wSvscxvXZk} will reset index
+[2022-10-11 17:16:30.724965 +08:00] INFO [bdt-tools/src/peer.rs:2998] report bdt agent perf result = GetResult {
+    args: None,
+    data: None,
+    files: None,
+    form: None,
+    headers: None,
+    json: None,
+    origin: None,
+    url: None,
+}

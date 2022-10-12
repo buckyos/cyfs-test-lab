@@ -136,12 +136,9 @@ export class AgentManager {
                         peer_name = agent.tags + "_" + RandomGenerator.string(10);
                     }
                     this.m_interface.getLogger().info(`start peer ${peer_name}`)
-                    taskAgent.push(agent.startPeerClient(config,peer_name,bdt_port))
+                    await agent.startPeerClient(config,peer_name,bdt_port);
                     bdt_port = bdt_port + 10;
                     await sleep(100);
-                }
-                for(let i in taskAgent){
-                    await taskAgent[i]
                 }
                 await agent.loadAgentCache("init");
 

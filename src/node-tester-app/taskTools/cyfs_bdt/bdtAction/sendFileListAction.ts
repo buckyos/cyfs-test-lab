@@ -40,14 +40,13 @@ export class SendFileListAction extends BaseAction implements ActionAbstract {
                 const action : Action =  JSON.parse(JSON.stringify(this.action));
                 action.action_id = action.action_id + "_" + RandomGenerator.string(10);
                 action.parent_action = this.action.action_id;
-                let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, action.fileSize!);
+                let calculate = await RN.bdtClient!.sendFile(randFile.filePath!, action.chunkSize!);
                 if(calculate.err){
                     V({ err: calculate.err, log: `SendFileListAction run failed, calculateFile err = ${JSON.stringify(calculate)},LN = ${action.LN},RN = ${action.RN}`,action }) 
                 }
                 action.calculate_time = calculate.calculate_time;
                 // RN 将文件保存到BDT NDN 中
-                let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
-                let setResult = await setRunning;
+                let setResult = calculate;
                 if(action.fileSize!>100*1024*1024){
                     await sleep(10*1000);
                 }

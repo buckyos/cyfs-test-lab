@@ -1,0 +1,303 @@
+[info],[2022-10-11 20:08:30.983],<>,current dir=/node_tester_app/script, rootdir=/node_tester_app, service_main.js:51
+[info],[2022-10-11 20:08:30.990],<>,begin connect to server ip=127.0.0.1 port=35553, rpc.js:51
+[debug],[2022-10-11 20:08:30.999],<>,send command, name=sys.ping.req, seq=1, key=7EEk5xbmGKrYNPaydWKFpGXkhxRdKTk, from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"LocalMasterServiceId"}, rpc.js:69
+[info],[2022-10-11 20:08:31.31],<>,=========start service namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, onload.js:6
+[info],[2022-10-11 20:08:31.714],<>,Stop Process bdt-toools, peer_manager.js:72
+[error],[2022-10-11 20:08:33.803],<>,============, port=37473, peer_manager.js:141
+[info],[2022-10-11 20:08:34.576],<>,recv command from rpc, name=sys.userapi.req, seq=33,apiname=utilRequest,param={"name":"getIPInfo"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:34.579],<>,remote undefined-27MsbRBB call utilRequest getIPInfo, onload.js:52
+[debug],[2022-10-11 20:08:34.580],<>,remote call createBdtLpcListener getIPInfo , onload.js:53
+[info],[2022-10-11 20:08:34.584],<>,{
+  lo: [
+    {
+      address: '127.0.0.1',
+      netmask: '255.0.0.0',
+      family: 'IPv4',
+      mac: '00:00:00:00:00:00',
+      internal: true,
+      cidr: '127.0.0.1/8'
+    },
+    {
+      address: '::1',
+      netmask: 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+      family: 'IPv6',
+      mac: '00:00:00:00:00:00',
+      internal: true,
+      cidr: '::1/128',
+      scopeid: 0
+    },
+    [length]: 2
+  ],
+  enp2s0: [
+    {
+      address: '192.168.100.132',
+      netmask: '255.255.255.0',
+      family: 'IPv4',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '192.168.100.132/24'
+    },
+    {
+      address: '240e:3b3:30c0:7480:9072:5679:9b36:6868',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '240e:3b3:30c0:7480:9072:5679:9b36:6868/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:9d00:6d8d:267b:dd7d',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:9d00:6d8d:267b:dd7d/64',
+      scopeid: 0
+    },
+    {
+      address: '240e:3b3:30c0:7480:7d27:6b39:7825:15f',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '240e:3b3:30c0:7480:7d27:6b39:7825:15f/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:a016:417b:6e14:887b',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:a016:417b:6e14:887b/64',
+      scopeid: 0
+    },
+    {
+      address: '240e:3b3:30c0:7480::b1e',
+      netmask: 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '240e:3b3:30c0:7480::b1e/128',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73::b1e',
+      netmask: 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73::b1e/128',
+      scopeid: 0
+    },
+    {
+      address: '240e:3b3:30c0:7480:2707:11a9:8250:f614',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '240e:3b3:30c0:7480:2707:11a9:8250:f614/64',
+      scopeid: 0
+    },
+    {
+      address: '240e:3b3:30c0:7480:2e0:4cff:fea6:220d',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: '240e:3b3:30c0:7480:2e0:4cff:fea6:220d/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:7aec:38c:9cbd:bdbe',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:7aec:38c:9cbd:bdbe/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:fbeb:8089:4fdc:779c',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:fbeb:8089:4fdc:779c/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:47b1:4a87:55c:4308',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:47b1:4a87:55c:4308/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:1835:d43d:736e:5caf',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:1835:d43d:736e:5caf/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:ab2e:8e52:7fd9:ee79',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:ab2e:8e52:7fd9:ee79/64',
+      scopeid: 0
+    },
+    {
+      address: 'fd8b:84e:ee73:0:2e0:4cff:fea6:220d',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fd8b:84e:ee73:0:2e0:4cff:fea6:220d/64',
+      scopeid: 0
+    },
+    {
+      address: 'fe80::2e0:4cff:fea6:220d',
+      netmask: 'ffff:ffff:ffff:ffff::',
+      family: 'IPv6',
+      mac: '00:e0:4c:a6:22:0d',
+      internal: false,
+      cidr: 'fe80::2e0:4cff:fea6:220d/64',
+      scopeid: 2
+    },
+    [length]: 16
+  ]
+}, util.js:315
+[debug],[2022-10-11 20:08:34.601],<>,send command, name=sys.userapi.resp, seq=33,err=0,param={"ipInfo":{"IPv4":["192.168.100.132"],"IPv6":["::1","240e:3b3:30c0:7480:9072:5679:9b36:6868","fd8b:84e:ee73:0:9d00:6d8d:267b:dd7d","240e:3b3:30c0:7480:7d27:6b39:7825:15f","fd8b:84e:ee73:0:a016:417b:6e14:887b","240e:3b3:30c0:7480::b1e","fd8b:84e:ee73::b1e","240e:3b3:30c0:7480:2707:11a9:8250:f614","240e:3b3:30c0:7480:2e0:4cff:fea6:220d","fd8b:84e:ee73:0:7aec:38c:9cbd:bdbe","fd8b:84e:ee73:0:fbeb:8089:4fdc:779c","fd8b:84e:ee73:0:47b1:4a87:55c:4308","fd8b:84e:ee73:0:1835:d43d:736e:5caf","fd8b:84e:ee73:0:ab2e:8e52:7fd9:ee79","fd8b:84e:ee73:0:2e0:4cff:fea6:220d","fe80::2e0:4cff:fea6:220d"]}} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:34.625],<>,recv command from rpc, name=sys.userapi.req, seq=48,apiname=utilRequest,param={"name":"loadAgentCache","agentName":"PC_0012","init":"clean"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:34.626],<>,remote undefined-27MsbRBB call utilRequest loadAgentCache, onload.js:52
+[debug],[2022-10-11 20:08:34.627],<>,remote call createBdtLpcListener loadAgentCache , onload.js:53
+[debug],[2022-10-11 20:08:34.638],<>,send command, name=sys.userapi.resp, seq=48,err=0,param={"LocalDeviceCache":"/node_tester_app/PC_0012/LocalDevice","RemoteDeviceCache":"/node_tester_app/PC_0012/RemoteDevice","local_list":[],"remote_list":[]} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:34.784],<>,recv command from rpc, name=sys.userapi.req, seq=62,apiname=startPeerClient,param={"RUST_LOG":"trace"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:34.785],<>,remote call startPeer, onload.js:10
+[info],[2022-10-11 20:08:34.786],<>,os type x64, peer_manager.js:151
+[info],[2022-10-11 20:08:34.786],<>,os type linux, peer_manager.js:152
+[info],[2022-10-11 20:08:34.803],<>,bdt path /node_tester_app/service/cyfs_bdt/bdt-tools, peer_manager.js:182
+[info],[2022-10-11 20:08:34.817],<>,####bdt-tools 9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7 start, peer_manager.js:187
+[info],[2022-10-11 20:08:34.831],<>,recv new connection  from bdt-tools,command =  {"name":"started","peer_name":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7"} , peer_manager.js:107
+[info],[2022-10-11 20:08:34.834],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:08:36.819],<>,send command, name=sys.userapi.resp, seq=62,err=0,param={"peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7"} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[debug],[2022-10-11 20:08:36.834],<>,bdtlpc send command to bdt.exe, seq=0, name=ping, lpc.js:36
+[info],[2022-10-11 20:08:36.837],<>,recv command from rpc, name=sys.userapi.req, seq=85,apiname=utilRequest,param={"name":"getCachePath","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:36.838],<>,remote undefined-27MsbRBB call utilRequest getCachePath, onload.js:52
+[debug],[2022-10-11 20:08:36.838],<>,remote call createBdtLpcListener getCachePath , onload.js:53
+[debug],[2022-10-11 20:08:36.840],<>,send command, name=sys.userapi.resp, seq=85,err=0,param={"cache_path":{"file_upload":"/node_tester_app/blog/9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7_cache/file_upload","file_download":"/node_tester_app/blog/9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7_cache/file_download","NamedObject":"/node_tester_app/blog/9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7_cache/NamedObject","logPath":"/node_tester_app/blog/10-11-20-08-30-36-C6ef"}} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[debug],[2022-10-11 20:08:38.835],<>,bdtlpc send command to bdt.exe, seq=1, name=ping, lpc.js:36
+[info],[2022-10-11 20:08:38.904],<>,recv command from rpc, name=sys.userapi.req, seq=99,apiname=sendBdtLpcCommand,param={"name":"create","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7","addrInfo":["W4udp192.168.100.132","L6udp[::]"],"bdt_port":50000,"sn_files":["sn-miner.desc"],"active_pn_files":[],"passive_pn_files":[],"known_peer_files":["pn-miner.desc"],"local":"PC_0012","device_tag":"PC_0012_mPkmcQZYTQ","chunk_cache":"file","ep_type":"effectiveEP_WAN","sn_only":0} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:38.905],<>,remote undefined-27MsbRBB call sendBdtLpcCommand create, onload.js:20
+[debug],[2022-10-11 20:08:38.906],<>,bdtlpc send command to bdt.exe, seq=2, name=create, lpc.js:36
+[info],[2022-10-11 20:08:39.779],<>,recv command from bdt peer, req = 2,name=create_resp, info={"ep_info":["W4udp192.168.100.132:50000"],"ep_resp":["W4udp192.168.100.132:50000"],"id":"5aSixgMKTSqn5K3BaU5anpBg4ZHBEsVQTbeVcSyEwi4T","name":"create_resp","online_time":179,"result":0}, peer.js:61
+[info],[2022-10-11 20:08:39.781],<>,send BdtLpcCommand create err = 0 , resp = {"seq":2,"bytes":{"type":"Buffer","data":[0,1,82,10,0,47,73,87,107,114,209,156,0,0,0,0,0,1,0,48,129,137,2,129,129,0,162,178,158,186,116,121,213,16,133,223,115,242,120,97,241,23,145,16,2,255,108,17,22,91,40,131,109,14,176,170,228,134,4,7,12,55,1,8,38,169,153,160,28,85,160,133,243,18,68,254,5,137,223,159,105,211,22,202,166,158,88,89,105,127,221,132,30,11,195,220,163,167,74,148,244,199,183,12,206,36,244,253,154,171,52,82,12,163,173,173,236,104,122,154,15,105,20,154,91,233,170,87,137,230,100,50,147,47,61,250,41,242,52,124,64,80,222,21,91,234,224,15,86,143,55,120,208,199,2,3,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,47,73,87,107,114,215,11,0,1,64,77,10,7,76,80,195,192,168,100,132,18,32,68,0,0,0,1,48,238,39,217,49,71,225,160,5,245,112,222,240,203,114,142,232,14,151,243,69,193,134,65,225,30,244,18,32,68,0,0,0,1,48,238,39,217,49,71,225,160,5,245,112,222,240,203,114,142,232,14,151,243,69,193,134,65,225,30,244,1,0,255,0,47,73,87,107,114,215,29,0,131,237,46,16,18,95,203,62,225,224,117,88,71,231,191,74,143,228,252,175,27,224,108,93,225,102,237,17,225,158,156,227,32,87,104,167,164,105,195,70,163,153,77,89,92,222,205,39,173,68,3,39,237,128,205,43,227,136,153,96,94,74,152,248,116,194,83,151,181,199,250,42,27,22,131,50,235,136,232,185,88,108,42,40,229,211,152,0,116,196,218,116,66,46,231,118,185,175,42,26,153,18,48,28,173,29,130,117,31,32,187,27,136,66,71,99,91,108,144,177,100,186,193,235,168,27,147,26]},"json":{"ep_info":["W4udp192.168.100.132:50000"],"ep_resp":["W4udp192.168.100.132:50000"],"id":"5aSixgMKTSqn5K3BaU5anpBg4ZHBEsVQTbeVcSyEwi4T","name":"create_resp","online_time":179,"result":0}}, peer.js:97
+[debug],[2022-10-11 20:08:39.782],<>,send command, name=sys.userapi.resp, seq=99,err=0,param={"ep_info":["W4udp192.168.100.132:50000"],"ep_resp":["W4udp192.168.100.132:50000"],"id":"5aSixgMKTSqn5K3BaU5anpBg4ZHBEsVQTbeVcSyEwi4T","name":"create_resp","online_time":179,"result":0} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:39.803],<>,recv command from rpc, name=sys.attachevent.req, seq=140,eventname=unlive_9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7, from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:39.804],<>,send command, name=sys.attachevent.resp, seq=140,err=0, cookie=1, from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:39.835],<>,recv command from rpc, name=sys.userapi.req, seq=143,apiname=createBdtLpcListener,param={"name":"auto_accept","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7","eventType":"confirm_resp","eventName":"autoAccept_5aSixgMKTSqn5K3BaU5anpBg4ZHBEsVQTbeVcSyEwi4T"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:39.836],<>,remote call createBdtLpcListener auto_accept , onload.js:36
+[debug],[2022-10-11 20:08:39.837],<>,bdtlpc send command to bdt.exe, seq=3, name=auto_accept, lpc.js:36
+[info],[2022-10-11 20:08:39.838],<>,recv command from bdt peer, req = 3,name=auto_accept_resp, info={"name":"auto_accept_resp","result":0}, peer.js:61
+[info],[2022-10-11 20:08:39.839],<>,send BdtLpcCommand auto_accept err = 0 , resp = {"seq":3,"bytes":{"type":"Buffer","data":[]},"json":{"name":"auto_accept_resp","result":0}}, peer.js:105
+[debug],[2022-10-11 20:08:39.839],<>,send command, name=sys.userapi.resp, seq=143,err=0,param={} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:39.864],<>,recv command from rpc, name=sys.attachevent.req, seq=149,eventname=autoAccept_5aSixgMKTSqn5K3BaU5anpBg4ZHBEsVQTbeVcSyEwi4T, from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:39.864],<>,send command, name=sys.attachevent.resp, seq=149,err=0, cookie=2, from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:40.19],<>,recv command from rpc, name=sys.userapi.req, seq=155,apiname=utilRequest,param={"name":"loadAgentCache","agentName":"PC_0012","init":"init"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:40.20],<>,remote undefined-27MsbRBB call utilRequest loadAgentCache, onload.js:52
+[debug],[2022-10-11 20:08:40.20],<>,remote call createBdtLpcListener loadAgentCache , onload.js:53
+[debug],[2022-10-11 20:08:40.21],<>,send command, name=sys.userapi.resp, seq=155,err=0,param={"LocalDeviceCache":"/node_tester_app/PC_0012/LocalDevice","RemoteDeviceCache":"/node_tester_app/PC_0012/RemoteDevice","local_list":["PC_0012_mPkmcQZYTQ.desc"],"remote_list":[]} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:40.32],<>,recv command from rpc, name=sys.userapi.req, seq=160,apiname=sendBdtLpcCommand,param={"name":"upload_system_info","agent_name":"PC_0012","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7","testcaseId":"NDN_BBR_UDP_File_Concurrent10_upload20_1665490111151","interval":2000} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:40.33],<>,remote undefined-27MsbRBB call sendBdtLpcCommand upload_system_info, onload.js:20
+[debug],[2022-10-11 20:08:40.33],<>,bdtlpc send command to bdt.exe, seq=4, name=upload_system_info, lpc.js:36
+[info],[2022-10-11 20:08:40.35],<>,recv command from bdt peer, req = 4,name=upload_system_info_resp, info={"name":"upload_system_info_resp","result":0}, peer.js:61
+[info],[2022-10-11 20:08:40.36],<>,send BdtLpcCommand upload_system_info err = 0 , resp = {"seq":4,"bytes":{"type":"Buffer","data":[]},"json":{"name":"upload_system_info_resp","result":0}}, peer.js:97
+[debug],[2022-10-11 20:08:40.36],<>,send command, name=sys.userapi.resp, seq=160,err=0,param={"name":"upload_system_info_resp","result":0} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[info],[2022-10-11 20:08:40.99],<>,recv command from rpc, name=sys.userapi.req, seq=170,apiname=utilRequest,param={"name":"createFile","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7","fileSize":524288000} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:08:40.100],<>,remote undefined-27MsbRBB call utilRequest createFile, onload.js:52
+[debug],[2022-10-11 20:08:40.100],<>,remote call createBdtLpcListener createFile , onload.js:53
+[debug],[2022-10-11 20:08:40.835],<>,bdtlpc send command to bdt.exe, seq=5, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:42.835],<>,bdtlpc send command to bdt.exe, seq=6, name=ping, lpc.js:36
+[info],[2022-10-11 20:08:44.829],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:08:44.836],<>,bdtlpc send command to bdt.exe, seq=7, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:46.837],<>,bdtlpc send command to bdt.exe, seq=8, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:48.842],<>,bdtlpc send command to bdt.exe, seq=9, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:50.842],<>,bdtlpc send command to bdt.exe, seq=10, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:52.843],<>,bdtlpc send command to bdt.exe, seq=11, name=ping, lpc.js:36
+[info],[2022-10-11 20:08:54.829],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:08:54.842],<>,bdtlpc send command to bdt.exe, seq=12, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:56.843],<>,bdtlpc send command to bdt.exe, seq=13, name=ping, lpc.js:36
+[debug],[2022-10-11 20:08:58.844],<>,bdtlpc send command to bdt.exe, seq=14, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:00.845],<>,bdtlpc send command to bdt.exe, seq=15, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:02.845],<>,bdtlpc send command to bdt.exe, seq=16, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:04.829],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:04.846],<>,bdtlpc send command to bdt.exe, seq=17, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:06.846],<>,bdtlpc send command to bdt.exe, seq=18, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:08.847],<>,bdtlpc send command to bdt.exe, seq=19, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:11.422],<>,send command, name=sys.userapi.resp, seq=170,err=0,param={"fileName":"nYtPdPk07K.txt","filePath":"/node_tester_app/blog/9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7_cache/file_upload/nYtPdPk07K.txt","md5":"35e4470666214bb28fd628fef763c07d"} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[debug],[2022-10-11 20:09:11.442],<>,bdtlpc send command to bdt.exe, seq=20, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:11.449],<>,recv command from rpc, name=sys.userapi.req, seq=171,apiname=sendBdtLpcCommand,param={"name":"start-send-file","peerName":"9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7","chunk_size":524288000,"path":"/node_tester_app/blog/9SwtM47nBfQdK3si3NTp0QPyZEjAkCP7_cache/file_upload/nYtPdPk07K.txt"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:09:11.449],<>,remote undefined-27MsbRBB call sendBdtLpcCommand start-send-file, onload.js:20
+[debug],[2022-10-11 20:09:11.450],<>,bdtlpc send command to bdt.exe, seq=21, name=start-send-file, lpc.js:36
+[debug],[2022-10-11 20:09:13.443],<>,bdtlpc send command to bdt.exe, seq=22, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:14.829],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:15.443],<>,bdtlpc send command to bdt.exe, seq=23, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:17.444],<>,bdtlpc send command to bdt.exe, seq=24, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:19.445],<>,bdtlpc send command to bdt.exe, seq=25, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:21.445],<>,bdtlpc send command to bdt.exe, seq=26, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:23.446],<>,bdtlpc send command to bdt.exe, seq=27, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:24.831],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:25.447],<>,bdtlpc send command to bdt.exe, seq=28, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:27.449],<>,bdtlpc send command to bdt.exe, seq=29, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:29.450],<>,bdtlpc send command to bdt.exe, seq=30, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:29.639],<>,recv command from rpc, name=sys.ping.req, seq=172, key=cPfWSQM8rS87QmMDrYmDHZKfy5P2maMB, from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:09:31.12],<>,send command, name=sys.ping.req, seq=2, key=7EEk5xbmGKrYNPaydWKFpGXkhxRdKTk, from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"LocalMasterServiceId"}, rpc.js:69
+[debug],[2022-10-11 20:09:31.451],<>,bdtlpc send command to bdt.exe, seq=31, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:33.452],<>,bdtlpc send command to bdt.exe, seq=32, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:34.831],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:35.452],<>,bdtlpc send command to bdt.exe, seq=33, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:36.841],<>,recv command from bdt peer, req = 21,name=start-send-file-resp, info={"calculate_time":25388666,"name":"start-send-file-resp","result":0,"session":"7Tk94YfZTfDoJ5xhTN4N1xTqKAsr9Q2TMTWAN21Ud2ms","set_time":387}, peer.js:61
+[info],[2022-10-11 20:09:36.842],<>,send BdtLpcCommand start-send-file err = 0 , resp = {"seq":21,"bytes":{"type":"Buffer","data":[0,8,8,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,40,0,0,0,0,31,64,0,0,11,179,188,114,187,113,191,41,37,228,91,213,29,1,164,37,57,172,8,44,195,198,159,178,253,182,211,231,62,7,180,116,0,0,47,73,87,110,228,80,115,0,1,64,70,10,68,18,32,92,0,0,64,31,11,179,188,114,187,113,191,41,37,228,91,213,29,1,164,37,57,172,8,44,195,198,159,178,253,182,211,18,32,92,0,0,0,0,227,176,196,66,152,252,28,20,154,251,244,200,153,111,185,36,39,174,65,228,100,155,147,76,164,149,153]},"json":{"calculate_time":25388666,"name":"start-send-file-resp","result":0,"session":"7Tk94YfZTfDoJ5xhTN4N1xTqKAsr9Q2TMTWAN21Ud2ms","set_time":387}}, peer.js:97
+[debug],[2022-10-11 20:09:36.842],<>,send command, name=sys.userapi.resp, seq=171,err=0,param={"calculate_time":25388666,"name":"start-send-file-resp","result":0,"session":"7Tk94YfZTfDoJ5xhTN4N1xTqKAsr9Q2TMTWAN21Ud2ms","set_time":387} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69
+[debug],[2022-10-11 20:09:37.452],<>,bdtlpc send command to bdt.exe, seq=34, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:39.454],<>,bdtlpc send command to bdt.exe, seq=35, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:41.455],<>,bdtlpc send command to bdt.exe, seq=36, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:43.456],<>,bdtlpc send command to bdt.exe, seq=37, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:44.832],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:45.457],<>,bdtlpc send command to bdt.exe, seq=38, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:47.457],<>,bdtlpc send command to bdt.exe, seq=39, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:49.458],<>,bdtlpc send command to bdt.exe, seq=40, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:51.459],<>,bdtlpc send command to bdt.exe, seq=41, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:53.459],<>,bdtlpc send command to bdt.exe, seq=42, name=ping, lpc.js:36
+[info],[2022-10-11 20:09:54.832],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:09:55.460],<>,bdtlpc send command to bdt.exe, seq=43, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:57.461],<>,bdtlpc send command to bdt.exe, seq=44, name=ping, lpc.js:36
+[debug],[2022-10-11 20:09:59.462],<>,bdtlpc send command to bdt.exe, seq=45, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:01.463],<>,bdtlpc send command to bdt.exe, seq=46, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:03.464],<>,bdtlpc send command to bdt.exe, seq=47, name=ping, lpc.js:36
+[info],[2022-10-11 20:10:04.833],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:10:05.465],<>,bdtlpc send command to bdt.exe, seq=48, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:07.466],<>,bdtlpc send command to bdt.exe, seq=49, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:09.467],<>,bdtlpc send command to bdt.exe, seq=50, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:11.467],<>,bdtlpc send command to bdt.exe, seq=51, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:13.468],<>,bdtlpc send command to bdt.exe, seq=52, name=ping, lpc.js:36
+[info],[2022-10-11 20:10:14.833],<>,recv command from bdt peer, req = 0,name=ping, info={"name":"ping"}, peer.js:61
+[debug],[2022-10-11 20:10:15.468],<>,bdtlpc send command to bdt.exe, seq=53, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:17.469],<>,bdtlpc send command to bdt.exe, seq=54, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:19.470],<>,bdtlpc send command to bdt.exe, seq=55, name=ping, lpc.js:36
+[debug],[2022-10-11 20:10:21.472],<>,bdtlpc send command to bdt.exe, seq=56, name=ping, lpc.js:36
+[info],[2022-10-11 20:10:22.966],<>,recv command from rpc, name=sys.userapi.req, seq=201,apiname=utilRequest,param={"name":"uploadLog","logName":"NDN_BBR_UDP_File_Concurrent10_upload20_1665490111151_PC_0012.zip"} from={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, to={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"} namespace={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, channel.js:58
+[debug],[2022-10-11 20:10:22.967],<>,remote undefined-27MsbRBB call utilRequest uploadLog, onload.js:52
+[debug],[2022-10-11 20:10:22.967],<>,remote call createBdtLpcListener uploadLog , onload.js:53
+[info],[2022-10-11 20:10:22.968],<>,command : {"name":"uploadLog","logName":"NDN_BBR_UDP_File_Concurrent10_upload20_1665490111151_PC_0012.zip"}, util.js:338
+[debug],[2022-10-11 20:10:23.472],<>,bdtlpc send command to bdt.exe, seq=57, name=ping, lpc.js:36
+[info],[2022-10-11 20:10:23.670],<>,upload log to server ,result = {"err":0,"url":"http://192.168.100.254/logs/NDN_BBR_UDP_File_Concurrent10_upload20_1665490111151_PC_0012-2022_10_11_121023.zip"}, util.js:345
+[debug],[2022-10-11 20:10:23.670],<>,send command, name=sys.userapi.resp, seq=201,err=0,param={"upload":{"err":0,"url":"http://192.168.100.254/logs/NDN_BBR_UDP_File_Concurrent10_upload20_1665490111151_PC_0012-2022_10_11_121023.zip"}} from={"agentid":"cSBEFF3TenrFem3ESGXKHcwTZGjYypbkYpziTptHDbdbx6YQbM3j3DDXMnSaa","serviceid":"4"}, to={"agentid":"undefined-27MsbRBB","serviceid":"4","taskid":"NDN_BBR_UDP_File_Concurrent10_upload20"}, rpc.js:69

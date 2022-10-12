@@ -176,8 +176,9 @@ export class AgentClient {
             bdtClient.cache_peer_info.device_tag =  local.split(".")[0];
             this.running_device.push(local);
         }
-        let result = await bdtClient.init();
+        let result = await bdtClient.init(this.agentMult);
         if(result.err){
+            this.logger.error(`${this.tags} init bdt client faild port = ${bdt_port}`)
             return result
         }
         this.agentMult = this.agentMult + 1;

@@ -55,7 +55,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     for(let index = 0;index<5;index++){
         let RN =  agent_list.WAN[0].tags[0];
-        let LN = agent_list.WAN[0].tags[0];
+        let LN = "None";
         let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,

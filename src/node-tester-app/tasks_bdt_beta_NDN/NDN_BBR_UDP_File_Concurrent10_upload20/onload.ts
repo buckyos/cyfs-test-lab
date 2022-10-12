@@ -39,6 +39,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
             logType:"info",
             SN :LabSnList,
             resp_ep_type:Resp_ep_type.effectiveEP_WAN, 
+            chunk_cache : "file",
     }
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
@@ -52,7 +53,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     for(let index = 0;index<2;index++){
         let RN =  agent_list.WAN[0].tags[0];
-        let LN = agent_list.WAN[0].tags[0];
+        let LN = "None";
         let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,

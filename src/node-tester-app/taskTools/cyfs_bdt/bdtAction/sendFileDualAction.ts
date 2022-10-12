@@ -33,7 +33,7 @@ export class SendFileDualAction extends BaseAction implements ActionAbstract {
         }
         // (3) BDT 传输  File
         // cyfs-base 计算文件Object 
-        let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
+        let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.chunkSize!);
         if(calculate.err){
             return { err: calculate.err, log: `SendFileAction run failed, calculateFile err = ${JSON.stringify(calculate)},LN = ${this.action.LN},RN = ${this.action.RN}` }
         }

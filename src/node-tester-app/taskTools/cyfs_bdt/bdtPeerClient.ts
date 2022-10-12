@@ -49,7 +49,7 @@ export class BdtPeerClient extends EventEmitter{
     }
 
     
-    async init():Promise<{err:number,log?:string}> {
+    async init(index:number=1):Promise<{err:number,log?:string}> {
         return new Promise(async(resolve)=>{
             // 1. start bdt-tool
             if(config.RUST_LOG){
@@ -66,7 +66,7 @@ export class BdtPeerClient extends EventEmitter{
             this.state = 1;
             if(start_tool.err){
                 this.logger.error(`${this.tags} start bdt-tools failed`)
-                resolve({err:start_tool.err,log:`${this.tags} start bdt-tools failed`})  
+                return resolve({err:start_tool.err,log:`${this.tags} start bdt-tools failed`})  
             }
             
             this.logger.info(`${this.tags} start bdt-tools success peerName = ${start_tool.value.peerName}`);
@@ -75,7 +75,7 @@ export class BdtPeerClient extends EventEmitter{
             
             let info1 = await this.util_client.getCachePath();
             if(info1.err){
-                this.logger.error(`${this.tags} start bdt-tools failed`)
+                this.logger.error(`${this.tags} start bdt-tools  getCachePath failed ,err = ${info1.err}`)
                 resolve({err:start_tool.err,log:`${this.tags} start bdt-tools failed,get cahce path error`})
             }
             // 设置 desc/sec 存放路径
@@ -107,7 +107,7 @@ export class BdtPeerClient extends EventEmitter{
             }, this.m_agentid!, 10*1000);
             this.state = 2;
             if(start_stack.err){
-                this.logger.error(`${this.tags} start bdt stack failed`)
+                this.logger.error(`${this.tags} start bdt stack failed,err = ${start_stack.err}`)
                 resolve({err:start_tool.err,log:`${this.tags} start bdt stack failed`})
             }
             this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
@@ -518,7 +518,18 @@ export class BdtPeerClient extends EventEmitter{
         }
         return {err: BDTERROR.timeout};
     }
-    
+    async sendFile(path:string,chunk_size:number): Promise<{err: ErrorCode, calculate_time?: number,set_time?: number, file?: Buffer,ObjectId?:string}>{
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+            name: 'start-send-file',
+            peerName: this.peerName,
+            chunk_size,
+            path,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} sendFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }
+        return {err: info.err,calculate_time: info.value?.calculate_time,set_time:info.value?.set_time ,file: info.bytes,ObjectId:info.value?.ObjectId};
+    }
     async calculateFile(path:string,chunk_size:number): Promise<{err: ErrorCode, calculate_time?: number, file?: Buffer,ObjectId?:string}>{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'calculate-file',

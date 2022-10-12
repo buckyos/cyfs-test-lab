@@ -27,7 +27,7 @@ export class SendFileRangeAction extends BaseAction implements ActionAbstract {
 
         // (3) BDT 传输  File
         // cyfs-base 计算文件Object 
-        let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.fileSize!);
+        let calculate = await RN.bdtClient!.calculateFile(randFile.filePath!, this.action.chunkSize!);
         // RN 将文件保存到BDT NDN 中
         let setRunning = RN.bdtClient!.setFile(randFile.filePath!, calculate.file!);
         if (!this.action.config.not_wait_upload_finished) {
