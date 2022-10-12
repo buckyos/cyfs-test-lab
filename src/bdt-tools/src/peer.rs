@@ -201,7 +201,7 @@ struct LazyComponents {
 }
 
 struct PeerImpl {
-    lazy_components: Option<LazyComponents>, 
+    lazy_components: Arc<Mutex<HashMap<String, LazyComponents>>>,
     stream_name_gen: TempSeqGenerator, 
     stream_manager: Mutex<Vec<TestConnection>>,
     temp_dir: PathBuf,
@@ -216,9 +216,10 @@ impl Peer {
     pub fn new(temp_dir: String)->Self {
         let task_map = TaskMap::new();
         let dir_task_map = DirTaskMap::new();
+        let mut peer_map = HashMap::new();
         let answer = Vec::new();
         Self(Arc::new(PeerImpl {
-            lazy_components: None, 
+            lazy_components: Arc::new(Mutex::new(peer_map)),
             stream_name_gen: TempSeqGenerator::new(), 
             stream_manager: Mutex::new(Vec::new()),
             temp_dir: PathBuf::from_str(temp_dir.as_str()).unwrap(),
@@ -231,6 +232,7 @@ impl Peer {
     pub fn on_create(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on create, c={:?}", &c);
         let seq = c.seq();
+        let peer_name = c.get_peer_name();
         let c = CreateLpcCommandReq::try_from(c).map_err(|e| {
             log::error!("convert command to CreateLpcCommandReq failed, e={}", &e);
             e
@@ -239,7 +241,7 @@ impl Peer {
         let ep_type = c.ep_type.clone();
         let sn = c.sn.clone();
         task::spawn(async move {
-            let resp = match peer.create(c).await {
+            let resp = match peer.create(c,&peer_name).await {
                 Err(e) => {
                     log::error!("create stack failed, e={}", &e);
                     CreateLpcCommandResp {
@@ -253,13 +255,13 @@ impl Peer {
                 },
                 Ok(_) => {
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut local = peer.get_stack().local();
+                    let mut local = peer.get_stack(&peer_name).unwrap().local();
                     log::info!("on create succ, local: {}", local.desc().device_id());
                     // 如果配置SN 等待sn上线
                     let mut result = 0 ;
                     if sn.len()>0{
                         log::info!("peer sn list len={},wait for sn online",sn.len());
-                        result = match future::timeout(Duration::from_secs(20), peer.get_stack().net_manager().listener().wait_online()).await {
+                        result = match future::timeout(Duration::from_secs(20), peer.get_stack(&peer_name).unwrap().net_manager().listener().wait_online()).await {
                             Err(err) => {
                                 log::error!("sn online timeout {}.err= {}", local.desc().device_id(),err);
                                 1000
@@ -272,7 +274,7 @@ impl Peer {
                     }
                     let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                     // 获取所有ep列表数据
-                    let ep_list =  peer.get_stack().net_manager().listener().endpoints();
+                    let ep_list =  peer.get_stack(&peer_name).unwrap().net_manager().listener().endpoints();
                     for ep in ep_list.clone(){
                         log::info!("{}",format!("local ep info:{}",ep));
                     }
@@ -346,7 +348,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match ConnectLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
@@ -468,7 +470,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match ConnectListLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
@@ -560,6 +562,7 @@ impl Peer {
     pub fn on_auto_accept(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on auto accept, c={:?}", &c);
         let seq = c.seq();
+        let peer_name = c.get_peer_name();
         {
             let peer = self.clone();
             let mut lpc = lpc.clone();
@@ -573,7 +576,7 @@ impl Peer {
                 },
                 Ok(c) => {
                     task::spawn(async move {
-                        let acceptor = peer.get_acceptor();
+                        let acceptor = peer.get_acceptor(&peer_name);
                         let mut incoming = acceptor.incoming();
                         let _ = peer.set_answer(&c.answer);
                         loop {
@@ -642,7 +645,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let acceptor = peer.get_acceptor();
+            let acceptor = peer.get_acceptor(&c.get_peer_name());
             let mut incoming = acceptor.incoming();
             let pre_stream = incoming.next().await.unwrap().unwrap();
             let conn = peer.add_stream(pre_stream.stream);
@@ -1117,6 +1120,7 @@ impl Peer {
         log::info!("on send datagram, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
+        let peer_name = c.get_peer_name();
         async_std::task::spawn(async move {
             let resp = match SendDatagramLpcCommandReq::try_from(c) {
                 Err(e) => {
@@ -1131,7 +1135,7 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    let stack = peer.get_stack();
+                    let stack = peer.get_stack(&peer_name).unwrap();
                     let mut options = cyfs_bdt::DatagramOptions::default();
                     // 要强转数据类型
                     let _ = match c.sequence.clone() {
@@ -1187,6 +1191,7 @@ impl Peer {
     pub fn on_recv_datagram(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on send datagram, c={:?}", &c);
         let seq = c.seq();
+        let peer_name = c.get_peer_name();
         {
             let peer = self.clone();
             let mut lpc = lpc.clone();
@@ -1199,7 +1204,7 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    let stack = peer.get_stack();
+                    let stack = peer.get_stack(&peer_name).unwrap().clone();
                     task::spawn(async move {
                         let mut lpc1 = lpc.clone();
                         let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
@@ -1249,7 +1254,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match CalculateChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateChunkLpcCommandReq failed, e={}", &e);
@@ -1313,7 +1318,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match SetChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetChunkLpcCommandReq failed, e={}", &e);
@@ -1401,7 +1406,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match TrackChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to TrackChunkLpcCommandReq failed, e={}", &e);
@@ -1498,7 +1503,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match InterestChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -1547,7 +1552,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match InterestChunkListLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkListLpcCommandReq failed, e={}", &e);
@@ -1597,7 +1602,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match CheckChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CheckChunkLpcCommandReq failed, e={}", &e);
@@ -1649,7 +1654,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack();
+            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match CheckChunkListCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CheckChunkListCommandReq failed, e={}", &e);
@@ -1697,7 +1702,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
 
-        let stack = peer.get_stack();
+        let stack = peer.get_stack(&c.get_peer_name()).unwrap();
         let resp = match AddDeviceCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to AddDeviceCommandReq failed, e={}", &e);
@@ -1727,7 +1732,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match CreateFileSessionCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CreateFileSessionCommandReq failed, e={}", &e);
@@ -1809,7 +1814,7 @@ impl Peer {
         let seq = c.seq();
         // let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack();
+            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartTransSessionCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartTransSessionCommandReq failed, e={}", &e);
@@ -1836,7 +1841,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack();
+            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match GetTransSessionStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartTransSessionCommandReq failed, e={}", &e);
@@ -1880,6 +1885,33 @@ impl Peer {
         });
     }
     
+    pub fn is_lazy_component_exists(&self, file_name: &str) -> bool {
+        self.0.lazy_components.lock().unwrap().contains_key(file_name)
+    }
+    pub fn add_lazy_component(&mut self, peer_name: &String, stack:StackGuard ,acceptor:StreamListenerGuard) -> BuckyResult<()> {
+        match self.0.lazy_components.lock().unwrap().entry(peer_name.to_owned()) {
+            hash_map::Entry::Vacant(v) => {
+                let info = LazyComponents { 
+                    stack: stack,
+                    acceptor : acceptor
+                };
+                v.insert(info);
+                Ok(())
+            }
+            hash_map::Entry::Occupied(_) => {
+                let msg = format!(
+                    "bdt stack already exists: {}",
+                    peer_name,
+                );
+
+                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+            }
+        }
+    }
+
+    pub fn remove_lazy_component(&mut self, peer_name: &str) -> Option<StackGuard> {
+        self.0.lazy_components.lock().unwrap().remove(peer_name).map(|v| v.stack)
+    }
     fn get_conn(&self, name: &String) -> Option<TestConnection> {
         let manager = self.0.stream_manager.lock().unwrap();
         for conn in manager.iter() {
@@ -1889,9 +1921,11 @@ impl Peer {
         }
         None
     }
-
-    fn get_stack(&self) -> StackGuard {
-        self.0.lazy_components.as_ref().unwrap().stack.clone()
+    // fn get_lazy_component(&self,peer_name:&String) -> Option<LazyComponents>{
+    //     Some(self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().clone())
+    // }
+    fn get_stack(&self,peer_name : &String) -> Option<StackGuard>{
+       Some(self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().stack.clone())
     }
 
     fn set_answer(&self,answer:&Vec<u8>){
@@ -1901,8 +1935,8 @@ impl Peer {
     fn get_answer(&self)-> Vec<u8>{
         self.0.fristQA_answer.lock().unwrap().clone()
     }
-    fn get_acceptor(&self) -> StreamListenerGuard {
-        self.0.lazy_components.as_ref().unwrap().acceptor.clone()
+    fn get_acceptor(&self ,peer_name: &String) -> StreamListenerGuard {
+        self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().acceptor.clone()
     }
 
     fn temp_dir(&self) -> &Path {
@@ -1917,8 +1951,7 @@ impl Peer {
         conn
     }
 
-    async fn create(&self, c: CreateLpcCommandReq) -> Result<(), BuckyError> {
-
+    async fn create(&self, c: CreateLpcCommandReq,peer_name:&String) -> Result<(), BuckyError> {
         let mut port: u16 = match c.bdt_port{
             Some(n) => {
                 n as u16
@@ -2223,15 +2256,27 @@ impl Peer {
         }
         let stack = stack.unwrap();   
         let acceptor = stack.stream_manager().listen(0).unwrap();
-
-        let peer_impl = unsafe {
-            &mut *(Arc::as_ptr(&self.0) as *mut PeerImpl)
+        // let peer_impl = unsafe {
+        //     &mut *(Arc::as_ptr(&self.0) as *mut PeerImpl)
+        // };
+        let _ = match self.0.lazy_components.lock().unwrap().entry(peer_name.to_owned()) {
+            hash_map::Entry::Vacant(v) => {
+                let info = LazyComponents { 
+                    stack: stack,
+                    acceptor : acceptor
+                };
+                v.insert(info);
+                Ok(())
+            }
+            hash_map::Entry::Occupied(_) => {
+                let msg = format!(
+                    "bdt stack already exists: {}",
+                    peer_name,
+                );
+                log::error!("bdt stack already exists: {}",{peer_name});
+                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+            }
         };
-        peer_impl.lazy_components = Some(LazyComponents {
-            stack, 
-            acceptor
-        });
-
         Ok(())
     }
 
@@ -2241,7 +2286,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match CalculateFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateFileCommandReq failed, e={}", &e);
@@ -2314,7 +2359,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match SetFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetFileCommandReq failed, e={}", &e);
@@ -2359,7 +2404,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartSendFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
@@ -2439,7 +2484,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartDownloadFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadFileCommandReq failed, e={}", &e);
@@ -2499,7 +2544,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartDownloadFileQWithRangesCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
@@ -2578,7 +2623,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack();
+            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match DownloadFileStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to DownloadFileStateCommandReq failed, e={}", &e);
@@ -2627,7 +2672,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartSendDirCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendDirCommandReq failed, e={}", &e);
@@ -2761,7 +2806,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match StartDownloadDirCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
@@ -2864,7 +2909,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack();
+            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match DownloadDirStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to DownloadDirStateCommandReq failed, e={}", &e);
@@ -2922,7 +2967,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
             let resp = match GetSystemInfoLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -2966,6 +3011,7 @@ impl Peer {
         log::info!("on get_system_info, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
+        let peer_name = c.get_peer_name();
         let resp = match UploadSystemInfoLpcCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -3006,7 +3052,7 @@ impl Peer {
             }
         };
         async_std::task::spawn(async move {
-            let stack = peer.get_stack();
+            let stack = peer.get_stack(&peer_name).unwrap();
             let mut lpc = lpc;
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });

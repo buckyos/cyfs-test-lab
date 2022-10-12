@@ -46,7 +46,17 @@ impl LpcCommand {
             None => None,
         }
     }
-
+    pub fn get_peer_name(&self)->String {
+        match self.json_value.get("peerName") {
+            Some(v) => {
+                match v {
+                    serde_json::Value::String(s) => s.clone(),
+                    _ => "Default".to_string(),
+                }
+            },
+            None => "Default".to_string(),
+        }
+    }
     pub fn as_buffer<'a>(&'a self) -> &'a [u8] {
         self.buffer.as_slice()
     }
