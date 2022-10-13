@@ -916,6 +916,8 @@ async fn main() {
             .help("test cost time"),
     );
 
+    // TOOD: samples_count, tps
+
     let matches = app.get_matches();
     let threads_nums = matches.value_of("threads_nums").unwrap_or_default().parse::<u32>().unwrap_or(10);
     let end_time = matches.value_of("end_time").unwrap_or_default().parse::<u64>().unwrap_or(60 * 1);

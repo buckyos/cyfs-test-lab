@@ -458,10 +458,10 @@ dependencies = [
  "backtrace",
  "byteorder",
  "bytes 1.2.1",
- "cyfs-base 0.5.5",
- "cyfs-bdt 0.5.7",
- "cyfs-debug 0.5.0",
- "cyfs-util 0.5.2",
+ "cyfs-base 0.6.3",
+ "cyfs-bdt 0.6.3",
+ "cyfs-debug 0.6.0",
+ "cyfs-util 0.6.0",
  "futures",
  "hex",
  "log",
@@ -996,23 +996,22 @@ dependencies = [
 [[package]]
 name = "cyfs-base"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "254ab52e5d2e4d15ed2d26ec3e4a5e43f808973646450c77babd5f125bc88a6d"
 dependencies = [
  "aes 0.7.5",
  "async-recursion",
  "async-std",
  "async-trait",
- "base-x",
  "base58",
  "block-modes",
  "chrono",
- "cyfs-base-derive 0.5.0",
- "cyfs-ecies 0.1.4",
+ "cyfs-base-derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-ecies 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "generic-array 0.12.4",
  "hex",
  "http-types",
  "int-enum",
- "intbits",
- "itertools",
  "lazy_static",
  "libc",
  "libsecp256k1",
@@ -1037,23 +1036,24 @@ dependencies = [
 
 [[package]]
 name = "cyfs-base"
-version = "0.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "254ab52e5d2e4d15ed2d26ec3e4a5e43f808973646450c77babd5f125bc88a6d"
+version = "0.6.3"
 dependencies = [
  "aes 0.7.5",
  "async-recursion",
  "async-std",
  "async-trait",
+ "base-x",
  "base58",
  "block-modes",
  "chrono",
- "cyfs-base-derive 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-ecies 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base-derive 0.5.0",
+ "cyfs-ecies 0.1.4",
  "generic-array 0.12.4",
  "hex",
  "http-types",
  "int-enum",
+ "intbits",
+ "itertools",
  "lazy_static",
  "libc",
  "libsecp256k1",
@@ -1101,6 +1101,8 @@ dependencies = [
 [[package]]
 name = "cyfs-bdt"
 version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32acf3c0fce2ef6eabe8e3dc30498185a002c91b00ce55e49d087c14429150e1"
 dependencies = [
  "async-std",
  "async-trait",
@@ -1109,7 +1111,7 @@ dependencies = [
  "clap",
  "cyfs-base 0.5.5",
  "cyfs-debug 0.5.0",
- "cyfs-raptorq 1.6.1",
+ "cyfs-raptorq 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cyfs-util 0.5.2",
  "futures",
  "generic-array 0.12.4",
@@ -1129,30 +1131,30 @@ dependencies = [
 
 [[package]]
 name = "cyfs-bdt"
-version = "0.5.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32acf3c0fce2ef6eabe8e3dc30498185a002c91b00ce55e49d087c14429150e1"
+version = "0.6.3"
 dependencies = [
  "async-std",
  "async-trait",
  "bytes 0.4.12",
  "chrono",
  "clap",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-debug 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-raptorq 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.6.3",
+ "cyfs-debug 0.6.0",
+ "cyfs-raptorq 1.6.1",
+ "cyfs-util 0.6.0",
  "futures",
  "generic-array 0.12.4",
  "hex",
  "libc",
  "log",
  "lru_time_cache",
+ "md5",
  "nix",
  "once_cell",
  "rand 0.7.3",
  "ringbuf",
  "rusqlite",
+ "serde_json",
  "sha2 0.8.2",
  "socket2",
  "winapi",
@@ -1167,8 +1169,8 @@ dependencies = [
  "async-std",
  "async-trait",
  "chrono",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.5.5",
+ "cyfs-util 0.5.2",
  "hex",
  "int-enum",
  "log",
@@ -1186,6 +1188,8 @@ dependencies = [
 [[package]]
 name = "cyfs-debug"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "097dc83858ec00b85ec8b8bd60b299629483b3f2300892bbbbcde981f70b23cd"
 dependencies = [
  "async-h1",
  "async-std",
@@ -1213,17 +1217,15 @@ dependencies = [
 
 [[package]]
 name = "cyfs-debug"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "097dc83858ec00b85ec8b8bd60b299629483b3f2300892bbbbcde981f70b23cd"
+version = "0.6.0"
 dependencies = [
  "async-h1",
  "async-std",
  "async-trait",
  "backtrace",
  "chrono",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.6.3",
+ "cyfs-util 0.6.0",
  "flexi_logger",
  "hex",
  "http-types",
@@ -1277,11 +1279,11 @@ dependencies = [
  "async-tungstenite",
  "bytes 1.2.1",
  "chrono",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-bdt 0.5.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.5.5",
+ "cyfs-bdt 0.5.7",
  "cyfs-core",
- "cyfs-debug 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-debug 0.5.0",
+ "cyfs-util 0.5.2",
  "futures",
  "futures-util",
  "globset",
@@ -1347,10 +1349,10 @@ dependencies = [
  "async-trait",
  "backtrace",
  "byteorder",
- "cyfs-base 0.5.5",
- "cyfs-bdt 0.5.7",
- "cyfs-debug 0.5.0",
- "cyfs-util 0.5.2",
+ "cyfs-base 0.6.3",
+ "cyfs-bdt 0.6.3",
+ "cyfs-debug 0.6.0",
+ "cyfs-util 0.6.0",
  "futures",
  "hex",
  "log",
@@ -1364,6 +1366,8 @@ dependencies = [
 [[package]]
 name = "cyfs-util"
 version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7654854c13d0d7c59f29a7722dbf3a34ddc02666f4d3e043dce6f2c3fb242d29"
 dependencies = [
  "async-h1",
  "async-std",
@@ -1371,7 +1375,7 @@ dependencies = [
  "c_linked_list",
  "clap",
  "cyfs-base 0.5.5",
- "cyfs-sha2 0.8.2",
+ "cyfs-sha2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs",
  "flexi_logger",
  "fs2",
@@ -1400,17 +1404,15 @@ dependencies = [
 
 [[package]]
 name = "cyfs-util"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7654854c13d0d7c59f29a7722dbf3a34ddc02666f4d3e043dce6f2c3fb242d29"
+version = "0.6.0"
 dependencies = [
  "async-h1",
  "async-std",
  "async-trait",
  "c_linked_list",
  "clap",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-sha2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.6.3",
+ "cyfs-sha2 0.8.2",
  "dirs",
  "flexi_logger",
  "fs2",
@@ -2248,6 +2250,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9106e1d747ffd48e6be5bb2d97fa706ed25b144fbee4d5c02eae110cd8d6badd"
 
 [[package]]
+name = "md5"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2686,12 +2694,12 @@ dependencies = [
  "async-trait",
  "clap",
  "criterion",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-bdt 0.5.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.5.5",
+ "cyfs-bdt 0.5.7",
  "cyfs-core",
- "cyfs-debug 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-debug 0.5.0",
  "cyfs-lib",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-util 0.5.2",
  "futures",
  "log",
 ]
@@ -3752,8 +3760,8 @@ dependencies = [
  "async-std",
  "async-trait",
  "clap",
- "cyfs-base 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cyfs-util 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cyfs-base 0.5.5",
+ "cyfs-util 0.5.2",
  "hex",
  "log",
  "serde",
