@@ -9,6 +9,12 @@
 * 必填
 * 非必填
 
+### dec_type
+* sys
+* any
+* sam_dec
+* dif_dec
+
 ### GlobalStateStub
 * PathOpEnvStub
 * SingleOpEnvStub
