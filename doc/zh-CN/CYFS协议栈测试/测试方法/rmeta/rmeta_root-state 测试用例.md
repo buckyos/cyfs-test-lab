@@ -349,4 +349,71 @@
 * root_state_access_stub（） 跨zone不同dec,access，set_group_permissions()权限组设定
 * root_state_access_stub（） 跨zone不同dec,access，make()权限组设定
 * root_state_access_stub（） 跨zone不同dec,access，access，constructor()权限组初始化
-
+***
+* global_state.get_current_root(),Global同zone同dec,access，dec_default()权限组
+* global_state.get_current_root(),Global同zone同dec,access，default()权限组
+* global_state.get_current_root(),Global同zone同dec,access，full()权限组
+* global_state.get_current_root(),Global同zone同dec,access，full_except_write()权限组
+* global_state.get_current_root(),Global同zone同dec,access，set_group_permission()权限组设定
+* global_state.get_current_root(),Global同zone同dec,access，set_group_permissions()权限组设定
+* global_state.get_current_root(),Global同zone同dec,access，make()权限组设定
+* global_state.get_current_root(),Global同zone同dec,access，access，constructor()权限组初始化
+* global_state.get_current_root(),Global同zone不同dec,access，dec_default()权限组
+* global_state.get_current_root(),Global同zone不同dec,access，default()权限组
+* global_state.get_current_root(),Global同zone不同dec,access，full()权限组
+* global_state.get_current_root(),Global同zone不同dec,access，full_except_write()权限组
+* global_state.get_current_root(),Global同zone不同dec,access，set_group_permission()权限组设定
+* global_state.get_current_root(),Global同zone不同dec,access，set_group_permissions()权限组设定
+* global_state.get_current_root(),Global同zone不同dec,access，make()权限组设定
+* global_state.get_current_root(),Global同zone不同dec,access，access，constructor()权限组初始化
+***
+* global_state.get_current_root(),Dec同zone同dec,access，dec_default()权限组
+* global_state.get_current_root(),Dec同zone同dec,access，default()权限组
+* global_state.get_current_root(),Dec同zone同dec,access，full()权限组
+* global_state.get_current_root(),Dec同zone同dec,access，full_except_write()权限组
+* global_state.get_current_root(),Dec同zone同dec,access，set_group_permission()权限组设定
+* global_state.get_current_root(),Dec同zone同dec,access，set_group_permissions()权限组设定
+* global_state.get_current_root(),Dec同zone同dec,access，make()权限组设定
+* global_state.get_current_root(),Dec同zone同dec,access，access，constructor()权限组初始化
+* global_state.get_current_root(),Dec同zone不同dec,access，dec_default()权限组
+* global_state.get_current_root(),Dec同zone不同dec,access，default()权限组
+* global_state.get_current_root(),Dec同zone不同dec,access，full()权限组
+* global_state.get_current_root(),Dec同zone不同dec,access，full_except_write()权限组
+* global_state.get_current_root(),Dec同zone不同dec,access，set_group_permission()权限组设定
+* global_state.get_current_root(),Dec同zone不同dec,access，set_group_permissions()权限组设定
+* global_state.get_current_root(),Dec同zone不同dec,access，make()权限组设定
+* global_state.get_current_root(),Dec同zone不同dec,access，access，constructor()权限组初始化 
+***
+* friends路径 同zone同dec,access，dec_default()权限组
+* friends路径 同zone同dec,access，default()权限组
+* friends路径 同zone同dec,access，full()权限组
+* friends路径 同zone同dec,access，full_except_write()权限组
+* friends路径 同zone同dec,access，set_group_permission()权限组设定
+* friends路径 同zone同dec,access，set_group_permissions()权限组设定
+* friends路径 同zone同dec,access，make()权限组设定
+* friends路径 同zone同dec,access，access，constructor()权限组初始化
+* friends路径 同zone不同dec,access，dec_default()权限组
+* friends路径 同zone不同dec,access，default()权限组
+* friends路径 同zone不同dec,access，full()权限组
+* friends路径 同zone不同dec,access，full_except_write()权限组
+* friends路径 同zone不同dec,access，set_group_permission()权限组设定
+* friends路径 同zone不同dec,access，set_group_permissions()权限组设定
+* friends路径 同zone不同dec,access，make()权限组设定
+* friends路径 同zone不同dec,access，access，constructor()权限组初始化
+***
+* friends路径 跨zone同dec,access，dec_default()权限组
+* friends路径 跨zone同dec,access，default()权限组
+* friends路径 跨zone同dec,access，full()权限组
+* friends路径 跨zone同dec,access，full_except_write()权限组
+* friends路径 跨zone同dec,access，set_group_permission()权限组设定
+* friends路径 跨zone同dec,access，set_group_permissions()权限组设定
+* friends路径 跨zone同dec,access，make()权限组设定
+* friends路径 跨zone同dec,access，access，constructor()权限组初始化
+* friends路径 跨zone不同dec,access，dec_default()权限组
+* friends路径 跨zone不同dec,access，default()权限组
+* friends路径 跨zone不同dec,access，full()权限组
+* friends路径 跨zone不同dec,access，full_except_write()权限组
+* friends路径 跨zone不同dec,access，set_group_permission()权限组设定
+* friends路径 跨zone不同dec,access，set_group_permissions()权限组设定
+* friends路径 跨zone不同dec,access，make()权限组设定
+* friends路径 跨zone不同dec,access，access，constructor()权限组初始化
