@@ -58,6 +58,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
         await handlerManager.clearAllHandler();
         //fs.removeSync(path.join(__dirname,'test_cache_file'))
         console.info(`#########用例执行完成`);
+        process.exit(0)
     })
     
     describe("NON接口测试",async()=>{
@@ -146,16 +147,20 @@ describe("SharedCyfsStack NON相关接口测试",function(){
             //     }) 
             // })
             describe("#协议栈NONRequestor 内post_object接口",async()=>{
-                it("NONRequestor调用post_object正常流程",async()=>{
+                it.only("NONRequestor调用post_object正常流程",async()=>{
                     let info =  await createTestObject(stack_runtime,stack_runtime.local_device_id().to_base_58());
+                    let path = "/test_non/reqpath"
+        
+                    let req_path = new cyfs.RequestGlobalStatePath(stack_ood.dec_id, path).toString()
                     const ret01 = await handlerManager.addHandler(
                         `${stack_ood.local_device_id().to_base_58()}`,
                         stack_ood,
                         cyfs.RouterHandlerCategory.PostObject,
-                        cyfs.RouterHandlerChain.PreRouter,
+                        cyfs.RouterHandlerChain.Handler,
                         "post-object-handler-001" ,
                         -1,
-                        `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
+                        req_path,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.PostObjectHandlerDefault,
                         "PostObjectHandlerDefault",
@@ -166,7 +171,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
 
                         object:  cyfs.NONObjectInfo.new_from_object_raw(info.object_raw).unwrap(),//info.saveObjectId,
                         common: {
-                            req_path: "/qa/post_object",
+                            req_path: req_path,
                             level: cyfs.NONAPILevel.Router,
                             target: stack_ood.local_device_id().object_id,
                             dec_id:stackInfo.appID,
@@ -185,7 +190,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
         })
         describe("#router_handlers 相关接口",async()=>{
             describe("#协议栈router_handlers 内add_put_object_handler接口",async()=>{
-                it.only("router_handlers调用add_put_object_handler正常流程",async()=>{
+                it("router_handlers调用add_put_object_handler正常流程",async()=>{
                     const ret01 = await handlerManager.addHandler(
                         `${stack_ood.local_device_id().to_base_58()}`,
                         stack_ood,
