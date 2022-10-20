@@ -125,7 +125,7 @@ export class AgentManager {
             taskList.push(new Promise(async(V)=>{
                 
                 let taskAgent = []
-                let bdt_port = 50000;
+                let bdt_port = 50000 + RandomGenerator.integer(1,100)*10;
                 if(config.bdt_port){
                     bdt_port = config.bdt_port;
                 }
@@ -148,6 +148,17 @@ export class AgentManager {
         } 
         for(let i in taskList){
             await taskList[i]
+        }
+    }
+    async stopService(){
+        let list = []
+        for(let agent of this.agentMap.values()){
+            list.push(new Promise(async(V)=>{
+                await agent.stopService();
+            }))  
+        }
+        for(let run of list){
+            await run;
         }
     }
     async uploadSystemInfo(testcaseId:string,interval: number){

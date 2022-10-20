@@ -16,7 +16,7 @@ export class CreateBDTStackAction extends BaseAction implements ActionAbstract {
         if(!LN_Agent!.bdt_port){
             LN_Agent!.bdt_port = 50000;
         }
-        LN_Agent!.bdt_port =  LN_Agent!.bdt_port! + 10;
+        LN_Agent!.bdt_port =  LN_Agent!.bdt_port! + 4;
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }

@@ -25,6 +25,7 @@ export class BdtPeerClient extends EventEmitter{
     public util_client? :UtilClient;
     public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁  
     public NAT? : number;
+    public stack_list : Map<string,Buffer>;
     on(event: 'unlive', listener: () => void): this;
     on(event: string, listener: (...args: any[]) => void): this {
         super.on(event, listener);
@@ -42,8 +43,9 @@ export class BdtPeerClient extends EventEmitter{
         this.m_interface = _interface;
         this.logger = _interface.getLogger();
         this.cache_peer_info = peer
-        this.m_conns = new Map;
+        this.m_conns = new Map();
         this.state = 0; 
+        this.stack_list = new Map();
         this.m_timeout = 60*1000;
         
     }
@@ -59,7 +61,7 @@ export class BdtPeerClient extends EventEmitter{
                 if(this.state<2){
                     resolve({err:BDTERROR.timeout,log:`${this.tags} start bdt-tools timeout ,state = ${this.state}`})
                 }
-            },20*1000)
+            },60*1000)
             let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
                 RUST_LOG : this.cache_peer_info!.RUST_LOG!
             }, this.m_agentid!, 10*1000);
@@ -89,7 +91,8 @@ export class BdtPeerClient extends EventEmitter{
             // 2. start bdt stack
             let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
                 name: 'create',
-                peerName:this.peerName,
+                peerName: this.peerName,
+                unique_id : this.peerName,
                 addrInfo:this.cache_peer_info!.addrInfo,
                 bdt_port : this.cache_peer_info!.bdt_port,
                 sn_files: this.cache_peer_info!.sn_files,
@@ -112,6 +115,7 @@ export class BdtPeerClient extends EventEmitter{
             }
             this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
             this.device_object = start_stack.bytes;
+            this.stack_list.set(this.peerName!,this.device_object!);
             this.sn_online_time = start_stack.value.online_time;
             this.sn_resp_eps = start_stack.value.ep_resp;
             this.peerid = start_stack.value.id
@@ -132,9 +136,11 @@ export class BdtPeerClient extends EventEmitter{
         // let local = path.join(this.util_client!.)
         // let device_tag =  "Device_"+RandomGenerator.string(10) 
         this.logger.info(`${this.tags} start run create_new_stack , local = ${local}  `)
+        let unique_id = RandomGenerator.string(20);
         let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
             name: 'create',
-            peerName:this.peerName,
+            peerName: this.peerName,
+            unique_id ,
             addrInfo:this.cache_peer_info!.addrInfo,
             bdt_port : bdt_port,
             sn_files: this.cache_peer_info!.sn_files,
@@ -157,6 +163,7 @@ export class BdtPeerClient extends EventEmitter{
         let sn_online_time = start_stack.value.online_time;
         let sn_resp_eps = JSON.stringify({ep:start_stack.value.ep_resp}) ;
         let peerid = start_stack.value.id
+        this.stack_list.set(unique_id,start_stack.bytes!);
         return {err:BDTERROR.success,log:`create bdt stack success`,sn_online_time,sn_resp_eps,peerid}
     }
     async reportAgent(testcaseId:string) :Promise<{err:ErrorCode,log:string}>{
@@ -204,7 +211,8 @@ export class BdtPeerClient extends EventEmitter{
         // 2. start bdt stack
         let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
             name: 'create',
-            peerName:this.peerName,
+            peerName: this.peerName,
+            unique_id : this.peerName,
             addrInfo:this.cache_peer_info!.addrInfo,
             bdt_port : this.cache_peer_info!.bdt_port,
             sn_files: this.cache_peer_info!.sn_files,
@@ -254,6 +262,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
             name: 'connect',
             peerName: this.peerName,
+            unique_id : this.peerName,
             question,
             known_eps: known_eps?1:0,
             remote_sn,
@@ -284,6 +293,7 @@ export class BdtPeerClient extends EventEmitter{
             name: 'connect-list',
             remote_desc_list,
             peerName: this.peerName,
+            unique_id : this.peerName,
             question,
             known_eps: known_eps?1:0,
             remote_sn,
@@ -305,6 +315,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'set_answer',
             peerName: this.peerName,
+            unique_id : this.peerName,
             answer,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -316,6 +327,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('createBdtLpcListener',  Buffer.from(""), {
             name: 'auto_accept',
             peerName: this.peerName,
+            unique_id : this.peerName,
             answer : this.cache_peer_info.FristQA_answer,
             eventType : "confirm_resp",
             eventName : `autoAccept_${this.peerid}`
@@ -369,10 +381,12 @@ export class BdtPeerClient extends EventEmitter{
         }
         let param: any = {
             peerName: this.peerName,
+            unique_id : this.peerName,
         };
         // send exit bdt client will destory,not resp
         this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             peerName: this.peerName,
+            unique_id : this.peerName,
             name: 'exit',
         }, this.m_agentid, 0);
         await sleep(2000)
@@ -384,6 +398,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  peer, {
             name: 'add-device', 
             peerName: this.peerName,
+            unique_id : this.peerName,
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} addDevice failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
@@ -394,6 +409,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'calculate-chunk',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_size,
             path,
         }, this.m_agentid, 0);
@@ -406,6 +422,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
             name: 'set-chunk',
             peerName: this.peerName,
+            unique_id : this.peerName,
             path,
             chunk_id,
             chunk_size,
@@ -425,6 +442,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'track-chunk',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_size,
             path,
         }, this.m_agentid, 0);
@@ -437,6 +455,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
             name: 'interest-chunk',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_id,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -448,6 +467,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'check-chunk',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_id,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -477,6 +497,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
             name: 'interest-chunk-list',
             peerName: this.peerName,
+            unique_id : this.peerName,
             task_name,
             chunk_list,
         }, this.m_agentid, 0);
@@ -490,6 +511,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'check-chunk-list',
             peerName: this.peerName,
+            unique_id : this.peerName,
             session,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -522,6 +544,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'start-send-file',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_size,
             path,
         }, this.m_agentid, 0);
@@ -534,6 +557,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'calculate-file',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_size,
             path,
         }, this.m_agentid, 0);
@@ -546,6 +570,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand', file, {
             name: 'set-file',
             peerName: this.peerName,
+            unique_id : this.peerName,
             path,
             dir_object_path:this.util_client!.cachePath!.NamedObject
         }, this.m_agentid, 0);
@@ -558,6 +583,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
             name: 'start-download-file',
             peerName: this.peerName,
+            unique_id : this.peerName,
             peer_id,
             path:save_path,
             second_peer_id
@@ -571,6 +597,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  file, {
             name: 'start-download-file-range',
             peerName: this.peerName,
+            unique_id : this.peerName,
             peer_id,
             ranges,
             path:save_path,
@@ -585,6 +612,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'download-file-state',
             peerName: this.peerName,
+            unique_id : this.peerName,
             session,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -623,6 +651,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
             name: 'start-send-dir',
             peerName: this.peerName,
+            unique_id : this.peerName,
             path,
             chunk_size,
             dir_object_path : object_path
@@ -642,6 +671,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'start-download-dir',
             peerName: this.peerName,
+            unique_id : this.peerName,
             peer_id,
             path:save_path,
             dir_name,
@@ -659,6 +689,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'download-dir-state',
             peerName: this.peerName,
+            unique_id : this.peerName,
             session,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -698,6 +729,7 @@ export class BdtPeerClient extends EventEmitter{
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'start-send-file',
             peerName: this.peerName,
+            unique_id : this.peerName,
             chunk_size,
             path,
         }, this.m_agentid, 0);
@@ -715,6 +747,7 @@ export class BdtPeerClient extends EventEmitter{
                 name: 'upload_system_info',
                 agent_name : this.tags,
                 peerName: this.peerName,
+            unique_id : this.peerName,
                 testcaseId,
                 interval,
             }, this.m_agentid, 0);
@@ -784,6 +817,7 @@ export class BdtConnection extends EventEmitter {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'close', 
             peerName: this.peerName,
+            unique_id : this.peerName,
             stream_name: this.stream_name,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -797,6 +831,7 @@ export class BdtConnection extends EventEmitter {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'send',
             peerName: this.peerName,
+            unique_id : this.peerName,
             stream_name: this.stream_name,
             size: fileSize,
         }, this.m_agentid, 0);
@@ -812,6 +847,7 @@ export class BdtConnection extends EventEmitter {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'recv',
             peerName: this.peerName,
+            unique_id : this.peerName,
             stream_name: this.stream_name,
         }, this.m_agentid, 0);
         if (info.err) {
@@ -825,6 +861,7 @@ export class BdtConnection extends EventEmitter {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'send_object',
             peerName: this.peerName,
+            unique_id : this.peerName,
             stream_name: this.stream_name,
             obj_path,
             obj_type
@@ -840,6 +877,7 @@ export class BdtConnection extends EventEmitter {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
             name: 'recv_object',
             peerName: this.peerName,
+            unique_id : this.peerName,
             stream_name: this.stream_name,
             file_name,
             obj_path,

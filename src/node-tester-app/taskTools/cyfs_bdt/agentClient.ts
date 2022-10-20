@@ -54,7 +54,7 @@ export class AgentClient {
             if (err) {
                 V({err:ErrorCode.netError,log:`${this.tags} start agen Servicet failed`}) 
             }
-            await sleep(2000);
+            await sleep(5000);
             let IPInfo = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
                 name : "getIPInfo"
             }, this.m_agentid!, 10*1000);
@@ -68,6 +68,9 @@ export class AgentClient {
             V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
         })
         
+    }
+    async stopService(){
+        await this.m_interface.stopService(this.m_agentid!)
     } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         if(!this.is_run){

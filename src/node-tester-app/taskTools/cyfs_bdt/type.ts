@@ -80,6 +80,7 @@ export const enum  ActionType {
 
  export const enum Resp_ep_type {
     Empty = "Empty",
+    All = "All",
     effectiveEP_LAN = "effectiveEP_LAN",  
     effectiveEP_WAN = "effectiveEP_WAN",  
     default = "default", 

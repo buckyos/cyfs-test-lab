@@ -258,9 +258,10 @@ export class TestRunner{
     // 退出测试用例
     async exitTestcase(err:number,log:string){
         this.end_time = Date.now();
-        setTimeout(()=>{
+        setTimeout(async()=>{
+            await this.agentManager.stopService();
             this.m_interface.exit(err,log);
-        },2*60*1000)
+        },5*60*1000)
         if(this.failed==0){
             this.Testcase!.result = 0;
         }else{
@@ -280,6 +281,7 @@ export class TestRunner{
         for(let i in this.errorList){
             this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
         }
+        await this.agentManager.stopService();
         this.m_interface.exit(err,log);
     }
 
