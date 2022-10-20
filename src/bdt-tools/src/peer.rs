@@ -232,7 +232,7 @@ impl Peer {
     pub fn on_create(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on create, c={:?}", &c);
         let seq = c.seq();
-        let peer_name = c.get_peer_name();
+        let peer_name = c.get_unique_id();
         let c = CreateLpcCommandReq::try_from(c).map_err(|e| {
             log::error!("convert command to CreateLpcCommandReq failed, e={}", &e);
             e
@@ -348,7 +348,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match ConnectLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
@@ -470,7 +470,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match ConnectListLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
@@ -562,7 +562,7 @@ impl Peer {
     pub fn on_auto_accept(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on auto accept, c={:?}", &c);
         let seq = c.seq();
-        let peer_name = c.get_peer_name();
+        let peer_name = c.get_unique_id();
         {
             let peer = self.clone();
             let mut lpc = lpc.clone();
@@ -645,7 +645,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         task::spawn(async move {
-            let acceptor = peer.get_acceptor(&c.get_peer_name());
+            let acceptor = peer.get_acceptor(&c.get_unique_id());
             let mut incoming = acceptor.incoming();
             let pre_stream = incoming.next().await.unwrap().unwrap();
             let conn = peer.add_stream(pre_stream.stream);
@@ -1120,7 +1120,7 @@ impl Peer {
         log::info!("on send datagram, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
-        let peer_name = c.get_peer_name();
+        let peer_name = c.get_unique_id();
         async_std::task::spawn(async move {
             let resp = match SendDatagramLpcCommandReq::try_from(c) {
                 Err(e) => {
@@ -1191,7 +1191,7 @@ impl Peer {
     pub fn on_recv_datagram(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on send datagram, c={:?}", &c);
         let seq = c.seq();
-        let peer_name = c.get_peer_name();
+        let peer_name = c.get_unique_id();
         {
             let peer = self.clone();
             let mut lpc = lpc.clone();
@@ -1254,7 +1254,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CalculateChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateChunkLpcCommandReq failed, e={}", &e);
@@ -1318,7 +1318,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match SetChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetChunkLpcCommandReq failed, e={}", &e);
@@ -1406,7 +1406,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match TrackChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to TrackChunkLpcCommandReq failed, e={}", &e);
@@ -1503,7 +1503,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match InterestChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -1552,7 +1552,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match InterestChunkListLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkListLpcCommandReq failed, e={}", &e);
@@ -1602,7 +1602,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CheckChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CheckChunkLpcCommandReq failed, e={}", &e);
@@ -1654,7 +1654,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CheckChunkListCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CheckChunkListCommandReq failed, e={}", &e);
@@ -1702,7 +1702,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
 
-        let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+        let stack = peer.get_stack(&c.get_unique_id()).unwrap();
         let resp = match AddDeviceCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to AddDeviceCommandReq failed, e={}", &e);
@@ -1732,7 +1732,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CreateFileSessionCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CreateFileSessionCommandReq failed, e={}", &e);
@@ -1814,7 +1814,7 @@ impl Peer {
         let seq = c.seq();
         // let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartTransSessionCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartTransSessionCommandReq failed, e={}", &e);
@@ -1841,7 +1841,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match GetTransSessionStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartTransSessionCommandReq failed, e={}", &e);
@@ -2286,7 +2286,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CalculateFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateFileCommandReq failed, e={}", &e);
@@ -2359,7 +2359,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match SetFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetFileCommandReq failed, e={}", &e);
@@ -2404,7 +2404,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartSendFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
@@ -2484,7 +2484,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartDownloadFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadFileCommandReq failed, e={}", &e);
@@ -2544,7 +2544,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartDownloadFileQWithRangesCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
@@ -2623,7 +2623,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match DownloadFileStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to DownloadFileStateCommandReq failed, e={}", &e);
@@ -2672,7 +2672,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartSendDirCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendDirCommandReq failed, e={}", &e);
@@ -2806,7 +2806,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match StartDownloadDirCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
@@ -2909,7 +2909,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match DownloadDirStateCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to DownloadDirStateCommandReq failed, e={}", &e);
@@ -2967,7 +2967,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_peer_name()).unwrap();
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match GetSystemInfoLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -3011,7 +3011,7 @@ impl Peer {
         log::info!("on get_system_info, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
-        let peer_name = c.get_peer_name();
+        let peer_name = c.get_unique_id();
         let resp = match UploadSystemInfoLpcCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);

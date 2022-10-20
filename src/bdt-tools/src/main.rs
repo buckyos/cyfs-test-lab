@@ -27,7 +27,7 @@ async fn main()->Result<(), BuckyError> {
     #[cfg(not(debug_assertions))]
     let log_default_level = "debug";
 
-    cyfs_debug::CyfsLoggerBuilder::new_app("rust-bdt-test-client")
+    cyfs_debug::CyfsLoggerBuilder::new_app("bdt-tools")
         .level(log_default_level)
         .console("warn")
         .directory(log_dir.clone())
@@ -35,7 +35,7 @@ async fn main()->Result<(), BuckyError> {
         .unwrap()
         .start();
 
-    cyfs_debug::PanicBuilder::new("rust-bdt-test-client", "rust-bdt-test-client")
+    cyfs_debug::PanicBuilder::new("bdt-tools", "bdt-tools")
         .exit_on_panic(true)
         .build()
         .start();
@@ -64,7 +64,6 @@ async fn main()->Result<(), BuckyError> {
         if name.is_none() {
             continue;
         }
-
         let name = name.unwrap();
         if name == String::from("create") {
             peer.on_create(c, lpc.clone());
@@ -142,8 +141,7 @@ async fn main()->Result<(), BuckyError> {
             peer.on_send_datagram(c, lpc.clone());
         }else if name == String::from("recv-datagram") {
             peer.on_recv_datagram(c, lpc.clone());
-        }
-         else if name == String::from("exit") {
+        }else if name == String::from("exit") {
             break;
         }else {
             log::warn!("unknown command, name={}", &name);
