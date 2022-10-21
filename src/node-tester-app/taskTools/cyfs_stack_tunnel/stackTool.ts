@@ -90,7 +90,7 @@ export class StackProxyClient extends EventEmitter {
             }
             let info = await this.m_interface.callApi('build_tunnel', Buffer.from(""), param, this.m_agentid!, 0);
             if (info.err) {
-                this.log.error(`build_tunnel`)
+                this.log.error(`build_tunnel err = ${JSON.stringify(info)}`)
             }
             // 添加保活探针
             c.setKeepAlive(true,2000)

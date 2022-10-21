@@ -125,7 +125,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnab9uVtjeaK4bM59QKSkLEGWow1pJq6hjjK9MM").unwrap();
     let DMC_Download = new StackProxyClient({
         _interface,
-        peerName: "DMC_Download",
+        peerName: "PC_0005",
         stack_type: "ood",
         timeout: 60 * 1000,
         ws_port: 20001,
@@ -134,7 +134,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await DMC_Download.init();
     let DMC_Upload = new StackProxyClient({
         _interface,
-        peerName: "DMC_Upload",
+        peerName: "PC_0018",
         stack_type: "ood",
         timeout: 60 * 1000,
         ws_port: 20003,

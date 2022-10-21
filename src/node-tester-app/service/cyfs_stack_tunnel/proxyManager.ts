@@ -97,6 +97,9 @@ export class ProxyManager extends EventEmitter {
                     let info = await this.m_interface.fireEvent(`${remoteAddress}_${remotePort}`, ErrorCode.succ, r_seq, Uint8ArrayToString(msg_u8))
                 })
             });
+            if(!client.remoteAddress || !client.remotePort){
+                return { err: ErrorCode.exception,log: `proxy client ${client.remoteAddress}_${client.remotePort}`};
+            }
             return { err: ErrorCode.succ, log: `proxy client ${client.remoteAddress}_${client.remotePort}` };
         } catch (error) {
             return { err: ErrorCode.exception, log: `${error}` };

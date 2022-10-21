@@ -19,7 +19,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         + （1）LN/RN 初始化本地BDT协议栈
         + （2）LN 向 RN 发起首次连接，LN发送10M大小stream数据,RN发送10Mb大小数据，关闭连接
         + （3）LN 向 RN 发起二次连接，LN发送10M大小stream数据,RN发送10Mb大小数据，关闭连接
-        + （4）RN 向 LN 发起反向连接，LN发送10M大小stream数据,RN发送10Mb大小数据，关闭连接`,
+        + （4）RN 向 LN 发起反向二次连接，LN发送10M大小stream数据,RN发送10Mb大小数据，关闭连接`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
