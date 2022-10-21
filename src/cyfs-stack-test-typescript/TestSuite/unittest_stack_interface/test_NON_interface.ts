@@ -199,6 +199,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "put-object-handler-001" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.PutObjectHandlerDefault,
                         "PutObjectHandlerDefault",
@@ -237,6 +238,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "get-object-handler-001" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.GetObjectHandlerDefault,
                         "GetObjectHandlerDefault",
@@ -273,6 +275,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "delete-object-handler-001" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.DeleteObjectHandlerDefault,
                         "DeleteObjectHandlerDefault",
@@ -288,7 +291,6 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                             target: info.saveobjectOwner,
                         },
                         object_id: info.saveObjectId,
-        
                     };
                     const delete_ret = await stack_runtime.non_service().delete_object(req4);
                     console.info('delete_object result:', delete_ret);
@@ -353,6 +355,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "post-object-handler-001" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.PostObjectHandlerDefault,
                         "PostObjectHandlerDefault",
@@ -389,6 +392,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "sign-object-handler-002" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.CryptoHandlerDefault,
                         "CryptoHandlerDefault",
@@ -403,6 +407,7 @@ describe("SharedCyfsStack NON相关接口测试",function(){
                         "verify-object-handler-001" ,
                         -1,
                         `dec_id == ${stackInfo.appID.to_base_58()}`,
+                        undefined,
                         cyfs.RouterHandlerAction.Default,
                         myHandler.CryptoHandlerDefault,
                         "CryptoHandlerDefault",

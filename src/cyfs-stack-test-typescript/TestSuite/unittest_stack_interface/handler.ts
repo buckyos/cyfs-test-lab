@@ -624,15 +624,18 @@ export class DeleteObjectHandlerResponse implements cyfs.RouterHandlerDeleteObje
     async call(param: cyfs.RouterHandlerDeleteObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDeleteObjectResult>> {
         Emitter.emit('handlerRunning', this.device, 'DeleteObjectHandlerResponse', this.handlerId, this.chain)
         const codec = new cyfs.NONDeleteObjectOutputRequestJsonCodec();
+        const rcodec = new cyfs.NONDeleteObjectInputResponseJsonCodec();
         console.info(codec.encode_object(param.request));
         //console.info(`get_object: id=${param.object_id}`);
         const result: cyfs.RouterHandlerDeleteObjectResult = {
-            action: cyfs.RouterHandlerAction.Response
+            action: cyfs.RouterHandlerAction.Response,
+            response: rcodec.decode_object(this.handlerId)
         };
         return cyfs.Ok(result)
     }
 }
 import { stack, stackInfo, ZoneSimulator } from "../../common/utils";
+import { response } from 'express';
 export class PostObjectHandlerDefault implements cyfs.RouterHandlerPostObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -1076,7 +1079,6 @@ export class handlerManager {
                     checkInfo = 'wait'
                 }
             }
-
 
             await new Promise(async (v) => {
                 setTimeout(async => {

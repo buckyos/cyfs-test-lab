@@ -4,7 +4,6 @@ import * as events from 'events'
 export const Emitter = new events.EventEmitter();
 
 
-
 export class PutObjectHandlerDefault implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -27,9 +26,6 @@ export class PutObjectHandlerDefault implements cyfs.RouterHandlerPutObjectRouti
         return cyfs.Ok(result)
     }
 }
-
-
-
 export class PutObjectHandlerReject implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -96,7 +92,6 @@ export class PutObjectHandlerPass implements cyfs.RouterHandlerPutObjectRoutine 
         return cyfs.Ok(result)
     }
 }
-
 export class PutObjectHandlerResponse implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -123,7 +118,6 @@ export class PutObjectHandlerResponse implements cyfs.RouterHandlerPutObjectRout
         return cyfs.Ok(result)
     }
 }
-
 export class PutObjectHandlerResponseAccept implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -203,8 +197,6 @@ export class PutObjectHandlerResponseAlreadyExists implements cyfs.RouterHandler
         return cyfs.Ok(result)
     }
 }
-
-
 export class PutObjectHandlerResponseMerged implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -238,7 +230,6 @@ export class PutObjectHandlerResponseMerged implements cyfs.RouterHandlerPutObje
         return cyfs.Ok(result)
     }
 }
-
 export class PutObjectHandlerResponseUpdated implements cyfs.RouterHandlerPutObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -273,7 +264,6 @@ export class PutObjectHandlerResponseUpdated implements cyfs.RouterHandlerPutObj
     }
 }
 
-
 export class GetObjectHandlerDefault implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -297,12 +287,6 @@ export class GetObjectHandlerDefault implements cyfs.RouterHandlerGetObjectRouti
         return cyfs.Ok(result)
     }
 }
-
-
-
-
-
-
 export class GetObjectHandlerDrop implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -326,7 +310,6 @@ export class GetObjectHandlerDrop implements cyfs.RouterHandlerGetObjectRoutine 
         return cyfs.Ok(result)
     }
 }
-
 export class GetObjectHandlerReject implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -373,7 +356,6 @@ export class GetObjectHandlerPass implements cyfs.RouterHandlerGetObjectRoutine 
         return cyfs.Ok(result)
     }
 }
-
 export class GetObjectHandlerNewObject implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -407,7 +389,6 @@ export class GetObjectHandlerNewObject implements cyfs.RouterHandlerGetObjectRou
     }
 }
 
-
 export class DeleteObjectHandlerPass implements cyfs.RouterHandlerDeleteObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -428,7 +409,6 @@ export class DeleteObjectHandlerPass implements cyfs.RouterHandlerDeleteObjectRo
         return cyfs.Ok(result)
     }
 }
-
 export class DeleteObjectHandlerDrop implements cyfs.RouterHandlerDeleteObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -469,7 +449,6 @@ export class DeleteObjectHandlerReject implements cyfs.RouterHandlerDeleteObject
         return cyfs.Ok(result)
     }
 }
-
 export class DeleteObjectHandlerDefault implements cyfs.RouterHandlerDeleteObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -490,8 +469,6 @@ export class DeleteObjectHandlerDefault implements cyfs.RouterHandlerDeleteObjec
         return cyfs.Ok(result)
     }
 }
-
-
 export class DeleteObjectHandlerResponse implements cyfs.RouterHandlerDeleteObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -513,7 +490,6 @@ export class DeleteObjectHandlerResponse implements cyfs.RouterHandlerDeleteObje
     }
 }
 
-import { stack, stackInfo } from "./stack";
 export class PostObjectHandlerDefault implements cyfs.RouterHandlerPostObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -525,20 +501,20 @@ export class PostObjectHandlerDefault implements cyfs.RouterHandlerPostObjectRou
     }
     async call(param: cyfs.RouterHandlerPostObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerPostObjectResult>> {
         Emitter.emit('handlerRunning', this.device, 'PostObjectHandlerDefault', this.handlerId, this.chain)
-        const codec = new cyfs.NONPostObjectOutputRequestJsonCodec();
-        let request = codec.encode_object(param.request);
-        param.request.object.object_id
-        let run = await stack.non_service().put_object({
-            common: {
-                req_path: "/qa/put_object",
-                dec_id: stackInfo.appID,
-                flags: 0,
-                level: cyfs.NONAPILevel.NOC //设置路由类型
-            },
-            object: new cyfs.NONObjectInfo(param.request.object.object_id!, param.request.object.object_raw!)
-        })
-        assert(!run.err, `post object handler put object failed`)
-        //console.info(`get_object: id=${param.object_id}`);
+        // const codec = new cyfs.NONPostObjectOutputRequestJsonCodec();
+        // let request = codec.encode_object(param.request);
+        // param.request.object.object_id
+        // let run = await stack.non_service().put_object({
+        //     common: {
+        //         req_path: undefined,
+        //         dec_id: undefined,
+        //         flags: 0,
+        //         level: cyfs.NONAPILevel.NOC //设置路由类型
+        //     },
+        //     object: new cyfs.NONObjectInfo(param.request.object.object_id!, param.request.object.object_raw!)
+        // })
+        // assert(!run.err, `post object handler put object failed`)
+        // //console.info(`get_object: id=${param.object_id}`);
         const result: cyfs.RouterHandlerPostObjectResult = {
             action: cyfs.RouterHandlerAction.Response,
             request: param.request,
@@ -570,7 +546,6 @@ export class PostObjectHandlerReject implements cyfs.RouterHandlerPostObjectRout
     }
 }
 
-
 export class CryptoHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -589,7 +564,24 @@ export class CryptoHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine
     }
 
 }
+export class VerifyHandlerDefault implements cyfs.RouterHandlerVerifyObjectRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerVerifyObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerVerifyObjectResult>> {
+        console.log("on verify event: verify for sign object", param.request.object.object_id)
+        Emitter.emit('handlerRunning', this.device, 'VerifyHandlerDefault', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Default
+        })
+    }
 
+}
 
 export class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
     private device: string;
@@ -611,7 +603,6 @@ export class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
         return cyfs.Ok(result)
     }
 }
-
 export class PutDataHandlerReject implements cyfs.RouterHandlerPutDataRoutine {
     private device: string;
     private handlerId: string;
@@ -632,7 +623,6 @@ export class PutDataHandlerReject implements cyfs.RouterHandlerPutDataRoutine {
         return cyfs.Ok(result)
     }
 }
-
 export class GetDataHandlerDefault implements cyfs.RouterHandlerGetDataRoutine {
     private device: string;
     private handlerId: string;
@@ -653,7 +643,6 @@ export class GetDataHandlerDefault implements cyfs.RouterHandlerGetDataRoutine {
         return cyfs.Ok(result)
     }
 }
-
 export class GetDataHandlerReject implements cyfs.RouterHandlerGetDataRoutine {
     private device: string;
     private handlerId: string;
@@ -694,7 +683,6 @@ export class DeleteDataHandlerDefault implements cyfs.RouterHandlerDeleteDataRou
         return cyfs.Ok(result)
     }
 }
-
 export class DeleteDataHandlerReject implements cyfs.RouterHandlerDeleteDataRoutine {
     private device: string;
     private handlerId: string;
@@ -739,10 +727,10 @@ export class handlerManager {
             }
         })
     }
-    async addHandler(deviceName: string, stack: cyfs.SharedCyfsStack, type: cyfs.RouterHandlerCategory, chain: cyfs.RouterHandlerChain, id: string, index: number, filter: string, default_action: cyfs.RouterHandlerAction, myHandler: any, routineType: string, runSum: number = 1) {
+    async addHandler(deviceName: string, stack: cyfs.SharedCyfsStack, type: cyfs.RouterHandlerCategory, chain: cyfs.RouterHandlerChain, id: string, index: number, filter: string|undefined, req_path: string|undefined, default_action: cyfs.RouterHandlerAction, myHandler: any, routineType: string, runSum: number = 1) {
         //添加handler 数据
         let routine
-        if (myHandler == null || myHandler == undefined) {
+        if (myHandler == undefined || myHandler == null) {
             routine = undefined
         } else {
             routine = new myHandler(deviceName, id, `${chain}`)
@@ -755,7 +743,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
-                    undefined,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -768,6 +756,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -780,6 +769,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -792,19 +782,20 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
                 console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
                 break;
             }
-         
             case cyfs.RouterHandlerCategory.SignObject: {
                 ret1 = await stack.router_handlers().add_sign_object_handler(
                     chain,
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -817,6 +808,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -829,6 +821,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -841,6 +834,7 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
@@ -853,17 +847,15 @@ export class handlerManager {
                     id,
                     index,
                     filter,
+                    req_path,
                     default_action,
                     routine
                 );
                 console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
                 break;
             }
-
-
         }
         //将添加的handler 数据保存到handlist
-
         this.handlerList.push({ deviceName, stack, chain, type, id, routine })
         if (routine != cyfs.None) {
             this.checkList.push({ deviceName, runSum, routineType, id })
@@ -920,7 +912,6 @@ export class handlerManager {
                 }
             }
 
-
             await new Promise(async (v) => {
                 setTimeout(async => {
                     console.info(`handlerRunningCheck 监听检查中，停止${waitTime}ms后检查`)
@@ -943,9 +934,6 @@ export class handlerManager {
         return { err: true, log: "监听handler运行超时退出", checkList: this.checkList }
 
     }
-
-
-
     async clearAllHandler() {
         let handlerList = this.handlerList
         //handlerLists 数据清空
@@ -961,6 +949,5 @@ export class handlerManager {
         return;
     }
 }
-
 
 
