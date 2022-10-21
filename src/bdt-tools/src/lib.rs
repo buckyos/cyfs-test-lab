@@ -46,7 +46,7 @@ impl LpcCommand {
             None => None,
         }
     }
-    pub fn get_peer_name(&self)->String {
+    pub fn get_unique_id(&self)->String {
         match self.json_value.get("peerName") {
             Some(v) => {
                 match v {
