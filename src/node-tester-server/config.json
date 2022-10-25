@@ -1,7 +1,7 @@
 {
     "newPackage": {
         "version": "1.52",
-        "host": "192.168.100.254",
+        "host": "192.168.200.175",
         "port": 80,
         "path": "/update/script.zip",
         "type": "update",
@@ -12,7 +12,7 @@
             "name": "bdt_echo",
             "packageInfo": {
                 "version": "271",
-                "host": "192.168.100.254",
+                "host": "192.168.200.175",
                 "port": 80,
                 "path": "/update/bdt_echo.zip",
                 "MD5": "d37a39b3224b1ffe2bf8d71d3f7410af"
@@ -22,8 +22,8 @@
                     {
                         "peerid": "SEED_DHT_PEER_10000",
                         "eplist": [
-                            "4@192.168.100.254@10000@u",
-                            "4@192.168.100.254@10010@t"
+                            "4@192.168.200.175@10000@u",
+                            "4@192.168.200.175@10010@t"
                         ]
                     },
                     {
