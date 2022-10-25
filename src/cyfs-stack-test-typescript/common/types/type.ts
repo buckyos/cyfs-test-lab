@@ -7,6 +7,7 @@ export type Handler = {
     chain:cyfs.RouterHandlerChain ;
     index:number;
     filter:string;
+    req_path?:string;
     default_action:cyfs.RouterHandlerAction, 
     myHandler?: any,
     routineType:string,
@@ -22,7 +23,7 @@ export type StackInfo = {
     stack : string;
     deviceName : string;
     handlerList : Array<Handler>;
-    ACL : ACL;
+    ACL? : ACL;
 }
 
 
@@ -41,10 +42,11 @@ export type InputInfo = {
     expect?:ResultInfo
     opt : {
         optType : string;
-        dec_id? : string;
         level : cyfs.NONAPILevel;
         source : string;
         target : string;
+        sdec_id? : string;
+        tdec_id? : string;
         NDNoptInfo? : NDNoptInfo,
         filter?:string,
         selectData?:{
