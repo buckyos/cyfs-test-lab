@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "Connect_Max_UDPConnection"
+    let testcaseName = "Connect_Max_TCPConnection"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
@@ -26,6 +26,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
+    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{

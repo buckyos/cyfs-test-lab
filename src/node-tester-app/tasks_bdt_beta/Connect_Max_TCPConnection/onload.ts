@@ -26,6 +26,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
+    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
