@@ -23,7 +23,7 @@ use cyfs_bdt::{
     mem_chunk_store::MemChunkStore,
     ChunkWriter,
     ChunkWriterExt,
-    ChunkListDesc
+    ChunkListDesc,
 };
 
 use std::{
@@ -42,7 +42,7 @@ use async_std::{
     task, 
     fs::File, 
     io::prelude::*,
-    future, 
+    future, stream::StreamExt, 
 };
 use actix_rt;
 use std::*;
@@ -57,8 +57,6 @@ pub async fn setup() -> () {
         let log_dir : String = "E:\\git_test\\cyfs-test-lab\\deploy\\log".to_string();
         #[cfg(debug_assertions)]
         let log_default_level = "debug";
-        #[cfg(not(debug_assertions))]
-        let log_default_level = "debug";
         cyfs_debug::CyfsLoggerBuilder::new_app("bdt-unittest")
             .level(log_default_level)
             .console("warn")
@@ -70,8 +68,7 @@ pub async fn setup() -> () {
         cyfs_debug::PanicBuilder::new("bdt-unittest", "bdt-unittest")
             .exit_on_panic(true)
             .build()
-            .start(); 
-        
+            .start();
         log::info!("before_all fun run");
     });
     //函数每次调用都会执行该部分
@@ -159,7 +156,7 @@ pub async fn load_pn(pnList:Vec<PathBuf>)->Vec<Device>{
     active_pn
 
 }
-pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:PathBuf)->(Device,PrivateKey){
+pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:Option<PathBuf>)->(Device,PrivateKey){
     let mut eps = Vec::new();
     for addr in endpoints.iter() {
         let ep = {
@@ -194,25 +191,31 @@ pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>
     ).build();
     let id = device.desc().device_id();
     let desc_path = format!("{}.desc",id);  
-    let file_obj_path = save_path.join(desc_path);
-    let _ = match device.encode_to_file(file_obj_path.clone().as_path(),true){
-        Ok(_) => {
-            log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+    let _ = match save_path.clone(){
+        Some(my_path) =>{
+            let file_obj_path = my_path.join(desc_path);
+            let _ = match device.encode_to_file(file_obj_path.clone().as_path(),true){
+                Ok(_) => {
+                    log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+                },
+                Err(e) => {
+                    log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+                },
+            };
+            let sec_path = format!("{}.sec",id.to_string());  
+            let file_obj_path = my_path.join(sec_path);
+            let _ = match private_key.encode_to_file(file_obj_path.clone().as_path(),true){
+                Ok(_) => {
+                    log::info!("encode device sec to file succ ,path ={}", file_obj_path.display());
+                },
+                Err(e) => {
+                    log::error!("encode device sec to file failed,path = {},err {}",file_obj_path.display(), e);
+                },
+            };
         },
-        Err(e) => {
-            log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
-        },
+        None => {},
     };
-    let sec_path = format!("{}.sec",id.to_string());  
-    let file_obj_path = save_path.join(sec_path);
-    let _ = match private_key.encode_to_file(file_obj_path.clone().as_path(),true){
-        Ok(_) => {
-            log::info!("encode device sec to file succ ,path ={}", file_obj_path.display());
-        },
-        Err(e) => {
-            log::error!("encode device sec to file failed,path = {},err {}",file_obj_path.display(), e);
-        },
-    };
+    
     (device, private_key)
 }
 
@@ -242,4 +245,67 @@ pub async fn load_device(device_path:PathBuf,name:String)->(Device,PrivateKey){
     }).unwrap();
     log::info!("load device {} success,deviceId = {}",name,device.desc().calculate_id().to_string());
     (device,private_key)
+}
+pub async fn load_stack(device:Device,private_key:PrivateKey,params:StackOpenParams)->(StackGuard,StreamListenerGuard){
+    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+    let stack = Stack::open(
+        device.clone(), 
+        private_key, 
+        params).await;
+    if let Err(e) = stack.clone(){
+        log::error!("init bdt stack error: {}", e);
+    }
+    let stack = stack.unwrap(); 
+    let acceptor = stack.stream_manager().listen(0).unwrap();
+    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+        Err(err) => {
+            log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
+            1000
+        },
+        Ok(_) => {
+            let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+            log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+            0
+        }
+    };
+    log::info!("BDT stack EP list");
+    for  ep in stack.net_manager().listener().endpoints() {
+        log::info!("device {} BDT stack EP: {}",stack.local_device_id(),ep);
+    }
+    (stack,acceptor)
+}
+
+pub async fn auto_accept(acceptor:StreamListenerGuard, answer :Vec<u8>){
+    task::spawn(async move {
+        log::info!("start auto_accept{}",acceptor);
+        loop {
+            let mut incoming = acceptor.incoming().next().await;
+            log::info!("#### RN recv accept");
+            let _ = match incoming{
+                Some(stream)=>{
+                    let _ = match stream{
+                        Ok(pre_stream)=>{
+                            let question = pre_stream.question;
+                            log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
+                            let resp = match pre_stream.stream.confirm(&answer).await{
+                                Err(e)=>{
+                                    log::error!("confirm err, err={}",e);
+                                },
+                                Ok(_)=>{
+                                    log::info!("confirm succ");
+                                }
+                            };
+                        },
+                        Err(err) =>{
+                            log::error!("accept question err ={}" ,err);
+                        }
+                    };                                
+                },
+                _ =>{
+                    log::error!("bdt incoming.next() is None");
+                }
+            };
+            
+        }
+    });
 }
