@@ -49,6 +49,7 @@
     "tslib": "^2.1.0",
     "tunnel": "^0.0.6",
     "ws": "^8.8.1",
-    "xmlhttprequest": "^1.8.0"
+    "xmlhttprequest": "^1.8.0",
+    "google-protobuf":"^3.21.2"
   }
 }
