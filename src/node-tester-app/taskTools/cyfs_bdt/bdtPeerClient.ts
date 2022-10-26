@@ -752,7 +752,7 @@ export class BdtPeerClient extends EventEmitter{
                 interval,
             }, this.m_agentid, 0);
             if (info.err || info.value.result) {
-                this.logger.error(`${this.tags} uploadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+                this.logger.error(`${this.tags} uploadSystemInfo failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
             }
             V({err:info.value.result}) 
         })

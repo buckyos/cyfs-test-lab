@@ -1,6 +1,6 @@
 export const public_host = "bdttest.tinyappcloud.com";
-export const lab_host = "192.168.200.175";
-export const dev_host = "cyfs-test-lab";
+export const lab_host = "192.168.100.205";
+export const dev_host = "192.168.100.205";
 export const host  = dev_host;
 
 export class GlobalConfig {

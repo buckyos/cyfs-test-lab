@@ -162,16 +162,24 @@ export class AgentManager {
         }
     }
     async uploadSystemInfo(testcaseId:string,interval: number){
-        let taskList = []
-        for(let agent of this.agentMap.values()){
-            taskList.push(new Promise(async(V)=>{
-                let ret =await agent.uploadSystemInfo(testcaseId,interval)
-                V(ret)
-            }))
-        }
-        for(let i in taskList){
-            await taskList[i]
-        }
+        return new Promise(async(V)=>{
+            setTimeout(()=>{
+                V("")
+            },10000)
+            let taskList = []
+            for(let agent of this.agentMap.values()){
+                taskList.push(new Promise(async(V)=>{
+                    let ret =await agent.uploadSystemInfo(testcaseId,interval)
+                    V(ret)
+                }))
+            }
+            for(let i in taskList){
+                await taskList[i]
+            }
+            V("")
+        })
+        
+        
     } 
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log:string}>{
         let taskList = []
