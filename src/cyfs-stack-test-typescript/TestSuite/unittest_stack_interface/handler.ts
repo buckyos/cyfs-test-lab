@@ -694,7 +694,7 @@ export class PostObjectHandlerReject implements cyfs.RouterHandlerPostObjectRout
 }
 
 
-export class CryptoHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
+export class SignObjectHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
     private device: string;
     private handlerId: string;
     private chain: string
@@ -731,6 +731,42 @@ export class VerifyHandlerDefault implements cyfs.RouterHandlerVerifyObjectRouti
 
 }
 
+export class EncryptDataHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerSignObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSignObjectResult>> {
+        console.log("on sign event: sign for object", param.request.object.object_id)
+        Emitter.emit('handlerRunning', this.device, 'CryptoHandlerDefault', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Default
+        })
+    }
+
+} // to do
+export class EcryptDataHandlerDefault implements cyfs.RouterHandlerVerifyObjectRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerVerifyObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerVerifyObjectResult>> {
+        console.log("on verify event: verify for sign object", param.request.object.object_id)
+        Emitter.emit('handlerRunning', this.device, 'VerifyHandlerDefault', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Default
+        })
+    }
+
+} // to do
 
 export class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
     private device: string;
@@ -968,6 +1004,32 @@ export class handlerManager {
                 break;
             }
             case cyfs.RouterHandlerCategory.VerifyObject: {
+                ret1 = await stack.router_handlers().add_verify_object_handler(
+                    chain,
+                    id,
+                    index,
+                    filter,
+                    req_path,
+                    default_action,
+                    routine
+                );
+                console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
+                break;
+            }
+            case cyfs.RouterHandlerCategory.EncryptData: {
+                ret1 = await stack.router_handlers().add_put_data_handler(
+                    chain,
+                    id,
+                    index,
+                    filter,
+                    req_path,
+                    default_action,
+                    routine
+                );
+                console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
+                break;
+            }
+            case cyfs.RouterHandlerCategory.DecryptData: {
                 ret1 = await stack.router_handlers().add_verify_object_handler(
                     chain,
                     id,

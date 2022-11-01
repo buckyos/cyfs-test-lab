@@ -840,8 +840,6 @@ function process_dir(obj: any) {
 
         }
 
-
-
         let builder = new cyfs.DirBuilder(new cyfs.DirDescContent(attributes!, obj_list!), new cyfs.DirBodyContent(body));
         let dir = process_common(builder, obj, cyfs.Dir);
 

@@ -5,7 +5,7 @@ import { ZoneSimulator } from './simulator'
 export enum all_stacks {
     zone1_ood = "zone1ood",
     zone1_sood = "zone1sood",
-    zone1_device1 = "zone1device1",
+    zone1_device1 = "zone1_device1",
     zone1_device2 = "zone1device2",
     zone1device1_sys = "zone1device1sys",
 
@@ -27,7 +27,7 @@ export enum all_dec_id {
 
 function decid(dec_id: all_dec_id): cyfs.ObjectId { return cyfs.DecApp.generate_id(cyfs.ObjectId.default(), dec_id) }
 
-export function getDecId(dec_id: string): cyfs.ObjectId {
+export function getDecId(dec_id: string|undefined): cyfs.ObjectId {
     switch (dec_id) {
         case "zone1ood_decid": { return decid(all_dec_id.zone1ood_decid) }
         case "zone1sood_decid": { return decid(all_dec_id.zone1sood_decid) }
@@ -42,11 +42,11 @@ export function getDecId(dec_id: string): cyfs.ObjectId {
     }
 }
 
-export function getStack(ostack: string): cyfs.SharedCyfsStack {
+export function getStack(ostack: string|undefined): cyfs.SharedCyfsStack {
     switch (ostack) {
         case "zone1ood": { return ZoneSimulator.zone1_ood_stack.fork_with_new_dec(getDecId(all_dec_id.zone1ood_decid)) }
         case "zone1sood": { return ZoneSimulator.zone1_standby_ood_stack.fork_with_new_dec(getDecId(all_dec_id.zone1sood_decid)) }
-        case "zone1device1": { return ZoneSimulator.zone1_device1_stack.fork_with_new_dec(getDecId(all_dec_id.zone1device1_decid)) }
+        case "zone1_device1": { return ZoneSimulator.zone1_device1_stack.fork_with_new_dec(getDecId(all_dec_id.zone1device1_decid)) }
         case "zone1device2": { return ZoneSimulator.zone1_device2_stack.fork_with_new_dec(getDecId(all_dec_id.zone1device2_decid)) }
         case "zone1device1sys": { return ZoneSimulator.zone1_device1_stack.fork_with_new_dec(getDecId(all_dec_id.zone1device1sys_decid)) }
         case "zone2ood": { return ZoneSimulator.zone2_ood_stack.fork_with_new_dec(getDecId(all_dec_id.zone2ood_decid)) }
