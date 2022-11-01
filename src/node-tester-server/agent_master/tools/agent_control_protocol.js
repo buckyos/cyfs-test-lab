@@ -558,10 +558,10 @@ const systemLastPublish = {
 };
 
 // upload file
-`http://192.168.100.254:11000/uploadFile/${path}`
+`http://192.168.200.175:11000/uploadFile/${path}`
 request.setHeader('Content-Type', 'application/octet-stream');
 const resp = {
-    url: `http://192.168.100.254/${savepath}`, // savepath是path最后一级后缀名前插入日期字符串
+    url: `http://192.168.200.175/${savepath}`, // savepath是path最后一级后缀名前插入日期字符串
     md5: 'md5'
 }
 

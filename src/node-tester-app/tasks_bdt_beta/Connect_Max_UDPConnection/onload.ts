@@ -16,16 +16,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `前置条件：
-        （1）LN/RN 同时使用TCP 协议EP
+        （1）LN/RN 同时使用UDP 协议EP
     操作步骤：
         (1) LN向RN发起65535次连接
     测试节点数据限制：
-        (1) 节点使用TCP直连
+        (1) 节点使用UDP直连
     预期结果：
         (1) 理论最大连接数 65535`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
+   
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
@@ -45,12 +46,13 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let LN = agent_list.LAN[0].tags[0];
     let WAN = agent_list.WAN[0].tags[0];
     await agentManager.allAgentStartBdtPeer(config)
+    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
     //(4) 测试用例执行器添加测试任务
     for(let i =0;i<50;i++){
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,
             RN : `${WAN}$1`,
-            timeout : 5*30*1000,
+            timeout : 10*60*1000,
             action : []
         })
         for(let x=0;x<200;x++){

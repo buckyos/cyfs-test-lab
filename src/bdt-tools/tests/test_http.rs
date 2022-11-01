@@ -118,7 +118,7 @@ mod tests {
     #[tokio::test]
     async fn test_json_post() {
         println!("############# test_json_post ");
-        let url = "http://192.168.100.254:5000/api/base/system_info/report";
+        let url = "http://192.168.200.175:5000/api/base/system_info/report";
         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
         let sysInfo = BDTTestSystemInfo {
             name : "test".to_string(),

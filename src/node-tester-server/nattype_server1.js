@@ -17,7 +17,7 @@ const dgram = require('dgram');
 
 const LIMIT_DETECT_INTERVAL = 3600000;
 const RESULT_CACHE_TIME = 300000;
-const SYM_DETECT_SERVER = {port: 11002, address: '192.168.100.254'};
+const SYM_DETECT_SERVER = {port: 11002, address: '192.168.200.175'};
 const HOST_DETECT_SERVER = {port: 11003, address: '10.13.187.14'};
 //const SYM_DETECT_SERVER = {port: 11002, address: '127.0.0.1'};
 //const HOST_DETECT_SERVER = {port: 11003, address: '127.0.0.1'};

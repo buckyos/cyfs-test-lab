@@ -59,6 +59,8 @@ use bdt_base::{
 #[cfg(test)]
 
 mod tests {
+    use std::fmt::format;
+
     use super::*;
     #[tokio::test]
     async fn test_sn_online_001() {
@@ -133,7 +135,7 @@ mod tests {
             eps1.push("L4tcp192.168.100.74:30004".to_string());
             eps1.push("L4udp192.168.100.74:30005".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),save_path.clone()).await;
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -185,7 +187,7 @@ mod tests {
             eps1.push("L4udp192.168.231.1:30007".to_string());
             //eps1.push("L4udp192.168.100.74:30001".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),save_path.clone()).await;
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -239,7 +241,7 @@ mod tests {
             eps1.push("L4udp192.168.231.1:30007".to_string());
             eps1.push("L4udp192.168.100.74:30001".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),save_path.clone()).await;
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -287,7 +289,7 @@ mod tests {
             let pn_list = load_pn(pns).await;
             let mut eps1 = Vec::new();
             let mut port = 30000;
-            while port< 31000  {
+            while port< 30100  {
                 port = port + 1;
                 let ep = format!("L4udp192.168.100.74:{}",port);
                 eps1.push(ep);
@@ -295,7 +297,7 @@ mod tests {
             }
             
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),save_path.clone()).await;
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -329,4 +331,288 @@ mod tests {
         }).await
         
     }
+
+    #[tokio::test]
+    async fn test_sn_online_006() {
+        // 测试SN  IPv6 SN 上线绑定一个地址
+        run_test_async( async {
+            let mut sns = Vec::new();
+            let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+            sns.push(sn);
+            let sn_list = load_sn(sns).await;
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+            let mut eps1 = Vec::new();
+            eps1.push("L6udp[::]:30003".to_string());
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+            // 已知Device 列表
+            params.known_device = None; //
+            params.known_sn = Some(sn_list.clone());
+            params.active_pn = Some(pn_list.clone());
+            params.passive_pn = Some(pn_list.clone());
+            params.config.interface.udp.sn_only = false;
+            params.tcp_port_mapping = None;
+            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+            let stack = Stack::open(
+                device.clone(), 
+                key, 
+                params).await;
+            if let Err(e) = stack.clone(){
+                log::error!("init bdt stack error: {}", e);
+            }
+            let stack = stack.unwrap();   
+            let acceptor = stack.stream_manager().listen(0).unwrap();
+            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                Err(err) => {
+                    log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
+                    1000
+                },
+                Ok(_) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                    0
+                }
+            };
+            
+        }).await
+        
+    }
+    #[tokio::test]
+    async fn test_sn_online_007() {
+        // 测试SN  IPv6 SN 上线 多个地址
+        run_test_async( async {
+            let mut sns = Vec::new();
+            let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+            sns.push(sn);
+            let sn_list = load_sn(sns).await;
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+            let mut eps1 = Vec::new();
+            eps1.push("L6udp[::]:30003".to_string());
+            eps1.push("L6udp[::]:30004".to_string());
+            eps1.push("L6udp[::]:30005".to_string());
+            eps1.push("L6udp[::]:30006".to_string());
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+            // 已知Device 列表
+            params.known_device = None; //
+            params.known_sn = Some(sn_list.clone());
+            params.active_pn = Some(pn_list.clone());
+            params.passive_pn = Some(pn_list.clone());
+            params.config.interface.udp.sn_only = false;
+            params.tcp_port_mapping = None;
+            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+            let stack = Stack::open(
+                device.clone(), 
+                key, 
+                params).await;
+            if let Err(e) = stack.clone(){
+                log::error!("init bdt stack error: {}", e);
+            }
+            let stack = stack.unwrap();   
+            let acceptor = stack.stream_manager().listen(0).unwrap();
+            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                Err(err) => {
+                    log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
+                    1000
+                },
+                Ok(_) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                    0
+                }
+            };
+            
+        }).await
+        
+    }
+    #[tokio::test]
+    async fn test_sn_online_008() {
+        // 测试SN  IPV4/IPv6  相同端口上线
+        // 模拟先断网，然后再上线
+        run_test_async( async {
+            let mut sns = Vec::new();
+            let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+            sns.push(sn);
+            let sn_list = load_sn(sns).await;
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+            let mut eps1 = Vec::new();
+            eps1.push("L6udp[::]:30003".to_string());
+            eps1.push("L4udp192.168.100.74:30001".to_string());
+            eps1.push("L4udp192.168.100.74:30002".to_string());
+            eps1.push("L4udp192.168.100.74:30003".to_string());
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+            // 已知Device 列表
+            params.known_device = None; //
+            params.known_sn = Some(sn_list.clone());
+            params.active_pn = Some(pn_list.clone());
+            params.passive_pn = Some(pn_list.clone());
+            params.config.interface.udp.sn_only = false;
+            params.tcp_port_mapping = None;
+            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+            let stack = Stack::open(
+                device.clone(), 
+                key, 
+                params).await;
+            if let Err(e) = stack.clone(){
+                log::error!("init bdt stack error: {}", e);
+            }
+            let stack = stack.unwrap();   
+            let acceptor = stack.stream_manager().listen(0).unwrap();
+            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                Err(err) => {
+                    log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
+                    1000
+                },
+                Ok(_) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                    0
+                }
+            };
+            
+        }).await
+        
+    }
+
+    #[tokio::test]
+    async fn test_sn_online_009() {
+        // 测试SN  IPV4/IPv6  相同端口上线
+        // 模拟先断网，然后再上线
+        run_test_async( async {
+            let mut sns = Vec::new();
+            let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+            sns.push(sn);
+            let sn_list = load_sn(sns).await;
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+            let mut eps1 = Vec::new();
+            //eps1.push("L6udp[::]:30003".to_string());
+            eps1.push("L4udp192.168.100.74:30001".to_string());
+           // eps1.push("L4udp192.168.100.74:30002".to_string());
+            //eps1.push("L4udp192.168.100.74:30003".to_string());
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+            // 已知Device 列表
+            params.known_device = None; //
+            params.known_sn = Some(sn_list.clone());
+            params.active_pn = Some(pn_list.clone());
+            params.passive_pn = Some(pn_list.clone());
+            params.config.interface.udp.sn_only = false;
+            params.tcp_port_mapping = None;
+            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+            let stack = Stack::open(
+                device.clone(), 
+                key, 
+                params).await;
+            if let Err(e) = stack.clone(){
+                log::error!("init bdt stack error: {}", e);
+            }
+            let stack = stack.unwrap();   
+            let acceptor = stack.stream_manager().listen(0).unwrap();
+            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                Err(err) => {
+                    log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
+                    1000
+                },
+                Ok(_) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                    0
+                }
+            };
+            let mut sleep = 60;
+            while sleep>0  {
+                sleep = sleep -1;
+                async_std::task::sleep(Duration::from_millis(1000)).await;
+            };
+        }).await
+    }
+    #[tokio::test]
+    async fn test_sn_online_0010() {
+        // 测试SN  IPV4/IPv6  相同端口上线
+        // 模拟先断网，然后再上线
+        run_test_async( async {
+            let mut sum = 1000; 
+            while sum>0 {
+                sum = sum -1;
+                async_std::task::spawn(async move {
+                    let mut sns = Vec::new();
+                    let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+                    sns.push(sn);
+                    let  sn_list = load_sn(sns).await;
+                    let mut pns = Vec::new();
+                    let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+                    pns.push(pn);
+                    let  pn_list = load_pn(pns).await;
+                    let mut eps1 = Vec::new();
+                    let port = 60000 - sum;
+                    let ep = format!("L4udp192.168.100.74:{}",port);
+                    eps1.push(ep.to_string());
+                   // eps1.push("L4udp192.168.100.74:30002".to_string());
+                    //eps1.push("L4udp192.168.100.74:30003".to_string());
+                    let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+                    let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+                    let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+                    // 已知Device 列表
+                    params.known_device = None; //
+                    params.known_sn = Some(sn_list.clone());
+                    params.active_pn = Some(pn_list.clone());
+                    params.passive_pn = Some(pn_list.clone());
+                    params.config.interface.udp.sn_only = false;
+                    params.tcp_port_mapping = None;
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let stack = Stack::open(
+                        device.clone(), 
+                        key, 
+                        params).await;
+                    if let Err(e) = stack.clone(){
+                        log::error!("init bdt stack error: {}", e);
+                    }
+                    let stack = stack.unwrap();   
+                    let acceptor = stack.stream_manager().listen(0).unwrap();
+                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                        Err(err) => {
+                            log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
+                            1000
+                        },
+                        Ok(_) => {
+                            let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                            log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                            0
+                        }
+                    };
+                    let mut sleep = 60;
+                    while sleep>0  {
+                        sleep = sleep -1;
+                        async_std::task::sleep(Duration::from_millis(1000)).await;
+                    };
+                });
+                
+            }
+            
+            let mut sleep = 600;
+            while sleep>0  {
+                sleep = sleep -1;
+                async_std::task::sleep(Duration::from_millis(1000)).await;
+            };
+             
+        }).await
+    }
+
 }

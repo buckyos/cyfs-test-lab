@@ -1,6 +1,6 @@
 export const public_host = "bdttest.tinyappcloud.com";
-export const lab_host = "192.168.100.254";
-export const host  = "192.168.100.254";
+export const lab_host = "192.168.100.205";
+export const host  = "192.168.100.205";
 
 export class GlobalConfig {
     static heartbeatIntervalTime: number = 60*1000;   

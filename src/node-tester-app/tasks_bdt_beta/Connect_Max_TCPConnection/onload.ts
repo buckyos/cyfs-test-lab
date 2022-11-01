@@ -26,6 +26,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
+   
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
@@ -48,12 +49,13 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let LN = agent_list.LAN[0].tags[0];
     let WAN = agent_list.WAN[0].tags[0];
     await agentManager.allAgentStartBdtPeer(config)
+    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
     //(4) 测试用例执行器添加测试任务
     for(let i =0;i<50;i++){
         let info = await testRunner.createPrevTask({
             LN : `${LN}$1`,
             RN : `${WAN}$1`,
-            timeout : 5*30*1000,
+            timeout : 10*60*1000,
             action : []
         })
         for(let x=0;x<200;x++){

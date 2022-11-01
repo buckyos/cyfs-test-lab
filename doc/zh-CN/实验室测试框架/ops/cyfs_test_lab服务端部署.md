@@ -109,8 +109,8 @@ nohup node ./agent_master/main.js >> server_nodejs.log 2>&1&
 vim node_tester_web\src\data\config.ts
 ```
 ```
-public static apiServer = 'http://192.168.100.254:11081';
-public static uploadServer = 'http://192.168.100.254:12000/uploadFile/';
+public static apiServer = 'http://192.168.200.175:11081';
+public static uploadServer = 'http://192.168.200.175:12000/uploadFile/';
 ```
 编译部署
 ```
@@ -133,8 +133,8 @@ nohup node server.js >> server.log 2>&1&
 ## 配置nginx 代理
 ```
 server {
-    listen       192.168.100.254:12000;
-    server_name  192.168.100.254;
+    listen       192.168.200.175:12000;
+    server_name  192.168.200.175;
 	location  / {
         proxy_pass http://127.0.0.1:12000/;
 		client_max_body_size 1000m;
@@ -144,8 +144,8 @@ server {
     }
 }
 server {
-    listen       192.168.100.254:11080;
-    server_name  192.168.100.254;
+    listen       192.168.200.175:11080;
+    server_name  192.168.200.175;
 	location  / {
         proxy_pass http://127.0.0.1:11080/;
         proxy_set_header Host $host;
@@ -154,8 +154,8 @@ server {
     }
 }
 server {
-    listen       192.168.100.254:11081;
-    server_name  192.168.100.254;
+    listen       192.168.200.175:11081;
+    server_name  192.168.200.175;
 	location  / {
         proxy_pass http://127.0.0.1:11081/;
         proxy_set_header Host $host;
@@ -164,8 +164,8 @@ server {
     }
 }
 server {
-    listen       192.168.100.254:5000;
-    server_name  192.168.100.254;
+    listen       192.168.200.175:5000;
+    server_name  192.168.200.175;
 	location  / {
         proxy_pass http://127.0.0.1:5000/;
         proxy_set_header Host $host;
@@ -174,8 +174,8 @@ server {
     }
 }
 server {
-    listen       192.168.100.254:80;
-    server_name  192.168.100.254;
+    listen       192.168.200.175:80;
+    server_name  192.168.200.175;
     access_log   logs/ui.access.log  main;
     error_log    logs/ui.error.log debug;
     root /node_test/cyfs_stack2/src/node_tester_web/dist;
@@ -271,5 +271,5 @@ sudo dpkg -i grafana-enterprise_9.1.5_amd64.deb
 ```
 
 ```
-http://192.168.100.254:3000/bucky
+http://192.168.200.175:3000/bucky
 ```

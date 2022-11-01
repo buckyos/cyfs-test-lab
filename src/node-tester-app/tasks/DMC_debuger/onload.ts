@@ -145,15 +145,15 @@ async function put_object(_interface: TaskClientInterface,DMC_Download:StackProx
 export async function TaskMain(_interface: TaskClientInterface) {
 
     let dec_id = cyfs.ObjectId.from_base_58("9tGpLNnab9uVtjeaK4bM59QKSkLEGWow1pJq6hjjK9MM").unwrap();
-    let DMC_Download = new StackProxyClient({
-        _interface,
-        peerName: "PC_0005",
-        stack_type: "ood",
-        timeout: 60 * 1000,
-        ws_port: 20001,
-        http_port: 20002
-    })
-    await DMC_Download.init();
+    // let DMC_Download = new StackProxyClient({
+    //     _interface,
+    //     peerName: "PC_0005",
+    //     stack_type: "ood",
+    //     timeout: 60 * 1000,
+    //     ws_port: 20001,
+    //     http_port: 20002
+    // })
+    // await DMC_Download.init();
     let DMC_Upload = new StackProxyClient({
         _interface,
         peerName: "PC_0018",
@@ -164,14 +164,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     })
     await DMC_Upload.init();
     
-    _interface.getLogger().info(`Waiting for proxy to connection...`);
-    let stack_download = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(20002, 20001,dec_id).unwrap())
-    let resp = await stack_download.wait_online(cyfs.None);
-    _interface.getLogger().info(`wait_online finished ${JSON.stringify(resp.unwrap())}`);
-    let res = await stack_download.util().get_zone({ common: { flags: 0 } });
+    // _interface.getLogger().info(`Waiting for proxy to connection...`);
+    // let stack_download = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(20002, 20001,dec_id).unwrap())
+    // let resp = await stack_download.wait_online(cyfs.None);
+    // _interface.getLogger().info(`wait_online finished ${JSON.stringify(resp.unwrap())}`);
+    // let res = await stack_download.util().get_zone({ common: { flags: 0 } });
     let stack_upload = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(20004, 20003,dec_id).unwrap())
     let resp2 = await stack_upload.wait_online(cyfs.None);
-    _interface.getLogger().info(`wait_online finished ${JSON.stringify(resp.unwrap())}`);
+    _interface.getLogger().info(`wait_online finished ${JSON.stringify(resp2.unwrap())}`);
     let res2 = await stack_upload.util().get_zone({ common: { flags: 0 } });
     // {
     //     let success = 0;
@@ -196,7 +196,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     //         }
     //     }     
     // }
-    let result = await test_file(_interface,DMC_Download,DMC_Upload,stack_download,stack_upload,50*1024*1024,1000);
+    // let result = await test_file(_interface,DMC_Download,DMC_Upload,stack_download,stack_upload,50*1024*1024,1000);
 
-    _interface.exit(ClientExitCode.failed, `${result}`)
+    _interface.exit(ClientExitCode.failed, `"""`)
 }

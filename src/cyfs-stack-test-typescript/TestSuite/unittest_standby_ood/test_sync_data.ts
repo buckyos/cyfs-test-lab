@@ -74,9 +74,11 @@ async function createProcess(n:number,op_env:any,obj_list:Array<cyfs.ObjectId>){
                         dec_id:ZoneSimulator.APPID,
                         flags: 0,
                         //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
-                        level: cyfs.NONAPILevel.NOC //设置路由类型
+                        level: cyfs.NONAPILevel.NOC, //设置路由类型
+                        
                     },
-                    object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                    object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                    access: cyfs.AccessString.full()
                 })
                 let create = await op_env.insert_with_path(insert_path,obj_id1)
                 assert.ok(!create.err);
@@ -126,8 +128,10 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             flags: 0,
                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                             level: cyfs.NONAPILevel.NOC //设置路由类型
+                            
                         },
-                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                        access: cyfs.AccessString.full()
                     })
                     let create = await op_env.insert_with_path(insert_path,obj_id1)
                     assert.ok(!create.err);
@@ -188,7 +192,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                             level: cyfs.NONAPILevel.NOC //设置路由类型
                         },
-                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                        access: cyfs.AccessString.full()
                     })
                     let create = await op_env.insert_with_path(insert_path,obj_id1)
                     assert.ok(!create.err);
@@ -253,8 +258,11 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 flags: 0,
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
+                                
+
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -319,7 +327,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.set_with_key(insert_path,key,obj_id1,prev);
                         assert.ok(!create.err);
@@ -445,7 +454,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert(insert_path,obj_id1);
                         assert.ok(!create.err);
@@ -508,7 +518,9 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
+        
                         })
                         let create = await op_env.insert(insert_path,obj_id1);
                         assert.ok(!create.err);
@@ -621,7 +633,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                             level: cyfs.NONAPILevel.NOC //设置路由类型
                         },
-                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                        access: cyfs.AccessString.full()
                     })
                     let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                     assert.ok(!create.err);
@@ -688,7 +701,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(ood_obj.desc().calculate_id(), ood_obj.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(ood_obj.desc().calculate_id(), ood_obj.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         assert.ok(save)
                     }
@@ -811,7 +825,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -868,7 +883,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -941,7 +957,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -1001,7 +1018,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1.err)
 
@@ -1016,7 +1034,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -1073,7 +1092,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(author.desc().calculate_id(), author.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(author.desc().calculate_id(), author.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1.err)
 
@@ -1088,7 +1108,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -1145,7 +1166,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(prev.desc().calculate_id(), prev.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(prev.desc().calculate_id(), prev.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1.err)
 
@@ -1160,7 +1182,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -1218,7 +1241,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(prev.desc().calculate_id(), prev.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(prev.desc().calculate_id(), prev.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let [prev2] = createPeople();
 
@@ -1229,7 +1253,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(prev2.desc().calculate_id(), prev2.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(prev2.desc().calculate_id(), prev2.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1_2.err)
                             let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(prev.calculate_id(),cyfs.None),new cyfs.ObjectLink(prev2.calculate_id(),cyfs.None)]))
@@ -1245,7 +1270,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -1300,7 +1326,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(people.desc().calculate_id(), people.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(people.desc().calculate_id(), people.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             
 
@@ -1316,7 +1343,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -1398,7 +1426,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             console.info("save",JSON.stringify(save))                           
                             let create = await op_env.insert_with_key(insert_path,key,obj1.calculate_id());
@@ -1491,7 +1520,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             console.info("save",JSON.stringify(save)) 
 
@@ -1585,7 +1615,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             console.info("save",JSON.stringify(save)) 
 
@@ -1680,7 +1711,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             console.info("save",JSON.stringify(save)) 
 
@@ -1774,7 +1806,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         console.info("save",JSON.stringify(save))
                         let create = await op_env.insert_with_key(insert_path,key,obj1.calculate_id());
@@ -2216,7 +2249,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1.err)
                             let [obj2] = createPeople();
@@ -2228,7 +2262,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj2.desc().calculate_id(), obj2.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj2.desc().calculate_id(), obj2.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_2.err)
                             let [obj3] = createPeople();
@@ -2239,7 +2274,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj3.desc().calculate_id(), obj3.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj3.desc().calculate_id(), obj3.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_3.err)
                             let [obj4] = createPeople();
@@ -2250,7 +2286,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj4.desc().calculate_id(), obj4.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj4.desc().calculate_id(), obj4.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_4.err)
                             let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(obj4.calculate_id(),cyfs.None)]))
@@ -2268,7 +2305,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                     level: cyfs.NONAPILevel.NOC //设置路由类型
                                 },
-                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                                object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                                access: cyfs.AccessString.full()
                             })
                             let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                             assert.ok(!create.err);
@@ -2467,7 +2505,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                             level: cyfs.NONAPILevel.NOC //设置路由类型
                                         },
-                                        object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap())
+                                        object: new cyfs.NONObjectInfo(obj1.calculate_id(), obj1.to_vec().unwrap()),
+                                        access: cyfs.AccessString.full()
                                     })
                                     console.info("save",JSON.stringify(save1))
 
@@ -2478,7 +2517,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                             level: cyfs.NONAPILevel.NOC //设置路由类型
                                         },
-                                        object: new cyfs.NONObjectInfo(obj2.calculate_id(), obj2.to_vec().unwrap())
+                                        object: new cyfs.NONObjectInfo(obj2.calculate_id(), obj2.to_vec().unwrap()),
+                                        access: cyfs.AccessString.full()
                                     })
                                     console.info("save",JSON.stringify(save2))
  
@@ -2490,7 +2530,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                             level: cyfs.NONAPILevel.NOC //设置路由类型
                                         },
-                                        object: new cyfs.NONObjectInfo(obj3.calculate_id(), obj3.to_vec().unwrap())
+                                        object: new cyfs.NONObjectInfo(obj3.calculate_id(), obj3.to_vec().unwrap()),
+                                        access: cyfs.AccessString.full()
                                     })
                                     console.info("save",JSON.stringify(save3))
 
@@ -2559,7 +2600,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         assert.ok(!save_1.err)
 
@@ -2574,7 +2616,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -2632,7 +2675,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         assert.ok(!save_1.err)
 
@@ -2647,7 +2691,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -2703,7 +2748,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         assert.ok(!save_1.err)
 
@@ -2718,7 +2764,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(insert_path,key,obj_id1)
                         assert.ok(!create.err);
@@ -2776,7 +2823,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         assert.ok(!save_1.err)
 
@@ -2791,7 +2839,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                                 level: cyfs.NONAPILevel.NOC //设置路由类型
                             },
-                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                            object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                            access: cyfs.AccessString.full()
                         })
                         let create = await op_env.insert_with_key(key,obj_id1)
                         assert.ok(!create.err);
@@ -2928,7 +2977,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                             level: cyfs.NONAPILevel.NOC //设置路由类型
                         },
-                        object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap())
+                        object: new cyfs.NONObjectInfo(owner.desc().calculate_id(), owner.to_vec().unwrap()),
+                        access: cyfs.AccessString.full()
                     })
                     assert.ok(!save_1.err)
 
@@ -2943,7 +2993,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //target: cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap(),
                             level: cyfs.NONAPILevel.NOC //设置路由类型
                         },
-                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap())
+                        object: new cyfs.NONObjectInfo(obj1.desc().calculate_id(), obj1.to_vec().unwrap()),
+                        access: cyfs.AccessString.full()
                     })
                     assert.ok(!save.err);
                     let create = await op_env.insert_with_key(key,obj_id1)
@@ -3038,7 +3089,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                         flags: 0
                     
                                     },                               
-                                    object:new cyfs.NONObjectInfo(admin_id ,buf)
+                                    object:new cyfs.NONObjectInfo(admin_id ,buf),
+                                    
                                 }
 
                                 let result =  (await stack.non_service().post_object(req)).unwrap();                          
@@ -3052,7 +3104,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(!save_update.err);          
 
                             })
-                            it("进行写入操作",async()=>{
+                            it("进行写入操作_20221031",async()=>{
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 let people_id = stack.local_device().desc().owner()?.unwrap() 

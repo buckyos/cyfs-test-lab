@@ -9,7 +9,7 @@ export const ContentType = {
 
 
 //const hostname = "106.12.128.114";
-const hostname = "http://192.168.100.254"
+const hostname = "http://192.168.100.205"
 //const hostname = "http://106.12.128.114"
 const port  = 5000
 

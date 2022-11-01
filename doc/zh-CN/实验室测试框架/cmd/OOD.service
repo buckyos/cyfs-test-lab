@@ -1,0 +1,11 @@
+[Unit]
+Description=CYFS OOD
+
+[Service]
+ExecStart=/bin/bash /cyfs/ood-installer
+Restart = always
+Type=forking
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

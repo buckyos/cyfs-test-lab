@@ -62,6 +62,23 @@ export class AgentClient {
             if(IPInfo.err || IPInfo.value.ipInfo.IPv4 == undefined  || IPInfo.value.ipInfo.IPv6 == undefined){  
                 V({err:ErrorCode.exception,log:`${this.tags} get ipinfo failed`}) 
             }
+            // let ipv4s : Array<string> = IPInfo.value.ipInfo.IPv4;
+            // let ipv6s : Array<string> = IPInfo.value.ipInfo.IPv6;
+            // let ipList = ipv4s.concat(ipv6s);
+            // let eps = this.agentInfo!.ipv4;
+            // eps.concat(this.agentInfo!.ipv6);
+            // for(let x=0;x<eps.length;x++){
+            //     let ip = eps[x].substring(5);
+            //     let contain = false;
+            //     for(let j=0;j<ipList.length;j++){
+            //         if(ip.indexOf(ipList[j])!=-1 || ip.indexOf('[::]')!=-1){
+            //             contain = true;
+            //         }
+            //     }
+            //     if(contain==false){
+            //         this.logger.error(`节点 ${this.tags} IP 错误:${JSON.stringify(IPInfo)} EP:${JSON.stringify(eps)}`);
+            //     }       
+            // }
             this.ipInfo = IPInfo.value.ipInfo;
             let loadAgentCache = await this.loadAgentCache("clean");
             this.state = 1;
@@ -92,8 +109,9 @@ export class AgentClient {
             if(result.value.upload?.err ){  
                 V({err:ErrorCode.exception,log:`${this.tags} uploadLog failed`}) 
             }
-            this.logUrl = result.value.upload?.url;
-            V({err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:result.value.upload?.url}) 
+            this.logUrl = String(result.value.upload?.url).replace("192.168.200.175","cyfs-test-lab") ;
+            this.logger.info(`### ${this.tags} run log url : ${this.logUrl}`);
+            V({err:ErrorCode.exception,log:`${this.tags} uploadLog success`,url:this.logUrl}) 
         })
         
     }
@@ -242,6 +260,8 @@ export class AgentClient {
                     break;
                 }
             }
+        }else{
+            this.logger.info(`Warn: agent is_report_perf`);
         }
         return {err:ErrorCode.succ}
     }
