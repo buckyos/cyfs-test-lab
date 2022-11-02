@@ -2128,16 +2128,18 @@ class AgentMgr {
     _dispatchJob(jobInfo) {
         let connections = [...this.m_clientConnectionMap.values()];
         let connIndex = Math.round(Math.random() * connections.length);
-
+        // 限制执行Task 机器
         for (let [taskId, jobTaskInfo] of jobInfo.jobTaskInfos) {
             const maxConnIndex = connections.length + connIndex;
             for (; connIndex < maxConnIndex; connIndex++) {
                 let connection = connections[connIndex % connections.length];
-                this._dispatchJobTaskToAgent(jobTaskInfo, connection.__agentInfo);
-                const runStatus = jobTaskInfo.runStatus;
-                if (runStatus.successTimes + runStatus.failedTimes + runStatus.runningTimes >= runStatus.timesLimit) {
-                    break;
-                }
+                if(connection.__agentInfo.agent.agentId.includes("TaskRun")){
+                    this._dispatchJobTaskToAgent(jobTaskInfo, connection.__agentInfo);
+                    const runStatus = jobTaskInfo.runStatus;
+                    if (runStatus.successTimes + runStatus.failedTimes + runStatus.runningTimes >= runStatus.timesLimit) {
+                        break;
+                    }
+                }   
             }
 
             if (jobTaskInfo.runStatus.runningTimes > 0) {
