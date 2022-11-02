@@ -18,27 +18,38 @@ cyfs.clog.enable_file_log({
 });
 //初始化测试工具
 const handlerManager = new myHandler.handlerManager();
+let tmg: TestcaseManger
+let source_device:cyfs.SharedCyfsStack
+let target_device:cyfs.SharedCyfsStack
 
 describe("cyfs协议栈测试", async function () {
     this.timeout(0);
+    this.beforeAll(async function () {
+        tmg = new TestcaseManger();
+        await tmg.initMongo();
+    })
+    this.afterAll(async function () {
+        //process.exit(0)
+    })
 
     describe(`${datas.module}`, async function () {
+
         for (let j in datas.testcaseList) {
             let inputData: InputInfo;
             let expectData: ResultInfo;
+            
             describe(`${datas.testcaseList[j].id}:${datas.testcaseList[j].name}`, async () => {
                 before(async function () {
                     //获取测试数据
-                    let tmg = new TestcaseManger();
-                    await tmg.initMongo();
                     let res = await tmg.findRecordById(datas.testcaseList[j].id);
                     assert.ok(!res.err, res.log)
                     let testcaseInfo: testcaseInfo = res.datas![0];
                     inputData = JSON.parse(testcaseInfo.input_data!.toString());
                     expectData = JSON.parse(testcaseInfo.expect_result!.toString());
-
                     //启动模拟器连接协议栈
                     await ZoneSimulator.init();
+                    source_device  =  getStack(inputData.opt.source)
+                    target_device  =  getStack(inputData.opt.target)
                 })
                 after(async function () {
                     //数据清理
@@ -46,6 +57,7 @@ describe("cyfs协议栈测试", async function () {
                     await cyfs.sleep(2 * 1000);
                     await ZoneSimulator.stopZoneSimulator();
                     await cyfs.sleep(2 * 1000);
+                    await target_device.root_state_meta_stub(target_device.local_device_id().object_id, undefined).clear_access()
                 })
                 it(`${datas.testcaseList[j].name}`, async () => {
                     // 异常用例阻塞暂时跳过
@@ -66,7 +78,7 @@ describe("cyfs协议栈测试", async function () {
                     }, timeout)
                     //运行测试用例
                     let req_path = undefined
-                    if (inputData.opt.tdec_id) { req_path = new cyfs.RequestGlobalStatePath(getDecId(inputData.opt.tdec_id), "/test/reqpath").toString() }
+                    if (inputData.opt.tdec_id) { req_path = new cyfs.RequestGlobalStatePath(target_device.dec_id, "/test/reqpath").toString() }
                     switch (inputData.opt.optType) {
                         case "put_data_chunk": {
                             await initHandlerList(inputData, req_path);
@@ -100,7 +112,7 @@ describe("cyfs协议栈测试", async function () {
                         }
                         case "put_object": {
                             await initHandlerList(inputData, req_path);
-                            await put_object(inputData, expectData, req_path);
+                            await put_object(inputData, expectData,req_path);
                             break;
                         }
                         case "get_object": {
@@ -133,15 +145,38 @@ describe("cyfs协议栈测试", async function () {
 
 })
 
-function reqpath(decid: string, path: string = "/test/reqpath"): string {
+async function reqpath(decid: string, path: string = "/test/reqpath"): Promise<string> {
     let dec_id = getDecId(decid)
     let req_path = new cyfs.RequestGlobalStatePath(dec_id, path).toString()
     console.log("------------------------> " + req_path)
     return req_path
 }
+
+async function add_handler_access(optType: string, chain: string) {
+    if ((Object.values(cyfs.RouterHandlerChain) as string[]).includes(chain)) {
+        if (chain == "handler") {
+            console.log("不跨Dec非hook情况无需授权req_path")
+        } else {
+            //hook级别需要sys授权限定zone1device1协议栈
+            let permission = cyfs.GlobalStatePathAccessItem.new_group(`/.cyfs/api/handler/${chain}/${optType}/`,
+                undefined, undefined, source_device.dec_id, cyfs.AccessPermissions.Full)
+            await getStack("zone1device1sys").root_state_meta_stub(getStack("zone1device1sys").local_device_id().object_id, getDecId("zone1device1sys_decid")).add_access(permission)
+        }
+    } else throw "error：input no valid chain value！"
+}
+
+async function opt_access(inputData: InputInfo) {
+    if (inputData.opt.source != inputData.opt.target || inputData.opt.sdec_id != inputData.opt.tdec_id) {
+        let permission = cyfs.GlobalStatePathAccessItem.new_group("/test/reqpath",
+            undefined, undefined, getDecId(inputData.opt.sdec_id), cyfs.AccessPermissions.Full)
+        await getStack(inputData.opt.target).root_state_meta_stub(getStack(inputData.opt.target).local_device_id().object_id, getDecId(inputData.opt.tdec_id)).add_access(permission)
+    }
+
+}
 async function initHandlerList(inputData: InputInfo, req_path?: string | undefined) {
     for (let j in inputData.stackCfgList) {
         for (let m in inputData.stackCfgList[j].handlerList) {
+            await add_handler_access(inputData.stackCfgList[j].handlerList[m].type,inputData.stackCfgList[j].handlerList[m].chain)
             const ret = await handlerManager.addHandler(
                 inputData.stackCfgList[j].deviceName,
                 ZoneSimulator.getStackByName(inputData.stackCfgList[j].stack),
@@ -372,12 +407,11 @@ async function trans_dir(inputData: InputInfo, expect: ResultInfo) {
     assert.equal(run.err, expect.err, run.log)
 }
 
-async function put_object(inputData: InputInfo, expect: ResultInfo, req_path: string | undefined) {
+async function put_object(inputData: InputInfo, expect: ResultInfo,req_path: string | undefined) {
     //(1) put object
     // 创建一个测试对象 
     const owner_id = cyfs.ObjectId.from_base_58(ZoneSimulator.getPeerIdByName(inputData.opt.source)).unwrap();
-    let dec_id = undefined;
-    if (inputData.opt.sdec_id) { dec_id = getDecId(inputData.opt.sdec_id) }
+  
     const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const object_id = obj.desc().calculate_id();
     await cyfs.sleep(10000);
@@ -387,15 +421,15 @@ async function put_object(inputData: InputInfo, expect: ResultInfo, req_path: st
     const object_raw = obj.to_vec().unwrap();
     const req: cyfs.NONPutObjectOutputRequest = {
         common: {
-            req_path,
-            dec_id,
+            req_path:req_path,
+            dec_id:source_device.dec_id,
             flags: 0,
-            target: cyfs.ObjectId.from_base_58(ZoneSimulator.getPeerIdByName(inputData.opt.target)).unwrap(),
+            target: target_device.local_device_id().object_id,
             level: inputData.opt.level //设置路由类型
         },
         object: new cyfs.NONObjectInfo(object_id, object_raw)
     };
-    const put_ret = await (ZoneSimulator.getStackByName(inputData.opt.source).non_service().put_object(req));
+    const put_ret = await source_device.non_service().put_object(req);
     //校验结果
     //cyfs.BuckyError
     console.info('put_object result:', put_ret);

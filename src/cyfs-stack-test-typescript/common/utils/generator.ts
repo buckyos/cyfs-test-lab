@@ -235,6 +235,19 @@ async function cropImage(source:string,target:string) {
       }
 }
 
+export function get_len_buf(len: number) {
+    let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
+    const arr: number[] = []
+    let maxnum = basestr.length
+    for (let i = 0; i < len; i++) {
+        arr.push(basestr.charCodeAt(Math.floor(Math.random() * (maxnum - 0)) + 0))
+    }
+    let buf = new Uint8Array(arr)
+    console.log(buf.byteLength)
+    // console.log(buf)
+    return buf
+}
+
 export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
     static CHAR_SET:string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789'; //0123456789

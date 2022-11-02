@@ -1,11 +1,8 @@
 import assert = require('assert');
 import * as cyfs from "../../cyfs_node/cyfs_node"
-import { stack, stackInfo, ZoneSimulator } from "../../common/utils";
+import { ZoneSimulator, get_len_buf } from "../../common/utils";
 import * as myHandler from "./handler"
 
-import * as path from "path"
-import * as fs from 'fs-extra';
-import { access } from 'fs';
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -14,7 +11,7 @@ cyfs.clog.enable_file_log({
     file_max_size: 1024 * 1024 * 10,
     file_max_count: 10,
 });
-
+``
 async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, access?: cyfs.AccessString, req_path?: string) {
     // peerId stack_runtime.local_device_id().to_base_58()
     const saveobjectOwner = cyfs.ObjectId.from_base_58(peerId).unwrap()
@@ -89,8 +86,6 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         system_stack = ZoneSimulator.zone1_device1_stack.fork_with_new_dec(sysdec)
 
-
-
     })
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
@@ -98,7 +93,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         process.exit(0)
     })
 
-    describe("#access默认权限设置", async () => {
+    describe("#access权限", async () => {
         it("default权限-当前设备的put、get、delete", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
@@ -2049,13 +2044,13 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     })
 
     describe("#NON接口req_path", async () => {
-        this.beforeEach(async function () {
-            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
-        })
-        this.afterEach(async function () {
-            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
-            handlerManager.clearAllHandler()
-        })
+        // this.beforeEach(async function () {
+        //     await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+        // })
+        // this.afterEach(async function () {
+        //     await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+        //     handlerManager.clearAllHandler()
+        // })
         it("没授权zone内不同dec，put失败", async () => {
             let info = await createTestObject(zone1device1, zone1device1.local_device_id().to_base_58());
 
@@ -2545,7 +2540,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
 
         })
-        it.skip("NONRequestor调用 globalroot path", async () => {
+        it.only("NONRequestor调用 globalroot path", async () => {
 
             const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
@@ -2561,9 +2556,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             let root_info = (await op_env.commit()).unwrap()
             root_info.dec_root
             root_info.root
-            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
-            let root_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.GlobalRoot(root_info.root)).toString()  //cyfs.get_system_dec_app().object_id
-            let decroot_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.DecRoot(root_info.dec_root)).toString()  //cyfs.get_system_dec_app().object_id
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.GlobalRoot(root_info.root)).toString()  //cyfs.get_system_dec_app().object_id
 
             console.log("------------------------>" + req_path)
 
@@ -2640,9 +2633,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             let root_info = (await op_env.commit()).unwrap()
             root_info.dec_root
             root_info.root
-            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
-            let root_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.GlobalRoot(root_info.root)).toString()  //cyfs.get_system_dec_app().object_id
-            let decroot_req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.DecRoot(root_info.dec_root)).toString()  //cyfs.get_system_dec_app().object_id
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path, undefined, cyfs.RequestGlobalStateRoot.DecRoot(root_info.dec_root)).toString()  //cyfs.get_system_dec_app().object_id
 
             console.log("------------------------>" + req_path)
 
@@ -2652,14 +2643,9 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             // let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path,rwx)
             // zone1device1.root_state_meta_stub(zone2device1.local_device_id().object_id,zone1device1_dec_id).add_access(item)
 
-
-
-
-
-
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
-                    req_path: path,
+                    req_path: req_path,
                     dec_id: zone1device1.local_device_id().object_id,
                     flags: 0,
                     target: zone1device1.dec_id,
@@ -3081,7 +3067,6 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
             let permission2 = cyfs.GlobalStatePathAccessItem.new_group(path,
                 undefined, undefined, zone2device1_dec_id, cyfs.AccessPermissions.Full)
-            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
             await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission2)
 
             const req1: cyfs.NONPostObjectOutputRequest = {
@@ -3348,7 +3333,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
 
         })
-        
+
         it("req_path put_object zone内同设备跨dec level=non", async () => {
 
             const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
@@ -3681,7 +3666,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
             //给指定设备dec授权该path,不指定默认当前source
             let permission = cyfs.GlobalStatePathAccessItem.new_group(path,
-                undefined, undefined,  ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
+                undefined, undefined, ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
             await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission)
 
             const put_req: cyfs.NONPutObjectOutputRequest = {
@@ -3745,7 +3730,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             let check = handlerManager.startHandlerCheck(10 * 1000);
 
             let permission = cyfs.GlobalStatePathAccessItem.new_group(path,
-                undefined, undefined,  ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
+                undefined, undefined, ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
             await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission)
 
             const req1: cyfs.NONPostObjectOutputRequest = {
@@ -3835,28 +3820,271 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
 
         })
-       
+
+        it("req_path put_object zone内同设备同dec level=noc", async () => {
+
+            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const saveObjectId = saveobject.desc().calculate_id();
+            console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
+            const object_raw = saveobject.to_vec().unwrap();
+            let info = { saveobject, saveObjectId, object_raw }
+
+            const first_delete: cyfs.NONDeleteObjectOutputRequest = {
+                common: {  //清理 local cache
+                    level: cyfs.NONAPILevel.NOC,
+                    flags: 0,
+                },
+                object_id: info.saveObjectId,
+            }
+            let del1_res = await zone1device1.non_service().delete_object(first_delete)
+            let del2_res = await zone1device2.non_service().delete_object(first_delete)
+            console.info('delete_object result:', first_delete);
+            assert(!del1_res.err, `delete1 object failed ,err : ${JSON.stringify(del1_res)}`)
+            assert(!del2_res.err, `delete2 object failed ,err : ${JSON.stringify(del2_res)}`)
+
+            //注册req_path
+            let path = "/test_non/reqpath"
+            let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            await op_env.set_with_path(path, info.saveObjectId, undefined, true)
+            let o = (await op_env.commit()).unwrap()
+
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            //给指定设备dec授权该path,不指定默认当前source
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path, cyfs.AccessString.full())
+            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
+
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.NOC,
+                    dec_id: zone1device1_dec_id
+                },
+                access: undefined,
+                object: new cyfs.NONObjectInfo(info.saveObjectId, info.object_raw)
+            };
+            const put_ret = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret)
+            assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`)
+
+        })
+        it("req_path get_object zone内同设备同dec level=noc", async () => {
+
+            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const saveObjectId = saveobject.desc().calculate_id();
+            console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
+            const object_raw = saveobject.to_vec().unwrap();
+            let info = { saveobject, saveObjectId, object_raw }
+
+            const first_delete: cyfs.NONDeleteObjectOutputRequest = {
+                common: {  //清理 local cache
+                    level: cyfs.NONAPILevel.NOC,
+                    flags: 0,
+                },
+                object_id: info.saveObjectId,
+
+            }
+            let del1_res = await zone1device1.non_service().delete_object(first_delete)
+            let del2_res = await zone1device2.non_service().delete_object(first_delete)
+            console.info('delete_object result:', first_delete);
+            assert(!del1_res.err, `delete1 object failed ,err : ${JSON.stringify(del1_res)}`)
+            assert(!del2_res.err, `delete2 object failed ,err : ${JSON.stringify(del2_res)}`)
+
+
+            //注册req_path
+            let path = "/test_non/reqpath"
+            let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            await op_env.set_with_path(path, info.saveObjectId, undefined, true)
+            let o = (await op_env.commit()).unwrap()
+
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            //给指定设备dec授权该path,不指定默认当前source
+            let permission = cyfs.GlobalStatePathAccessItem.new_group(path,
+                undefined, undefined, ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission)
+
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.NOC,
+                },
+                access: undefined,
+                object: new cyfs.NONObjectInfo(info.saveObjectId, info.object_raw)
+            };
+            const put_ret = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret)
+            assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`)
+
+            // get
+            const get_req: cyfs.NONGetObjectOutputRequest = {
+                object_id: info.saveObjectId,
+                common: {
+                    req_path: req_path,
+                    level: cyfs.NONAPILevel.NOC,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const get_ret = await zone1device1.non_service().get_object(get_req);
+            console.info('get_object result:', get_ret);
+            assert(!get_ret.err);
+
+
+        })
+        it("req_path post_object zone内同设备同dec level=noc", async () => {
+            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const saveObjectId = saveobject.desc().calculate_id();
+            const object_raw = saveobject.to_vec().unwrap();
+            let info = { saveobject, saveObjectId, object_raw }
+
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.PostObject,
+                cyfs.RouterHandlerChain.Handler,
+                "post-object-handler-003",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.PostObjectHandlerDefault,
+                "PostObjectHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            let permission = cyfs.GlobalStatePathAccessItem.new_group(path,
+                undefined, undefined, ZoneSimulator.zone1_device1_stack.dec_id, cyfs.AccessPermissions.Full)
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission)
+
+            const req1: cyfs.NONPostObjectOutputRequest = {
+
+                object: cyfs.NONObjectInfo.new_from_object_raw(info.object_raw).unwrap(),//info.saveObjectId,
+                common: {
+                    req_path: req_path,
+                    level: cyfs.NONAPILevel.NOC,
+                    target: zone1device1.local_device_id().object_id,
+                    dec_id: zone1device1_dec_id,
+                    flags: 0,
+                }
+            };
+            const post_ret = await zone1device1.non_service().post_object(req1);
+            console.info('post_object result:', post_ret);
+            assert(!post_ret.err)
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`post_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("req_path delete_object zone内同设备同dec level=noc", async () => {
+
+            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+                'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const saveObjectId = saveobject.desc().calculate_id();
+            console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
+            const object_raw = saveobject.to_vec().unwrap();
+            let info = { saveobject, saveObjectId, object_raw }
+
+            const first_delete: cyfs.NONDeleteObjectOutputRequest = {
+                common: {  //清理 local cache
+                    level: cyfs.NONAPILevel.NOC,
+                    flags: 0,
+                },
+                object_id: info.saveObjectId,
+
+            }
+            let del1_res = await zone1device1.non_service().delete_object(first_delete)
+            let del2_res = await zone1device2.non_service().delete_object(first_delete)
+            console.info('delete_object result:', first_delete);
+            assert(!del1_res.err, `delete1 object failed ,err : ${JSON.stringify(del1_res)}`)
+            assert(!del2_res.err, `delete2 object failed ,err : ${JSON.stringify(del2_res)}`)
+
+
+            //注册req_path
+            let path = "/test_non/reqpath"
+            let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
+            let op_env = (await stub.create_path_op_env()).unwrap()
+            await op_env.set_with_path(path, info.saveObjectId, undefined, true)
+            let o = (await op_env.commit()).unwrap()
+
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            //给指定设备dec授权该path,不指定默认当前source
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new(path, cyfs.AccessString.default())
+            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
+
+            const put_req: cyfs.NONPutObjectOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                    level: cyfs.NONAPILevel.NOC,
+                },
+                access: undefined,
+                object: new cyfs.NONObjectInfo(info.saveObjectId, info.object_raw)
+            };
+            const put_ret = await zone1device1.non_service().put_object(put_req);
+            console.log(put_ret)
+            assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`)
+
+            const del_req: cyfs.NONDeleteObjectOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    dec_id: zone1device1_dec_id,
+                    level: cyfs.NONAPILevel.NOC,
+                    flags: 0,
+                    target: zone1device1.local_device_id().object_id,
+                },
+                object_id: info.saveObjectId,
+            };
+            const delete_ret = await zone1device1.non_service().delete_object(del_req);
+            console.info('delete_object result:', delete_ret);
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+
+        })
+
 
     })
 
-    describe.only("#router-handlers", async () => {
-        this.beforeEach(async function () {
-            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+    describe("#router-handlers", async () => {
+        beforeEach(async function () {
+            zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
         })
-        this.afterEach(async function () {
-            await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+        afterEach(async function () {
+            zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
             handlerManager.clearAllHandler()
         })
         it("添加hook handler prerouter put_object默认action", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_noc/put_object/",
-                zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            let info = await createTestObject(zone1device1, zone1device1.local_device_id().to_base_58());
+            let info = await createTestObject(zone1device2, zone1device2.local_device_id().to_base_58());
 
             // 添加req_path
             let path = "/test_non/reqpath"
-            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device2_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
             console.log("------------------------> " + req_path)
 
             const ret1 = await zone1device1.router_handlers().add_put_object_handler(
@@ -3873,8 +4101,9 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_req: cyfs.NONPutObjectOutputRequest = {
                 common: {
                     req_path: req_path,
+                    dec_id: zone1device1_dec_id,
                     flags: 0,
-                    target: zone1device1.local_device_id().object_id,
+                    target: zone1device2.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router,
                 },
                 access: undefined,
@@ -4452,7 +4681,6 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
 
-        
         it("添加hook handler prerouter delete_object reject ", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/delete_object/",
                 zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
@@ -4560,7 +4788,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined,
                 req_path,
                 cyfs.RouterHandlerAction.Default,
-                new myHandler.CryptoHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
+                new myHandler.SignObjectHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
             );
             assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
             // 对对象进行签名
@@ -4617,7 +4845,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined,
                 req_path,
                 cyfs.RouterHandlerAction.Default,
-                new myHandler.CryptoHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
+                new myHandler.SignObjectHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
             );
             assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
             // 对对象进行签名
@@ -5314,7 +5542,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined,
                 req_path,
                 cyfs.RouterHandlerAction.Default,
-                new myHandler.CryptoHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
+                new myHandler.SignObjectHandlerDefault("zone1device1", "sign_handler_01", "PreRouter")
             );
             assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
             // 对对象进行签名
@@ -5462,16 +5690,14 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
             console.log("------------------------> " + req_path)
 
-            // let permission = cyfs.GlobalStatePathAccessItem.new(path, cyfs.AccessString.default())
-            // //console.log("---------------------------------->>>>>>" + acc.value)
-            // await zone1device2.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(permission)
+
             let permission = cyfs.GlobalStatePathAccessItem.new_group(path,
-                zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
-            await zone1device1.root_state_meta_stub(zone1device2.local_device_id().object_id, zone1device2_dec_id).add_access(permission)
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await zone1device1.root_state_meta_stub(undefined, zone1device1_dec_id).add_access(permission)
 
             const ret1 = await handlerManager.addHandler(
-                `${zone1device2.local_device_id().to_base_58()}`,
-                zone1device2,
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
                 cyfs.RouterHandlerCategory.PostObject,
                 cyfs.RouterHandlerChain.Handler,
                 "post-object-handler-001",
@@ -5560,37 +5786,32 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     })
 
     describe("#crypto 相关接口", async () => {
-        it("crypto 调用 sign_object未授权", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-            const object_id = obj.desc().calculate_id();
-            // 对对象进行签名
-            console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
-            const crypto = zone1device2.crypto();
-            const resp = (await crypto.sign_object({
-                common: {
-                    req_path: undefined,
-                    target: undefined,
-                    dec_id: undefined,
-                    flags: 0
-                },
-                object: new cyfs.NONObjectInfo(object_id, obj.to_vec().unwrap()),
-                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE | cyfs.CRYPTO_REQUEST_FLAG_SIGN_SET_DESC | cyfs.CRYPTO_REQUEST_FLAG_SIGN_SET_BODY
-            }));
-            console.log('sign_object result:', resp);
-            assert(resp.err, "调研sign接口没授权就成功了")
-
+        beforeEach(async function () {
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+        })
+        afterEach(async function () {
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
+            await handlerManager.clearAllHandler()
         })
         it("crypto 调用 sign_object系统授权、verify_object无需授权验证成功", async () => {
             const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
+
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
+                zone1device1.local_device_id().object_id, undefined, undefined, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
             const crypto = zone1device1.crypto();
             const resp = (await crypto.sign_object({
                 common: {
-                    req_path: undefined,
+                    req_path: req_path,
                     target: undefined,
-                    dec_id: sysdec,
+                    dec_id: undefined,
                     flags: 0
                 },
                 object: new cyfs.NONObjectInfo(object_id, obj.to_vec().unwrap()),
@@ -5614,10 +5835,37 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 assert(resp2.unwrap().result.valid, "check verify result failed")
             }
         })
+        it("crypto 调用跨Dec设备 sign_object未授权", async () => {
+            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+
+
+            // let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
+            //     zone1device2.local_device_id().object_id, undefined, undefined, cyfs.AccessPermissions.Full)
+            // await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 对对象进行签名
+            console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
+            const crypto = zone1device1.crypto();
+            const resp = (await crypto.sign_object({
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device2.local_device_id().object_id,
+                    flags: 0
+                },
+                object: new cyfs.NONObjectInfo(object_id, obj.to_vec().unwrap()),
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE | cyfs.CRYPTO_REQUEST_FLAG_SIGN_SET_DESC | cyfs.CRYPTO_REQUEST_FLAG_SIGN_SET_BODY
+            }));
+            console.log('sign_object result:', resp);
+            assert(resp.err, "调研sign接口没授权就成功了")
+
+        })
+
         it("crypto 调用 sign_object系统授权，添加preCryptoHandler", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/sign_object/",
-                zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
             const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
@@ -5635,23 +5883,23 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined,
                 req_path,
                 cyfs.RouterHandlerAction.Default,
-                myHandler.CryptoHandlerDefault,
+                myHandler.SignObjectHandlerDefault,
                 "CryptoHandlerDefault",
                 1,
             )
             assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
             let check = handlerManager.startHandlerCheck(10 * 1000);
 
-            // let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/sign_object/",
-            //     zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
-            // system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            let spermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(spermission)
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
             const crypto = zone1device1.crypto();
             const resp = (await crypto.sign_object({
                 common: {
                     req_path: req_path,
-                    target: zone1device1.local_device_id().object_id,
+                    target: undefined,
                     dec_id: undefined,
                     flags: 0
                 },
@@ -5664,10 +5912,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
             assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
             console.log("test sign object success");
-            //检查监听事件是否触发
-            let handlerResult = await check
-            console.info(`sign_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
-            assert(!handlerResult.err)
+
             //校验对象签名
             {
                 const resp2 = (await crypto.verify_object({
@@ -5679,18 +5924,51 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 console.log('verify_object result:', resp2);
                 assert(resp2.unwrap().result.valid, "check verify result failed")
             }
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`sign_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
         })
-        it("crypto 调用 sign_object系统授权、verify_object无需授权验证成功", async () => {
+        it("crypto 调用 sign_object系统授权，添加postCryptoHandler", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/sign_object/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
             const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.SignObject,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "post-object-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.SignObjectHandlerDefault,
+                "CryptoHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            let spermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(spermission)
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
             const crypto = zone1device1.crypto();
             const resp = (await crypto.sign_object({
                 common: {
-                    req_path: undefined,
+                    req_path: req_path,
                     target: undefined,
-                    dec_id: sysdec,
+                    dec_id: undefined,
                     flags: 0
                 },
                 object: new cyfs.NONObjectInfo(object_id, obj.to_vec().unwrap()),
@@ -5702,6 +5980,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
             assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
             console.log("test sign object success");
+
             //校验对象签名
             {
                 const resp2 = (await crypto.verify_object({
@@ -5713,6 +5992,10 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 console.log('verify_object result:', resp2);
                 assert(resp2.unwrap().result.valid, "check verify result failed")
             }
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`sign_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
         })
         it.skip("crypto 调用 系统已授权选择people签名", async () => { //people签名暂未支持
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
@@ -5786,9 +6069,10 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             }
         })
         it("crypto 调用 系统已授权sign_object，zone内不同设备", async () => {
-            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
-                zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
-            zone1device1.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/sign_object/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
             const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
@@ -5809,12 +6093,1028 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         })
 
+        it("crypto调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt", async () => {
 
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、decrypt_data EncryptData", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data,数据长度最大117bytes", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(117)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data,数据长度1bytes", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(1)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、解密type不一致", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、数据不能为空", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            // let ob = get_len_buf(48)
+            // console.log("----------------------=====================================:  "+ob.byteLength)
+            // console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+        })
+        it("crypto调用 encrypt_data、解密type不一致", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            // let ob = get_len_buf(48)
+            // console.log("----------------------=====================================:  "+ob.byteLength)
+            // console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、GenAESKeyAndEncrypt不支持传入data buf", async () => {
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+        })
+        it("crypto ood调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt", async () => {
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1ood.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1ood.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1ood.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto ood调用 encrypt_data、decrypt_data EncryptData", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1ood.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1ood.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1ood.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        //encrypt_data、decrypt_data同zone跨dec的权限
+        it("crypto跨dec设备调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt", async () => {
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、decrypt_data EncryptData", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        //encrypt_data、decrypt_datat添加handler的情况(待开发完成)
+        it("crypto调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt handler", async () => {
+
+            let hpermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/sign_object/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(hpermission)
+
+            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const object_id = obj.desc().calculate_id();
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.Handler,
+                "post-object-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.SignObjectHandlerDefault,
+                "CryptoHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.Handler,
+                "post-object-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.SignObjectHandlerDefault,
+                "CryptoHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`sign_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto跨dec设备调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt handler", async () => {
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+        it("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
+
+            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const object_id = obj.desc().calculate_id();
+            // const ob = obj.to_vec().unwrap()
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: undefined,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+        })
+    })
+
+    describe("util接口", async () => {
+        describe("unit 接口 get_device", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_device({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_device({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_zone", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone2device1.util().get_zone({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_zone({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_zone({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_zone({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_zone({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_zone({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_zone({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_zone({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 resolve_ood", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone2ood.util().resolve_ood({ object_id: zone2ood.local_device_id().object_id, common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().resolve_ood({ object_id: zone1device2.local_device_id().object_id, common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().resolve_ood({ object_id: zone1device1.local_device_id().object_id, common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().resolve_ood({ object_id: zone1device2.local_device_id().object_id, common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().resolve_ood({ object_id: zone1ood.local_device_id().object_id, common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().resolve_ood({ object_id: zone1device2.local_device_id().object_id, common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().resolve_ood({ object_id: zone2device1.local_device_id().object_id, common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().resolve_ood({ object_id: zone2ood.local_device_id().object_id, common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+
+        })
+        describe("unit 接口 get_ood_status", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_ood_status({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_ood_status({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_ood_status({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood上调用指定其他设备获取所在ood状态", async () => {
+                let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood上调用自己的状态", async () => {
+                let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_noc_info", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_noc_info({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_noc_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_noc_info({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_noc_info({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_noc_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_noc_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_noc_info({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_noc_info({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_network_access_info", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_network_access_info({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_network_access_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_network_access_info({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_network_access_info({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_network_access_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_network_access_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_network_access_info({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_network_access_info({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_device_static_info", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_device_static_info({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_device_static_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_device_static_info({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_device_static_info({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_device_static_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_device_static_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_device_static_info({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_device_static_info({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_system_info", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_system_info({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_system_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_system_info({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_system_info({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_system_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_system_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_system_info({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_system_info({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 get_version_info", async () => {
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口正常调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同设备间调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内同dec间调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { req_path: undefined, dec_id: zone1device1_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口zone内不同dec间调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { req_path: undefined, dec_id: zone1device2_dec_id, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口正常调用", async () => {
+                let run = await zone1ood.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("ood接口不同设备间调用", async () => {
+                let run = await zone1ood.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
+                assert(!run.err, `调用接口失败:${run}`)
+                console.info(`${JSON.stringify(run.unwrap())}`)
+            })
+            it("runtime接口跨zone调用", async () => {
+                let run = await zone1device1.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: zone2device1.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+
+            })
+            it("ood接口跨zone调用", async () => {
+                let run = await zone1ood.util().get_version_info({ common: { req_path: undefined, dec_id: undefined, target: zone2ood.local_device_id().object_id, flags: 0 } })
+                assert(run.err, `调用接口跨zone成功了:${run}`)
+            })
+        })
+        describe("unit 接口 build_dir_from_object_map", async () => {
+
+        })
     })
 })
-
-
-
 
 
 

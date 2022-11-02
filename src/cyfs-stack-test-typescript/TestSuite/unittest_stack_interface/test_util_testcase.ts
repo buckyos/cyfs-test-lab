@@ -59,7 +59,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
         //console.info(JSON.stringify(this.suites))
         //console.info(this.tests)
 
-        process.exit(0);
+        //process.exit(0);
 
     })
 
@@ -213,11 +213,11 @@ describe("SharedCyfsStack util相关接口测试", function () {
                 assert(!run.err, `调用接口失败:${run}`)
                 console.info(`${JSON.stringify(run.unwrap())}`)
             })
-            it("ood上调用自己的状态", async () => {
+            it.skip("ood上调用自己的状态", async () => {
                 let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
-                assert(run.err, `调用接口失败:${run}`)
+                assert(!run.unwrap().status.ood_device_id, `调用接口成功:${run}`)
                 console.info(`${JSON.stringify(run.unwrap())}`)
-            })
+            }) //6, sync client is not support on ood or not enabled for current device!
             it("ood接口不同设备间调用", async () => {
                 let run = await zone1ood.util().get_ood_status({ common: { req_path: undefined, dec_id: undefined, target: zone1device2.local_device_id().object_id, flags: 0 } })
                 assert(!run.err, `调用接口失败:${run}`)
