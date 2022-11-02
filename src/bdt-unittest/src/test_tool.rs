@@ -1,31 +1,7 @@
 use cyfs_base::*;
 use bytes::Bytes;
-use cyfs_util::cache::{
-    NamedDataCache, 
-    TrackerCache
-};
-use cyfs_bdt::{
-    Stack, 
-    StackGuard, 
-    StreamListenerGuard, 
-    BuildTunnelParams, 
-    TempSeqGenerator, 
-    StreamGuard,
-    DownloadTask, 
-    DownloadTaskState, 
-    StackOpenParams, 
-    SingleDownloadContext, 
-    download::DirTaskPathControl,
-    local_chunk_store::LocalChunkWriter,
-    local_chunk_store::LocalChunkListWriter,
-    local_chunk_store::LocalChunkReader,
-    mem_tracker::MemTracker,
-    mem_chunk_store::MemChunkStore,
-    ChunkWriter,
-    ChunkWriterExt,
-    ChunkListDesc,
-};
-
+use cyfs_util::cache::*;
+use cyfs_bdt::*;
 use std::{
     str::FromStr, 
     path::{Path, PathBuf}, 
@@ -46,19 +22,20 @@ use async_std::{
 };
 use actix_rt;
 use std::*;
-
 use std::sync::Once; 
+use std::fs::OpenOptions;
 
 static INIT: Once = Once::new();
 static INIT_END: Once = Once::new();
-pub async fn setup() -> () { 
+pub async fn setup(testcaseName:&str) -> () { 
     INIT.call_once(|| {
+        
         //函数第一次执行会执行该部分内容
         let log_dir : String = "E:\\git_test\\cyfs-test-lab\\deploy\\log".to_string();
         #[cfg(debug_assertions)]
-        let log_default_level = "debug";
+        //let log_default_level = "info";
         cyfs_debug::CyfsLoggerBuilder::new_app("bdt-unittest")
-            .level(log_default_level)
+            .level("info")
             .console("warn")
             .directory(log_dir.clone())
             .build()
@@ -69,44 +46,44 @@ pub async fn setup() -> () {
             .exit_on_panic(true)
             .build()
             .start();
-        log::info!("before_all fun run");
+        log::info!("########################## Before all testcase init ##########################");
+        
     });
     //函数每次调用都会执行该部分
-    log::info!("before_each fun run");
+    log::info!("########################## Testcase {} start running ##########################",testcaseName);
 }
-pub async fn teardown() -> () { 
+pub async fn teardown(testcaseName:&str) -> () { 
     INIT_END.call_once(|| {
-        log::info!("after_each fun run");
+        log::info!("########################## All testcase run finished ##########################");
     });
+    log::info!("########################## Testcase {} run finished ##########################",testcaseName);
 }
 use std::future::Future;
-pub async fn run_test_async<F: Future>(test: F)
-  {
-    setup().await; 
+pub async fn run_test_async<F: Future>(testcaseName:&str,test: F){
+    setup(testcaseName).await; 
    // test();
-    let result =  move ||{
+    let result = move ||{
         async move {
-            test.await;
-        }
-        
+            test.await
+        } 
     };
     result().await;
-
-    teardown().await;  
+    teardown(testcaseName).await;  
+    log::info!("########################## Testcase return ##########################")
 }
 
 //<F: FnOnce() -> R + UnwindSafe, R>(f: F) -> Result<R>
-pub async fn run_test<T>(test: T) ->  ()
+pub async fn run_test<T>(testcaseName:&str,test: T) ->  ()
     where T: FnOnce() -> () + panic::UnwindSafe
 {
-    setup().await; 
+    setup(testcaseName).await; 
     let result = panic::catch_unwind(move ||{
         async move{
             test();
         }
         
     });
-    teardown().await;  
+    teardown(testcaseName).await;  
     assert!(result.is_ok());
 }
 
@@ -156,7 +133,7 @@ pub async fn load_pn(pnList:Vec<PathBuf>)->Vec<Device>{
     active_pn
 
 }
-pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:Option<PathBuf>)->(Device,PrivateKey){
+pub async fn create_device(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:Option<PathBuf>)->(Device,PrivateKey){
     let mut eps = Vec::new();
     for addr in endpoints.iter() {
         let ep = {
@@ -190,7 +167,7 @@ pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>
         DeviceCategory::OOD
     ).build();
     let id = device.desc().device_id();
-    let desc_path = format!("{}.desc",id);  
+    let desc_path = format!("{}.desc",name.clone());  
     let _ = match save_path.clone(){
         Some(my_path) =>{
             let file_obj_path = my_path.join(desc_path);
@@ -202,7 +179,7 @@ pub async fn create_device(endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>
                     log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
                 },
             };
-            let sec_path = format!("{}.sec",id.to_string());  
+            let sec_path = format!("{}.sec",name.clone());  
             let file_obj_path = my_path.join(sec_path);
             let _ = match private_key.encode_to_file(file_obj_path.clone().as_path(),true){
                 Ok(_) => {
@@ -274,6 +251,48 @@ pub async fn load_stack(device:Device,private_key:PrivateKey,params:StackOpenPar
     }
     (stack,acceptor)
 }
+pub async fn random_mem(piece: usize, count: usize) -> (usize, Vec<u8>) {
+    let mut buffer = vec![0u8; piece * count];
+    for i in 0..count {
+        let r = rand::random::<u64>();
+        buffer[i * 8..(i + 1) * 8].copy_from_slice(&r.to_be_bytes());
+    }
+    (piece * count, buffer)
+}
+pub async fn random_str(len : usize) -> String {
+    use rand::Rng;
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let mut rng = rand::thread_rng();
+    let str_info: String = (0..len)
+        .map(|_| {
+            let idx = rng.gen_range(0, CHARSET.len());
+            // 这是安全的，因为 `idx` 会在 `CHARSET` 的范围内。
+            char::from(unsafe { *CHARSET.get_unchecked(idx) }) // 来自用户的所有输入，最好都定义为不安全的。
+        })
+        .collect();
+    str_info
+}
+
+pub async fn random_file(file_path : &str ,file_name : &str ,len : usize) -> String {
+    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+    let file_path = file_path.to_string() + "\\" + file_name;
+    let mut file = File::create(file_path.clone()).await.unwrap();
+    // 大素数作为随机值
+    let randcache = random_str(1000037).await;
+    let randcache = randcache.as_bytes();
+    let mut cache_size = randcache.len();
+    let mut size = len;
+    while size>cache_size{
+        let _ = file.write(randcache).await;
+        size = size - cache_size;
+    }
+    let other_data = random_str(size).await;
+    let _ =  file.write(other_data.as_bytes()).await;
+    let random_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+    log::info!("create random file time = {} ,path = {}",random_time,file_path.clone());
+    file_path
+}
+
 
 pub async fn auto_accept(acceptor:StreamListenerGuard, answer :Vec<u8>){
     task::spawn(async move {
@@ -286,8 +305,8 @@ pub async fn auto_accept(acceptor:StreamListenerGuard, answer :Vec<u8>){
                     let _ = match stream{
                         Ok(pre_stream)=>{
                             let question = pre_stream.question;
-                            log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
-                            let resp = match pre_stream.stream.confirm(&answer).await{
+                            log::info!("accept question succ, len={},content = {:?}",question.len(),str::from_utf8(&question).unwrap());
+                            let resp = match pre_stream.stream.confirm(&answer.clone()).await{
                                 Err(e)=>{
                                     log::error!("confirm err, err={}",e);
                                 },
@@ -308,4 +327,13 @@ pub async fn auto_accept(acceptor:StreamListenerGuard, answer :Vec<u8>){
             
         }
     });
+}
+
+pub async fn sleep(time:usize){
+    let mut time = time;
+    while time>0  {
+        time = time -1;
+        log::trace!("wait 1 s");
+        async_std::task::sleep(Duration::from_millis(1000)).await;
+    };
 }

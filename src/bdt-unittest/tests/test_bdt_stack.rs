@@ -47,23 +47,15 @@ use async_std::{
 use actix_rt;
 use std::*;
 
-mod bdt_base;
-use bdt_base::{
-    run_test_async,
-    create_device,
-    load_pn,
-    load_sn,
-    load_device,
-};
+use bdt_unittest::*;
 
 #[cfg(test)]
 
 mod tests {
     use super::*;
     #[tokio::test]
-    #[ignore]
     async fn test_create_device() {
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -72,21 +64,44 @@ mod tests {
             let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
             pns.push(pn);
             let pn_list = load_pn(pns).await;
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            
             let mut eps1 = Vec::new();
             eps1.push("L4tcp192.168.100.74:30000".to_string());
             eps1.push("L4udp192.168.100.74:30001".to_string());
+            let (device1,key1) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
             let mut eps2 = Vec::new();
             eps2.push("L4tcp192.168.100.74:30002".to_string());
             eps2.push("L4udp192.168.100.74:30003".to_string());
-            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device1,key1) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
-            let (device2,key2) = create_device(eps2,sn_list,pn_list,None).await;
+            let (device2,key2) = create_device("device2".to_string(),eps2,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+
+            let mut eps3 = Vec::new();
+            eps3.push("L4udp192.168.100.74:30004".to_string());
+            let (device3,key3) = create_device("device3_L4udp".to_string(),eps3,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+            let mut eps4 = Vec::new();
+            eps4.push("L4udp192.168.100.74:30005".to_string());
+            let (device4,key4) = create_device("device4_L4udp".to_string(),eps4,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+            
+
+            let mut eps5 = Vec::new();
+            eps5.push("W4tcp192.168.100.74:30006".to_string());
+            let (device5,key5) = create_device("device5_W4tcp".to_string(),eps5,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+            let mut eps6 = Vec::new();
+            eps6.push("W4tcp192.168.100.74:30007".to_string());
+            let (device6,key6) = create_device("device6_W4tcp".to_string(),eps6,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+
+            let mut eps7 = Vec::new();
+            eps7.push("W4udp192.168.100.74:30008".to_string());
+            let (device7,key7) = create_device("device7_W4udp".to_string(),eps7,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+            let mut eps8 = Vec::new();
+            eps8.push("W4udp192.168.100.74:30009".to_string());
+            let (device6,key6) = create_device("device8_W4udp".to_string(),eps8,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
         }).await    
     }
 
     #[tokio::test]
     async fn test_stack_open_001() {
-        run_test_async( async {
+        run_test_async("", async{
             // 0. 使用BDT协议栈 需要使用cyfs-base 创建 Device 对象和PrivateKey,如何创建参照用例test_create_device
             // 1. 加载创建BDT 协议栈需要的本地Device信息，以及SN 、PN信息
             let device_path = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
@@ -140,7 +155,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_002() {
         //  BDT 协议栈初始化 正常流程
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -153,7 +168,7 @@ mod tests {
             eps1.push("L6udp[::]:30003".to_string());
             eps1.push("L4udp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -196,7 +211,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_003() {
         //  BDT 协议栈初始化 Device 参数校验,EP 为空 
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -209,7 +224,7 @@ mod tests {
             // eps1.push("L6udp[::]:30003".to_string());
             // eps1.push("L4udp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -252,7 +267,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_004() {
         //  BDT 协议栈初始化 Device 参数校验, 只有TCP ,没有UDP SN 无法上线
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -265,7 +280,7 @@ mod tests {
             // eps1.push("L6udp[::]:30003".to_string());
             eps1.push("L4tcp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -308,7 +323,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_005() {
         //  BDT 协议栈初始化 Device 参数校验, 设置TCP+UDP ,然后使用udp.sn_only  IPv6 udp + IPv4 tcp
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -321,7 +336,7 @@ mod tests {
             eps1.push("L6udp[::]:30003".to_string());
             eps1.push("L4tcp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -363,7 +378,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_006() {
         //  BDT 协议栈初始化 Device 参数校验, 设置TCP+UDP ,然后使用udp.sn_only  IPv4 udp + IPv6 tcp
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -376,7 +391,7 @@ mod tests {
             eps1.push("L6tcp[::]:30003".to_string());
             eps1.push("L4udp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -418,7 +433,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_007() {
         //  BDT 协议栈初始化 Device 参数校验, 设置TCP+UDP ,然后使用udp.sn_only  IPv6 udp + IPv6 tcp
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -431,7 +446,7 @@ mod tests {
             eps1.push("L6tcp[::]:30003".to_string());
             eps1.push("L6udp[::]:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -473,7 +488,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_008() {
         //  BDT 协议栈初始化 , 设置SN 和 PN为空
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -486,7 +501,7 @@ mod tests {
             eps1.push("L6tcp[::]:30003".to_string());
             eps1.push("L6udp[::]:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -528,7 +543,7 @@ mod tests {
     #[tokio::test]
     async fn test_stack_open_009() {
         //  BDT 协议栈初始化 ,  测试tcp_port_mapping 
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -541,7 +556,7 @@ mod tests {
             eps1.push("L4udp192.168.100.74:30003".to_string());
             eps1.push("L4tcp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //

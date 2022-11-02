@@ -47,14 +47,7 @@ use async_std::{
 use actix_rt;
 use std::*;
 
-mod bdt_base;
-use bdt_base::{
-    run_test_async,
-    create_device,
-    load_pn,
-    load_sn,
-    load_device,
-};
+use bdt_unittest::*;
 
 #[cfg(test)]
 
@@ -65,7 +58,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_001() {
         // 测试SN 上线简单流程
-        run_test_async( async {
+        run_test_async("", async{
             // 0. 使用BDT协议栈 需要使用cyfs-base 创建 Device 对象和PrivateKey,如何创建参照用例test_create_device
             // 1. 加载创建BDT 协议栈需要的本地Device信息，以及SN 、PN信息
             let device_path = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
@@ -118,7 +111,7 @@ mod tests {
     
     async fn test_sn_online_002() {
         // 测试SN 绑定多个地址上线流程
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -135,7 +128,7 @@ mod tests {
             eps1.push("L4tcp192.168.100.74:30004".to_string());
             eps1.push("L4udp192.168.100.74:30005".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -172,7 +165,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_003() {
         // 测试SN 只绑定了虚拟网卡上线失败超时问题
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -187,7 +180,7 @@ mod tests {
             eps1.push("L4udp192.168.231.1:30007".to_string());
             //eps1.push("L4udp192.168.100.74:30001".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -226,7 +219,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_004() {
         // 测试SN 绑定了多个网卡，只有一个网卡可以上线成功
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -241,7 +234,7 @@ mod tests {
             eps1.push("L4udp192.168.231.1:30007".to_string());
             eps1.push("L4udp192.168.100.74:30001".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -278,7 +271,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_005() {
         // 测试SN 绑定了多个网卡，只有一个网卡可以上线成功
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -297,7 +290,7 @@ mod tests {
             }
             
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -335,7 +328,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_006() {
         // 测试SN  IPv6 SN 上线绑定一个地址
-        run_test_async( async {
+        run_test_async("", async {
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -347,7 +340,7 @@ mod tests {
             let mut eps1 = Vec::new();
             eps1.push("L6udp[::]:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -384,7 +377,7 @@ mod tests {
     #[tokio::test]
     async fn test_sn_online_007() {
         // 测试SN  IPv6 SN 上线 多个地址
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -399,7 +392,7 @@ mod tests {
             eps1.push("L6udp[::]:30005".to_string());
             eps1.push("L6udp[::]:30006".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -437,7 +430,7 @@ mod tests {
     async fn test_sn_online_008() {
         // 测试SN  IPV4/IPv6  相同端口上线
         // 模拟先断网，然后再上线
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -452,7 +445,7 @@ mod tests {
             eps1.push("L4udp192.168.100.74:30002".to_string());
             eps1.push("L4udp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -491,7 +484,7 @@ mod tests {
     async fn test_sn_online_009() {
         // 测试SN  IPV4/IPv6  相同端口上线
         // 模拟先断网，然后再上线
-        run_test_async( async {
+        run_test_async("", async{
             let mut sns = Vec::new();
             let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
             sns.push(sn);
@@ -506,7 +499,7 @@ mod tests {
            // eps1.push("L4udp192.168.100.74:30002".to_string());
             //eps1.push("L4udp192.168.100.74:30003".to_string());
             let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-            let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+            let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
             let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
             // 已知Device 列表
             params.known_device = None; //
@@ -547,7 +540,7 @@ mod tests {
     async fn test_sn_online_0010() {
         // 测试SN  IPV4/IPv6  相同端口上线
         // 模拟先断网，然后再上线
-        run_test_async( async {
+        run_test_async("", async{
             let mut sum = 1000; 
             while sum>0 {
                 sum = sum -1;
@@ -567,7 +560,7 @@ mod tests {
                    // eps1.push("L4udp192.168.100.74:30002".to_string());
                     //eps1.push("L4udp192.168.100.74:30003".to_string());
                     let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
-                    let (device,key) = create_device(eps1,sn_list.clone(),pn_list.clone(),None).await;
+                    let (device,key) = create_device("device1".to_string(),eps1,sn_list.clone(),pn_list.clone(),None).await;
                     let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
                     // 已知Device 列表
                     params.known_device = None; //
