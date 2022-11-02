@@ -200,6 +200,8 @@ struct LazyComponents {
     stack: StackGuard,
 }
 
+
+
 struct PeerImpl {
     lazy_components: Arc<Mutex<HashMap<String, LazyComponents>>>,
     stream_name_gen: TempSeqGenerator, 
@@ -388,7 +390,7 @@ impl Peer {
                         }
                     };
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut answer = [0;128];
+                    let mut answer = [0;12800];
                     match stack.stream_manager().connect(0, c.question, param).await {
                         Ok(mut stream) => {
                             let mut len = 0;
@@ -2205,7 +2207,7 @@ impl Peer {
         let mut params = StackOpenParams::new(local.desc().device_id().to_string().as_str());
         match c.chunk_cache.as_str() {
             "file" => {
-                
+                // use default
             },
             "mem" => {
                 let tracker = MemTracker::new();
