@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BDT测试节点性能监控</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align:center;
+            min-height: 50px;
+            min-width: 50px;
+            white-space:normal;
+            word-wrap:break-word;
+            word-break:break-all;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        th {
+            background-color: #7799AA;
+            color: white;
+        }
+    </style>
+</head>
+<script src="../jquery-3.3.1.min.js"></script>
+<body>
+    
+    <script>
+        $(function () {
+            let data = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = table.insertRow(table.rows.length);
+                var c1 = row.insertCell(0);
+                c1.innerHTML = data[i].name;
+                var row = table.insertRow(table.rows.length);
+                var c10 = row.insertCell(0);
+                c10.innerHTML = `<img src = ../img/${data[i].testcaseId}/${data[i].name}/${data[i].name}_Perf_CPU.png target="_blank" width: 100%>` ;
+                var row = table.insertRow(table.rows.length);
+                var c11 = row.insertCell(0);
+                c11.innerHTML =`<img src = ../img/${data[i].testcaseId}/${data[i].name}/${data[i].name}_Perf_MEM.png target="_blank" width: 100%>` ;
+                var row = table.insertRow(table.rows.length);
+                var c12 = row.insertCell(0);
+                c12.innerHTML = `<img src = ../img/${data[i].testcaseId}/${data[i].name}/${data[i].name}_Perf_Network.png target="_blank" width: 100%>` ;
+            }  
+        })
+    </script>
+    <table id="table" border="1" cellspacing="0" cellpadding="0">
+        <tr>
+            <th>性能信息</th>
+        </tr>
+    </table>
+</body>
+
+</html>

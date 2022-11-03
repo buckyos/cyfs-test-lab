@@ -42,4 +42,14 @@ export class BdtTask{
         }
         
     }
+    async report(testcaseId:string){
+      try {
+        const result = await this.prisma.bdt_task.findMany({
+          where: { testcaseId },orderBy:[{id : "asc"}]  
+        });
+        return {err:0,log:"getRecords success",result}
+      } catch (error) {
+        return {err:1,log:`${error}`}
+      }
+    }
 }

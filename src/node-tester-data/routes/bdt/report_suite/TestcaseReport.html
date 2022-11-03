@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BDT测试用例执行统计</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align:center;
+            min-height: 20px;
+            max-width: 300px;
+            min-width: 50px;
+            white-space:normal;
+            word-wrap:break-word;
+            word-break:break-all;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        th {
+            background-color: #7799AA;
+            color: white;
+        }
+    </style>
+</head>
+<script src="./jquery-3.3.1.min.js"></script>
+<body>
+    
+    <script>
+        $(function () {
+            let data = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = table.insertRow(table.rows.length);
+                var c1 = row.insertCell(0);
+                c1.innerHTML = data[i].testcaseId;
+                var c2 = row.insertCell(1);
+                c2.innerHTML = data[i].remark;
+                var c3 = row.insertCell(2);
+                c3.innerHTML = data[i].environment;
+                var c4 = row.insertCell(3);
+                c4.innerHTML = data[i].taskMult;
+                var c5 = row.insertCell(4);
+                c5.innerHTML = data[i].total;
+                var c6 = row.insertCell(5);
+                c6.innerHTML = data[i].success;
+                var c7 = row.insertCell(6);
+                c7.innerHTML = data[i].failed;
+                var c8 = row.insertCell(7);
+                c8.innerHTML = data[i].date;
+                var c9 = row.insertCell(8);
+                c9.innerHTML = data[i].createTime;
+                var c10 = row.insertCell(9);
+                c10.innerHTML = `<a href = ${data[i].details} target="_blank">详细信息</a>` ;
+                var c11 = row.insertCell(10);
+                c11.innerHTML = `<a href = ${data[i].action_info} target="_blank">操作统计</a>` ;
+                var c12 = row.insertCell(11);
+                c12.innerHTML = `<a href = ${data[i].perf_info} target="_blank">性能监控</a>` ;
+            }  
+        })
+    </script>
+    <table id="table" border="1" cellspacing="0" cellpadding="0">
+        <tr>
+            <th>用例ID</th>
+            <th>操作步骤</th>
+            <th>测试版本</th>
+            <th>运行并发</th>
+            <th>总数</th>
+            <th>成功</th>
+            <th>失败</th>
+            <th>执行日期</th>
+            <th>时间</th>
+            <th>详细信息</th>
+            <th>操作统计</th>
+            <th>性能监控</th>
+        </tr>
+    </table>
+</body>
+
+</html>

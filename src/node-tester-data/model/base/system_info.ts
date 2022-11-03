@@ -52,5 +52,15 @@ export type SystemInfoModel =  {
       
 
     }
-  
+    async getAgentList(testcaseId:string):Promise<{err:number,log:string,data?:any}>{
+      try {
+        let sql = "SELECT DISTINCT `name`,testcaseId from agent_system_info WHERE testcaseId = " + `"${testcaseId}";`;
+        console.info(sql);
+        let data = await this.prisma.$queryRawUnsafe(sql);
+        return { err: 0, log: "getRecords success", data }
+      } catch (error) {
+        return { err: 1, log: `${error}` }
+      }
+    }
+
   }

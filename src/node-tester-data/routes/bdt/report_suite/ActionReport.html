@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BDT测试操作详情</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align:center;
+            min-height: 20px;
+            max-width: 300px;
+            min-width: 50px;
+            white-space:normal;
+            word-wrap:break-word;
+            word-break:break-all;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        th {
+            background-color: #7799AA;
+            color: white;
+        }
+    </style>
+</head>
+<script src="../jquery-3.3.1.min.js"></script>
+<body>
+    
+    <script>
+        $(function () {
+            let data = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = table.insertRow(table.rows.length);
+                var c3 = row.insertCell(0);
+                c3.innerHTML = data[i].action_id;
+                var c4 = row.insertCell(1);
+                c4.innerHTML = data[i].type;
+                var c5 = row.insertCell(2);
+                c5.innerHTML = data[i].LN;
+                var c6 = row.insertCell(3);
+                c6.innerHTML = data[i].RN;
+                var c7 = row.insertCell(4);
+                c7.innerHTML = data[i].connect_time;
+                var c8 = row.insertCell(5);
+                c8.innerHTML = data[i].calculate_time;
+                var c9 = row.insertCell(6);
+                c9.innerHTML = data[i].set_time;
+                var c10 = row.insertCell(7);
+                c10.innerHTML = data[i].fileSize;
+                var c11 = row.insertCell(8);
+                c11.innerHTML = data[i].chunkSize;
+                var c12 = row.insertCell(9);
+                c12.innerHTML = data[i].send_time;
+                var c13 = row.insertCell(10);
+                c13.innerHTML = data[i].expect;
+                var c14 = row.insertCell(11);
+                c14.innerHTML = data[i].resultLog;
+                var c15 = row.insertCell(12);
+                c15.innerHTML = data[i].date;
+                var c16= row.insertCell(13);
+                c16.innerHTML = data[i].createTime;
+            }  
+        })
+    </script>
+    <table id="table" border="1" cellspacing="0" cellpadding="0">
+        <tr>
+            <th>操作ID</th>
+            <th>操作类型</th>
+            <th>LN</th>
+            <th>RN</th>
+            <th>连接时间</th>
+            <th>Calculate Time</th>
+            <th>Set Time</th>
+            <th>文件大小</th>
+            <th>Chunk大小</th>
+            <th>传输时间</th>
+            <th>预期结果</th>
+            <th>执行结果</th>
+            <th>运行日期</th>
+            <th>运行时间</th>
+        </tr>
+    </table>
+</body>
+
+</html>

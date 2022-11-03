@@ -39,4 +39,15 @@ export class BdtAgent{
       }
         
     }
-}
+    async report(testcaseId:string,name:string){
+      //console.info(`查询节点数据：${testcaseId} ,${name}`)
+      try {
+        const result = await this.prisma.bdt_agent.findFirst({
+          where: { testcaseId,name },orderBy:[{id : "asc"}]  
+        });
+        return {err:0,log:"getRecords success",result}
+      } catch (error) {
+        return {err:1,log:`${error}`}
+      }
+    }
+} 

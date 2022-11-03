@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试用例task执行详细信息</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align:center;
+            min-height: 20px;
+            max-width: 300px;
+            min-width: 50px;
+            white-space:normal;
+            word-wrap:break-word;
+            word-break:break-all;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        th {
+            background-color: #7799AA;
+            color: white;
+        }
+    </style>
+</head>
+<script src="../jquery-3.3.1.min.js"></script>
+<body>
+    
+    <script>
+        $(function () {
+            let data = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = table.insertRow(table.rows.length);
+                var c2 = row.insertCell(0);
+                c2.innerHTML = data[i].task_id;
+                var c3 = row.insertCell(1);
+                c3.innerHTML = data[i].LN;
+                var c4 = row.insertCell(2);
+                c4.innerHTML = data[i].RN;
+                var c5 = row.insertCell(3);
+                c5.innerHTML = data[i].expect_status;
+                var c6 = row.insertCell(4);
+                c6.innerHTML = data[i].state;
+                var c7 = row.insertCell(5);
+                c7.innerHTML = data[i].resultLog;
+                var c8 = row.insertCell(6);
+                c8.innerHTML = `<a href = ${data[i].details}  target="_blank">详细信息</a>` ;
+                var c9 = row.insertCell(7);
+                c9.innerHTML =  `<a href = ${data[i].LN_LOG}  target="_blank">点击下载</a>` ;
+                var c10 = row.insertCell(8);
+                c10.innerHTML =  `<a href = ${data[i].RN_LOG}  target="_blank">点击下载</a>` ;
+            }  
+        })
+    </script>
+    <table id="table" border="1" cellspacing="0" cellpadding="0">
+        <tr>
+            <th>任务id</th>
+            <th>LN</th>
+            <th>RN</th>
+            <th>预期结果</th>
+            <th>实际结果</th>
+            <th>错误信息</th>
+            <th>详细数据</th>
+            <th>LN日志</th>
+            <th>RN日志</th>
+        </tr>
+    </table>
+</body>
+
+</html>
