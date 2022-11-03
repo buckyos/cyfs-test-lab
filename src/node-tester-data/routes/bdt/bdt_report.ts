@@ -24,19 +24,15 @@ router.post('/reportHtml',
             return res.json({err:true,log:"缺少输入参数"})
         }
         let check = path.join(config.BDT_Report_Dir,req.body.version,"TestcaseReport.html");
-        let result : any = {}
-        if(!fs.pathExistsSync(check)){
-            let result_info =  await reportDataToHtml(req.body.version);
-            let result : any = result_info
-            result.zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
-            result.testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
-            result.action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+        let zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
+        let testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
+        let action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+        if(fs.pathExistsSync(check)){
+            let result = {err:0,log:"测试报告已经生成，请勿重复触发",zip_url,testcase_url,action_total_url}
             return res.json(result)
         }else{
-            let result : any = {err:0,log:"测试报告已经生成，请勿重复触发"}
-            result.zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
-            result.testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
-            result.action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+            let result_info =  await reportDataToHtml(req.body.version);
+            let result = {err:result_info.err,log:result_info.log,zip_url,testcase_url,action_total_url}
             return res.json(result)
         }
         
@@ -58,7 +54,7 @@ async function reportDataToHtml(environment: string) {
     let testcase_list = await testcase_mod.report(environment);
     if (testcase_list.err) {
         console.info(`查询测试用例失败:${testcase_list}`)
-        return { err: true, log: `查询测试用例失败:${testcase_list}` }
+        return { err: 1, log: `查询测试用例失败:${testcase_list}` }
     }
 
     //统计所有的Task
@@ -106,13 +102,12 @@ async function reportDataToHtml(environment: string) {
     let action_perf = await action_mod.report_version_perf(environment);
     console.info(`###### 统计总执行性能 ${JSON.stringify(action_perf)}`)
     if(action_perf.data){
-        
         let save = await reportDataToFile(action_perf.data, path.join(__dirname, "./report_suite/TotalActionPerf.html"), path.join(config.BDT_Report_Dir, environment,"perf"), `TotalActionPerf.html`) 
     } 
     let jquery = fs.copyFileSync(path.join(__dirname,"./report_suite/jquery-3.3.1.min.js"),path.join(config.BDT_Report_Dir, environment,"jquery-3.3.1.min.js"))
     let save = await reportDataToFile(testcase_list.result, path.join(__dirname, "./report_suite/TestcaseReport.html"), path.join(config.BDT_Report_Dir, environment), "TestcaseReport.html")
     let zip = await startZIP(path.join(config.BDT_Report_Dir, environment),environment);
-
+    return {err:0,log:`生成测试报告成功`}
 }
 
 async function reportSystemInfo(testcaseId:string,agent_list:Array<any>,save_path:string){
