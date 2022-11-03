@@ -1,2 +1,2 @@
 
-export const BDT_Report_Dir = "E:\\BDT\\测试报告";
+export const BDT_Report_Dir = "/opt/http_downloader/testcaseReport";
