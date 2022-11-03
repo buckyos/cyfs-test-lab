@@ -24,18 +24,22 @@ router.post('/reportHtml',
             return res.json({err:true,log:"缺少输入参数"})
         }
         let check = path.join(config.BDT_Report_Dir,req.body.version,"TestcaseReport.html");
-        let result : any
+        let result : any = {}
         if(!fs.pathExistsSync(check)){
             let result_info =  await reportDataToHtml(req.body.version);
-            result = result_info
+            let result : any = result_info
+            result.zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
+            result.testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
+            result.action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+            return res.json(result)
         }else{
-            result.err = 0;
-            result.log = "测试报告已经生成，请勿重复触发"
+            let result : any = {err:0,log:"测试报告已经生成，请勿重复触发"}
+            result.zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
+            result.testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
+            result.action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+            return res.json(result)
         }
-        result.zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
-        result.testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
-        result.action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
-        return res.json(result)
+        
     }
 );
 
