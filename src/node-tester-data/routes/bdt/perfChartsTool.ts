@@ -16,8 +16,8 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 节点网络监控',
-          subtext: `${agent} 节点数据统计 `,
+          text: 'BDT Network Monitoring',
+          subtext: `${agent}`,
           x: 'center'
         },
     
@@ -28,7 +28,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
           x: 'left',
           // y 设置垂直安放位置，默认全图顶端，可选值：'top' ¦ 'bottom' ¦ 'center' ¦ {number}（y坐标，单位px）
           y: 'top',
-          data: ['下行速度','上行速度']
+          data: ['download','upload']
         },
     
         //  图表距边框的距离,可选值：'百分比'¦ {number}（单位px）
@@ -41,7 +41,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
         },
     
         xAxis: {
-          name: '时间戳',
+          name: 'time',
           type: 'category',
           axisLine: {
             lineStyle: {
@@ -60,7 +60,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
         },
     
         yAxis: {
-          name: '传输速度Bytes/s',
+          name: 'Speed Bytes/s',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -75,7 +75,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
     
         series: [
           {
-            name: '下行速度',
+            name: 'download',
             data: received,
             type: 'line',
             // 设置折线上圆点大小
@@ -95,7 +95,7 @@ function bdteEchartsNetwork(filePath:string,agent:string,timeList:Array<number>,
             }
           },
           {
-            name: '上行速度',
+            name: 'upload',
             data: transmitted,
             type: 'line',
             // 设置折线上圆点大小
@@ -137,8 +137,8 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 节点CPU使用率监控',
-          subtext: `${agent} 节点数据统计 `,
+          text: 'BDT CPU Monitoring',
+          subtext: `${agent}`,
           x: 'center'
         },
     
@@ -162,7 +162,7 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
         },
     
         xAxis: {
-          name: '时间',
+          name: 'time',
           type: 'category',
           axisLine: {
             lineStyle: {
@@ -181,7 +181,7 @@ function bdteEchartsCPU(filePath:string,agent:string,timeList:Array<number>,cpu:
         },
     
         yAxis: {
-          name: 'CPU(百分比)',
+          name: 'CPU(All core)',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -235,8 +235,8 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
     let option = {
         backgroundColor: '#FFFFF5',
         title: {
-          text: 'BDT 节点内存使用监控',
-          subtext: `${agent} 节点数据统计 `,
+          text: 'BDT Memory Monitoring',
+          subtext: `${agent}`,
           x: 'center'
         },
     
@@ -247,7 +247,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
           x: 'left',
           // y 设置垂直安放位置，默认全图顶端，可选值：'top' ¦ 'bottom' ¦ 'center' ¦ {number}（y坐标，单位px）
           y: 'top',
-          data: ['内存']
+          data: ['Memory']
         },
     
         //  图表距边框的距离,可选值：'百分比'¦ {number}（单位px）
@@ -260,7 +260,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
         },
     
         xAxis: {
-          name: '时间',
+          name: 'time',
           type: 'category',
           axisLine: {
             lineStyle: {
@@ -279,7 +279,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
         },
     
         yAxis: {
-          name: '内存(KB)',
+          name: 'Memory(KB)',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值
@@ -293,7 +293,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
         }, 
         series: [
             {
-              name: '内存',
+              name: 'Memory',
               data: mem,
               type: 'line',
               // 设置折线上圆点大小
