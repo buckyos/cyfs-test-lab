@@ -1,10 +1,40 @@
-let run_param: string
-
+type API = typeof import('../cyfs_node/cyfs_node') 
+const cyfs= <any>{ }
+let run_param = "ci"
 if (run_param = "npm") {
-    export  *  from '../../cyfs-sdk-nightly@test';
+    import( "../cyfs_node/cyfs_node").then((module)=>{Object.assign(cyfs, module)
+    });
 } else if (run_param = "source") {
-    export *  from "../../cyfs-ts-sdk/";
+    import( "../cyfs_node/cyfs_node").then((module)=>{Object.assign(cyfs, module)
+    });
 }
 else if (run_param = "ci") {
-    export * as cyfs from "../../cyfs_node/";
+    import("../cyfs_node/cyfs_node").then((module)=>{Object.assign(cyfs, module)
+    });
 }
+
+async function importModule(moduleName:string):Promise<any>{
+    if (moduleName = "npm"){
+    console.log("importing ", moduleName);
+
+    const importedModule = import("../cyfs_node/cyfs_node");
+    console.log("\timported ...");
+    return importedModule;
+}else if (moduleName = "source")
+{
+    console.log("importing ", moduleName);
+
+    const importedModule =import("../cyfs_node/cyfs_node");
+    console.log("\timported ...");
+    return importedModule;
+}else if (moduleName = "ci"){
+    console.log("importing ", moduleName);
+
+    const importedModule = import("../cyfs_node/cyfs_node");
+    console.log("\timported ...");
+    return importedModule;
+}
+
+}
+
+export default  cyfs
