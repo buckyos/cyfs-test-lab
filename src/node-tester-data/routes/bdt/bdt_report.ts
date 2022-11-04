@@ -108,7 +108,7 @@ async function sleep(time: number) {
     })
 }
 
-async function reportDataToHtml(environment: string) {
+async function reportDataToHtml(environment: string):Promise<{err:number,log:string}> {
     //统计测试用例
     console.info(`begin running report ${environment}`)
     let testcase_mod = new BdtTestcase();
