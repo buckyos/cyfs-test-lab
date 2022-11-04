@@ -91,7 +91,7 @@ router.post('/setVersion',
             fs.removeSync(req.body.config_path);
         }
         try {
-            fs.writeFileSync(req.body.config_path,`export const testcase_version = "${req.body.version}"`)
+            fs.writeFileSync(req.body.config_path,`exports.testcase_version = "${req.body.version}"`)
             return res.json({err:0,log:"config sucesss",path:req.body.config_path,version:req.body.version})
         } catch (error) {
             return res.json({err:1,log:`${JSON.stringify(error)}`})
