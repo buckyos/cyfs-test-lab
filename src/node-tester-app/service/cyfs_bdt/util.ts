@@ -60,6 +60,9 @@ export class UtilTool {
             case "removeAgentCache":{
                 return await this.removeAgentCache(command);
             }
+            case "check_version":{
+                return await this.removeAgentCache(command);
+            }
         }
         this.m_logger.info(`#### not found utilRequest req_path `)
         return {err:ErrorCode.notFound}

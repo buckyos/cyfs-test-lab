@@ -41,6 +41,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     // 每台机器运行一个bdt 客户端
     await agentManager.allAgentStartBdtPeer(config)
+    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
     //(4) 测试用例执行器添加测试任务
     for(let [i,j] of randShuffle(labAgent.length)){
         if(i != j && labAgent[i].NAT + labAgent[j].NAT < 5 ){

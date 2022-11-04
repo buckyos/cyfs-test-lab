@@ -5,7 +5,7 @@ import {request,ContentType} from "./request";
 import * as config from "./config"
 import * as fs from 'fs';
 import * as path from 'path';
-import {testcase_version} from "./dev_config";
+
 var date = require("silly-datetime");
 const timeout = 300*1000;
 
@@ -47,8 +47,12 @@ export class TestRunner{
         this.Testcase!.date = date.format(new Date(),'YYYY/MM/DD');
         this.begin_time = Date.now();
         this.Testcase!.errorList = [];
-        if(testcase_version){
-            this.Testcase.environment = testcase_version;
+        
+        if(fs.existsSync(path.join(__dirname,"../../dev_config"))){
+            let dev_config =require("../../dev_config")
+            this.Testcase.environment = dev_config.testcase_version;
+        }else{
+            this.Testcase.environment = testcase.testcaseId; 
         }
         
     }
@@ -260,7 +264,7 @@ export class TestRunner{
         this.end_time = Date.now();
         setTimeout(async()=>{
             await this.agentManager.stopService();
-            this.m_interface.exit(err,log);
+            await this.m_interface.exit(err,log);
         },5*60*1000)
         if(this.failed==0){
             this.Testcase!.result = 0;
@@ -282,7 +286,7 @@ export class TestRunner{
             this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
         }
         await this.agentManager.stopService();
-        this.m_interface.exit(err,log);
+        await this.m_interface.exit(err,log);
     }
 
     async waitFinished(check:number = 5){

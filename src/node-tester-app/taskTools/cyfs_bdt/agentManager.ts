@@ -151,15 +151,22 @@ export class AgentManager {
         }
     }
     async stopService(){
-        let list = []
-        for(let agent of this.agentMap.values()){
-            list.push(new Promise(async(V)=>{
-                await agent.stopService();
-            }))  
-        }
-        for(let run of list){
-            await run;
-        }
+        return new Promise(async(V)=>{
+            setTimeout(()=>{
+                return V("run finished")
+            },10000)
+            let list = []
+            for(let agent of this.agentMap.values()){
+                list.push(new Promise(async(V)=>{
+                    await agent.stopService();
+                }))  
+            }
+            for(let run of list){
+                await run;
+            }
+            return V("run finished")
+        })
+        
     }
     async uploadSystemInfo(testcaseId:string,interval: number){
         return new Promise(async(V)=>{
