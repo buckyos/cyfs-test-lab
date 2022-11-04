@@ -21,7 +21,7 @@ async function request(method, route, postData, psotType) {
         method: method,
         body: JSON.stringify(postData),
         headers: { 'Content-Type': psotType },
-        timeout: 5 * 60 * 100
+        timeout: 10 * 60 * 100
     });
     sendResp = true;
     if (response.status != 200) {
