@@ -39,6 +39,25 @@ router.post('/reportHtml',
     }
 );
 
+router.post('/setVersion',
+    async (req, res) => {
+        console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
+        if( !req.body.version && !req.body.config_path){
+            return res.json({err:true,log:"缺少输入参数"})
+        }
+        if(fs.existsSync(req.body.config_path)){
+            fs.removeSync(req.body.config_path);
+        }
+        try {
+            fs.writeFileSync(req.body.config_path,`export const testcase_version = "${req.body.version}"`)
+            return res.json({err:0,log:"config sucesss",path:req.body.config_path,version:req.body.version})
+        } catch (error) {
+            return res.json({err:1,log:`${JSON.stringify(error)}`})
+        }
+    }
+);
+
+
 async function sleep(time: number) {
     return new Promise(async (V) => {
         setTimeout(() => {
