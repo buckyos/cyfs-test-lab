@@ -48,8 +48,8 @@ export class TestRunner{
         this.begin_time = Date.now();
         this.Testcase!.errorList = [];
         
-        if(fs.existsSync(path.join(__dirname,"../../dev_config"))){
-            let dev_config =require("../../dev_config")
+        if(fs.existsSync(path.join(__dirname,"../dev_config.js"))){
+            let dev_config =require("../dev_config")
             this.Testcase.environment = dev_config.testcase_version;
         }else{
             this.Testcase.environment = testcase.testcaseId; 

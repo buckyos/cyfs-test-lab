@@ -153,10 +153,12 @@ async function create_job(name:string,serviceid:number,servicename:string,runNum
     return  resp.data.jobid
 }
 
-async function run_job(name:string,serviceid:number,servicename:string,runNum:number){
+async function run_job(name:string,serviceid:number,servicename:string,runNum:number,version:string){
+    let set_version = await setVersion(version);
     let jobid = await create_job(name,serviceid,servicename,runNum);
     let run = await startJob(jobid);
-    let check = await checkJobRunState(jobid,1*60*60*1000)
+    let check = await checkJobRunState(jobid,1*60*60*1000);
+    let get_testcase_report = await getTestReport(version);
     return check
 }
 
@@ -210,7 +212,7 @@ async function checkJobRunState(jobId:number,timeout:number) {
             let job = check.data.jobs[index];
             //console.info(`识别到测试任务${jobId},状态为：${job.status}`)
             if(job.jobid == jobId){
-                console.info(`识别到测试任务${jobId},状态为：${job.status}`)
+                console.info(`识别到测试任务${jobId},状态为：${job.status},当前已经运行${Date.now()-start} `)
                 if(job.status!=1){
                     return {err:0,log:`运行任务 ${jobId} 完成`}
                 }
@@ -221,12 +223,12 @@ async function checkJobRunState(jobId:number,timeout:number) {
     return {err:0,log:`运行任务 ${jobId} 超时退出`}
     
 }
-async function setVersion(version:number) {
+async function setVersion(version:string) {
     console.info("send cpmmand to server update testcase version")
     let config_path = "/node_tester_app/tasks/dev_config.js"
     let run =await data_request.request("POST","api/bdt/report/setVersion",{version,config_path},ContentType.json)
 }
-async function getTestReport(version:number) {
+async function getTestReport(version:string) {
     console.info("send cpmmand to server,build testcase report")
     let run =await data_request.request("POST","api/bdt/report/reportHtml",{version},ContentType.json)
     console.info("create testcase report resp:")
@@ -240,6 +242,10 @@ async function main() {
     let serviceid =  Number(SysProcess.argv[4]);
     let servicename =  SysProcess.argv[5];
     let runNum = Number(SysProcess.argv[6]);
+    let version = String(SysProcess.argv[7]);
+    if(!version){
+        version =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
+    }
     switch(opt){
         case "create_task" : {
             await create(name,serviceid,servicename)
@@ -254,7 +260,7 @@ async function main() {
             break;
         }
         case "run_job" : {
-            await run_job(name,serviceid,servicename,runNum)
+            await run_job(name,serviceid,servicename,runNum,version)
             break;
         }
         default : {
