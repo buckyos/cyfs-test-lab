@@ -11,8 +11,8 @@ import {BDTPerfReport} from "./perfChartsTool"
 import {startZIP} from "./zip"
 import * as path from "path";
 import * as fs from "fs-extra";
-
-
+import { BdtReport ,ReportModel} from "../../model/bdt/bdt_report"
+var date = require("silly-datetime");
 router.get("/text", (req, res) => {
     res.json({ msg: "bdt testcase report" });
 });
@@ -32,13 +32,55 @@ router.post('/reportHtml',
             return res.json(result)
         }else{
             let result_info =  await reportDataToHtml(req.body.version);
+            let mod =  new BdtReport();
+            let now =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
+            let data:ReportModel = {
+                version : req.body.version!,
+                zip_url,
+                testcase_url,
+                action_total_url,
+                date : now
+            }
+            let save =await mod.add(data);
             let result = {err:result_info.err,log:result_info.log,zip_url,testcase_url,action_total_url}
             return res.json(result)
-        }
-        
+        }  
     }
 );
 
+router.post('/reportList',
+    async (req, res) => {
+        console.info(`#receive reportList req,body = ${JSON.stringify(req.body)} `)
+        let mod =  new BdtReport(); 
+        let result = await mod.querList();
+        return res.json(result)
+    }
+);
+
+router.post('/reportTestcase',
+    async (req, res) => {
+        console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
+        if(!req.body.testcaseId){
+            return res.json({err:true,log:"缺少输入参数"})
+        }
+        let testcase_mod = new BdtTestcase();
+        let testcase = await testcase_mod.query(req.body.testcaseId!);
+        let testcaseId = testcase.result![0].testcaseId!;
+        let environment = testcase.result![0].environment!;
+        let check = path.join(config.BDT_Report_Dir,environment,"task",`${testcaseId}.html`);
+        if(fs.pathExistsSync(check)){
+            let result = {err:0,log:"测试报告已经生成，请勿重复触发",testcase_url:check}
+            return res.json(result)
+        }else{
+            console.info(`testcase: ${testcaseId}`)
+            let  testcase_info : any = testcase;
+            let result_info = await reportTestcase(testcaseId,environment);  
+            let result = {err:0,log:"create bdt testcase report sucesss",testcase_url:check}
+            return res.json(result)
+        }
+           
+    }
+);
 router.post('/setVersion',
     async (req, res) => {
         console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
@@ -142,7 +184,7 @@ async function reportTestcase(testcaseId: string,environment:string) {
     let task_list = await task_mod.report(testcaseId);
     if (task_list.err) {
         console.info(`查询测试用例失败:${task_list}`)
-        return { err: true, log: `查询测试用例失败:${task_list}` }
+        return { err: 0, log: `查询测试用例失败:${task_list}` }
     }
     let runMax = 20;
     let running = [];
@@ -178,7 +220,7 @@ async function reportTestcase(testcaseId: string,environment:string) {
     }
     let save = await reportDataToFile(task_list.result, path.join(__dirname, "./report_suite/TaskReport.html"), path.join(config.BDT_Report_Dir,environment,"task"), `${testcaseId}.html`)
     
-    return
+    return { err: 0, log: `查询测试用例成功` }
 }
 
 async function reportTask(taskId: string,environment:string) {

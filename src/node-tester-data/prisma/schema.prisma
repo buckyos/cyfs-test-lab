@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:Bucky@0809@192.168.200.175:3306/cyfs_test_lab"
+  url      = "mysql://root:Bucky@0809@192.168.100.205:3306/cyfs_test_lab"
 }
 
 model agent {
@@ -316,4 +316,13 @@ model users {
   avatar   String?   @db.VarChar(255)
   identity String?   @db.VarChar(255)
   date     DateTime? @db.DateTime(0)
+}
+
+model bdt_report {
+  id               Int     @id @default(autoincrement())
+  version          String? @db.VarChar(255)
+  zip_url          String? @db.VarChar(255)
+  testcase_url     String? @db.VarChar(255)
+  action_total_url String? @db.VarChar(255)
+  date             String? @db.VarChar(255)
 }
