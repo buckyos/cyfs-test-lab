@@ -17,6 +17,10 @@ router.get("/text", (req, res) => {
     res.json({ msg: "bdt testcase report" });
 });
 
+
+let ReportingVersion = "";
+
+
 router.post('/reportHtml',
     async (req, res) => {
         console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
@@ -27,11 +31,16 @@ router.post('/reportHtml',
         let zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
         let testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
         let action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
-        if(fs.pathExistsSync(check)){
-            let result = {err:0,log:"测试报告已经生成，请勿重复触发",zip_url,testcase_url,action_total_url}
+        if(fs.pathExistsSync(check) || ReportingVersion == `${req.body.version}`){
+            let result = {err:0,log:"请勿重复触发",zip_url,testcase_url,action_total_url}
             return res.json(result)
         }else{
-            let result_info =  await reportDataToHtml(req.body.version);
+            setTimeout(()=>{
+                let result = {err: 0,log:"测试报告生成中，链接需等待一定时间打开",zip_url,testcase_url,action_total_url}
+                return res.json(result)
+            },60*1000)
+            ReportingVersion = `${req.body.version}`;
+            let resultInfo = await reportDataToHtml(req.body.version);
             let mod =  new BdtReport();
             let now =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
             let data:ReportModel = {
@@ -42,13 +51,14 @@ router.post('/reportHtml',
                 date : now
             }
             let save =await mod.add(data);
-            let result = {err:result_info.err,log:result_info.log,zip_url,testcase_url,action_total_url}
+            ReportingVersion = "";
+            let result = {err: 0,log:"测试报告生成完成",zip_url,testcase_url,action_total_url}
             return res.json(result)
         }  
     }
 );
 
-router.post('/reportList',
+router.get('/reportList',
     async (req, res) => {
         console.info(`#receive reportList req,body = ${JSON.stringify(req.body)} `)
         let mod =  new BdtReport(); 
@@ -56,7 +66,6 @@ router.post('/reportList',
         return res.json(result)
     }
 );
-
 router.post('/reportTestcase',
     async (req, res) => {
         console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
@@ -129,7 +138,7 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
         let  testcase_info : any = testcase;
         testcase_info.details = `./task/${testcaseId}.html`;
         while (runMax <= 0) {
-            await sleep(1000)
+            await sleep(100)
             console.info(`runMax:${runMax}`)
         }
         running.push(new Promise(async (V) => {
@@ -153,7 +162,7 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
             let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcaseId}.html`) 
     
         }
-        await sleep(1000)
+        await sleep(100)
 
     }
     for (let run of running) {
@@ -194,7 +203,7 @@ async function reportTestcase(testcaseId: string,environment:string) {
         task_info.details = `../action/${taskId}.html`;
         console.info(`task: ${taskId}`)
         while (runMax <= 0) {
-            await sleep(1000)
+            await sleep(100)
             console.info(`runMax:${runMax}`)
         }
         // 获取日志链接
