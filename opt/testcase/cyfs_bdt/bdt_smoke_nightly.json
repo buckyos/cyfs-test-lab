@@ -1,0 +1,52 @@
+{
+    "rust_bdt": {
+        "name": "bdt_smoke_nightly",
+        "version": "1.01",
+        "distribute": 1,
+        "runrule": 2,
+        "serviceid": 349,
+        "servicename": "cyfs_bdt_nightly",
+        "list": [
+            {
+                "desc": "NDN_Chunk",
+                "taskid": 371
+            },
+            {
+                "desc": "NDN_ChunkList",
+                "taskid": 372
+            },
+            {
+                "desc": "NDN_Dir",
+                "taskid": 373
+            },
+            {
+                "desc": "NDN_DualSource",
+                "taskid": 374
+            },
+            {
+                "desc": "NDN_File",
+                "taskid": 375
+            },
+            {
+                "desc": "NDN_FileRange",
+                "taskid": 376
+            },
+            {
+                "desc": "Stream_AllEP_TunnelSelect",
+                "taskid": 377
+            },
+            {
+                "desc": "Stream_FristQA",
+                "taskid": 378
+            },
+            {
+                "desc": "Stream_TCP_IPV4",
+                "taskid": 379
+            },
+            {
+                "desc": "Stream_UDP_IPV4",
+                "taskid": 380
+            }
+        ]
+    }
+}
