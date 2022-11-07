@@ -77,8 +77,6 @@ async function upload(filePath, filename) {
         var req = http.request(options, function (res) {
             res.setEncoding('utf8');
             res.on('data', function (chunk) {
-                //console.log(boundaryKey);
-                //console.log('body: ' + chunk);
                 data += chunk;
             });
             res.on('end', function () {

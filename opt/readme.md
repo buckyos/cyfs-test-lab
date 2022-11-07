@@ -18,12 +18,37 @@ git pull
 git checkout master // 切换分支操作，选择执行
 ```
 ### BDT 
-#### 触发测试用例
-+ 初始化环境
+#### 执行案例
 ```
 cd cyfs-test-lab/opt
 npm i
+cd ../src
+node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 nightly release
+node ..\opt\testcase\cyfs_bdt\upload_task.js run_job bdt_smoke_nightly 359 cyfs_bdt_nightly 1
+``` 
+
+#### 编译测试客户端&&发布测试包
++ 发布BDT测试包脚本
 ```
+cd src
+node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools ${buildnumber} ${channel} release
+```
++ dev 测试包
+```
+cd src
+node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 dev release
+```
++ nightly包
+```
+cd src
+node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 nightly release
+```
++ beta 包
+```
+cd src
+node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 beta release
+```
+#### 触发测试用例
 + dev回归测试最小集
 ```
 cd src
@@ -50,26 +75,4 @@ node ..\opt\testcase\cyfs_bdt\upload_task.js run_job bdt_smoke_beta 350 cyfs_bdt
     "testcase_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/TestcaseReport.html",
     "action_total_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/TotalActionPerf.html"
 }
-```
-#### 编译测试客户端&&发布测试包
-
-+ 发布BDT测试包脚本
-```
-cd src
-node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools ${buildnumber} ${channel} release
-```
-+ dev 测试包
-```
-cd src
-node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 dev release
-```
-+ nightly包
-```
-cd src
-node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 nightly release
-```
-+ beta 包
-```
-cd src
-node ..\opt\script\build.js x86_64-pc-windows-msvc;x86_64-unknown-linux-gnu tools 1 beta release
 ```

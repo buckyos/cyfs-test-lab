@@ -48,6 +48,10 @@ async function startZIP(service) {
     return new Promise(async(V)=>{
         var currPath = __dirname; //文件的绝对路径 当前当前js所在的绝对路径
         var service_path = path.join(currPath, "../service",service);
+        let save_path = path.join(service_path ,`${service}.zip`);
+        if(fs.pathExistsSync(save_path)){
+            fs.removeSync(save_path)
+        }
         let run =await readDir(zip, service_path);
             zip.generateAsync({
                 type: "nodebuffer",
@@ -56,8 +60,8 @@ async function startZIP(service) {
                     level: 9
                 }
             }).then(function (content) {
-                let save_path = path.join(service_path ,`${service}.zip`);
-                if(fs.pathExistsSync(save_path)){
+                
+                if(!fs.pathExistsSync(save_path)){
                     console.info("create file")
                     let run = fs.createFileSync(save_path);
                 }

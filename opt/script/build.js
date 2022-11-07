@@ -117,8 +117,8 @@ async function main(){
         fs.copyFileSync(path.join(__dirname,"../../src/target/x86_64-unknown-linux-gnu/release/bdt-tools"),path.join(__dirname,"../service/cyfs_bdt/bdt-tools"))
     }
     let zip = await zipTask.startZIP("cyfs_bdt");
-    let upload_zip = await request.upload(path.join(__dirname,"../service/cyfs_bdt","cyfs_bdt.zip"));
-    console,info(`上传压缩包：${JSON.stringify(upload_zip)}`)
+    let upload_zip = await request.upload(path.join(__dirname,"../service/cyfs_bdt","cyfs_bdt.zip"),"cyfs_bdt.zip");
+    console,info(`上传压缩包：${JSON.stringify(upload_zip).replace("192.168.200.175","192.168.100.205")}`)
     let upload_service = await updateService(serviceid,servicename,upload_zip.url, upload_zip.md5)
     console,info(`更新服务：${JSON.stringify(upload_service)}`)
 }
