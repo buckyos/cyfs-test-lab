@@ -1,4 +1,4 @@
-cd ../../
+cd ../
 git pull
 cd /CYFS
 git pull

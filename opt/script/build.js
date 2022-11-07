@@ -85,6 +85,13 @@ async function main(){
     if (!fs.existsSync('Cargo.toml')) {
         console.error('cannot find Cargo.toml in cwd! check working dir')
     }
+    // 更新CYFS 代码
+    if(channel == "nightly"){
+        child_process.execSync(`..\\opt\\script\\init_git.bat main`)
+    }else if (channel == "beta"){
+        child_process.execSync(`..\\opt\\script\\init_git.bat beta`)
+    }
+    
     // 编译文件
     console.info(`###### 编译文件`)
     for (const type of types) {
