@@ -1,5 +1,6 @@
 export class ConfigInfo {
     public static apiServer = 'http://192.168.100.205:11081';
+    public static dataServer = 'http://192.168.100.205:5000';
     public static uploadServer = 'http://192.168.100.205:11000/uploadFile/';
 }
 

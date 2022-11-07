@@ -39,4 +39,28 @@ export class FetchHelper {
             }); 
         });
     }
+    public static async PostFetchData(url: any, option: {} & any): Promise<{err: number, value?: any}> {
+        option.method = 'get';
+        option.headers = {};
+        option.redirect = 'follow';
+        url = ConfigInfo.dataServer + url
+        //option.body = JSON.stringify(option.body);
+        console.info(url)
+        return await new Promise<{err: number, value?: any}>((v) => {
+            fetch(url, option).then((response)=>{
+                //console.info(`resp = ${JSON.stringify(response.text())}`)
+                if (response.status !== 200) {
+                    return {err: 1};
+                }
+                response.json().then((value) => {
+                    //console.info(`value = ${JSON.stringify(value)}`)
+                     v({err: 0, value});
+                }).catch(() =>{
+                    v({err: 1});
+                });
+            }).catch(() => {
+                v({err: 1});
+            }); 
+        });
+    }
 }

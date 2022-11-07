@@ -1,44 +1,31 @@
 <template>
   <div v-loading="loading">
-
-    <el-table :data="agentList" border style="width: 100%">
-      <el-table-column prop="agentid" label="机器ID" width="500"></el-table-column>
-      <el-table-column prop="env" label="网络环境"></el-table-column>
-      <el-table-column label="节点标签">
+    <el-table :data="reportList" border style="width: 100%">
+      <el-table-column prop="id" label="id" width="200" align="center">
+      </el-table-column>
+      <el-table-column prop="version" label="测试版本" width="400" align="center"></el-table-column>
+      <el-table-column prop="zip_url" label="测试报告压缩包" width="300" align="center">
         <template slot-scope="scope">
-          <el-tag
-            v-for="tag in handleParseJson(scope.row.tags)"
-            :key="tag"
-            :disable-transitions="true"
-          >{{tag}}</el-tag>
+          <a :href="scope.row.zip_url" target="_blank" class="buttonText">点击下载测试报告</a>
         </template>
       </el-table-column>
-      <el-table-column prop="desc" label="描述" width="200"></el-table-column>
-      <el-table-column label="系统版本" width="80" prop="version">
-      </el-table-column>
-      <el-table-column label="平台" width="80" prop="platform">
-      </el-table-column>
-      <el-table-column label="节点属性" width="80">
-        <template slot-scope="scope">{{scope.row.accessible===1 ? "自建节点" : "外网节点"}}</template>
-      </el-table-column>
-      <el-table-column label="状态" width="80">
+      <el-table-column prop="testcase_url" label="测试报告链接" width="300" align="center">
         <template slot-scope="scope">
-          <el-tag
-          v-if="scope.row.status===1"
-          type="success"
-          disable-transitions>在线</el-tag>
-          <el-tag
-          v-else
-          type="info"
-          disable-transitions>离线</el-tag>
+          <a :href="scope.row.testcase_url" target="_blank" class="buttonText">点击查看测试报告</a>
         </template>
       </el-table-column>
+      <el-table-column prop="action_total_url" label="测试数据统计" width="300" align="center">
+         <template slot-scope="scope">
+          <a :href="scope.row.action_total_url" target="_blank" class="buttonText">点击查看数据统计</a>
+        </template>
+      </el-table-column>
+      <el-table-column prop="date" label="统计日期" width="400" align="center"></el-table-column>
     </el-table>
   </div>
 </template>
 
 <script>
-import { AgentProvider } from "../data/AgentProvider";
+import { ReportProvider } from "../data/ReportProvider";
 export default {
   data() {
     let validJson = (rule, value, callback) => {
@@ -52,13 +39,6 @@ export default {
     return {
       tagInputVisible: false,
       tagInputValue: '',
-      editInfo: {
-        desc: '',
-        accessibleLabel: '0',
-        tags:[],
-        env:'[]',
-        agentid: '',
-      },
       currEditIndex: -1,
       currViewAgentid: "",
       currViewIndex: -1,
@@ -67,7 +47,7 @@ export default {
       viewLoading: false,
       dialogDetailVisible: false,
       dialogEditVisible: false,
-      agentList: [],
+      reportList: [],
       services: [],
       tasks: [],
       agentRules: {
@@ -76,35 +56,11 @@ export default {
     };
   },
   methods: {
-    handleCloseTag: function(tag) {
-      this.editInfo.tags.splice(this.editInfo.tags.indexOf(tag), 1);
-    },
-
-    showTagInput: function() {
-      this.tagInputVisible = true;
-      this.$nextTick(_ => {
-        this.$refs.saveTagInput.$refs.input.focus();
-      });
-    },
-
-    handleTagInputConfirm: function() {
-      let tagInputValue = this.tagInputValue;
-      if (tagInputValue) {
-        this.editInfo.tags.push(tagInputValue);
-      }
-      this.tagInputVisible = false;
-      this.tagInputValue = "";
-    },
-
-    handleParseJson: function(str) {
-      return JSON.parse(str);
-    },
-
     handleView: function(index, row) {
       this.viewLoading = true;
       this.dialogDetailVisible = true;
       this.currViewIndex = index;
-      this.currViewAgentid = this.agentList[index].agentid;
+      this.currViewAgentid = this.reportList[index].id;
       AgentProvider.getInstance()
         .worklist(this.currViewAgentid)
         .then(value => {
@@ -126,31 +82,23 @@ export default {
           this.tasks = value.worklist.tasks;
         });
     },
-
-
-
-
   },
-
   created: function() {
-    AgentProvider.getInstance()
+    ReportProvider.getInstance()
       .list()
       .then(value => {
         this.loading = false;
         if (!value.succ) {
           this.$message({
-            message: `更新机器列表失败！！msg=${value.msg}`,
+            message: `更新失败！！msg=${value.msg}`,
             type: "warning"
           });
           return;
         }
-
-        this.agentList = [];
-        this.agentList = value.entrys;
+        this.reportList = [];
+        this.reportList = value.entrys;
       });
   },
-
-  destroyed: function() {}
 };
 </script>
 
