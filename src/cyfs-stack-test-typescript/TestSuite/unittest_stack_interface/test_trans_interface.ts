@@ -216,7 +216,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
             stack_ood = ZoneSimulator.zone1_ood_stack!;
             stack_ood2 = ZoneSimulator.zone1_device2_stack!;
         })
-        it.only("下载进度测试",async()=>{
+        it("下载进度测试",async()=>{
             let fileName = RandomGenerator.string(10);
             let filePath = path.join(__dirname,"../../test_cache_file/source")
             let file = RandomGenerator.createRandomFile(filePath,fileName,10);

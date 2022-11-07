@@ -1,6 +1,6 @@
 import assert = require('assert');
 import * as cyfs from "../../cyfs_node/cyfs_node"
-import { ZoneSimulator, get_len_buf } from "../../common/utils";
+import { ZoneSimulator, get_len_buf, create_people, create_device } from "../../common/utils";
 import * as myHandler from "./handler"
 
 //初始化日志
@@ -11,30 +11,7 @@ cyfs.clog.enable_file_log({
     file_max_count: 10,
 });
 ``
-async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, access?: cyfs.AccessString, req_path?: string) {
-    // peerId stack_runtime.local_device_id().to_base_58()
-    const saveobjectOwner = cyfs.ObjectId.from_base_58(peerId).unwrap()
-    const saveobject = cyfs.TextObject.create(cyfs.Some(saveobjectOwner), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-    const saveObjectId = saveobject.desc().calculate_id();
-    console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
-    const object_raw = saveobject.to_vec().unwrap();
-    const req: cyfs.NONPutObjectOutputRequest = {
-        common: {
-            req_path: req_path,
-            dec_id: undefined,
-            flags: 0,
-            target: cyfs.ObjectId.from_base_58(peerId).unwrap(),
-            level: cyfs.NONAPILevel.NOC //设置路由类型
-        },
-        object: new cyfs.NONObjectInfo(saveObjectId, object_raw),
-        access: access
-    };
-    const put_ret = await stack.non_service().put_object(req);
-    //校验结果
-    console.info('put_object result:', put_ret);
-    assert(!put_ret.err, `put object failed,err : ${JSON.stringify(put_ret)}`);
-    return { saveobject, saveObjectId, saveobjectOwner, object_raw }
-}
+
 
 const handlerManager = new myHandler.handlerManager(); //用来回收handler 和监听校验handler触发
 
@@ -60,7 +37,7 @@ let sysdec: cyfs.ObjectId
 
 
 
-describe("SharedCyfsStack NON相关接口测试", function () {
+describe("SharedCyfsStack crypto相关接口测试", function () {
     this.timeout(0);
     this.beforeAll(async function () {
 
@@ -89,7 +66,6 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
         ZoneSimulator.clearZoneSimulator();
-        process.exit(0)
     })
 
 
@@ -377,7 +353,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto 调用 系统已授权sign_object，zone内不同设备", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/sign_object/", cyfs.AccessString.full())
-          
+
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
             const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
@@ -398,6 +374,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!resp.err, "调研sign接口没授权就成功了")
 
         })
+
         it("crypto device1调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt", async () => {
 
             console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
@@ -431,7 +408,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!deresp.err, `解密数据出错 ：${deresp}`)
 
         })
-        it.only("crypto device2调用 encrypt_data、decrypt_data EncryptData", async () => {
+        it("crypto device2调用 encrypt_data、decrypt_data EncryptData", async () => {
 
             // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
@@ -700,7 +677,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!deresp.err, `解密数据出错 ：${deresp}`)
 
         })
-        it("crypto ood调用 encrypt_data、decrypt_data EncryptData", async () => {
+        it("crypto ood调用 encrypt_data、 EncryptData模式 不支持", async () => {
 
             // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
@@ -720,25 +697,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             };
             const enresp = await zone1ood.crypto().encrypt_data(enreq);
             console.log(enresp)
-            assert(!enresp.err, `加密数据出错 ：${enresp}`)
-
-
-            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
-            let sdec = cyfs.get_system_dec_app().object_id
-            let sstack = zone1ood.fork_with_new_dec(sdec)
-            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
-
-            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
-                common: {
-                    flags: 0
-                },
-                data: enresp.unwrap().result,
-                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
-                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
-            };
-            const deresp = await zone1ood.crypto().decrypt_data(dereq);
-            console.log(deresp)
-            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
 
         })
         //encrypt_data、decrypt_data同zone跨dec的权限
@@ -829,39 +788,37 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         })
         //encrypt_data、decrypt_datat添加handler的情况(待开发完成)
-        it.skip("crypto调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt handler", async () => {
-
-            let hpermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/sign_object/",
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
-            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(hpermission)
-
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-            const object_id = obj.desc().calculate_id();
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
             // 添加req_path       
             let path = "/test_non/reqpath/"
             let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
             console.log("------------------------> " + req_path)
-       
+
             const ret2 = await handlerManager.addHandler(
                 `${zone1device1.local_device_id().to_base_58()}`,
                 zone1device1,
-                cyfs.RouterHandlerCategory.DecryptData,
-                cyfs.RouterHandlerChain.Handler,
-                "post-object-handler-001",
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
                 1,
                 undefined,
                 req_path,
                 cyfs.RouterHandlerAction.Default,
-                myHandler.SignObjectHandlerDefault,
-                "CryptoHandlerDefault",
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
                 1,
             )
             assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
             let check = handlerManager.startHandlerCheck(10 * 1000);
+
             console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
 
             const enreq: cyfs.CryptoEncryptDataOutputRequest = {
                 common: {
+                    req_path: req_path,
                     flags: 0
                 },
                 data: undefined,
@@ -872,32 +829,38 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(enresp)
             assert(!enresp.err, `加密数据出错 ：${enresp}`)
 
-
-            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
-            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
-
-            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
-                common: {
-                    flags: 0
-                },
-                data: enresp.unwrap().result,
-                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
-                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
-            };
-            const deresp = await zone1device1.crypto().decrypt_data(dereq);
-            console.log(deresp)
-            assert(!deresp.err, `解密数据出错 ：${deresp}`)
             //检查监听事件是否触发
             let handlerResult = await check
-            console.info(`sign_object handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
             assert(!handlerResult.err)
 
         })
-        it.skip("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
+        it("crypto调用 encrypt_data EncryptData PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-            // const object_id = obj.desc().calculate_id();
-            // const ob = obj.to_vec().unwrap()
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
 
             let ob = get_len_buf(48)
             console.log("----------------------=====================================:  " + ob.byteLength)
@@ -905,6 +868,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
             const enreq: cyfs.CryptoEncryptDataOutputRequest = {
                 common: {
+                    req_path: req_path,
                     flags: 0
                 },
                 data: ob,
@@ -915,12 +879,1003 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(enresp)
             assert(!enresp.err, `加密数据出错 ：${enresp}`)
 
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
 
-            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.EncryptDataHandlerPass,
+                "EncryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PreCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.EncryptDataHandlerPass,
+                "EncryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.EncryptDataHandlerPass,
+                "EncryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.EncryptDataHandlerPass,
+                "EncryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.EncryptDataHandlerDrop,
+                "EncryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PreCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.EncryptDataHandlerDrop,
+                "EncryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.EncryptDataHandlerDrop,
+                "EncryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.EncryptDataHandlerDrop,
+                "EncryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.EncryptDataHandlerReject,
+                "EncryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PreCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.EncryptDataHandlerReject,
+                "EncryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.EncryptDataHandlerReject,
+                "EncryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.EncryptDataHandlerReject,
+                "EncryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.EncryptDataHandlerResponse,
+                "EncryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PreCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.EncryptDataHandlerResponse,
+                "EncryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.EncryptDataHandlerResponse,
+                "EncryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.EncryptDataHandlerResponse,
+                "EncryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
 
             const dereq: cyfs.CryptoDecryptDataOutputRequest = {
                 common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
                     flags: 0
                 },
                 data: enresp.unwrap().result,
@@ -931,15 +1886,1938 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(deresp)
             assert(!deresp.err, `解密数据出错 ：${deresp}`)
 
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
         })
-        it.skip("crypto跨dec设备调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt handler", async () => {
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
 
             console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
 
             const enreq: cyfs.CryptoEncryptDataOutputRequest = {
                 common: {
-                    req_path: undefined,
-                    dec_id: undefined,
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PreCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.DecryptDataHandlerPass,
+                "DecryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PreCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.DecryptDataHandlerPass,
+                "DecryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PostCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.DecryptDataHandlerPass,
+                "DecryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PostCrypto+action=pass", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Pass,
+                myHandler.DecryptDataHandlerPass,
+                "DecryptDataHandlerPass",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PreCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.DecryptDataHandlerResponse,
+                "DecryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PreCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.DecryptDataHandlerResponse,
+                "DecryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PostCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.DecryptDataHandlerResponse,
+                "DecryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PostCrypto+action=response", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Response,
+                myHandler.DecryptDataHandlerResponse,
+                "DecryptDataHandlerResponse",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PreCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.DecryptDataHandlerDrop,
+                "DecryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PreCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.DecryptDataHandlerDrop,
+                "DecryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PostCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.DecryptDataHandlerDrop,
+                "DecryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PostCrypto+action=drop", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Drop,
+                myHandler.DecryptDataHandlerDrop,
+                "DecryptDataHandlerDrop",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PreCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.DecryptDataHandlerReject,
+                "DecryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PreCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.DecryptDataHandlerReject,
+                "DecryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data GenAESKeyAndEncrypt PostCrypto+action=Reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.DecryptDataHandlerReject,
+                "DecryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 decrypt_data EncryptData PostCrypto+action=reject", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Reject,
+                myHandler.DecryptDataHandlerReject,
+                "DecryptDataHandlerReject",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(deresp.err, `解密数据出错 ：${deresp}`)
+
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: EncryptData `);
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data GenAESKeyAndEncrypt PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data EncryptData PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: EncryptData `);
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto调用 encrypt_data-PostCrypto GenAESKeyAndEncrypt-PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data-PostCrypto EncryptData PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: EncryptData `);
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data-PreCrypto GenAESKeyAndEncrypt PostCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto调用 encrypt_data-PostCrypto EncryptData PreCrypto", async () => {
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: EncryptData `);
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device1.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+        it("crypto跨dec设备调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt postCrypto", async () => {
+
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    dec_id: zone1device2_dec_id,
                     target: zone1device1.local_device_id().object_id,
                     flags: 0
                 },
@@ -951,32 +3829,76 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(enresp)
             assert(!enresp.err, `加密数据出错 ：${enresp}`)
 
-            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
-            let sdec = cyfs.get_system_dec_app().object_id
-            let sstack = zone1device2.fork_with_new_dec(sdec)
-            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
 
             const dereq: cyfs.CryptoDecryptDataOutputRequest = {
                 common: {
-                    req_path: undefined,
-                    dec_id: undefined,
-                    target: zone1device1.local_device_id().object_id,
+                    req_path: req_path,
                     flags: 0
                 },
                 data: enresp.unwrap().result,
                 decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
                 flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
             };
-            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
             console.log(deresp)
             assert(!deresp.err, `解密数据出错 ：${deresp}`)
 
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
         })
-        it.skip("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
+        it("crypto跨Dec设备调用 encrypt_data、decrypt_data EncryptData postCrypto", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-            // const object_id = obj.desc().calculate_id();
-            // const ob = obj.to_vec().unwrap()
+
+            let hpermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/post_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(hpermission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PostCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
 
             let ob = get_len_buf(48)
             console.log("----------------------=====================================:  " + ob.byteLength)
@@ -984,8 +3906,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
             const enreq: cyfs.CryptoEncryptDataOutputRequest = {
                 common: {
-                    req_path: undefined,
-                    dec_id: undefined,
+                    req_path: req_path,
+                    dec_id: zone1device2_dec_id,
                     target: zone1device1.local_device_id().object_id,
                     flags: 0
                 },
@@ -1004,7 +3926,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
             const dereq: cyfs.CryptoDecryptDataOutputRequest = {
                 common: {
-                    req_path: undefined,
+                    req_path: req_path,
                     dec_id: undefined,
                     target: zone1device1.local_device_id().object_id,
                     flags: 0
@@ -1016,6 +3938,243 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const deresp = await zone1device2.crypto().decrypt_data(dereq);
             console.log(deresp)
             assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+        it("crypto跨dec设备调用 encrypt_data、decrypt_data GenAESKeyAndEncrypt preCrypto", async () => {
+
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            console.info(`will encrypt_data: GenAESKeyAndEncrypt `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    dec_id: zone1device2_dec_id,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: undefined,
+                encrypt_type: cyfs.CryptoEncryptType.GenAESKeyAndEncrypt,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let deepermission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(deepermission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptAESKey,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device1.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+        })
+        it("crypto跨Dec设备调用 encrypt_data、decrypt_data EncryptData preCrypto", async () => {
+
+
+            let hpermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/encrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(hpermission)
+            // 添加req_path       
+            let path = "/test_non/reqpath/"
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()
+            console.log("------------------------> " + req_path)
+
+            const ret1 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.EncryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "encrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.EncryptDataHandlerDefault,
+                "EncryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret1.err, `添加handler错误 ---> ${ret1}`)
+
+
+            let depermission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_crypto/decrypt_data/",
+                undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+            await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(depermission)
+
+
+            const ret2 = await handlerManager.addHandler(
+                `${zone1device1.local_device_id().to_base_58()}`,
+                zone1device1,
+                cyfs.RouterHandlerCategory.DecryptData,
+                cyfs.RouterHandlerChain.PreCrypto,
+                "decrypt-data-handler-001",
+                1,
+                undefined,
+                req_path,
+                cyfs.RouterHandlerAction.Default,
+                myHandler.DecryptDataHandlerDefault,
+                "DecryptDataHandlerDefault",
+                1,
+            )
+            assert(!ret2.err, `添加handler错误 ---> ${ret2}`)
+            let check = handlerManager.startHandlerCheck(10 * 1000);
+
+            let ob = get_len_buf(48)
+            console.log("----------------------=====================================:  " + ob.byteLength)
+            console.info(`will encrypt_data: EncryptData `);
+
+            const enreq: cyfs.CryptoEncryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    dec_id: zone1device2_dec_id,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: ob,
+                encrypt_type: cyfs.CryptoEncryptType.EncryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const enresp = await zone1device2.crypto().encrypt_data(enreq);
+            console.log(enresp)
+            assert(!enresp.err, `加密数据出错 ：${enresp}`)
+
+            let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/decrypt_data/", cyfs.AccessString.full())
+            let sdec = cyfs.get_system_dec_app().object_id
+            let sstack = zone1device2.fork_with_new_dec(sdec)
+            await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
+
+            const dereq: cyfs.CryptoDecryptDataOutputRequest = {
+                common: {
+                    req_path: req_path,
+                    dec_id: undefined,
+                    target: zone1device1.local_device_id().object_id,
+                    flags: 0
+                },
+                data: enresp.unwrap().result,
+                decrypt_type: cyfs.CryptoDecryptType.DecryptData,
+                flags: cyfs.CRYPTO_REQUEST_FLAG_SIGN_BY_DEVICE
+            };
+            const deresp = await zone1device2.crypto().decrypt_data(dereq);
+            console.log(deresp)
+            assert(!deresp.err, `解密数据出错 ：${deresp}`)
+
+            //检查监听事件是否触发
+            let handlerResult = await check
+            console.info(`EncryptData handler 触发结果为:${JSON.stringify(handlerResult)}`);
+            assert(!handlerResult.err)
+
+        })
+
+
+        //sign_and_push_named_object  sign_and_set_named_object
+        it.only("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
+
+            let [people, people_pk] = create_people();
+
+            const people_id = people.calculate_id()
+            const unique_id = Date.now().toString();
+            const [ood, ood_pk, address_index] = create_device(people_id, people_pk, cyfs.DeviceCategory.OOD, unique_id);
+            // 设置People的ood_list
+            people.body_expect().content().ood_list.push(ood.device_id());
+            people.body_expect().increase_update_time(cyfs.bucky_time_now());
+            const [runtime, runtime_pk] = create_device(people_id, people_pk, cyfs.DeviceCategory.PC, unique_id, 'runtime');
+
+
+            // People给ood签名
+            cyfs.sign_and_push_named_object(people_pk, ood, new cyfs.SignatureRefIndex(254)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, ood, new cyfs.SignatureRefIndex(255)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, ood, new cyfs.SignatureRefIndex(254)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, ood, new cyfs.SignatureRefIndex(254)).unwrap();
+
+            // People给自己签名
+            cyfs.sign_and_push_named_object(people_pk, people, new cyfs.SignatureRefIndex(255)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, people, new cyfs.SignatureRefIndex(255)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, people, new cyfs.SignatureRefIndex(254)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, people, new cyfs.SignatureRefIndex(255)).unwrap();
+
+            // People给runtime签名
+            cyfs.sign_and_push_named_object(people_pk, runtime, new cyfs.SignatureRefIndex(254)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, runtime, new cyfs.SignatureRefIndex(254)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, runtime, new cyfs.SignatureRefIndex(255)).unwrap();
+            cyfs.sign_and_push_named_object(people_pk, runtime, new cyfs.SignatureRefIndex(254)).unwrap();
+
+            //反复覆盖修改签名
+            cyfs.sign_and_set_named_object(ood_pk, people, new cyfs.SignatureRefIndex(254))
+            cyfs.sign_and_set_named_object(ood_pk, ood, new cyfs.SignatureRefIndex(255))
+            cyfs.sign_and_set_named_object(ood_pk, runtime, new cyfs.SignatureRefIndex(255))
+            cyfs.sign_and_set_named_object(ood_pk, people, new cyfs.SignatureRefIndex(255))
+            cyfs.sign_and_set_named_object(ood_pk, ood, new cyfs.SignatureRefIndex(255))
+            cyfs.sign_and_set_named_object(ood_pk, runtime, new cyfs.SignatureRefIndex(255))
+
+            people.desc().public_key()
+            people.body_expect().content().ood_list
+            people.body_expect().content()
+
+
+
 
         })
     })

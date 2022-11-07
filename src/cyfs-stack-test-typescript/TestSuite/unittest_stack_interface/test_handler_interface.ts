@@ -89,7 +89,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
         ZoneSimulator.clearZoneSimulator();
-        process.exit(0)
+        //process.exit(0)
     })
     describe("#router-handlers冒烟", async () => {
         beforeEach(async function () {
@@ -100,15 +100,15 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             handlerManager.clearAllHandler()
         })
         it("添加hook handler prerouter put_object默认action", async () => {
-            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_noc/put_object/",
+            let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/put_object/",
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            let info = await createTestObject(zone1device2, zone1device2.local_device_id().to_base_58());
+            let info = await createTestObject(zone1device1, zone1device1.local_device_id().to_base_58());
 
             // 添加req_path
             let path = "/test_non/reqpath"
-            let req_path = new cyfs.RequestGlobalStatePath(zone1device2_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
+            let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()  //cyfs.get_system_dec_app().object_id
             console.log("------------------------> " + req_path)
 
             const ret1 = await zone1device1.router_handlers().add_put_object_handler(
@@ -127,7 +127,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                     req_path: req_path,
                     dec_id: zone1device1_dec_id,
                     flags: 0,
-                    target: zone1device2.local_device_id().object_id,
+                    target: zone1device1.local_device_id().object_id,
                     level: cyfs.NONAPILevel.Router,
                 },
                 access: undefined,
@@ -706,7 +706,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("添加hook handler prerouter delete_object reject ", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/delete_object/",
-                zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
+                undefined,undefined,zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
             let info = await createTestObject(zone1device1, zone1device1.local_device_id().to_base_58());
 
@@ -744,7 +744,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             };
             const delete_ret = await zone1device1.non_service().delete_object(del_req);
             console.info('delete_object result:', delete_ret);
-            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
         it("添加hook handler prerouter delete_object drop ", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/delete_object/",
@@ -786,7 +786,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             };
             const delete_ret = await zone1device1.non_service().delete_object(del_req);
             console.info('delete_object result:', delete_ret);
-            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
         it("添加hook handler prerouter sign_object", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/sign_object/",
@@ -902,6 +902,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 assert(resp2.unwrap().result.valid, "check verify result failed")
             }
         })
+        
         it("添加hook handler prerouter verify_object", async () => {
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/handler/pre_router/verify_object/",
                 zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
@@ -1230,7 +1231,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             };
             const get_ret = await zone1device1.non_service().get_object(get_req);
             console.info('get_object result:', get_ret);
-            assert(!get_ret.err);
+            assert(!get_ret.err,`get object 失败了: ${get_ret}`);
 
         })
         it("添加普通 handler get_object  pass", async () => {
