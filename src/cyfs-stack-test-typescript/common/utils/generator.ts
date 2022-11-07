@@ -1,17 +1,93 @@
-import assert = require('assert'); 
+import assert = require('assert');
 import * as cyfs from '../../cyfs_node/cyfs_node';
 let encoding = require('encoding');
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from 'crypto';
-import  sharp  from "sharp";
+import sharp from "sharp";
+
+export function getKey(keyType: string, size: number = 1024) {
+    let pvk: cyfs.PrivateKey
+    switch (keyType) {
+        case 'rsa':
+            pvk = cyfs.PrivateKey.generate_rsa(size).unwrap();
+            break;
+        case 'secp256k1':
+            pvk = cyfs.PrivateKey.generate_secp256k1().unwrap();
+        default:
+            pvk = cyfs.PrivateKey.generate_rsa(1024).unwrap();
+    }
+    return pvk
+}
 export function create_people(): [cyfs.People, cyfs.PrivateKey] {
-    let pk = cyfs.PrivateKey.generate_rsa(1024).unwrap();
+    let pk = getKey("rsa")
     let public_key = pk.public();
-    let people = cyfs.People.create(cyfs.None, [], public_key, cyfs.None);
+    let people = cyfs.People.create(cyfs.None, [], public_key, cyfs.Some(cyfs.Area.from_str("00:00:0000:00").unwrap()));
     return [people, pk];
 }
 
+// 计算哈希
+function _hashCode(strValue: string): number {
+    let hash = 0;
+    for (let i = 0; i < strValue.length; i++) {
+        const chr = strValue.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+
+    hash = Math.floor(Math.abs(hash) / 63336);
+
+    return hash;
+}
+
+// 通过uniqueStr计算当前device索引
+function _calcIndex(uniqueStr: string): number {
+
+    // 示例用了cyfs sdk依赖的node-forge库进行计算
+    const md5 = cyfs.forge.md.md5.create();
+    md5.update(uniqueStr, 'utf8')
+    const result = cyfs.forge.util.binary.hex.encode(md5.digest())
+    const index = _hashCode(result);
+
+    console.log(`calc init index: uniqueStr=${uniqueStr}, index=${index}`);
+
+    return index
+}
+
+export function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, category: cyfs.DeviceCategory, unique_id: string, nick_name?: string): [cyfs.Device, cyfs.PrivateKey, number] {
+    const gen = cyfs.CyfsSeedKeyBip.from_private_key(pk.to_vec().unwrap().toHex(), owner.to_base_58());
+    const address_index = _calcIndex(unique_id)
+    const path = cyfs.CyfsChainBipPath.new_device(
+        0,
+        cyfs.get_current_network(),
+        address_index
+    );
+    const private_key = gen.unwrap().sub_key(path).unwrap();
+
+    const unique = cyfs.UniqueId.copy_from_slice(cyfs.forge.util.binary.raw.decode(unique_id));
+    console.info(`unique_str: ${unique_id} -> ${unique.as_slice().toHex()}`);
+
+    const device = cyfs.Device.create(
+        cyfs.Some(owner),
+        unique,
+        [],
+        [],
+        [],
+        private_key.public(),
+        cyfs.Area.from_str("00:00:0000:00").unwrap(),
+        category,
+        (builder) => {
+            builder.no_create_time();
+        }
+    );
+
+    if (nick_name) {
+        device.set_name(nick_name);
+    }
+
+
+    return [device, private_key, address_index]
+}
 /**
  * 
     \0	Null字符（\u0000）
@@ -32,60 +108,60 @@ export function create_people(): [cyfs.People, cyfs.PrivateKey] {
 
 export const ESC_char = [
     {
-        name : "\\0",
-        char : "\0"
+        name: "\\0",
+        char: "\0"
     },
     {
-        name : "\\b",
-        char : "\b"
+        name: "\\b",
+        char: "\b"
     },
     {
-        name : "\\t",
-        char : "\t"
+        name: "\\t",
+        char: "\t"
     },
     {
-        name : "\\n",
-        char : "\n"
+        name: "\\n",
+        char: "\n"
     },
     {
-        name : "\\v",
-        char : "\v"
+        name: "\\v",
+        char: "\v"
     },
     {
-        name : "\\f",
-        char : "\f"
+        name: "\\f",
+        char: "\f"
     },
     {
-        name : "\\r",
-        char : "\r"
+        name: "\\r",
+        char: "\r"
     },
     {
-        name : "\\0",
-        char : "\0"
+        name: "\\0",
+        char: "\0"
     },
     {
-        name : `\\"`,
-        char : "\""
+        name: `\\"`,
+        char: "\""
     },
     {
-        name : "\\'",
-        char : "\'"
+        name: "\\'",
+        char: "\'"
     },
     {
-        name : "\\\\",
-        char : "\\"
+        name: "\\\\",
+        char: "\\"
     },
     {
-        name : "\\xXX",
-        char : "\x23"
+        name: "\\xXX",
+        char: "\x23"
     },
     {
-        name : "\\uXXXX",
-        char : "\u1234"
+        name: "\\uXXXX",
+        char: "\u1234"
     },
     {
-        name : "\\XXX",
-        char : "\u1234"
+        name: "\\XXX",
+        char: "\u1234"
     },
 ]
 /**
@@ -122,71 +198,71 @@ const yingninyu = "DECApp, dibentuk dengan protokol cyfsBDT, dilengkapi dengan f
 const alaboyu = "(Decapp)، الذي يستند إلى اتفاق CyFSBDT)، بالإضافة إلى خاصيته الطبيعية مثل سرعة النقل المركزي السريع، لديه وظيفة أساسية مثل تحويل NFT إلى الأبد، دون أن يخشى المرء أن يستخدم قبل مرور قيمة Web30 في مسائل مثل فقدان البيانات الخصوصية، أو نضوج البيانات الضخمة"
 const taiyu = "นอกจากนี้ยังมีคุณสมบัติดิจิตอลที่เกิดจากข้อตกลงไซเอฟบีดีที";
 
-export const testLanguage =[
+export const testLanguage = [
     {
-        name : "中文-简体",
-        charts : cn
+        name: "中文-简体",
+        charts: cn
     },
     {
-        name : "中文-繁体",
-        charts : cn_t
+        name: "中文-繁体",
+        charts: cn_t
     },
     {
-        name : "英语",
-        charts : en
+        name: "英语",
+        charts: en
     },
     {
-        name : "日语",
-        charts : jp
+        name: "日语",
+        charts: jp
     },
     {
-        name : "法语",
-        charts : french
+        name: "法语",
+        charts: french
     },
     {
-        name : "德语",
-        charts : german
+        name: "德语",
+        charts: german
     },
     {
-        name : "韩语",
-        charts : hanyu
+        name: "韩语",
+        charts: hanyu
     },
     {
-        name : "俄语",
-        charts : eyu
+        name: "俄语",
+        charts: eyu
     },
     {
-        name : "西班牙语",
-        charts : xibanyayu
+        name: "西班牙语",
+        charts: xibanyayu
     },
     {
-        name : "葡萄牙语",
-        charts : putaoyayu
+        name: "葡萄牙语",
+        charts: putaoyayu
     },
     {
-        name : "意大利语",
-        charts : yidaliyu
+        name: "意大利语",
+        charts: yidaliyu
     },
     {
-        name : "越南语",
-        charts : yuelanyu
+        name: "越南语",
+        charts: yuelanyu
     },
     {
-        name : "阿拉伯语",
-        charts : alaboyu
+        name: "阿拉伯语",
+        charts: alaboyu
     },
     {
-        name : "印尼语",
-        charts : yingninyu
+        name: "印尼语",
+        charts: yingninyu
     },
     {
-        name : "泰语",
-        charts : taiyu
+        name: "泰语",
+        charts: taiyu
     },
 
 ]
 
-export const LANGUAGELIST = [cn,cn_t,en,jp,french,german,hanyu,xibanyayu,eyu,eyu,putaoyayu,yidaliyu,yuelanyu,yingninyu,alaboyu,taiyu]
+export const LANGUAGELIST = [cn, cn_t, en, jp, french, german, hanyu, xibanyayu, eyu, eyu, putaoyayu, yidaliyu, yuelanyu, yingninyu, alaboyu, taiyu]
 /**
  * ASCII
  * UNICODE
@@ -197,7 +273,7 @@ export const LANGUAGELIST = [cn,cn_t,en,jp,french,german,hanyu,xibanyayu,eyu,eyu
  * UTF-8
  * UTF-16
 */
-export const encodeType = ["ASCII","UNICODE","UTF-8","UTF-16","GBK","GB18030","GB2312","ISO-8859-1"]
+export const encodeType = ["ASCII", "UNICODE", "UTF-8", "UTF-16", "GBK", "GB18030", "GB2312", "ISO-8859-1"]
 
 
 
@@ -220,19 +296,19 @@ export const IMGURL = [
 
 ]
 
-async function cropImage(source:string,target:string) {
-    let width = RandomGenerator.integer(1200,600);
-    let height = RandomGenerator.integer(1200,600);
+async function cropImage(source: string, target: string) {
+    let width = RandomGenerator.integer(1200, 600);
+    let height = RandomGenerator.integer(1200, 600);
     try {
         await sharp(source)
-          .resize({
-            width: width,
-            height: height
-          })
-          .toFile(target);
-      } catch (error) {
+            .resize({
+                width: width,
+                height: height
+            })
+            .toFile(target);
+    } catch (error) {
         console.log(error);
-      }
+    }
 }
 
 export function get_len_buf(len: number) {
@@ -250,12 +326,12 @@ export function get_len_buf(len: number) {
 
 export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
-    static CHAR_SET:string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789'; //0123456789
-    static CN_SET : string = '巴克云网络科技有限公司测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹纟';
-    static LANGUAGELIST = [cn,cn_t,en,jp,french,german,hanyu,xibanyayu,eyu,eyu,putaoyayu,yidaliyu,yuelanyu,yingninyu,alaboyu,taiyu]
+    static CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789'; //0123456789
+    static CN_SET: string = '巴克云网络科技有限公司测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹纟';
+    static LANGUAGELIST = [cn, cn_t, en, jp, french, german, hanyu, xibanyayu, eyu, eyu, putaoyayu, yidaliyu, yuelanyu, yingninyu, alaboyu, taiyu]
 
-    static SYMBOL : string = 'iəɔua##$&@æ。？！.《》……&（）';
-    static  string(length: number = 32,cn:number = 0,symbol:number = 0) {
+    static SYMBOL: string = 'iəɔua##$&@æ。？！.《》……&（）';
+    static string(length: number = 32, cn: number = 0, symbol: number = 0) {
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -267,26 +343,26 @@ export class RandomGenerator {
         for (let i = 0; i < symbol; i++) {
             result += RandomGenerator.SYMBOL.charAt(RandomGenerator.integer(maxPos));
         }
-        if(Buffer.byteLength(result)<length){
+        if (Buffer.byteLength(result) < length) {
             let accurate_len = length - Buffer.byteLength(result);
             result += RandomGenerator.accurateString(accurate_len);
         }
         return result;
-    };    
-    static accurateString(length: number = 32){
+    };
+    static accurateString(length: number = 32) {
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
-        while(Buffer.byteLength(result)<length){
+        while (Buffer.byteLength(result) < length) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
         return result;
     }
     // static ESC_char = "\0\b\t\n\v\f\r\"\'\\\x34\xfa\123\253\u3445\uabcd";
     // static ESC_char_random(length: number = 1){
-        
+
     //     let len = RandomGenerator.ESC_char.length;
     //     let result = '';
     //     for (let i = 0; i < length; i++) {
@@ -302,10 +378,10 @@ export class RandomGenerator {
     //     }
     //     return result;
     // }
-    static language(length: number = 32,type:number = 2){
+    static language(length: number = 32, type: number = 2) {
         let myLen = 0
         let result = ""
-        while(myLen<length){
+        while (myLen < length) {
             result += LANGUAGELIST[type].charAt(RandomGenerator.integer(LANGUAGELIST[type].length));
             myLen = myLen + 1;
         }
@@ -314,20 +390,20 @@ export class RandomGenerator {
     static unicode(length: number): string {
         return Array.from(
             { length }, () => String.fromCharCode(Math.floor(Math.random() * (65536)))
-          ).join('')
-    }
-    
-    static accii(length:number){
-        return Array.from(
-            { length }, () => String.fromCharCode(Math.floor(Math.random() * (255)))
-          ).join('')
+        ).join('')
     }
 
-    static encode(length:number,type:string){
-        let result = String(encoding.convert(RandomGenerator.unicode(length),type)) 
+    static accii(length: number) {
+        return Array.from(
+            { length }, () => String.fromCharCode(Math.floor(Math.random() * (255)))
+        ).join('')
+    }
+
+    static encode(length: number, type: string) {
+        let result = String(encoding.convert(RandomGenerator.unicode(length), type))
         return result
     }
-    
+
     static integer(max: number, min: number = 0) {
         let result = Math.round(Math.random() * (max - min)) + min;
         if (result > max) {
@@ -335,23 +411,23 @@ export class RandomGenerator {
         }
         return result;
     }
-    static async createRandomFile(pathDir:string,name:string,size:number) {
-        if(!fs.pathExistsSync(pathDir)){
+    static async createRandomFile(pathDir: string, name: string, size: number) {
+        if (!fs.pathExistsSync(pathDir)) {
             fs.mkdirpSync(pathDir)
         }
-        let file  = path.join(pathDir,name)
-        const strRandom = RandomGenerator.string(1000,1000,1000);
-        let len =  Buffer.byteLength(strRandom,'utf-8');
-        while(size>len){
-            let err = fs.appendFileSync(file,strRandom);
+        let file = path.join(pathDir, name)
+        const strRandom = RandomGenerator.string(1000, 1000, 1000);
+        let len = Buffer.byteLength(strRandom, 'utf-8');
+        while (size > len) {
+            let err = fs.appendFileSync(file, strRandom);
             size = size - len;
         }
-        fs.appendFileSync(file,RandomGenerator.string(size));
-        assert(fs.pathExistsSync(file),`创建文件${path} 失败`)
+        fs.appendFileSync(file, RandomGenerator.string(size));
+        assert(fs.pathExistsSync(file), `创建文件${path} 失败`)
         return;
-        
+
     }
-    static compareFileMD5(sourcePath:string,targetPath:string){
+    static compareFileMD5(sourcePath: string, targetPath: string) {
         let fsHash1 = crypto.createHash('md5')
         let fileInfo1 = fs.readFileSync(sourcePath)
         fsHash1.update(fileInfo1)
@@ -360,84 +436,84 @@ export class RandomGenerator {
         let fileInfo2 = fs.readFileSync(targetPath)
         fsHash2.update(fileInfo2)
         let targetMD5 = fsHash2.digest('hex')
-        if(sourceMD5 === targetMD5){
-            return {err:false,log:"文件MD5值相同"}
-        }else{
-            return {err:true,log:"文件MD5值不同，校验失败"}
+        if (sourceMD5 === targetMD5) {
+            return { err: false, log: "文件MD5值相同" }
+        } else {
+            return { err: true, log: "文件MD5值不同，校验失败" }
         }
     }
-    static async createRandomDir(root:string,dirNumber:number,fileNumber:number,fileSize:number,deep:number=1){
-        let dirNameList =  [root]
+    static async createRandomDir(root: string, dirNumber: number, fileNumber: number, fileSize: number, deep: number = 1) {
+        let dirNameList = [root]
         let fileNameList = []
         // 先生成文件夹列表，文件名列表
         console.info(`开始生成随机文件夹列表`)
-        for(let i = 0;i < dirNumber;i++){
-            dirNameList.push(path.join(root,RandomGenerator.string(10)))
-            if(!fs.pathExistsSync(path.join(root,dirNameList[i]))){
-                fs.mkdirpSync(path.join(root,dirNameList[i]))
+        for (let i = 0; i < dirNumber; i++) {
+            dirNameList.push(path.join(root, RandomGenerator.string(10)))
+            if (!fs.pathExistsSync(path.join(root, dirNameList[i]))) {
+                fs.mkdirpSync(path.join(root, dirNameList[i]))
             }
         }
         console.info(`开始生成随机文件名列表`)
-        for(let i = 0;i < fileNumber;i++){
+        for (let i = 0; i < fileNumber; i++) {
             fileNameList.push(`${RandomGenerator.string(10)}.txt`)
         }
         // TODOO 文件夹深度实现
         // 生成随机文件暂时就弄一级结构
         let len = dirNameList.length
-        for(let i in fileNameList){
-            await this.createRandomFile(dirNameList[RandomGenerator.integer(len-1)],fileNameList[i],RandomGenerator.integer(fileSize))
+        for (let i in fileNameList) {
+            await this.createRandomFile(dirNameList[RandomGenerator.integer(len - 1)], fileNameList[i], RandomGenerator.integer(fileSize))
             await cyfs.sleep(100);
         }
 
-        
+
     }
-    static async img(img_path:string,name:string) {
-        if(!fs.pathExistsSync(img_path)){
+    static async img(img_path: string, name: string) {
+        if (!fs.pathExistsSync(img_path)) {
             fs.mkdirpSync(img_path);
         }
-        img_path = path.join(img_path,name)
+        img_path = path.join(img_path, name)
         return new Promise(async (V) => {
-            let url:string = IMGURL[RandomGenerator.integer(IMGURL.length-1)]
+            let url: string = IMGURL[RandomGenerator.integer(IMGURL.length - 1)]
             var request = require("request");
             let stream = fs.createWriteStream(img_path);
-            request(url).pipe(stream).on("close", function (err:any) {
+            request(url).pipe(stream).on("close", function (err: any) {
                 console.log(`文件下载完毕:${path}`);
                 V(img_path)
             });
-            })
-        
+        })
+
     }
-    static async createImg(img_path:string,name:string) {
+    static async createImg(img_path: string, name: string) {
         // 获取一张图片
-        let rand_str = RandomGenerator.string(10)+".jpg"
-        await RandomGenerator.img(img_path,rand_str);  
+        let rand_str = RandomGenerator.string(10) + ".jpg"
+        await RandomGenerator.img(img_path, rand_str);
         //await RandomGenerator.img(img_path,name);
         // 修改图片
-        let source = path.join(img_path,rand_str);
-        let target = path.join(img_path,name);
-        await cropImage(source,target)
+        let source = path.join(img_path, rand_str);
+        let target = path.join(img_path, name);
+        await cropImage(source, target)
         //删除原始图片
         fs.rmSync(source);
         await cyfs.sleep(20000)
     }
 };
 
-export function Uint8ArrayToString(fileData:Uint8Array){
+export function Uint8ArrayToString(fileData: Uint8Array) {
     var dataString = "";
     for (var i = 0; i < fileData.length; i++) {
-      dataString += String.fromCharCode(fileData[i]);
+        dataString += String.fromCharCode(fileData[i]);
     }
-   
+
     return dataString
-  }
-  
-  
-export function stringToUint8Array(str:string){
+}
+
+
+export function stringToUint8Array(str: string) {
     var arr = [];
     for (var i = 0, j = str.length; i < j; ++i) {
-      arr.push(str.charCodeAt(i));
+        arr.push(str.charCodeAt(i));
     }
-   
+
     var tmpUint8Array = new Uint8Array(arr);
     return tmpUint8Array
 }

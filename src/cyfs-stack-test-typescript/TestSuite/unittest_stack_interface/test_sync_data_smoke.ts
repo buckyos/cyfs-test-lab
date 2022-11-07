@@ -113,7 +113,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         ZoneSimulator.stopZoneSimulator();
     })
     describe("#主从OOD数据同步业务流程冒烟测试",async()=>{
-        it.only("#业务流程测试",async()=>{
+        it("#业务流程测试",async()=>{
             // (1) 主 OOD root_state 插入数据commit
             let insert_list = [];
             for(let i = 0;i<10;i++){

@@ -13,7 +13,7 @@ cyfs.clog.enable_file_log({
 let stack_runtime: cyfs.SharedCyfsStack;
 let stack_ood: cyfs.SharedCyfsStack;
 
-describe("SharedCyfsStack util相关接口测试", function () {
+describe("SharedCyfsStack NDN相关接口测试", function () {
     this.timeout(0);
 
     this.beforeAll(async function () {
@@ -28,11 +28,12 @@ describe("SharedCyfsStack util相关接口测试", function () {
         //每个函数执行前，清除所有handler
         console.info(`#########用例执行完成`);
         ZoneSimulator.stopZoneSimulator();
-
+        //process.exit(0)
     })
     let chunkId1: cyfs.ChunkId
     it("put_data 接口调用", async () => {
-        let randomStr = RandomGenerator.string(1024 * 1024);
+        let randomStr = RandomGenerator.string(10 * 1024);
+        console.log("-_----------------------------->"+Buffer.byteLength(randomStr))
         let uint8Array: Uint8Array = stringToUint8Array(randomStr)
         let chunkId = cyfs.ChunkId.calculate(uint8Array);
         chunkId1 = chunkId.unwrap();
@@ -63,7 +64,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
 
     // put_data 用例补充
     it("put_data router级别target不指定设备", async () => {
-        let randomStr = RandomGenerator.string(1024 * 1024);
+        let randomStr = RandomGenerator.string(10 * 1024);
         let uint8Array: Uint8Array = stringToUint8Array(randomStr)
         let chunkId = cyfs.ChunkId.calculate(uint8Array);
         console.info(`测试随机的chunkId 为：${chunkId}`)
@@ -89,7 +90,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
     })
 
     it("put_data 请求路径为空", async () => {
-        let randomStr = RandomGenerator.string(1024 * 1024);
+        let randomStr = RandomGenerator.string(10 * 1024);
         let uint8Array: Uint8Array = stringToUint8Array(randomStr)
         let chunkId = cyfs.ChunkId.calculate(uint8Array);
         console.info(`测试随机的chunkId 为：${chunkId}`)
@@ -118,7 +119,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
     })
 
     it("put_data 不定义应用id", async () => {
-        let randomStr = RandomGenerator.string(1024 * 1024);
+        let randomStr = RandomGenerator.string(10 * 1024);
         let uint8Array: Uint8Array = stringToUint8Array(randomStr)
         let chunkId = cyfs.ChunkId.calculate(uint8Array);
         console.info(`测试随机的chunkId 为：${chunkId}`)
@@ -147,7 +148,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
     })
 
     it("put_data NDN级别target为空默认本地", async () => {
-        let randomStr = RandomGenerator.string(1024 * 1024);
+        let randomStr = RandomGenerator.string(10 * 1024);
         let uint8Array: Uint8Array = stringToUint8Array(randomStr)
         let chunkId = cyfs.ChunkId.calculate(uint8Array);
         console.info(`测试随机的chunkId 为：${chunkId}`)
@@ -568,7 +569,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
 
     })
     //query_file 补充用例
-    it.only("query_file 不定义fileid", async () => {
+    it("query_file 不定义fileid", async () => {
         let fileName = RandomGenerator.string(10);
         let filePath = path.join(__dirname, "../../test_cache_file/source")
         let file = await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);

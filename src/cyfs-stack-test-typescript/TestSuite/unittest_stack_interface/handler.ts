@@ -731,7 +731,7 @@ export class VerifyHandlerDefault implements cyfs.RouterHandlerVerifyObjectRouti
 
 }
 
-export class EncryptDataHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
+export class EncryptDataHandlerDefault implements cyfs.RouterHandlerEncryptDataRoutine {
     private device: string;
     private handlerId: string;
     private chain: string
@@ -740,16 +740,18 @@ export class EncryptDataHandlerDefault implements cyfs.RouterHandlerSignObjectRo
         this.handlerId = handlerId;
         this.chain = chain;
     }
-    async call(param: cyfs.RouterHandlerSignObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerSignObjectResult>> {
-        console.log("on sign event: sign for object", param.request.object.object_id)
-        Emitter.emit('handlerRunning', this.device, 'CryptoHandlerDefault', this.handlerId, this.chain)
+    async call(param: cyfs.RouterHandlerEncryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerEncryptDataResult>> {
+        console.log("on sign event: sign for object", param.request.encrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'EncryptDataHandlerDefault', this.handlerId, this.chain)
         return cyfs.Ok({
-            action: cyfs.RouterHandlerAction.Default
+            action: cyfs.RouterHandlerAction.Default,
+            request: param.request
         })
     }
 
-} // to do
-export class EcryptDataHandlerDefault implements cyfs.RouterHandlerVerifyObjectRoutine {
+} 
+
+export class EncryptDataHandlerPass implements cyfs.RouterHandlerEncryptDataRoutine {
     private device: string;
     private handlerId: string;
     private chain: string
@@ -758,15 +760,175 @@ export class EcryptDataHandlerDefault implements cyfs.RouterHandlerVerifyObjectR
         this.handlerId = handlerId;
         this.chain = chain;
     }
-    async call(param: cyfs.RouterHandlerVerifyObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerVerifyObjectResult>> {
-        console.log("on verify event: verify for sign object", param.request.object.object_id)
-        Emitter.emit('handlerRunning', this.device, 'VerifyHandlerDefault', this.handlerId, this.chain)
+    async call(param: cyfs.RouterHandlerEncryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerEncryptDataResult>> {
+        console.log("on sign event: sign for object", param.request.encrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'EncryptDataHandlerPass', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Pass,
+            request: param.request
+        })
+    }
+
+} 
+
+export class EncryptDataHandlerDrop implements cyfs.RouterHandlerEncryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerEncryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerEncryptDataResult>> {
+        console.log("on sign event: sign for object", param.request.encrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'EncryptDataHandlerDrop', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Drop,
+            request: param.request
+        })
+    }
+} 
+export class EncryptDataHandlerReject implements cyfs.RouterHandlerEncryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerEncryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerEncryptDataResult>> {
+        console.log("on sign event: sign for object", param.request.encrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'EncryptDataHandlerReject', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Reject,
+            request: param.request
+        })
+    }
+} 
+
+export class EncryptDataHandlerResponse implements cyfs.RouterHandlerEncryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerEncryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerEncryptDataResult>> {
+        console.log("on sign event: sign for object", param.request.encrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'EncryptDataHandlerResponse', this.handlerId, this.chain)
+        const result: cyfs.RouterHandlerEncryptDataResult = {
+            action: cyfs.RouterHandlerAction.Response,
+            response: cyfs.Ok({
+                err: false,
+                result: new Uint8Array(123)
+            })
+        };
+        return cyfs.Ok(result)
+    }
+} 
+
+export class DecryptDataHandlerDefault implements cyfs.RouterHandlerDecryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerDecryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDecryptDataResult>> {
+        console.log("on verify event: for DecryptDataHandlerDefault", param.request.decrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'DecryptDataHandlerDefault', this.handlerId, this.chain)
         return cyfs.Ok({
             action: cyfs.RouterHandlerAction.Default
         })
     }
 
-} // to do
+}
+export class DecryptDataHandlerPass implements cyfs.RouterHandlerDecryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerDecryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDecryptDataResult>> {
+        console.log("on sign event: for DecryptDataHandlerPass", param.request.decrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'DecryptDataHandlerPass', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Pass,
+            request: param.request
+        })
+    }
+
+} 
+export class DecryptDataHandlerDrop implements cyfs.RouterHandlerDecryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerDecryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDecryptDataResult>> {
+        console.log("on decrypt event: for DecryptDataHandlerDrop", param.request.decrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'DecryptDataHandlerDrop', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Drop,
+            request: param.request
+        })
+    }
+} 
+export class DecryptDataHandlerReject implements cyfs.RouterHandlerDecryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerDecryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDecryptDataResult>> {
+        console.log("on  Decrypt event: for DecryptDataHandlerReject", param.request.decrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'DecryptDataHandlerReject', this.handlerId, this.chain)
+        return cyfs.Ok({
+            action: cyfs.RouterHandlerAction.Reject,
+            request: param.request
+        })
+    }
+} 
+export class DecryptDataHandlerResponse implements cyfs.RouterHandlerDecryptDataRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerDecryptDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerDecryptDataResult>> {
+        console.log("on  Decrypt event: for DecryptDataHandlerResponse", param.request.decrypt_type)
+        Emitter.emit('handlerRunning', this.device, 'DecryptDataHandlerResponse', this.handlerId, this.chain)
+        const result: cyfs.RouterHandlerDecryptDataResult = {
+            action: cyfs.RouterHandlerAction.Response,
+            response: cyfs.Ok({
+                err: false,
+                data:new Uint8Array(123),
+                result: cyfs.DecryptDataResult.Decrypted
+            })
+        };
+        return cyfs.Ok(result)
+    }
+} 
+
+
 
 export class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
     private device: string;
@@ -1017,7 +1179,7 @@ export class handlerManager {
                 break;
             }
             case cyfs.RouterHandlerCategory.EncryptData: {
-                ret1 = await stack.router_handlers().add_put_data_handler(
+                ret1 = await stack.router_handlers().add_encrypt_data_handler(
                     chain,
                     id,
                     index,
@@ -1030,7 +1192,7 @@ export class handlerManager {
                 break;
             }
             case cyfs.RouterHandlerCategory.DecryptData: {
-                ret1 = await stack.router_handlers().add_verify_object_handler(
+                ret1 = await stack.router_handlers().add_decrypt_data_handler(
                     chain,
                     id,
                     index,
@@ -1081,7 +1243,6 @@ export class handlerManager {
                 console.info(`${deviceName} 添加handler ${id},结果为${JSON.stringify(ret1)}`);
                 break;
             }
-
 
         }
         //将添加的handler 数据保存到handlist

@@ -59,7 +59,6 @@ let zone2device2_dec_id: cyfs.ObjectId
 let sysdec: cyfs.ObjectId
 
 
-
 describe("SharedCyfsStack NON相关接口测试", function () {
     this.timeout(0);
     this.beforeAll(async function () {
@@ -90,7 +89,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     this.afterAll(async () => {
         console.info(`#########用例执行完成`);
         ZoneSimulator.clearZoneSimulator();
-        process.exit(0)
+        //process.exit(0)
     })
 
     describe("#NON接口+access权限冒烟", async () => {

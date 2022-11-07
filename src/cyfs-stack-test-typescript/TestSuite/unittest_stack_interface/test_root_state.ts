@@ -28,7 +28,7 @@ describe("SharedCyfsStack root_state 相关接口测试",function(){
         //每个函数执行前，清除所有handler
         console.info(`#########用例执行完成`);
         await ZoneSimulator.stopZoneSimulator();
- 
+        //process.exit(0)
     })
     it("get_category ",async()=>{
         let state = await stack_runtime.root_state().get_category();

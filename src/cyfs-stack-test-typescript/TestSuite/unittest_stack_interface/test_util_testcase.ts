@@ -1,7 +1,6 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from '../../cyfs_node/cyfs_node'
 import { ZoneSimulator } from "../../common/utils";
-import * as mocha from "mocha"
 
 
 
