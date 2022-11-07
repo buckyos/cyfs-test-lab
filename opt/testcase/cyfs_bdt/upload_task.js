@@ -211,7 +211,7 @@ async function main() {
     let serviceid = Number(SysProcess.argv[4]);
     let servicename = SysProcess.argv[5];
     let runNum = Number(SysProcess.argv[6]);
-    let version = version = date.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
+    let version =  date.format(new Date(), 'YYYY/MM/DD HH:mm:ss');
     switch (opt) {
         case "create_task": {
             await create(name, serviceid, servicename);
