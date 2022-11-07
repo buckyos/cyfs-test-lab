@@ -23,7 +23,8 @@ node testcase\cyfs_bdt\testcase_run_smoke.js
     "log":"生成测试报告成功",
     "zip_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/2022_11_04_20_57_39.zip",
     "testcase_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/TestcaseReport.html",
-    "action_total_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/TotalActionPerf.html"}
+    "action_total_url":"http://cyfs-test-lab/testcaseReport/2022_11_04_20_57_39/TotalActionPerf.html"
+}
 ```
 #### 编译测试客户端
 TODO
