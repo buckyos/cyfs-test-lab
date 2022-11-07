@@ -75,22 +75,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 },
                 expect : {err:0},      
             }))
-            // 1.3 RN -> LN 发送数据
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendFileRangeAction({
-                type : ActionType.send_file_range,
-                LN : `${labAgent[j].tags[0]}$1`,
-                RN : `${labAgent[i].tags[0]}$1`,
-                fileSize : 10*1024*1024,
-                chunkSize : 4*1024*1024,
-                config:{
-                    timeout : 160*1000,
-                    range : [{
-                        begin: 4*1024*1024,
-                        end: 6*1024*1024,
-                    }]
-                },
-                expect : {err:0},      
-            }))
             
             await testRunner.prevTaskRun();
         }

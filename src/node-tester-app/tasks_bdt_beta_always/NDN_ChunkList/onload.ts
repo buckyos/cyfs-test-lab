@@ -65,27 +65,13 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
                 chunkSize : 10*1024*1024,
-                fileNum : 5,
+                fileNum : 2,
                 config:{
                     conn_tag: connect_1,
                     timeout : 160*1000,
                 },
                 expect : {err:0},      
-            }))
-            // 1.3 RN -> LN 发送数据
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkListAction({
-                type : ActionType.send_chunk_list,
-                LN : `${labAgent[j].tags[0]}$1`,
-                RN : `${labAgent[i].tags[0]}$1`,
-                chunkSize : 10*1024*1024,
-                fileNum : 5,
-                config:{
-                    conn_tag: connect_1,
-                    timeout : 160*1000,
-                },
-                expect : {err:0},      
-            }))
-            
+            }))            
             await testRunner.prevTaskRun();
         }
     }

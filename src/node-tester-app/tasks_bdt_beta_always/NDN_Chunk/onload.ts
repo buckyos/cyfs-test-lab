@@ -71,18 +71,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 },
                 expect : {err:0},      
             }))
-            // 1.3 RN -> LN 发送数据
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
-                type : ActionType.send_chunk,
-                LN : `${labAgent[j].tags[0]}$1`,
-                RN : `${labAgent[i].tags[0]}$1`,
-                chunkSize : 10*1024*1024,
-                config:{
-                    conn_tag: connect_1,
-                    timeout : 60*1000,
-                },
-                expect : {err:0},      
-            }))
             
             await testRunner.prevTaskRun();
         }
