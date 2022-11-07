@@ -3,7 +3,6 @@ resolver = "2"
 
 members=[
     "bdt-tools",
-    "bdt-server",
     "bdt-unittest",
     "perf-report-tool",
     "cyfs-tools",
