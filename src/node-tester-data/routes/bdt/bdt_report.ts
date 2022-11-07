@@ -63,6 +63,10 @@ router.get('/reportList',
         console.info(`#receive reportList req,body = ${JSON.stringify(req.body)} `)
         let mod =  new BdtReport(); 
         let result = await mod.querList();
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT, HEAD");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Token, adminID");
+        res.setHeader("Access-Control-Max-Age", "3600");
         return res.json(result)
     }
 );
