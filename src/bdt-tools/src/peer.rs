@@ -2075,6 +2075,7 @@ impl Peer {
                         for pn in passive_pn.clone() {
                             device.mut_connect_info().mut_passive_pn_list().push(pn.desc().device_id());
                         }
+    
                         (device, key)
                     },
                     false => {
@@ -2107,7 +2108,7 @@ impl Peer {
                             sn_list,
                             vec![],
                             public_key,
-                            Area::default(),
+                            c.area,
                             DeviceCategory::OOD
                         ).build();
                         for pn in passive_pn.clone() {

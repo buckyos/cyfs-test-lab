@@ -56,6 +56,7 @@ router.post('/reportHtml',
             let save =await mod.add(data);
             ReportingVersion = "";
             let result = {err: 0,log:"测试报告生成完成",zip_url,testcase_url,action_total_url}
+            wait = false;
             return res.json(result)
         }  
     }
