@@ -1,6 +1,6 @@
 import assert = require('assert'); 
 import JSBI from 'jsbi';
-import * as cyfs from '../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 import * as meta_config from './meta_config';
 //import { stack,stackInfo}from "../../common/utils/stack";
 import * as fs from "fs-extra"

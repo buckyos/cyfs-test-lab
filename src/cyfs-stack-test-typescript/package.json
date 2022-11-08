@@ -67,6 +67,8 @@
     "compressing": "^1.5.1",
     "concurrently": "^6.4.0",
     "connect-restreamer": "~1.0.0",
+    "cyfs-sdk": "^0.5.9",
+    "cyfs-sdk-nightly": "^0.5.11",
     "echarts": "^4.2.0-rc.2",
     "element-ui": "^2.4.8",
     "encoding": "^0.1.13",

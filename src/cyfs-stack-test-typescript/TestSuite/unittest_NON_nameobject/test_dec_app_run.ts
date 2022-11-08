@@ -1,4 +1,4 @@
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import {cyfs} from '../../cyfs_node'
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, run, decoder, DeleteDescFile } from './index';
@@ -47,8 +47,8 @@ describe("测试DecApp对象编解码", function () {
                 id
             )
             //icon，desc属性修改
-            DecApp.body_expect().content().icon = cyfs.Some(new cyfs.BuckyString(version1))
-            DecApp.body_expect().content().desc = cyfs.Some(new cyfs.BuckyString(descstr1))
+            DecApp.body_expect().content().unwrap().icon = cyfs.Some(new cyfs.BuckyString(version1))
+            DecApp.body_expect().content().unwrap().desc = cyfs.Some(new cyfs.BuckyString(descstr1))
 
             //属性校验
             assert.equal(version1, DecApp.icon())
@@ -62,9 +62,9 @@ describe("测试DecApp对象编解码", function () {
                 id
             );
             //调用set_source(),新增source,source_desc属性
-            DecApp.set_source(version1, source1, cyfs.Some(descstr1));
-            DecApp.set_source(version2, source2, cyfs.Some(descstr2));
-            DecApp.set_source(version_e, source2, cyfs.Some(descstr_e));
+            DecApp.set_source(version1, source1, cyfs.Some(descstr1).unwrap());
+            DecApp.set_source(version2, source2, cyfs.Some(descstr2).unwrap());
+            DecApp.set_source(version_e, source2, cyfs.Some(descstr_e).unwrap());
 
             //调用find_source_desc()
             let source_desc1 = DecApp.find_source_desc(version1).unwrap();
@@ -94,8 +94,8 @@ describe("测试DecApp对象编解码", function () {
                 id
             );
             //调用set_source(),新增source,source_desc属性
-            DecApp.set_source(version1, source1, cyfs.Some(descstr1));
-            DecApp.set_source(version2, source2, cyfs.Some(descstr2));
+            DecApp.set_source(version1, source1, cyfs.Some(descstr1).unwrap());
+            DecApp.set_source(version2, source2, cyfs.Some(descstr2).unwrap());
 
             //调用remove_source(),删除version1的值
             DecApp.remove_source(version1)
