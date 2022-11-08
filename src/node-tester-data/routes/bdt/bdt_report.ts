@@ -30,15 +30,18 @@ router.post('/reportHtml',
         let check = path.join(config.BDT_Report_Dir,req.body.version,"TestcaseReport.html");
         let zip_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/${req.body.version}.zip`;
         let testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TestcaseReport.html`;
-        let action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/TotalActionPerf.html`;
+        let action_total_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/perf/TotalActionPerf.html`;
         if(fs.pathExistsSync(check) || ReportingVersion == `${req.body.version}`){
             let result = {err:0,log:"请勿重复触发",zip_url,testcase_url,action_total_url}
             return res.json(result)
         }else{
+            let wait = true;
             setTimeout(()=>{
-                let result = {err: 0,log:"测试报告生成中，链接需等待一定时间打开",zip_url,testcase_url,action_total_url}
-                return res.json(result)
-            },60*1000)
+                if(wait){
+                    let result = {err: 0,log:"测试报告生成中，链接需等待一定时间打开",zip_url,testcase_url,action_total_url}
+                    return res.json(result)
+                }
+            },2*60*1000)
             ReportingVersion = `${req.body.version}`;
             let resultInfo = await reportDataToHtml(req.body.version);
             let mod =  new BdtReport();
