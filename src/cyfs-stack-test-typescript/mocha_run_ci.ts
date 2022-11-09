@@ -5,13 +5,13 @@ var date = require("silly-datetime");
 import * as mocha from "mocha"
 import * as fs from "fs-extra"
 import { sleep } from './cyfs_node/cyfs_node';
-import {CyfsSDKType,changeImport} from './cyfs_node'
+import {cyfs,changeImport,CyfsSDKType} from './cyfs_node'
 
 
 async function main(testsuit:string[]) {
     
 
-    let change = await changeImport(CyfsSDKType.cyfs_nightly)
+    let change = changeImport(CyfsSDKType.cyfs_nightly)
     
     let report_path = path.join(__dirname,"./mochawesome-report")
     //清空日志
@@ -29,7 +29,7 @@ async function main(testsuit:string[]) {
     console.log(currenttime)
     for(const testcase of testsuit){
         let TestSuite = ".\\TestSuite\\unittest_stack_interface\\" + `${testcase}`
-        console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
+        console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=./report,reportFilename=${testcase},html=true --require ts-node/register `)
         let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
 
         run.on('exit', async (code: number, signal: string) => {
