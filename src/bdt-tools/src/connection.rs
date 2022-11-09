@@ -2,15 +2,10 @@ use cyfs_base::*;
 use cyfs_bdt::{StreamGuard};
 use async_std::io::prelude::{ReadExt, WriteExt};
 use std::{
-    path::{Path, PathBuf}, 
+    path::{PathBuf}, 
     io::{Read, Write}, 
 };
-use async_std::{
-    sync::Arc, 
-    task, 
-    fs::File, 
-    io::prelude::*
-};
+
 #[derive(Clone)]
 pub struct TestConnection {
     stream: StreamGuard,
@@ -177,7 +172,7 @@ impl TestConnection {
                 b.copy_from_slice(&recv_buffer[0..FILE_SIZE_LEN]);
                 file_size = u64::from_be_bytes(b);
                 log::info!("=====================================file_size={}", file_size);
-                if(file_size>100*1024*1024*1024){
+                if file_size>100*1024*1024*1024 {
                     return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "error file_size"))
                 }
             }
@@ -237,7 +232,7 @@ impl TestConnection {
                 b.copy_from_slice(&recv_buffer[0..FILE_SIZE_LEN]);
                 file_size = u64::from_be_bytes(b);
                 log::info!("=====================================file_size={}", file_size);
-                if(file_size>100*1024*1024*1024){
+                if file_size>100*1024*1024*1024 {
                     return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "error file_size"))
                 }
                 let mut c = [0u8; FILE_SIZE_LEN];
@@ -271,7 +266,7 @@ impl TestConnection {
         let mut object_id = hash.to_string();
         log::info!("recv object finish, hash={:?}", &hash);
         if obj_type == 1{
-            let (device_obj,device_raw) = cyfs_base::Device::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
+            let (device_obj,_) = cyfs_base::Device::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
             let file_id = match file_name{
                 Some(name) =>{
                     name
@@ -292,7 +287,7 @@ impl TestConnection {
                 },
             }
         }else if obj_type == 2{
-            let (file_obj,file_raw) = cyfs_base::File::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
+            let (file_obj,_) = cyfs_base::File::raw_decode(file_buffer[16..total_recv as usize].as_mut()).unwrap();
             let file_id = format!("{}",file_obj.desc().calculate_id()) ;
             object_id  = file_id.clone().to_string();
             let file_obj_path =  obj_path.clone().join("file_obj").join(file_id.to_string().as_str());
@@ -305,7 +300,7 @@ impl TestConnection {
                 },
             }
         }else if obj_type == 3 {
-            let (dir_obj,dir_raw) = match cyfs_base::Dir::raw_decode(file_buffer[16..total_recv as usize].as_mut()){
+            let (dir_obj,_) = match cyfs_base::Dir::raw_decode(file_buffer[16..total_recv as usize].as_mut()){
                 Ok((dir_obj, dir_raw)) => {
                     Ok((dir_obj, dir_raw))
                 },

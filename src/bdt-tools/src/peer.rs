@@ -3,10 +3,9 @@ use std::{
     path::{Path, PathBuf}, 
     io::{Read, Write}, 
     sync::{Mutex}, 
-    time::{Duration, Instant},
+    time::{Duration,},
     collections::{HashMap,hash_map,BTreeSet},
     convert::TryFrom,
-    borrow::Cow,
     
 };
 use async_std::{
@@ -20,7 +19,6 @@ use rand::{Rng};
 use futures::StreamExt;
 use sha2::Digest;
 use cyfs_base::*;
-use bytes::Bytes;
 use cyfs_bdt::*;
 use cyfs_util::cache::{
     NamedDataCache, 
@@ -38,14 +36,9 @@ use cyfs_bdt::{
     DownloadTaskState, 
     StackOpenParams, 
     SingleDownloadContext, 
-    download::DirTaskPathControl,
-    local_chunk_store::LocalChunkWriter,
     local_chunk_store::LocalChunkListWriter,
-    local_chunk_store::LocalChunkReader,
     mem_tracker::MemTracker,
     mem_chunk_store::MemChunkStore,
-    ChunkWriter,
-    ChunkWriterExt,
     ChunkListDesc
 };
 use crate::lib::{LpcCommand, Lpc};
@@ -60,16 +53,11 @@ use cyfs_util::SYSTEM_INFO_MANAGER;
 
 use walkdir::WalkDir;
 use hyper::{body::Buf};
-use hyper::{Body, Method,Client,  Request};
-use serde::{Deserialize,Serialize};
-//
-#[derive(Clone)]
-struct Task {
-    task: Arc<Box<dyn DownloadTask>>,
-}
+use hyper::{Body};
+
 
 struct TaskMap {
-    tasks_map: HashMap<String, Task>,
+    tasks_map: HashMap<String, Box<dyn DownloadTask>>,
 }
 
 
@@ -87,23 +75,20 @@ impl TaskMap {
     pub fn get_task_state(&self, file_name: &str) -> Option<DownloadTaskState> {
         let task = self.get_task(file_name);
         if task.is_some() {
-            Some(task.unwrap().task.state())
+            Some(task.unwrap().state())
         } else {
             None
         }
     }
 
-    pub fn get_task(&self, file_name: &str) -> Option<Task> {
-        self.tasks_map.get(file_name).map(|v| v.clone())
+    pub fn get_task(&self, file_name: &str) -> Option<Box<dyn DownloadTask>> {
+        self.tasks_map.get(file_name).map(|v| v.clone_as_task())
     }
 
-    pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<Box<dyn DownloadTask>>) -> BuckyResult<()> {
+    pub fn add_task(&mut self, file_name: &str, download_file_task: Box<dyn DownloadTask>) -> BuckyResult<()> {
         match self.tasks_map.entry(file_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
-                let info = Task { 
-                    task: download_file_task
-                };
-                v.insert(info);
+                v.insert(download_file_task);
                 Ok(())
             }
             hash_map::Entry::Occupied(_) => {
@@ -117,60 +102,60 @@ impl TaskMap {
         }
     }
 
-    pub fn remove_task(&mut self, file_name: &str) -> Option<Arc<Box<dyn DownloadTask>>> {
-        self.tasks_map.remove(file_name).map(|v| v.task)
+    pub fn remove_task(&mut self, file_name: &str) -> Option<Box<dyn DownloadTask>> {
+        self.tasks_map.remove(file_name)
     }
 }
 
 
-struct DirTask {
-    //task: DirTaskPathControl,
-    task: Arc< DirTaskPathControl>,
-}
+// struct DirTask {
+//     //task: DirTaskPathControl,
+//     task: Arc< DirTaskPathControl>,
+// }
 
-struct DirTaskMap {
-    tasks_map: HashMap<String, DirTask>,
-}
+// struct DirTaskMap {
+//     tasks_map: HashMap<String, DirTask>,
+// }
 
-impl DirTaskMap {
-    pub fn new() -> Self {
-        Self {
-            tasks_map: HashMap::new(),
-        }
-    }
+// impl DirTaskMap {
+//     pub fn new() -> Self {
+//         Self {
+//             tasks_map: HashMap::new(),
+//         }
+//     }
 
-    pub fn is_task_exists(&self, file_name: &str) -> bool {
-        self.tasks_map.contains_key(file_name)
-    }
-    pub fn get_task(&self, file_name: &str) -> Option<&DirTask> {
-        self.tasks_map.get(file_name).map(|v| v.clone())
-    }
+//     pub fn is_task_exists(&self, file_name: &str) -> bool {
+//         self.tasks_map.contains_key(file_name)
+//     }
+//     pub fn get_task(&self, file_name: &str) -> Option<&DirTask> {
+//         self.tasks_map.get(file_name).map(|v| v.clone())
+//     }
 
 
-    pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<DirTaskPathControl>) -> BuckyResult<()> {
-        match self.tasks_map.entry(file_name.to_owned()) {
-            hash_map::Entry::Vacant(v) => {
-                let info = DirTask { 
-                    task: download_file_task
-                };
-                v.insert(info);
-                Ok(())
-            }
-            hash_map::Entry::Occupied(_) => {
-                let msg = format!(
-                    "download file task already exists: {}",
-                    file_name,
-                );
+//     pub fn add_task(&mut self, file_name: &str, download_file_task: Arc<DirTaskPathControl>) -> BuckyResult<()> {
+//         match self.tasks_map.entry(file_name.to_owned()) {
+//             hash_map::Entry::Vacant(v) => {
+//                 let info = DirTask { 
+//                     task: download_file_task
+//                 };
+//                 v.insert(info);
+//                 Ok(())
+//             }
+//             hash_map::Entry::Occupied(_) => {
+//                 let msg = format!(
+//                     "download file task already exists: {}",
+//                     file_name,
+//                 );
 
-                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
-            }
-        }
-    }
+//                 Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+//             }
+//         }
+//     }
 
-    pub fn remove_task(&mut self, file_name: &str) -> Option<Arc< DirTaskPathControl>> {
-        self.tasks_map.remove(file_name).map(|v| v.task)
-    }
-}
+//     pub fn remove_task(&mut self, file_name: &str) -> Option<Arc< DirTaskPathControl>> {
+//         self.tasks_map.remove(file_name).map(|v| v.task)
+//     }
+// }
 
 
 
@@ -204,11 +189,11 @@ struct LazyComponents {
 
 struct PeerImpl {
     lazy_components: Arc<Mutex<HashMap<String, LazyComponents>>>,
-    stream_name_gen: TempSeqGenerator, 
+    // stream_name_gen: TempSeqGenerator, 
     stream_manager: Mutex<Vec<TestConnection>>,
     temp_dir: PathBuf,
     tasks: Arc<Mutex<TaskMap>>,
-    dir_tasks: Arc<Mutex<DirTaskMap>>,
+    // dir_tasks: Arc<Mutex<DirTaskMap>>,
     fristQA_answer : Mutex<Vec<u8>>
 }
 #[derive(Clone)]
@@ -217,16 +202,16 @@ pub struct Peer(Arc<PeerImpl>);
 impl Peer {
     pub fn new(temp_dir: String)->Self {
         let task_map = TaskMap::new();
-        let dir_task_map = DirTaskMap::new();
-        let mut peer_map = HashMap::new();
+        // let dir_task_map = DirTaskMap::new();
+        let peer_map = HashMap::new();
         let answer = Vec::new();
         Self(Arc::new(PeerImpl {
             lazy_components: Arc::new(Mutex::new(peer_map)),
-            stream_name_gen: TempSeqGenerator::new(), 
+            // stream_name_gen: TempSeqGenerator::new(), 
             stream_manager: Mutex::new(Vec::new()),
             temp_dir: PathBuf::from_str(temp_dir.as_str()).unwrap(),
             tasks: Arc::new(Mutex::new(task_map)),
-            dir_tasks : Arc::new(Mutex::new(dir_task_map)),
+            // dir_tasks : Arc::new(Mutex::new(dir_task_map)),
             fristQA_answer :Mutex::new(answer),
         }))
     }
@@ -280,7 +265,7 @@ impl Peer {
                     for ep in ep_list.clone(){
                         log::info!("{}",format!("local ep info:{}",ep));
                     }
-                    let _ = match(ep_type){
+                    let _ = match ep_type {
                         Some(ef_config) =>{
                             if ef_config == String::from("Empty") {
                                 log::info!("set resp endpoint list Empty");
@@ -369,7 +354,7 @@ impl Peer {
                             wan_addr = true;
                         }
                     }
-                    if(c.known_eps){
+                    if c.known_eps {
                         wan_addr = true;
                     }
                     let remote_sn = match c.remote_desc.body().as_ref() {
@@ -395,13 +380,13 @@ impl Peer {
                         Ok(mut stream) => {
                             let mut len = 0;
                             // 接收answer
-                            if(c.accept_answer){
+                            if c.accept_answer {
                                 len = match stream.read(&mut answer).await{
                                     Ok(len) => {
                                         log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
                                         len
                                     },
-                                    Err(e) => {
+                                    Err(_) => {
                                         log::error!("Read answer faild");
                                         let len : usize = 0;
                                         len
@@ -491,7 +476,7 @@ impl Peer {
                                 wan_addr = true;
                             }
                         }
-                        if(c.known_eps){
+                        if c.known_eps {
                             wan_addr = true;
                         }
                         let remote_sn = match remote_desc.body().as_ref() {
@@ -517,13 +502,13 @@ impl Peer {
                         Ok(mut stream) => {
                             let mut len = 0;
                             // 接收answer
-                            if(c.accept_answer){
+                            if c.accept_answer {
                                 len = match stream.read(&mut answer).await{
                                     Ok(len) => {
                                         log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
                                         len
                                     },
-                                    Err(e) => {
+                                    Err(_) => {
                                         log::error!("Read answer faild");
                                         let len : usize = 0;
                                         len
@@ -568,7 +553,7 @@ impl Peer {
         {
             let peer = self.clone();
             let mut lpc = lpc.clone();
-            let resp = match AutoAcceptStreamLpcCommandReq::try_from(c) {
+            match AutoAcceptStreamLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to AutoAcceptStreamLpcCommandReq failed, e={}", &e);
                     AutoAcceptStreamLpcCommandResp {
@@ -883,7 +868,7 @@ impl Peer {
                             let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                             let connState = format!("{}", conn.get_stream().state());
                             log::info!("check StreamState = {}", connState);
-                            if(connState == "# StreamState::Closing" || connState == "StreamState::Closed"){
+                            if connState == "# StreamState::Closing" || connState == "StreamState::Closed" {
                                 SendLpcCommandResp {
                                     seq, 
                                     result: 105,
@@ -891,7 +876,7 @@ impl Peer {
                                     time: 0,
                                     hash: HashValue::default()
                                 }
-                            }else{
+                            } else {
                                 match conn.send_file(c.size).await {
                                     Err(e) => {
                                         log::error!("send failed, name={}, e={}", &c.stream_name, &e);
@@ -1158,7 +1143,7 @@ impl Peer {
                     let create_time = c.create_time;
                     let send_time = c.send_time;
                     let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
-                        Ok(c) =>{
+                        Ok(_) =>{
                             log::info!("Send Datagram succcess ");
                             SendDatagramLpcCommandResp {
                                 seq, 
@@ -1196,8 +1181,8 @@ impl Peer {
         let peer_name = c.get_unique_id();
         {
             let peer = self.clone();
-            let mut lpc = lpc.clone();
-            let resp = match RecvDatagramMonitorLpcCommandReq::try_from(c) {
+            let lpc = lpc.clone();
+            match RecvDatagramMonitorLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to RecvDatagramMonitorLpcCommandReq failed, e={}", &e);
                     RecvDatagramMonitorLpcCommandResp {
@@ -1205,7 +1190,7 @@ impl Peer {
                         result: e.code().as_u16(),
                     }
                 },
-                Ok(c) => {
+                Ok(_) => {
                     let stack = peer.get_stack(&peer_name).unwrap().clone();
                     task::spawn(async move {
                         let mut lpc1 = lpc.clone();
@@ -1269,15 +1254,15 @@ impl Peer {
                 },
                 Ok(c) => {
                     
-                    let mut ret = if c.path.as_path().exists() {
+                    let ret = if c.path.as_path().exists() {
                         let mut content =  File::open(c.path.as_path()).await.unwrap();
                         let mut buf = vec![0u8; c.chunk_size];
-                        let len = content.read(&mut buf).await.unwrap();
+                        let _ = content.read(&mut buf).await.unwrap();
                         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                         let result =  match ChunkId::calculate(&buf).await {
                             Ok(chunk_id) => {
                                 let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
-                                let path = dir.join(chunk_id.to_string().as_str());
+                                // let path = dir.join(chunk_id.to_string().as_str());
                                 log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 CalculateChunkLpcCommandResp {
                                     seq, 
@@ -1337,30 +1322,44 @@ impl Peer {
                     let mut buf = vec![0u8; c.chunk_size];
                     let len = content.read(&mut buf).await.unwrap();
                     log::info!("set chunk content len={}",len.clone());
-                    let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    // let begin_calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.clone().to_string().as_str());
                     log::info!("track_chunk_in_path, path={}", path.display());
                     let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match cyfs_bdt::download::track_chunk_to_path(&*stack, &c.chunk_id,Arc::new(buf),path.as_path()).await {
-                        Ok(_) => {
-                            let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
-                            let request = cyfs_util::UpdateChunkStateRequest {
-                                chunk_id: c.chunk_id.clone(),
-                                current_state : None,
-                                state: ChunkState::Ready,
-
-                            };
-                            let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
-                            let chunk_exists = stack.ndn().chunk_manager().store().exists( &c.chunk_id).await;
-                            log::info!("chunk is exists {}",chunk_exists);
-                            
-                            SetChunkLpcCommandResp {
-                                seq, 
-                                result: 0 as u16,
-                                chunk_id:c.chunk_id.clone(),
-                                set_time,
-                                
+                    match cyfs_bdt::download::local_chunk_writer(&*stack, &c.chunk_id, path).await {
+                        Ok(writer) => {
+                            match writer.write(async_std::io::Cursor::new(buf)).await {
+                                Ok(_) => {
+                                    let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                                    let request = cyfs_util::UpdateChunkStateRequest {
+                                        chunk_id: c.chunk_id.clone(),
+                                        current_state : None,
+                                        state: ChunkState::Ready,
+        
+                                    };
+                                    let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                                    let chunk_exists = stack.ndn().chunk_manager().store().exists( &c.chunk_id).await;
+                                    log::info!("chunk is exists {}",chunk_exists);
+                                    
+                                    SetChunkLpcCommandResp {
+                                        seq, 
+                                        result: 0 as u16,
+                                        chunk_id:c.chunk_id.clone(),
+                                        set_time,
+                                        
+                                    }
+                                },
+                                Err(e) => {
+                                    log::error!("set-chunk failed, e={}", &e);
+                                    SetChunkLpcCommandResp {
+                                        seq, 
+                                        result: e.code().as_u16(),
+                                        chunk_id:c.chunk_id.clone(),
+                                        set_time:0,
+                                        
+                                    }
+                                }
                             }
                         },
                         Err(e) => {
@@ -1422,10 +1421,10 @@ impl Peer {
                 },
                 Ok(c) => {
                     
-                    let mut ret = if c.path.as_path().exists() {
+                    let ret = if c.path.as_path().exists() {
                         let mut content =  File::open(c.path.as_path()).await.unwrap();
                         let mut buf = vec![0u8; c.chunk_size];
-                        let len = content.read(&mut buf).await.unwrap();
+                        let _ = content.read(&mut buf).await.unwrap();
                         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                         let result =  match ChunkId::calculate(&buf).await {
                             Ok(chunk_id) => {
@@ -1434,25 +1433,40 @@ impl Peer {
                                 log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 let calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32;
                                 let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                let resp =  match cyfs_bdt::download::track_chunk_to_path(&*stack, &chunk_id,Arc::new(buf),path.as_path()).await {
-                                    Ok(_) => {
-                                        let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
-                                        let request = cyfs_util::UpdateChunkStateRequest {
-                                            chunk_id: chunk_id.clone(),
-                                            current_state : None,
-                                            state: ChunkState::Ready,
-            
-                                        };
-                                        let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
-                                        let chunk_exists = stack.ndn().chunk_manager().store().exists( &chunk_id).await;
-                                        log::info!("chunk is exists {}",chunk_exists);
-                                        TrackChunkLpcCommandResp {
-                                            seq, 
-                                            result: 0 as u16,
-                                            chunk_id:chunk_id.clone(),
-                                            calculate_time:calculate_time,
-                                            set_time : set_time,
-                                            
+                                match cyfs_bdt::download::local_chunk_writer(&*stack, &chunk_id, path).await {
+                                    Ok(writer) => {
+                                        match writer.write(async_std::io::Cursor::new(buf)).await {
+                                            Ok(_) => {
+                                                let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
+                                                let request = cyfs_util::UpdateChunkStateRequest {
+                                                    chunk_id: chunk_id.clone(),
+                                                    current_state : None,
+                                                    state: ChunkState::Ready,
+                    
+                                                };
+                                                let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                                                let chunk_exists = stack.ndn().chunk_manager().store().exists( &chunk_id).await;
+                                                log::info!("chunk is exists {}",chunk_exists);
+                                                TrackChunkLpcCommandResp {
+                                                    seq, 
+                                                    result: 0 as u16,
+                                                    chunk_id:chunk_id.clone(),
+                                                    calculate_time:calculate_time,
+                                                    set_time : set_time,
+                                                    
+                                                }
+                                            },
+                                            Err(e) => {
+                                                log::error!("set-chunk failed, e={}", &e);
+                                                TrackChunkLpcCommandResp {
+                                                    seq, 
+                                                    result: e.code().as_u16(),
+                                                    chunk_id:chunk_id.clone(),
+                                                    calculate_time:0,
+                                                    set_time : 0,
+                                                    
+                                                }
+                                            }
                                         }
                                     },
                                     Err(e) => {
@@ -1466,8 +1480,7 @@ impl Peer {
                                             
                                         }
                                     }
-                                };
-                                resp
+                                }
                             }
                             Err(e) => {
                                 log::error!("set-chunk failed for calculate chunk-id failed, err: {:?}", e);
@@ -1521,16 +1534,38 @@ impl Peer {
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.to_string().as_str());
 
-                    let ret = cyfs_bdt::download::download_chunk_to_path(&stack, 
+                    match cyfs_bdt::download::download_chunk(
+                        &stack, 
                         c.chunk_id.clone(), 
                         None,
-                        Some(SingleDownloadContext::streams(None, vec![remote_id])), 
-                        path.as_path()).await;
-                    match ret {
-                        Ok(_) => {
-                            InterestChunkLpcCommandResp {
-                                seq, 
-                                result: 0 as u16,
+                        Some(SingleDownloadContext::desc_streams(None, vec![c.remote.desc().clone()])), 
+                    ).await {
+                        Ok(task) => {
+                            match cyfs_bdt::download::local_chunk_writer(&*stack, &c.chunk_id, path).await {
+                                Ok(writer) => {
+                                    match writer.write(task.reader()).await {
+                                        Ok(_) => {
+                                            InterestChunkLpcCommandResp { 
+                                                seq, 
+                                                result: 0 as u16,
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::error!("interest-chunk failed, e={}", &e);
+                                            InterestChunkLpcCommandResp {
+                                                seq, 
+                                                result: e.code().as_u16(),
+                                            }
+                                        }
+                                    }
+                                },
+                                Err(e) => {
+                                    log::error!("interest-chunk failed, e={}", &e);
+                                    InterestChunkLpcCommandResp {
+                                        seq, 
+                                        result: e.code().as_u16(),
+                                    }
+                                }
                             }
                         },
                         Err(e) => {
@@ -1568,25 +1603,34 @@ impl Peer {
                     stack.device_cache().add(&remote_id, &c.remote);
 
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
-                    if(!dir.as_path().exists()){
+                    if !dir.as_path().exists() {
                         let _ = std::fs::create_dir_all(dir.clone());
                     }
-                    let mut writers : Vec<Box<dyn ChunkWriter>> = Vec::new();
-                    let writer = LocalChunkListWriter::new(
-                        dir.clone(), 
-                        &ChunkListDesc::from_chunks(&c.chunk_list.clone()), 
-                        stack.ndn().chunk_manager().ndc(), 
-                        stack.ndn().chunk_manager().tracker());
-                    let writer = Box::new(writer) as Box<dyn ChunkWriter>;
-                    writers.push(writer);
+                    
+                  
+                   
+                    
                     let task = cyfs_bdt::download::download_chunk_list(&stack, 
                         c.task_name.clone(),
                         &c.chunk_list.clone(),
                         None, 
-                        Some(SingleDownloadContext::streams(None, vec![remote_id])), 
-                        writers).await.unwrap();
+                        Some(SingleDownloadContext::desc_streams(None, vec![c.remote.desc().clone()]))
+                    ).await.unwrap();
+
+                    {
+                        let writer = LocalChunkListWriter::new(
+                            dir.clone(), 
+                            &ChunkListDesc::from_chunks(&c.chunk_list.clone()), 
+                            stack.ndn().chunk_manager().ndc(), 
+                            stack.ndn().chunk_manager().tracker());
+                        let reader = task.reader(0);
+                        async_std::task::spawn(async move {
+                            let _ = writer.write(reader).await;
+                        });
+                    }
+                    
                     let mut tasks = peer.0.tasks.lock().unwrap();
-                    let _ =  tasks.add_task(c.task_name.clone().as_str(), Arc::new(task)).unwrap();
+                    let _ =  tasks.add_task(c.task_name.clone().as_str(), task.clone_as_task()).unwrap();
                     InterestChunkListCommandResp {
                         seq, 
                         result: Ok(c.task_name.clone()),
@@ -1615,7 +1659,7 @@ impl Peer {
                     }
                 },
                 Ok(c) => {
-                    match stack.ndn().chunk_manager().store().read(&c.chunk_id).await {
+                    match stack.ndn().chunk_manager().store().get(&c.chunk_id).await {
                         Ok(mut reader) => {
                             match chunk_check(reader.as_mut(), c.chunk_id).await {
                                 Ok(state) => {
@@ -1672,7 +1716,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(speed,progress) => "downloading",
+                                DownloadTaskState::Downloading(..) => "downloading",
                                 DownloadTaskState::Finished => "finished",
                                 DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
@@ -1780,16 +1824,25 @@ impl Peer {
                         Ok((task_id, file))
                     } else {
                         if let Some(file) = c.file.as_ref() {
-                            let task = cyfs_bdt::download::download_file_to_path(&stack, 
+                            let task = cyfs_bdt::download::download_file(&stack, 
                                 file.clone(),
                                 None, 
-                                Some(SingleDownloadContext::streams(None, vec![c.default_hub])), 
-                                c.path.as_path()).await.unwrap();
-                                                        
+                                Some(SingleDownloadContext::id_streams(&*stack, None, vec![c.default_hub]).await.unwrap()), 
+                            ).await.unwrap();
+
+
+                            {
+                                let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                                let reader = task.reader();
+                                async_std::task::spawn(async move {
+                                    let _ = writer.write(reader).await.unwrap();
+                                });
+                            }
+                           
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                             log::info!("recver: task_id {}", &task_id);
                             let mut tasks = peer.0.tasks.lock().unwrap();
-                            tasks.add_task(&task_id.as_str(), Arc::new(task)).unwrap();
+                            tasks.add_task(&task_id.as_str(), task.clone_as_task()).unwrap();
 
                             Ok((task_id, file.clone()))
                         } else {
@@ -1860,7 +1913,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(speed, progress) => "downloading",
+                                DownloadTaskState::Downloading(..) => "downloading",
                                 DownloadTaskState::Finished => "finished",
                                 DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
@@ -2113,7 +2166,7 @@ impl Peer {
                         for pn in passive_pn.clone() {
                             device.mut_connect_info().mut_passive_pn_list().push(pn.desc().device_id());
                         }
-                        let ret = match device.encode_to_file(public_key_path.clone().as_path(),true){
+                        let _ = match device.encode_to_file(public_key_path.clone().as_path(),true) {
                             Ok(_) => {
                                 log::info!("succ encode file obj to {}", public_key_path.clone().display());
                             },
@@ -2122,7 +2175,7 @@ impl Peer {
                             },
                         };
 
-                        let ret = match private_key.encode_to_file(private_key_path.clone().as_path(),true){
+                        let _ = match private_key.encode_to_file(private_key_path.clone().as_path(),true){
                             Ok(_) => {
                                 log::info!("succ encode file obj to {}", private_key_path.clone().display());
                             },
@@ -2225,15 +2278,10 @@ impl Peer {
         params.config.interface.udp.sn_only = c.sn_only;
         params.tcp_port_mapping = c.tcp_port_mapping;
         let _ = match &c.ndn_event{
-            Some(s) =>{
+            Some(_) =>{
                 let _ = match &c.ndn_event_target{
-                    Some(d) =>{
-                        if s.clone() == "Redirect" {
-                            log::info!("set ndn_event handler = Redirect,target = {}",d.clone());
-                        }else if s.clone() == "Forward"{
-                            log::info!("set ndn_event handler = Forward,target = {}",d.clone());
-                            params.ndn_event = Some(Box::new(cyfs_bdt::event_utils::ForwardEventHandle::new(d.clone())));
-                        }
+                    Some(_d) =>{
+                        params.ndn_event = None;
                     },
                     None => {
                         params.ndn_event = None;
@@ -2288,7 +2336,7 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CalculateFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateFileCommandReq failed, e={}", &e);
@@ -2505,16 +2553,24 @@ impl Peer {
                         }
                         
                         if let Some(file) = c.file.as_ref() {
-                            let task = cyfs_bdt::download::download_file_to_path(&stack, 
+                            let task = cyfs_bdt::download::download_file(&stack, 
                                 file.clone(),
                                 None, 
-                                Some(SingleDownloadContext::streams(None, src)) , 
-                                c.path.as_path()).await.unwrap();
-                                                        
+                                Some(SingleDownloadContext::id_streams(&stack, None, src).await.unwrap()) , 
+                            ).await.unwrap();
+                            
+                            {
+                                let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                                let reader = task.reader();
+                                async_std::task::spawn(async move {
+                                    let _ = writer.write(reader).await.unwrap();
+                                });
+                            }
+
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                             log::info!("recver: task_id {}", &task_id);
                             let mut tasks = peer.0.tasks.lock().unwrap();
-                            match tasks.add_task(&task_id.as_str(), Arc::new(task)) {
+                            match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
                                 Ok(_) => {
                                     Ok((task_id, file.clone()))
                                 },
@@ -2540,86 +2596,87 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
-    pub fn on_start_download_file_range(&self, c: LpcCommand, lpc: Lpc) {
+    pub fn on_start_download_file_range(&self, c: LpcCommand, _lpc: Lpc) {
         log::info!("on start-download-file-range, c={:?}", &c);
-        let seq = c.seq();
-        let peer = self.clone();
+        // let seq = c.seq();
+        // let peer = self.clone();
 
-        async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
-            let resp = match StartDownloadFileQWithRangesCommandReq::try_from(c) {
-                Err(e) => {
-                    log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
-                    StartDownloadFileWithRangesCommandResp {
-                        seq, 
-                        result: Err(e),
-                    }
-                },
-                Ok(c) => {
-                    let ret = {
-                        let mut src = Vec::new();
-                        src.push(c.peer_id);
-                        if c.second_peer_id.is_some() {
-                            src.push(c.second_peer_id.unwrap());
-                        }
+        // async_std::task::spawn(async move {
+        //     let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+        //     let resp = match StartDownloadFileQWithRangesCommandReq::try_from(c) {
+        //         Err(e) => {
+        //             log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
+        //             StartDownloadFileWithRangesCommandResp {
+        //                 seq, 
+        //                 result: Err(e),
+        //             }
+        //         },
+        //         Ok(c) => {
+        //             let ret = {
+        //                 let mut src = Vec::new();
+        //                 src.push(c.peer_id);
+        //                 if c.second_peer_id.is_some() {
+        //                     src.push(c.second_peer_id.unwrap());
+        //                 }
                         
-                        if let Some(file) = c.file.as_ref() {
-                            let file_id = file.desc().calculate_id();
-                            let total_size = 10000;
-                            // let writer = FirstWakeupStreamWriter::new(&file_id,total_size);
-                            // let mut writer_list = vec![writer.clone().into_writer_ext()];
-                            // // 本地缓存
-                            // if let Ok(Some(writer)) = self.data_cache.gen_file_writer(file_id, file).await {
-                            //     writer_list.push(ChunkWriterExtAdapter::new(writer).into_writer_ext());
-                            // }
+        //                 if let Some(file) = c.file.as_ref() {
+        //                     let file_id = file.desc().calculate_id();
+        //                     let total_size = 10000;
+        //                     // let writer = FirstWakeupStreamWriter::new(&file_id,total_size);
+        //                     // let mut writer_list = vec![writer.clone().into_writer_ext()];
+        //                     // // 本地缓存
+        //                     // if let Ok(Some(writer)) = self.data_cache.gen_file_writer(file_id, file).await {
+        //                     //     writer_list.push(ChunkWriterExtAdapter::new(writer).into_writer_ext());
+        //                     // }
 
-                            // // 增加返回短路器
-                            // let waker = FirstWakeupStreamWriter::new(writer.task_id());
-                            // writer_list.push(waker.clone().into_writer_ext());
+        //                     // // 增加返回短路器
+        //                     // let waker = FirstWakeupStreamWriter::new(writer.task_id());
+        //                     // writer_list.push(waker.clone().into_writer_ext());
 
-                            let chunk_list = ChunkListDesc::from_file(&file).unwrap();
-                            let writer = LocalChunkListWriter::new(
-                                c.path.clone().as_path().to_owned(), 
-                                &chunk_list, 
-                                stack.ndn().chunk_manager().ndc(), 
-                                stack.ndn().chunk_manager().tracker());
-                            let writer = Box::new(writer)  as Box<dyn ChunkWriterExt>;
-                            let task = cyfs_bdt::download::download_file_with_ranges(&stack, 
-                                file.clone(), 
-                                c.ranges.clone(),
-                                None,
-                                Some(SingleDownloadContext::streams(None, src)),  
-                                vec![writer]).await.unwrap();
+        //                     let chunk_list = ChunkListDesc::from_file(&file).unwrap();
+        //                     let writer = LocalChunkListWriter::new(
+        //                         c.path.clone().as_path().to_owned(), 
+        //                         &chunk_list, 
+        //                         stack.ndn().chunk_manager().ndc(), 
+        //                         stack.ndn().chunk_manager().tracker());
+        //                     let writer = Box::new(writer)  as Box<dyn ChunkWriterExt>;
+        //                     let task = cyfs_bdt::download::download_file_with_ranges(&stack, 
+        //                         file.clone(), 
+        //                         c.ranges.clone(),
+        //                         None,
+        //                         Some(SingleDownloadContext::streams(None, src)),  
+        //                         vec![writer]).await.unwrap();
                                                         
-                            //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
-                            log::info!("recver: task_id {}", file_id.clone());
-                            let mut tasks = peer.0.tasks.lock().unwrap();
-                            match tasks.add_task(&file_id.clone().to_string().as_str(), Arc::new(task)) {
-                                Ok(_) => {
-                                    Ok((file_id.clone().to_string(), file.clone()))
-                                },
-                                Err(e) => {
-                                    Err(e)
-                                }
-                            }                                
-                        } else {
-                            let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input file object");
-                            log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
-                            Err(e)
-                        }
-                    };
+        //                     //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
+        //                     log::info!("recver: task_id {}", file_id.clone());
+        //                     let mut tasks = peer.0.tasks.lock().unwrap();
+        //                     match tasks.add_task(&file_id.clone().to_string().as_str(), Arc::new(task)) {
+        //                         Ok(_) => {
+        //                             Ok((file_id.clone().to_string(), file.clone()))
+        //                         },
+        //                         Err(e) => {
+        //                             Err(e)
+        //                         }
+        //                     }                                
+        //                 } else {
+        //                     let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input file object");
+        //                     log::error!("convert command to StartDownloadFileQWithRangesCommandReq failed, e={}", &e);
+        //                     Err(e)
+        //                 }
+        //             };
 
-                    StartDownloadFileWithRangesCommandResp {
-                        seq, 
-                        result: ret,
-                    }
-                }
-            };
+        //             StartDownloadFileWithRangesCommandResp {
+        //                 seq, 
+        //                 result: ret,
+        //             }
+        //         }
+        //     };
 
-            let mut lpc = lpc;
-            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
-        });
+        //     let mut lpc = lpc;
+        //     let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        // });
     }
+
     pub fn on_download_file_state(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on download-file-state, c={:?}", &c);
         let seq = c.seq();
@@ -2641,7 +2698,7 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(speed, progress) => "downloading",
+                                DownloadTaskState::Downloading(..) => "downloading",
                                 DownloadTaskState::Finished => "finished",
                                 DownloadTaskState::Paused => "paused",
                                 _ => "unkown",
@@ -2696,9 +2753,9 @@ impl Peer {
                                 Ok(entry) => {
                                     log::info!("add file,path = {}",entry.clone().path().display());
                                     if entry.file_type().is_file() {
-                                        let file_name = entry.file_name();
+                                        // let file_name = entry.file_name();
                                         let file_path_str = entry.path();
-                                        let mut file_path:PathBuf  = entry.path().to_path_buf().clone();
+                                        let file_path:PathBuf  = entry.path().to_path_buf().clone();
                                         log::info!("add file,path = {}",file_path.clone().display());
                                         //down_file_path.push(String::from(entry.path().as_os_str().to_str().expect(""))); 
                                         //单个文件chunk生成
@@ -2802,166 +2859,166 @@ impl Peer {
         });
     }
     
-    pub fn on_start_download_dir(&self, c: LpcCommand, lpc: Lpc) {
+    pub fn on_start_download_dir(&self, c: LpcCommand, _lpc: Lpc) {
         log::info!("on start-download-dir, c={:?}", &c);
-        let seq = c.seq();
-        let peer = self.clone();
+        // let seq = c.seq();
+        // let peer = self.clone();
 
-        async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
-            let resp = match StartDownloadDirCommandReq::try_from(c) {
-                Err(e) => {
-                    log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
-                    StartDownloadDirCommandResp {
-                        seq, 
-                        result: Err(e),
-                    }
-                },
-                Ok(c) => {
+        // async_std::task::spawn(async move {
+        //     let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+        //     let resp = match StartDownloadDirCommandReq::try_from(c) {
+        //         Err(e) => {
+        //             log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
+        //             StartDownloadDirCommandResp {
+        //                 seq, 
+        //                 result: Err(e),
+        //             }
+        //         },
+        //         Ok(c) => {
  
-                    let ret = {
-                        let mut src = Vec::new();
-                        src.push(c.peer_id);
-                        if c.second_peer_id.is_some() {
-                            src.push(c.second_peer_id.unwrap());
-                        }
-                        let down_dir = c.path.clone();
-                        let mut down_file_path/* : Vec<_> */ = vec![];
-                        let mut source = c.dir_object_path.as_path().join("file_obj"); 
-                        let mut dir_map : Vec<FileInfo> =  c.dir_map;
-                        // 读取本地的file object 文件获取对象数据
-                        for fileInfo in dir_map{
-                            let entry = source.clone().join(fileInfo.file_id);
-                            let mut file_name = fileInfo.name;
-                            if entry.is_file() {
-                                let mut file = std::fs::File::open(entry.clone()).unwrap();
-                                let mut buf = Vec::<u8>::new();
-                                let _ = file.read_to_end(&mut buf).map_err(|e| {
-                                    log::error!("read file object file failed , e={}", &e);
-                                    e
-                                });
-                                let (file_obj,_) = cyfs_base::File::raw_decode(buf.as_slice()).unwrap();
-                                let file_id = file_obj.desc().calculate_id();
-                                let down_path = down_dir.join(file_name.as_str());
-                                down_file_path.push((file_obj.clone(), down_path));
-                            }
-                        }
-                        // 下载文件夹
-                        if let Some(dir) = c.dir.clone().as_ref() {
-                            let mut task_id = format!("{}",dir.desc().calculate_id());
-                            let download_dir =  match cyfs_bdt::download::download_dir_to_path(
-                                &stack,
-                                dir.clone().desc().dir_id(),
-                                None,
-                                Some(SingleDownloadContext::streams(None, src)), 
-                                down_dir.as_path(),
-                            ){
-                                Ok((task, dir_task_control)) => {
-                                    for (file, path) in down_file_path {
-                                        let _ = dir_task_control.add_file_path(file, path.as_path());
-                                    }
+        //             let ret = {
+        //                 let mut src = Vec::new();
+        //                 src.push(c.peer_id);
+        //                 if c.second_peer_id.is_some() {
+        //                     src.push(c.second_peer_id.unwrap());
+        //                 }
+        //                 let down_dir = c.path.clone();
+        //                 let mut down_file_path/* : Vec<_> */ = vec![];
+        //                 let mut source = c.dir_object_path.as_path().join("file_obj"); 
+        //                 let mut dir_map : Vec<FileInfo> =  c.dir_map;
+        //                 // 读取本地的file object 文件获取对象数据
+        //                 for fileInfo in dir_map{
+        //                     let entry = source.clone().join(fileInfo.file_id);
+        //                     let mut file_name = fileInfo.name;
+        //                     if entry.is_file() {
+        //                         let mut file = std::fs::File::open(entry.clone()).unwrap();
+        //                         let mut buf = Vec::<u8>::new();
+        //                         let _ = file.read_to_end(&mut buf).map_err(|e| {
+        //                             log::error!("read file object file failed , e={}", &e);
+        //                             e
+        //                         });
+        //                         let (file_obj,_) = cyfs_base::File::raw_decode(buf.as_slice()).unwrap();
+        //                         let file_id = file_obj.desc().calculate_id();
+        //                         let down_path = down_dir.join(file_name.as_str());
+        //                         down_file_path.push((file_obj.clone(), down_path));
+        //                     }
+        //                 }
+        //                 // 下载文件夹
+        //                 if let Some(dir) = c.dir.clone().as_ref() {
+        //                     let mut task_id = format!("{}",dir.desc().calculate_id());
+        //                     let download_dir =  match cyfs_bdt::download::download_dir_to_path(
+        //                         &stack,
+        //                         dir.clone().desc().dir_id(),
+        //                         None,
+        //                         Some(SingleDownloadContext::streams(None, src)), 
+        //                         down_dir.as_path(),
+        //                     ){
+        //                         Ok((task, dir_task_control)) => {
+        //                             for (file, path) in down_file_path {
+        //                                 let _ = dir_task_control.add_file_path(file, path.as_path());
+        //                             }
                                     
-                                    let mut tasks = peer.0.tasks.lock().unwrap();
-                                    let add_task =  match tasks.add_task(&task_id.clone().as_str(), Arc::new(task)) {
-                                        Ok(_) => {
-                                            Ok((task_id.clone(), dir.clone()))
-                                        },
-                                        Err(e) => {
-                                            Err(e)
-                                        }
-                                    }; 
-                                    let mut dir_tasks = peer.0.dir_tasks.lock().unwrap();
-                                    match dir_tasks.add_task(&task_id.clone().as_str(),Arc::new(dir_task_control)) {
-                                        Ok(_) => {
-                                            Ok((task_id.clone(), dir.clone()))
-                                        },
-                                        Err(e) => {
-                                            Err(e)
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input dir object");
-                                    log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
-                                    Err(e)
-                                }
-                            };
-                            Ok((task_id,dir.clone()))
+        //                             let mut tasks = peer.0.tasks.lock().unwrap();
+        //                             let add_task =  match tasks.add_task(&task_id.clone().as_str(), Arc::new(task)) {
+        //                                 Ok(_) => {
+        //                                     Ok((task_id.clone(), dir.clone()))
+        //                                 },
+        //                                 Err(e) => {
+        //                                     Err(e)
+        //                                 }
+        //                             }; 
+        //                             let mut dir_tasks = peer.0.dir_tasks.lock().unwrap();
+        //                             match dir_tasks.add_task(&task_id.clone().as_str(),Arc::new(dir_task_control)) {
+        //                                 Ok(_) => {
+        //                                     Ok((task_id.clone(), dir.clone()))
+        //                                 },
+        //                                 Err(e) => {
+        //                                     Err(e)
+        //                                 }
+        //                             }
+        //                         }
+        //                         Err(e) => {
+        //                             let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input dir object");
+        //                             log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
+        //                             Err(e)
+        //                         }
+        //                     };
+        //                     Ok((task_id,dir.clone()))
                        
-                        } else {
-                            let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input dir object");
-                            log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
-                            Err(e)
-                        }
-                    };
-                    StartDownloadDirCommandResp {
-                        seq, 
-                        result: ret
-                    }
-                }
-            };
+        //                 } else {
+        //                     let e = BuckyError::new(BuckyErrorCode::InvalidParam, "should input dir object");
+        //                     log::error!("convert command to StartDownloadDirCommandReq failed, e={}", &e);
+        //                     Err(e)
+        //                 }
+        //             };
+        //             StartDownloadDirCommandResp {
+        //                 seq, 
+        //                 result: ret
+        //             }
+        //         }
+        //     };
 
-            let mut lpc = lpc;
-            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
-        });
+        //     let mut lpc = lpc;
+        //     let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        // });
     }
 
-    pub fn on_download_dir_state(&self, c: LpcCommand, lpc: Lpc) {
+    pub fn on_download_dir_state(&self, c: LpcCommand, _lpc: Lpc) {
         log::info!("on download-file-state, c={:?}", &c);
-        let seq = c.seq();
-        let peer = self.clone();
-        async_std::task::spawn(async move {
-            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
-            let resp = match DownloadDirStateCommandReq::try_from(c) {
-                Err(e) => {
-                    log::error!("convert command to DownloadDirStateCommandReq failed, e={}", &e);
-                    DownloadDirStateCommandResp {
-                        seq, 
-                        state: Err(e)
-                    }
-                },
-                Ok(c) => {
-                    let task_id = c.session;
-                    let tasks = peer.0.tasks.lock().unwrap();
-                    let task = tasks.get_task_state(&task_id.clone().as_str());
-                    let dir_tasks = peer.0.dir_tasks.lock().unwrap();
-                    let dir_task = dir_tasks.get_task(&task_id.clone().as_str()).unwrap();
-                    match task  {
-                        Some(state) => {
-                            let state_str = match state {
-                                DownloadTaskState::Downloading(speed, progress) => {
-                                    if progress == 100 as f32 {
-                                        let _ = dir_task.task.finish();
-                                    }
-                                    "downloading"
-                                },
-                                DownloadTaskState::Finished => {
-                                    "finished"
-                                },
+        // let seq = c.seq();
+        // let peer = self.clone();
+        // async_std::task::spawn(async move {
+        //     // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+        //     let resp = match DownloadDirStateCommandReq::try_from(c) {
+        //         Err(e) => {
+        //             log::error!("convert command to DownloadDirStateCommandReq failed, e={}", &e);
+        //             DownloadDirStateCommandResp {
+        //                 seq, 
+        //                 state: Err(e)
+        //             }
+        //         },
+        //         Ok(c) => {
+        //             let task_id = c.session;
+        //             let tasks = peer.0.tasks.lock().unwrap();
+        //             let task = tasks.get_task_state(&task_id.clone().as_str());
+        //             let dir_tasks = peer.0.dir_tasks.lock().unwrap();
+        //             let dir_task = dir_tasks.get_task(&task_id.clone().as_str()).unwrap();
+        //             match task  {
+        //                 Some(state) => {
+        //                     let state_str = match state {
+        //                         DownloadTaskState::Downloading(speed, progress) => {
+        //                             if progress == 100 as f32 {
+        //                                 let _ = dir_task.task.finish();
+        //                             }
+        //                             "downloading"
+        //                         },
+        //                         DownloadTaskState::Finished => {
+        //                             "finished"
+        //                         },
 
-                                DownloadTaskState::Paused => "paused",
-                                _ => "unkown",
-                            };
-                            log::info!("on_download_file_state: session {} {}", task_id, state_str);
-                            DownloadDirStateCommandResp {
-                                seq, 
-                                state: Ok(state)
-                            }
-                        },
-                        None => {
-                            log::error!("on_download_file_state: session {} not found", task_id);
-                            DownloadDirStateCommandResp {
-                                seq, 
-                                state: Err(BuckyError::new(BuckyErrorCode::NotFound, "session not exists"))
-                            }
-                        }
-                    }
-                }
-            };
+        //                         DownloadTaskState::Paused => "paused",
+        //                         _ => "unkown",
+        //                     };
+        //                     log::info!("on_download_file_state: session {} {}", task_id, state_str);
+        //                     DownloadDirStateCommandResp {
+        //                         seq, 
+        //                         state: Ok(state)
+        //                     }
+        //                 },
+        //                 None => {
+        //                     log::error!("on_download_file_state: session {} not found", task_id);
+        //                     DownloadDirStateCommandResp {
+        //                         seq, 
+        //                         state: Err(BuckyError::new(BuckyErrorCode::NotFound, "session not exists"))
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     };
 
-            let mut lpc = lpc;
-            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
-        });
+        //     let mut lpc = lpc;
+        //     let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        // });
     }
     
     pub fn on_get_system_info(&self, c: LpcCommand, lpc: Lpc) {
@@ -2969,7 +3026,7 @@ impl Peer {
         let seq = c.seq();
         let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match GetSystemInfoLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -2987,7 +3044,7 @@ impl Peer {
                         hdd_disk_avail: 0,
                     }
                 },
-                Ok(c) => {
+                Ok(_) => {
                     let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
                     GetSystemInfoLpcCommandResp {
                         seq, 
@@ -3054,7 +3111,7 @@ impl Peer {
             }
         };
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&peer_name).unwrap();
+            // let stack = peer.get_stack(&peer_name).unwrap();
             let mut lpc = lpc;
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });

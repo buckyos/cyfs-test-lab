@@ -1,4 +1,4 @@
-use crate::lib::{LpcCommand, Lpc};
+use crate::lib::{LpcCommand};
 use byteorder::{LittleEndian, ReadBytesExt};
 use cyfs_base::{
     RawDecode, 
@@ -6,17 +6,15 @@ use cyfs_base::{
     *,
 };
 use std::{
-    path::{Path, PathBuf}, 
+    path::{PathBuf}, 
     ops::Range,
     collections::BTreeSet,
-    time::Duration,
 };
 use std::convert::TryFrom;
 
 use std::str::FromStr;
 use std::io::{Read};
 use cyfs_bdt::{ DownloadTaskState };
-use walkdir::WalkDir;
 use serde::{Serialize};
 #[derive(Serialize)]
 pub struct FileInfo{
@@ -539,7 +537,7 @@ impl TryFrom<LpcCommand> for ConnectListLpcCommandReq {
             },
             _ => false,
         };
-        let no_cache = match json.get("no_cache") {
+        let _ = match json.get("no_cache") {
             Some(v) => match v {
                 serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
                 _ => false,
@@ -550,7 +548,7 @@ impl TryFrom<LpcCommand> for ConnectListLpcCommandReq {
         match json.get("remote_desc_list"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for (fileInfo) in infos {
+                    for fileInfo in infos {
                         let device = match fileInfo.get("device_path") {
                             Some(v) => match v {
                                 serde_json::Value::String(s) => {
@@ -1299,7 +1297,7 @@ impl TryFrom<LpcCommand> for InterestChunkListLpcCommandReq {
         match json.get("chunk_list"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for (fileInfo) in infos {
+                    for fileInfo in infos {
                         let chunk_id = match fileInfo.get("chunk_id") {
                             Some(v) => match v {
                                 serde_json::Value::String(s) => {
@@ -1341,7 +1339,7 @@ impl TryFrom<LpcCommand> for InterestChunkListLpcCommandReq {
 
 pub struct InterestChunkListCommandResp {
     pub seq: u32,
-    pub result: BuckyResult<(String)>,
+    pub result: BuckyResult<String>,
 }
 
 impl TryFrom<InterestChunkListCommandResp> for LpcCommand {
@@ -1349,7 +1347,7 @@ impl TryFrom<InterestChunkListCommandResp> for LpcCommand {
     fn try_from(value: InterestChunkListCommandResp) -> BuckyResult<Self> {
         let seq = value.seq;
         match value.result {
-            Ok((session)) => {
+            Ok(session) => {
                 let json = serde_json::json!({
                     "name": "interest-chunk-list-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
@@ -1413,7 +1411,6 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
                     DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
-                    _ => String::from("unkown")
                 }
             }),
             Err(err) => serde_json::json!({
@@ -1434,7 +1431,7 @@ pub struct GetSystemInfoLpcCommandReq {
 impl TryFrom<LpcCommand> for GetSystemInfoLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
-        let json = value.as_json_value();
+        // let json = value.as_json_value();
         Ok(Self {
             seq: value.seq()
         })
@@ -2245,7 +2242,6 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
                     DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
-                    _ => String::from("unkown"),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -2323,7 +2319,7 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
         match json.get("ranges"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for (fileInfo) in infos {
+                    for fileInfo in infos {
                         let begin =match fileInfo.get("begin"){
                             Some(v) => match v {
                                 serde_json::Value::Number(n) => {
@@ -2609,7 +2605,7 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
         match json.get("dir_map"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for (fileInfo) in infos {
+                    for fileInfo in infos {
                         let name =match fileInfo.get("name"){
                             Some(v) => match v {
                                 serde_json::Value::String(s) =>  Ok(s.clone()),
@@ -2787,7 +2783,6 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
                     DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
-                    _ => String::from("unkown"),
                 }
             }),
             Err(err) => serde_json::json!({
