@@ -57,7 +57,7 @@ node ..\opt\testcase\cyfs_bdt\upload_task.js run_job bdt_smoke 4 cyfs_bdt 1
 + nightly回归测试最小集
 ```
 cd src
-node ..\opt\testcase\cyfs_bdt\upload_task.js run_job bdt_smoke_nightly 359 cyfs_bdt_nightly 1
+node ..\opt\testcase\cyfs_bdt\upload_task.js run_job bdt_smoke_nightly 349 cyfs_bdt_nightly 1
 ```
 + beta回归测试最小集
 ```
