@@ -2088,8 +2088,9 @@ impl TryFrom<SetFileCommandResp> for LpcCommand {
 }
 pub struct StartDownloadFileCommandReq {
     pub seq: u32,
-    pub peer_id: DeviceId,
-    pub second_peer_id: Option<DeviceId>,
+    pub remotes: Vec<DeviceId>,
+    pub group : Option<String>,
+    pub referer :Option<String>,
     pub path: PathBuf,
     pub file: Option<File>,
 }
@@ -2110,44 +2111,50 @@ impl TryFrom<LpcCommand> for StartDownloadFileCommandReq {
             },
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
         }?;
-
-        let peer_id = match json.get("peer_id") {
+        let mut remotes : Vec<DeviceId> = Vec::new();
+        let _ = match json.get("remotes") {
             Some(v) => match v {
-                serde_json::Value::String(s) => DeviceId::from_str(s.as_str()).map_err(|_err| {
-                    BuckyError::new(BuckyErrorCode::InvalidData, "path format err")
-                }),
-                _ => Err(BuckyError::new(
-                    BuckyErrorCode::InvalidData,
-                    "peer_id format err",
-                )),
-            },
-            _ => Err(BuckyError::new(
-                BuckyErrorCode::NotFound,
-                "peer_id-id lost",
-            )),
-        }?;
-        
-        let second_peer_id = match json.get("second_peer_id") {
-            Some(v) => match v {
-                serde_json::Value::String(s) => {
-                    let ret = DeviceId::from_str(s.as_str());
-                    if ret.is_err() {
-                        Err(BuckyError::new(
-                            BuckyErrorCode::InvalidData,
-                            "path format err",
-                        ))
-                    } else {
-                        Ok(Some(ret.unwrap()))
-                    }
+                serde_json::Value::Array(infos) => {
+                    for device in infos {
+                        let _ = match device{
+                            serde_json::Value::String(s)=>{
+                                let ret = DeviceId::from_str(s.as_str());
+                                if ret.is_err() {
+                                    log::error!("remote deviceId must be base58 String");
+                                } else {
+                                    remotes.push(ret.unwrap());
+                                   log::info!("Read remote deviceId success");
+                                }
+                            },
+                            _ =>{
+                                log::error!("remote deviceId must be base58 String");
+                            }
+                        };
+                        
+                    }         
                 },
-                _ => Err(BuckyError::new(
-                    BuckyErrorCode::InvalidData,
-                    "second_peer_id format err",
-                )),
+                _ => {
+                    log::error!("remote deviceId must be base58 String");
+                },
             },
-            _ => Ok(None),
-        }?;
-
+            _ =>{
+                log::error!("remote deviceId must be base58 String");
+            },
+        };
+        let group = match json.get("group") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Some(s.to_string()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let referer = match json.get("referer") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Some(s.to_string()),
+                _ => None,
+            },
+            _ => None,
+        };
         let file = if value.as_buffer().len() > 0 {
             let (file, _) = File::raw_decode(value.as_buffer())?;
             Some(file)
@@ -2157,8 +2164,9 @@ impl TryFrom<LpcCommand> for StartDownloadFileCommandReq {
 
         Ok(Self {
             seq: value.seq(),
-            peer_id,
-            second_peer_id,
+            remotes,
+            group,
+            referer,
             path,
             file,
         })
@@ -2189,6 +2197,159 @@ impl TryFrom<StartDownloadFileCommandResp> for LpcCommand {
             Err(err) => {
                 let json = serde_json::json!({
                     "name": "start-download-file-resp",
+                    "result": err.code().as_u16(),
+                });
+                Ok(LpcCommand::new(seq, vec![], json))
+            }
+        }
+    }
+}
+
+
+pub struct CreateDownloadGroupCommandReq {
+    pub seq: u32,
+    pub path: String, 
+    pub remotes: Vec<DeviceId>,
+    pub context: Option<String>
+}
+
+impl TryFrom<LpcCommand> for CreateDownloadGroupCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> BuckyResult<Self> {
+        let json = value.as_json_value();
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.to_string()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        let mut remotes : Vec<DeviceId> = Vec::new();
+        let _ = match json.get("remotes") {
+            Some(v) => match v {
+                serde_json::Value::Array(infos) => {
+                    for device in infos {
+                        let _ = match device{
+                            serde_json::Value::String(s)=>{
+                                let ret = DeviceId::from_str(s.as_str());
+                                if ret.is_err() {
+                                    log::error!("remote deviceId must be base58 String");
+                                } else {
+                                    remotes.push(ret.unwrap());
+                                   log::info!("Read remote deviceId success");
+                                }
+                            },
+                            _ =>{
+                                log::error!("remote deviceId must be base58 String");
+                            }
+                        };
+                        
+                    }         
+                },
+                _ => {
+                    log::error!("remote deviceId must be base58 String");
+                },
+            },
+            _ =>{
+                log::error!("remote deviceId must be base58 String");
+            },
+        };
+        let context = match json.get("context") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    Some(s.to_string())
+                },
+                _ => None,
+            },
+            _ => None,
+        };
+
+        Ok(Self {
+            seq: value.seq(),
+            path,
+            remotes,
+            context,
+        })
+    }
+}
+pub struct CreateDownloadGroupCommandResp {
+    pub seq: u32,
+    pub result: BuckyResult<(String)>,
+}
+
+impl TryFrom<CreateDownloadGroupCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: CreateDownloadGroupCommandResp) -> BuckyResult<Self> {
+        let seq = value.seq;
+        match value.result {
+            Ok((session)) => {
+                let json = serde_json::json!({
+                    "name": "create-download-group-resp",
+                    "result": BuckyErrorCode::Ok.as_u16(),
+                    "session": session.to_string(),
+                });
+                Ok(LpcCommand::new(seq,vec![], json))
+            }
+            Err(err) => {
+                let json = serde_json::json!({
+                    "name": "create-download-group-resp",
+                    "result": err.code().as_u16(),
+                });
+                Ok(LpcCommand::new(seq, vec![], json))
+            }
+        }
+    }
+}
+
+pub struct CreateUploadGroupCommandReq {
+    pub seq: u32,
+    pub path: String, 
+}
+
+impl TryFrom<LpcCommand> for CreateUploadGroupCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> BuckyResult<Self> {
+        let json = value.as_json_value();
+        let path = match json.get("path") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => Ok(s.to_string()),
+                _ => Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "path format err",
+                )),
+            },
+            _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
+        }?;
+        Ok(Self {
+            seq: value.seq(),
+            path
+        })
+    }
+}
+pub struct CreateUploadGroupCommandResp {
+    pub seq: u32,
+    pub result: BuckyResult<(String)>,
+}
+
+impl TryFrom<CreateUploadGroupCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: CreateUploadGroupCommandResp) -> BuckyResult<Self> {
+        let seq = value.seq;
+        match value.result {
+            Ok((session)) => {
+                let json = serde_json::json!({
+                    "name": "create-upload-group-resp",
+                    "result": BuckyErrorCode::Ok.as_u16(),
+                    "session": session.to_string(),
+                });
+                Ok(LpcCommand::new(seq,vec![], json))
+            }
+            Err(err) => {
+                let json = serde_json::json!({
+                    "name": "create-upload-group-resp",
                     "result": err.code().as_u16(),
                 });
                 Ok(LpcCommand::new(seq, vec![], json))

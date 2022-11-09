@@ -141,6 +141,10 @@ async fn main()->Result<(), BuckyError> {
             peer.on_send_datagram(c, lpc.clone());
         }else if name == String::from("recv-datagram") {
             peer.on_recv_datagram(c, lpc.clone());
+        }else if name == String::from("create-download-group") {
+            peer.on_create_download_group(c, lpc.clone());
+        }else if name == String::from("create_upload_group") {
+            peer.on_create_upload_group(c, lpc.clone());
         }else if name == String::from("exit") {
             break;
         }else {

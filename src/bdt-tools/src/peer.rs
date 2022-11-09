@@ -2528,6 +2528,96 @@ impl Peer {
         });
     }
 
+    pub fn on_create_download_group(&self, c: LpcCommand, lpc: Lpc){
+        log::info!("on create_download_group, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let resp = match CreateDownloadGroupCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to CreateDownloadGroupCommandReq failed, e={}", &e);
+                    CreateDownloadGroupCommandResp {
+                        seq, 
+                        result: Err(e),
+                    }
+                },
+                Ok(c) => {
+                    let ret = {         
+                        let context = match c.context {
+                            Some(v) =>{
+                                Some(cyfs_bdt::SingleDownloadContext::id_streams(&stack, Some(v), c.remotes).await.unwrap())
+                            },
+                            None => None
+                        };          
+                        let task = cyfs_bdt::download::create_download_group(&stack, c.path.clone(), context).unwrap();
+                        let task_id = task_id_gen(c.path);
+                        log::info!("recver: task_id {}", &task_id);
+                        let mut tasks = peer.0.tasks.lock().unwrap();
+                        match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
+                            Ok(_) => {
+                                Ok((task_id))
+                            },
+                            Err(e) => {
+                                Err(e)
+                            }
+                        }
+                    };
+                    CreateDownloadGroupCommandResp {
+                        seq, 
+                        result: ret,
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+
+    pub fn on_create_upload_group(&self, c: LpcCommand, lpc: Lpc){
+        log::info!("on create_download_group, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        async_std::task::spawn(async move {
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let resp = match CreateUploadGroupCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to CreateDownloadGroupCommandReq failed, e={}", &e);
+                    CreateUploadGroupCommandResp {
+                        seq, 
+                        result: Err(e),
+                    }
+                },
+                Ok(c) => {
+                    let ret = {         
+              
+                        let task = cyfs_bdt::download::create_upload_group(&stack, c.path.clone()).unwrap();
+                        let task_id = task_id_gen(c.path);
+                        log::info!("recver: task_id {}", &task_id);
+                        let mut tasks = peer.0.tasks.lock().unwrap();
+                        Ok(task_id)
+                        // match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
+                        //     Ok(_) => {
+                        //         Ok((task_id))
+                        //     },
+                        //     Err(e) => {
+                        //         Err(e)
+                        //     }
+                        // }
+                    };
+                    CreateUploadGroupCommandResp {
+                        seq, 
+                        result: ret,
+                    }
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+
     pub fn on_start_download_file(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on start-download-file, c={:?}", &c);
         let seq = c.seq();
@@ -2545,18 +2635,12 @@ impl Peer {
                 },
                 Ok(c) => {
                     // 缓存对端设置Device
-                    let ret = {
-                        let mut src = Vec::new();
-                        src.push(c.peer_id);
-                        if c.second_peer_id.is_some() {
-                            src.push(c.second_peer_id.unwrap());
-                        }
-                        
+                    let ret = {                   
                         if let Some(file) = c.file.as_ref() {
                             let task = cyfs_bdt::download::download_file(&stack, 
                                 file.clone(),
-                                None, 
-                                Some(SingleDownloadContext::id_streams(&stack, None, src).await.unwrap()) , 
+                                c.group, 
+                                Some(SingleDownloadContext::id_streams(&stack, c.referer, c.remotes).await.unwrap()) , 
                             ).await.unwrap();
                             
                             {
