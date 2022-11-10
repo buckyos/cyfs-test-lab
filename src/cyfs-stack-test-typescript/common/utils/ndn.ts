@@ -7,6 +7,8 @@ import * as crypto from 'crypto';
 
 
 import { ZoneSimulator } from "./simulator"
+import { ObjectId } from 'mongoose';
+import { type } from 'os';
 
 export class NDNTestManager {
 
@@ -891,6 +893,89 @@ export class NDNTestManager {
 
     }
 
+    static async addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, saveDir: string, fileSize: number, chunkSize: number, level: cyfs.NDNAPILevel) {
+
+        let fileName = `file-${RandomGenerator.string(6)}.txt`
+        let inner_path: string = `/testData/${fileName}`
+        let datafile = path.join(saveDir, inner_path)
+        //(1)清空缓存目录
+        if (fs.existsSync(saveDir)) {
+            fs.removeSync(saveDir)
+        }
+        //(2)生成测试文件
+        await RandomGenerator.createRandomFile(datafile, fileName, fileSize);
+
+        //1. source 设备 publish_file 将dir存放到本地NDC  
+        let owner = source.local_device().desc().owner()!.unwrap()
+        let publish_file_time = Date.now();
+        const pubres = (await source.trans().publish_file({
+            common: {
+                level: level,
+                flags: 0,
+                dec_id: source.dec_id,
+                target: target.local_device_id().object_id,
+                req_path: undefined,
+                referer_object: []
+            },
+            owner,
+            local_path: datafile,
+            chunk_size: chunkSize,     // chunk大小4M
+            dirs: []
+        }));
+        publish_file_time = Date.now() - publish_file_time;
+        console.info(`addDir publish_file 耗时：${publish_file_time}`)
+        assert(!pubres.err, `publish_file 失败`)
+
+        let pub_resp: cyfs.TransAddFileResponse = pubres.unwrap();
+
+        let object_map_id = cyfs.ObjectMapId.try_from_object_id(pub_resp.file_id).unwrap()
+
+
+        //2. source 设备 使用NOC 获取dir对象
+        const getoreq ={
+            common: {
+                level: cyfs.NONAPILevel.NOC,
+                flags: 0
+            },
+            object_id: pub_resp.file_id,
+            inner_path: undefined
+        };
+        let getores = await source.non_service().get_object(getoreq)
+        assert(!getores.err, `get_object 获取dir对象失败`)
+
+
+        let get_resp = getores.unwrap();
+        //let file_id_from_objectmap = cyfs.FileId.try_from_object_id(get_resp.object.object_id).unwrap()
+
+        let req: cyfs.UtilBuildDirFromObjectMapOutputRequest = {
+            common: {
+                flags: 0
+            },
+            object_map_id: object_map_id.object_id,
+            dir_type: cyfs.BuildDirType.Zip
+        };
+        let dresp = await (await source.util().build_dir_from_object_map(req)).unwrap()
+        let dir_id: cyfs.DirId = cyfs.DirId.try_from_object_id(dresp.object_id).unwrap()
+
+
+        let greq: cyfs.NONGetObjectOutputRequest = {
+            common: {
+                req_path: undefined,
+                level: cyfs.NONAPILevel.NOC,
+                flags: 0,
+                target: target.local_device_id().object_id
+            },
+            object_id: dir_id.object_id,
+            inner_path: inner_path
+        }
+        let gresp = await (await source.non_service().get_object(greq)).unwrap()
+        let file_id: cyfs.FileId = cyfs.FileId.try_from_object_id(gresp.object.object_id).unwrap()
+
+        //assert(file_id === file_id_from_objectmap, "fileid 不相等")
+        return { file_id, dir_id, inner_path }
+
+    }
+
 }
 
 interface FileTransTask {
@@ -913,6 +998,7 @@ interface TreeNode {
     // type='object'情况下有object_id
     object_id?: cyfs.ObjectId,
 }
+
 
 // 重建dir的目录树结构
 async function build_dir(stack: cyfs.SharedCyfsStack, dir_id: cyfs.DirId) {
