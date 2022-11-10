@@ -115,7 +115,7 @@
 * get_data,同zone不同dec,objectmap+inner_path,取出file，传输权限验证
 * get_data,不同zone同dec,objectmap+inner_path,取出file，传输权限验证
 * get_data,不同zone不同dec,objectmap+inner_path,取出file，传输权限验证
-* * get_data,不同zone不同dec,objectmap+inner_path,取出file，无req_path,传输权限验证
+* get_data,不同zone不同dec,objectmap+inner_path,取出file，无req_path,传输权限验证
 * get_data,同zone同dec,objectmap+inner_path,取出dir，传输权限验证
 * get_data,同zone不同dec,objectmap+inner_path,取出dir，传输权限验证
 * get_data,不同zone同dec,objectmap+inner_path,取出dir，传输权限验证
