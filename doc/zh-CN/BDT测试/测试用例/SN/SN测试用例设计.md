@@ -6,6 +6,38 @@ SN 是BDT实现P2P网络NAT穿透的必要组件，主要功能在其他模块�
 + SNPing : 节点通过SNPing再SN上线，SN cache Device 对象信息
 + SNCall + SNCalled : SN 辅助进行NAT 穿透
 
+### 多SN场景测试用例
++ 选择SN的原则：就近原则，按照country，carrier，city完成排序；
+```rust
+pub struct Area {
+    pub country: u16,
+    pub carrier: u8,
+    pub city: u16,
+}
+```
++ 获取sn的规则和时机
+* client的选择，在client端存在多个sn的情况下，根据就近原则选择最近距离选择sn；
+* sn-miner的选择，
+  * 在ping-req处理过程中增加就近原则处理流程，
+  * 在ping-resp中result，增加Redirect错误码处理，client端对于此错误进行对sn的切换，完成新的ping-req；
+
++ 跨sn发起call
+由client发起的SnCall请求，将有sn针对就近原则转发到对应的sn上；
+
++ Area 范围
++ 
+
+
+
+
+# sn加入和移除
+
+* 新增：对于新的sn加入，新的sn启动后，对已知sn进行SnPing，
+* 移除：按照现有knock逻辑，失去心跳之后，将sn移除；
+
+
+
+
 ### SN压力测试
 
 #### SNPing 性能测试

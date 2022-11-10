@@ -1,5 +1,5 @@
 import assert = require('assert'); 
-import * as cyfs from '../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 import * as myHandler from '../../common/utils/handler'
 import {TestcaseManger,testcaseInfo} from "../../common/models/testcaseInfo";
 import {AclManager,Acl,} from '../../common/utils/acl_manager'

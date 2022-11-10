@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from '../../../cyfs_node/cyfs_node';
+import {cyfs} from '../../../cyfs_node';
 import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../../common'
 import * as fs from "fs-extra"
 import * as path from "path"
@@ -65,9 +65,9 @@ describe("协议栈Nameobject测试", async function () {
 
 
             })
-            it(`${datas.testcaseList[j].name}`, async () => {
+            it(`${testdatas.testcaseList[j].name}`, async () => {
                 // 异常用例阻塞暂时跳过
-                console.info(`开始执行测试用例：${datas.testcaseList[j].name}`)
+                console.info(`开始执行测试用例：${testdatas.testcaseList[j].name}`)
                 if (inputData.skip) {
                     assert(false, "测试用例异常，暂时标记不执行")
                 }

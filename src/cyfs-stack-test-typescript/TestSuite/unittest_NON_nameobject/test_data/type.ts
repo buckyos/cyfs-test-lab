@@ -1,5 +1,5 @@
 import { type } from "os";
-import * as cyfs from "../../../cyfs_node/cyfs_node";
+import * as cyfs from "../../../cyfs_node";
 
 export type testNameObject = {
     stack_type:StackType;
@@ -20,7 +20,6 @@ export type testNameObject = {
         dec_id?:string,
         create_time?:cyfs.JSBI,
         update_time?:cyfs.JSBI,
-
     }
     testowner? : string;
     timeout?:number;

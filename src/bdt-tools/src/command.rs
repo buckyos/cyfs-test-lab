@@ -42,7 +42,7 @@ pub struct CreateLpcCommandReq {
     pub ndn_event_target : Option<DeviceId>,
     pub sn_only : bool,
     pub tcp_port_mapping : Option<Vec<(cyfs_base::Endpoint, u16)>>,
-    
+    pub area : cyfs_base::Area    
 }
 
 impl TryFrom<LpcCommand> for CreateLpcCommandReq {
@@ -306,6 +306,26 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             _ => false,
         };
         let tcp_port_mapping = None;
+        let area = match json.get("area") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        match cyfs_base::Area::from_str(&s.as_str()) {
+                            Ok(area) =>{
+                                area
+                            },
+                            _ =>{
+                                cyfs_base::Area::default()
+                            }
+                        }
+                    } else {
+                        cyfs_base::Area::default()
+                    }
+                }
+                _ => cyfs_base::Area::default(),
+            },
+            _ => cyfs_base::Area::default(),
+        };
         Ok(Self {
             seq: value.seq(),
             known_peers,
@@ -321,7 +341,8 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             ndn_event,
             ndn_event_target,
             sn_only,
-            tcp_port_mapping
+            tcp_port_mapping,
+            area
         })
     }
 }

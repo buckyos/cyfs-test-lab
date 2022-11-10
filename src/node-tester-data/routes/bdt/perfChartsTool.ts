@@ -279,7 +279,7 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
         },
     
         yAxis: {
-          name: 'Memory(KB)',
+          name: 'Memory(bytes)',
           type: 'value',
           min:0, // 设置y轴刻度的最小值
           max:maxNum,  // 设置y轴刻度的最大值

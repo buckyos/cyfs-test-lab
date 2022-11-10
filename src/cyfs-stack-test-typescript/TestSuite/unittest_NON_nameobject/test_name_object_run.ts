@@ -1,4 +1,4 @@
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import {cyfs} from '../../cyfs_node'
 import { Test, TestDecoder } from './name_object/name_object';
 import * as path from 'path'
 import * as fs from 'fs';

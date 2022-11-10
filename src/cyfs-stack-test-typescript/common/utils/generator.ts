@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from '../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 let encoding = require('encoding');
 import * as fs from "fs-extra";
 import * as path from "path";

@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import {cyfs} from '../../cyfs_node'
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo, stack } from "../../common";
 import * as path from 'path';
 import { before } from 'mocha';

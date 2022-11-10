@@ -8,7 +8,7 @@ import {
     ObjectId, RawDecode, Some,
     // TextObject, TextObjectDecoder,
 } from '../../cyfs_node/cyfs_node'
-import * as cyfs from '../../cyfs_node/cyfs_node'
+import {cyfs} from '../../cyfs_node'
 import { stack, stackInfo , create_stack} from './stack'
 import {
     RequestTargetCommonResponse,

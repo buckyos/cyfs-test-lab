@@ -1,11 +1,11 @@
 import assert = require('assert'); 
-import * as cyfs from '../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 import * as myHandler from '../../common/utils/handler'
 import {simulator} from '../../config/zoneData'
 import {ZoneSimulator} from '../../common/utils/simulator'
 import {AclManager,} from '../../common/utils/acl_manager'
 import {Test} from './dec_object_Test'
-import { sleep } from '../../cyfs_node/cyfs_node';
+import { sleep } from '../../cyfs_node';
 import {addFriend,deleteFriend} from './relation'
 const aclManager =  new AclManager();
 let handlerManager = new myHandler.handlerManager(); //用来回收handler 和监听校验handler触发

@@ -1,0 +1,412 @@
+{
+    "rust_bdt": {
+        "name": "dev_bdt_regress",
+        "version": "1.01",
+        "distribute": 1,
+        "runrule": 2,
+        "serviceid": 4,
+        "servicename": "cyfs_bdt",
+        "list": [
+            {
+                "desc": "BDT_removeNdcData",
+                "taskid": 438
+            },
+            {
+                "desc": "Connect_Endpoint_Port_TCP_direct",
+                "taskid": 439
+            },
+            {
+                "desc": "Connect_Endpoint_Port_TCP_SN",
+                "taskid": 440
+            },
+            {
+                "desc": "Connect_Endpoint_Port_UDP_direct",
+                "taskid": 441
+            },
+            {
+                "desc": "Connect_Endpoint_Port_UDP_SN",
+                "taskid": 442
+            },
+            {
+                "desc": "Connect_FristQA_TCP_direct",
+                "taskid": 443
+            },
+            {
+                "desc": "Connect_FristQA_TCP_PackageSize_answer",
+                "taskid": 444
+            },
+            {
+                "desc": "Connect_FristQA_TCP_PackageSize_question",
+                "taskid": 445
+            },
+            {
+                "desc": "Connect_FristQA_TCP_SN",
+                "taskid": 446
+            },
+            {
+                "desc": "Connect_FristQA_UDP_direct",
+                "taskid": 447
+            },
+            {
+                "desc": "Connect_FristQA_UDP_PackageSize_answer",
+                "taskid": 448
+            },
+            {
+                "desc": "Connect_FristQA_UDP_PackageSize_question",
+                "taskid": 449
+            },
+            {
+                "desc": "Connect_FristQA_UDP_SN",
+                "taskid": 450
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_direct_effectiveEP_AbnormalNAT",
+                "taskid": 451
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_direct_effectiveEP_LAN",
+                "taskid": 452
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_direct_effectiveEP_WAN",
+                "taskid": 453
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_SN_EmptyEP",
+                "taskid": 454
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_SN_invalidEP",
+                "taskid": 455
+            },
+            {
+                "desc": "Connect_IPV4_TCPTunnel_SN_TCPReverse",
+                "taskid": 456
+            },
+            {
+                "desc": "Connect_IPV4_UDPTunnel_direct_effectiveEP_AbnormalNAT",
+                "taskid": 457
+            },
+            {
+                "desc": "Connect_IPV4_UDPTunnel_direct_effectiveEP_LAN",
+                "taskid": 458
+            },
+            {
+                "desc": "Connect_IPV4_UDPTunnel_direct_effectiveEP_WAN",
+                "taskid": 459
+            },
+            {
+                "desc": "Connect_IPV4_UDPTunnel_SN_EmptyEP",
+                "taskid": 460
+            },
+            {
+                "desc": "Connect_IPV4_UDPTunnel_SN_invalidEP",
+                "taskid": 461
+            },
+            {
+                "desc": "Connect_IPV6_TCPTunnel_direct_effectiveEP",
+                "taskid": 462
+            },
+            {
+                "desc": "Connect_IPV6_TCPTunnel_SN_EmptyEP",
+                "taskid": 463
+            },
+            {
+                "desc": "Connect_IPV6_TCPTunnel_SN_invalidEP",
+                "taskid": 464
+            },
+            {
+                "desc": "Connect_IPV6_UDPTunnel_direct_effectiveEP",
+                "taskid": 465
+            },
+            {
+                "desc": "Connect_IPV6_UDPTunnel_SN_EmptyEP",
+                "taskid": 466
+            },
+            {
+                "desc": "Connect_IPV6_UDPTunnel_SN_invalidEP",
+                "taskid": 467
+            },
+            {
+                "desc": "Connect_Max_TCPConnection",
+                "taskid": 468
+            },
+            {
+                "desc": "Connect_Max_UDPConnection",
+                "taskid": 469
+            },
+            {
+                "desc": "NDN_AllEP_ChannelSelect",
+                "taskid": 470
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent100_upload",
+                "taskid": 471
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_download100",
+                "taskid": 472
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_download20",
+                "taskid": 473
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_download50",
+                "taskid": 474
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_upload100",
+                "taskid": 475
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_upload20",
+                "taskid": 476
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent10_upload50",
+                "taskid": 477
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent20_upload",
+                "taskid": 478
+            },
+            {
+                "desc": "NDN_BBR_TCP_File_Concurrent50_upload",
+                "taskid": 479
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent100_upload",
+                "taskid": 480
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_download100",
+                "taskid": 481
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_download20",
+                "taskid": 482
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_download50",
+                "taskid": 483
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_upload100",
+                "taskid": 484
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_upload20",
+                "taskid": 485
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent10_upload50",
+                "taskid": 486
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent20_Connect",
+                "taskid": 487
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent20_upload",
+                "taskid": 488
+            },
+            {
+                "desc": "NDN_BBR_UDP_File_Concurrent50_upload",
+                "taskid": 489
+            },
+            {
+                "desc": "NDN_Chunk",
+                "taskid": 490
+            },
+            {
+                "desc": "NDN_ChunkList",
+                "taskid": 491
+            },
+            {
+                "desc": "NDN_ChunkTask_ChunkSize",
+                "taskid": 492
+            },
+            {
+                "desc": "NDN_DirTask_FileNum_10",
+                "taskid": 493
+            },
+            {
+                "desc": "NDN_DirTask_FileNum_100",
+                "taskid": 494
+            },
+            {
+                "desc": "NDN_DirTask_FileNum_10000",
+                "taskid": 495
+            },
+            {
+                "desc": "NDN_DualSource",
+                "taskid": 496
+            },
+            {
+                "desc": "NDN_Dual_DualSource_InterestFile",
+                "taskid": 497
+            },
+            {
+                "desc": "NDN_Dual_SingleSource_InterestFile",
+                "taskid": 498
+            },
+            {
+                "desc": "NDN_File",
+                "taskid": 499
+            },
+            {
+                "desc": "NDN_FileRange",
+                "taskid": 500
+            },
+            {
+                "desc": "NDN_FIleRange_RangeValue",
+                "taskid": 501
+            },
+            {
+                "desc": "NDN_FileTask_ChunkSize",
+                "taskid": 502
+            },
+            {
+                "desc": "NDN_FileTask_FileSize",
+                "taskid": 503
+            },
+            {
+                "desc": "NDN_IPV4_TCPChannel_InterestFile",
+                "taskid": 504
+            },
+            {
+                "desc": "NDN_IPV4_UDPChannel_InterestFile",
+                "taskid": 505
+            },
+            {
+                "desc": "NDN_IPV6_TCPChannel_InterestFile",
+                "taskid": 506
+            },
+            {
+                "desc": "NDN_IPV6_UDPChannel_InterestFile",
+                "taskid": 507
+            },
+            {
+                "desc": "PN_FristQA_UDP_Active",
+                "taskid": 508
+            },
+            {
+                "desc": "PN_FristQA_UDP_Passive",
+                "taskid": 509
+            },
+            {
+                "desc": "PN_NDN_UDP_Active",
+                "taskid": 510
+            },
+            {
+                "desc": "PN_NDN_UDP_Active_Notuse",
+                "taskid": 511
+            },
+            {
+                "desc": "PN_NDN_UDP_Passive",
+                "taskid": 512
+            },
+            {
+                "desc": "PN_NDN_UDP_Passive_Notuse",
+                "taskid": 513
+            },
+            {
+                "desc": "PN_Stream_UDP_Active",
+                "taskid": 514
+            },
+            {
+                "desc": "PN_Stream_UDP_Active_Notuse",
+                "taskid": 515
+            },
+            {
+                "desc": "PN_Stream_UDP_All",
+                "taskid": 516
+            },
+            {
+                "desc": "PN_Stream_UDP_Passive",
+                "taskid": 517
+            },
+            {
+                "desc": "PN_Stream_UDP_Passive_Notuse",
+                "taskid": 518
+            },
+            {
+                "desc": "PN_TCP_NotSupport",
+                "taskid": 519
+            },
+            {
+                "desc": "Stream_AllEP_TunnelSelect",
+                "taskid": 520
+            },
+            {
+                "desc": "Stream_FristQA",
+                "taskid": 521
+            },
+            {
+                "desc": "Stream_TCPTunnel_1000_1KBData",
+                "taskid": 522
+            },
+            {
+                "desc": "Stream_TCPTunnel_10con_both_10MBData",
+                "taskid": 523
+            },
+            {
+                "desc": "Stream_TCPTunnel_10con_single_10MBData",
+                "taskid": 524
+            },
+            {
+                "desc": "Stream_TCPTunnel_5LN_10con_1MBData",
+                "taskid": 525
+            },
+            {
+                "desc": "Stream_TCPTunnel_5RN_10con_1MBData",
+                "taskid": 526
+            },
+            {
+                "desc": "Stream_TCPTunnel_dataMaxSize",
+                "taskid": 527
+            },
+            {
+                "desc": "Stream_TCPTunnel_dataSize",
+                "taskid": 528
+            },
+            {
+                "desc": "Stream_TCP_IPV4",
+                "taskid": 529
+            },
+            {
+                "desc": "Stream_UDPTunnel_1000_1KBData",
+                "taskid": 530
+            },
+            {
+                "desc": "Stream_UDPTunnel_10con_both_10MBData",
+                "taskid": 531
+            },
+            {
+                "desc": "Stream_UDPTunnel_10con_single_10MBData",
+                "taskid": 532
+            },
+            {
+                "desc": "Stream_UDPTunnel_5LN_10con_1MBData",
+                "taskid": 533
+            },
+            {
+                "desc": "Stream_UDPTunnel_5RN_10con_1MBData",
+                "taskid": 534
+            },
+            {
+                "desc": "Stream_UDPTunnel_dataMaxSize",
+                "taskid": 535
+            },
+            {
+                "desc": "Stream_UDPTunnel_dataSize",
+                "taskid": 536
+            },
+            {
+                "desc": "Stream_UDP_IPV4",
+                "taskid": 537
+            }
+        ]
+    }
+}

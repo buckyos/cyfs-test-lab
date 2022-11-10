@@ -6,7 +6,7 @@ import * as SysProcess from 'process';
 import * as ChildProcess from 'child_process';
 import * as os from 'os';
 import assert = require('assert');
-import * as cyfs from '../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 import JSBI from 'jsbi';
 import { TEST_DEC_ID } from "../../config/decApp"
 

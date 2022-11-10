@@ -7,7 +7,7 @@
  * @FilePath: \firstSyfs\cyfs\test.ts
  */
 
-import * as cyfs from '../../../cyfs_node/cyfs_node';
+import {cyfs} from '../../cyfs_node';
 import * as fs from 'fs';
 import * as path from 'path'
 import { ok } from 'assert';

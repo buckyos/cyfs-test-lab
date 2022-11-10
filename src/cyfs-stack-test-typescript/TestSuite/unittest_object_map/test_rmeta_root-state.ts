@@ -1,7 +1,7 @@
 import assert from "assert";
 import { access } from "fs";
-import * as cyfs from "../../cyfs_node/cyfs_node";
-import { NONAPILevel, NONObjectInfo, Some } from "../../cyfs_node/cyfs_node";
+import {cyfs} from '../../cyfs_node';
+import { NONAPILevel, NONObjectInfo, Some } from '../../cyfs_node';
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo} from "../../common";
 
 //初始化日志
@@ -3732,5 +3732,5 @@ describe("#op-env 初始化方式", function () {
         })  
     })
     
-
+})
 })

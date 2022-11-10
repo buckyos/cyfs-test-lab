@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import {cyfs} from '../../cyfs_node'
 import { ZoneSimulator, get_len_buf, create_people, create_device } from "../../common/utils";
 import * as myHandler from "./handler"
 

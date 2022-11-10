@@ -1,5 +1,5 @@
 
-import * as cyfs from "../../../cyfs_node/cyfs_node"
+import * as cyfs from "../../../../cyfs_node"
 import * as path from 'path'
 import * as fs from 'fs-extra';
 const crypto = require("crypto")
