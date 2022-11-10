@@ -40,7 +40,7 @@ pub struct BDTClientImpl {
    pub  stream_tasks:  Arc<Mutex<StreamMap>>,
    pub  temp_dir: PathBuf, //工作目录
    pub  file_tasks: Arc<Mutex<FileTaskMap>>,
-   pub  dir_tasks: Arc<Mutex<DirTaskMap>>,
+   //pub  dir_tasks: Arc<Mutex<DirTaskMap>>,
    pub  answer : Arc<Mutex<Vec<u8>>>,
 }
 #[derive(Clone)]
@@ -48,7 +48,8 @@ pub struct BDTClient(Arc<BDTClientImpl>);
 impl BDTClient{
     pub fn new(stack: StackGuard, acceptor: StreamListenerGuard,temp_dir: PathBuf)->Self {
         let file_task_map = FileTaskMap::new();
-        let dir_task_map = DirTaskMap::new();
+        //let dir_task_map = DirTaskMap::new();
+        //dir_tasks : Arc::new(Mutex::new(dir_task_map)),
         let stream_task_map = StreamMap::new();
         Self(Arc::new(BDTClientImpl{
             stack:Arc::new(Mutex::new(stack)),
@@ -56,7 +57,7 @@ impl BDTClient{
             stream_tasks: Arc::new(Mutex::new(stream_task_map)),
             temp_dir: temp_dir,
             file_tasks: Arc::new(Mutex::new(file_task_map)),
-            dir_tasks : Arc::new(Mutex::new(dir_task_map)),
+          
             answer :Arc::new(Mutex::new(Vec::new())) 
         })) 
     }

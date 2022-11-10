@@ -15,15 +15,11 @@ use cyfs_bdt::{
     DownloadTaskState, 
     StackOpenParams, 
     SingleDownloadContext, 
-    download::DirTaskPathControl,
     local_chunk_store::LocalChunkWriter,
     local_chunk_store::LocalChunkListWriter,
     local_chunk_store::LocalChunkReader,
     mem_tracker::MemTracker,
     mem_chunk_store::MemChunkStore,
-    ChunkWriter,
-    ChunkWriterExt,
-    ChunkListDesc
 };
 
 use std::{

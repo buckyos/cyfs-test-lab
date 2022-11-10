@@ -15,15 +15,11 @@ use cyfs_bdt::{
     DownloadTaskState, 
     StackOpenParams, 
     SingleDownloadContext, 
-    download::DirTaskPathControl,
     local_chunk_store::LocalChunkWriter,
     local_chunk_store::LocalChunkListWriter,
     local_chunk_store::LocalChunkReader,
     mem_tracker::MemTracker,
     mem_chunk_store::MemChunkStore,
-    ChunkWriter,
-    ChunkWriterExt,
-    ChunkListDesc
 };
 
 use std::{
@@ -96,6 +92,34 @@ mod tests {
             let mut eps8 = Vec::new();
             eps8.push("W4udp192.168.100.74:30009".to_string());
             let (device6,key6) = create_device("device8_W4udp".to_string(),eps8,sn_list.clone(),pn_list.clone(),Some(save_path.clone())).await;
+        }).await    
+    }
+
+    #[tokio::test]
+    async fn test_create_device_area() {
+        run_test_async("", async{
+            let mut sns = Vec::new();
+            let sn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\sn-miner.desc").unwrap();
+            sns.push(sn);
+            let sn_list = load_sn(sns).await;
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+            let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+            let mut run_sum = 10;
+            while run_sum>0 {
+                let mut eps1 = Vec::new();
+                let ep = format!("L4udp192.168.100.200:{}",30000+run_sum.clone());
+                eps1.push(ep);
+                run_sum = run_sum - 1;
+                let str_area = format!("{}:{}:{}:{}",run_sum.clone(),run_sum.clone(),run_sum.clone(),run_sum.clone()); 
+                let area = Area::from_str(str_area.as_str()).unwrap();
+                let name = format!("xhj{}",run_sum.clone());
+                let (device1,key1) = create_device_area(name,eps1,sn_list.clone(),pn_list.clone(),Some(save_path.clone()),area).await;
+            }
+            
+            
         }).await    
     }
 

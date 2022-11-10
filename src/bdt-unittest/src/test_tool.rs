@@ -152,7 +152,12 @@ pub async fn create_device(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns
     }
     let mut pn_list = Vec::new();
     for pn in pns.iter() {
-        pn_list.push(pn.desc().device_id());
+        let mut run = 1;
+        while run>0 {
+            pn_list.push(pn.desc().device_id());
+            run = run - 1;
+        }
+        
     }
     let private_key = PrivateKey::generate_rsa(1024).unwrap();
     let public_key = private_key.public();
@@ -164,6 +169,70 @@ pub async fn create_device(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns
         pn_list,
         public_key,
         Area::default(),
+        DeviceCategory::OOD
+    ).build();
+    let id = device.desc().device_id();
+    let desc_path = format!("{}.desc",name.clone());  
+    let _ = match save_path.clone(){
+        Some(my_path) =>{
+            let file_obj_path = my_path.join(desc_path);
+            let _ = match device.encode_to_file(file_obj_path.clone().as_path(),true){
+                Ok(_) => {
+                    log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+                },
+                Err(e) => {
+                    log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+                },
+            };
+            let sec_path = format!("{}.sec",name.clone());  
+            let file_obj_path = my_path.join(sec_path);
+            let _ = match private_key.encode_to_file(file_obj_path.clone().as_path(),true){
+                Ok(_) => {
+                    log::info!("encode device sec to file succ ,path ={}", file_obj_path.display());
+                },
+                Err(e) => {
+                    log::error!("encode device sec to file failed,path = {},err {}",file_obj_path.display(), e);
+                },
+            };
+        },
+        None => {},
+    };
+    
+    (device, private_key)
+}
+
+
+pub async fn create_device_area(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:Option<PathBuf>,area:Area)->(Device,PrivateKey){
+    let mut eps = Vec::new();
+    for addr in endpoints.iter() {
+        let ep = {
+            let s = format!("{}",addr);
+            Endpoint::from_str(s.as_str()).map_err(|e| {
+                log::error!("parse ep failed, s={}, e={}",s, &e);
+                e
+            }).unwrap()
+        };
+        log::info!("create device add ep: {}", &ep);
+        eps.push(ep);
+    }
+    let mut sn_list = Vec::new();
+    for sn in sns.iter() {
+        sn_list.push(sn.desc().device_id());
+    }
+    let mut pn_list = Vec::new();
+    for pn in pns.iter() {
+        pn_list.push(pn.desc().device_id());
+    }
+    let private_key = PrivateKey::generate_rsa(1024).unwrap();
+    let public_key = private_key.public();
+    let mut device = Device::new(
+        None,
+        UniqueId::default(),
+        eps,
+        sn_list,
+        pn_list,
+        public_key,
+        area,
         DeviceCategory::OOD
     ).build();
     let id = device.desc().device_id();
