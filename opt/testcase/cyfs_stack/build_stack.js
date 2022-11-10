@@ -71,6 +71,7 @@ function run_cmd(cmd,file_path,type){
 }
 
 async function pack(){
+    run_cmd("npm i typescript","../../../src/cyfs-stack-test-typescript/","local")
     //pack stack_test
     run_cmd('tsc -p' ,"../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
     await sleep(10000)
