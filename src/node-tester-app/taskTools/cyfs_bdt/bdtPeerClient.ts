@@ -62,6 +62,13 @@ export class BdtPeerClient extends EventEmitter{
                     resolve({err:BDTERROR.timeout,log:`${this.tags} start bdt-tools timeout ,state = ${this.state}`})
                 }
             },60*1000)
+            // 测试
+            if(this.tags == "PC_0007"){
+                //this.cache_peer_info!.addrInfo[0] = this.cache_peer_info!.addrInfo[0].replace("udp","tcp");
+                for(let i =0;i<0;i++){
+                    this.cache_peer_info.passive_pn_files!.push("pn-miner.desc")
+                }
+            }
             let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
                 RUST_LOG : this.cache_peer_info!.RUST_LOG!
             }, this.m_agentid!, 10*1000);
@@ -584,9 +591,8 @@ export class BdtPeerClient extends EventEmitter{
             name: 'start-download-file',
             peerName: this.peerName,
             unique_id : this.peerName,
-            peer_id,
+            remotes:[peer_id],
             path:save_path,
-            second_peer_id
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} downloadFile failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
