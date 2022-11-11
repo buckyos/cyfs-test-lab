@@ -216,6 +216,72 @@ mod tests {
         
     }
 
+
+    #[actix_rt::test]
+    async fn test_stream_udp_connect_packagesize() {
+        /**
+         * 模块：BDT Stream 连接流程 
+         * 测试函数 ： StreamManager.connect
+         * 测试点: UDP SN_Call 内网打洞流程 
+         */
+        run_test_async("test_stream_udp_connect_001", async{
+            // 前置条件:
+            // (1) 创建BDT 协议栈
+            let mut stack_manager = StackManager::new(PathBuf::from_str(Work_Space).unwrap());
+            let (device1,key1) = stack_manager.load_test_stack("device3_L4udp",Some(SN_list()),None).await;
+            let (device2,key2) = stack_manager.load_test_stack("device4_L4udp",Some(SN_list()),None).await;
+            // (2) BDT协议栈启动监听
+            let client1 = stack_manager.get_client("device3_L4udp".clone());
+            log::info!("client1 info : {}",client1.get_stack().local_device_id());
+            let confirm1= client1.auto_accept();
+            let client2 = stack_manager.get_client("device4_L4udp".clone());
+            let confirm2 =client2.auto_accept();
+            // (3.1) client1 连接 client2 首次连接
+            {   
+                // 构建 BuildTunnelParams
+                let mut wan_addr = false;
+                let remote_sn = match device2.body().as_ref() {
+                    None => {
+                        Vec::new()
+                    },
+                    Some(b) => {
+                        b.content().sn_list().clone()
+                    },
+                };
+                let param = BuildTunnelParams {
+                    remote_const: device2.desc().clone(),
+                    remote_sn,
+                    remote_desc: if wan_addr {
+                        Some(device2.clone())
+                    } else {
+                        None
+                    }
+                };
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                // 发起连接
+                let question_info = random_str(30*1024).await;
+                log::info!("set question info = {:?}",question_info.clone());
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                let _ = match client1.get_stack().stream_manager().connect(0, question_info.as_bytes().to_vec(), param.clone()).await{
+                    Ok(mut stream) => {
+                        let mut len = 0;
+                        // 接收answer
+                        let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        log::info!("connect success time = {}",connect_time);
+                    },
+                    Err(e) => {
+                        log::error!("connect failed, e={}", &e);
+                        
+                    }
+                };
+            }
+           // (4) 执行完成等待退出
+            stack_manager.destory_all().await;
+            stack_manager.sleep(10).await;
+        }).await;
+        
+    }
+
     #[actix_rt::test]
     async fn test_stream_udp_connect_002() {
         /**

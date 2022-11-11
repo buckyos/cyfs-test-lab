@@ -152,14 +152,15 @@ pub async fn create_device(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns
     }
     let mut pn_list = Vec::new();
     for pn in pns.iter() {
-        let mut run = 1;
+        let mut run = 0;
         while run>0 {
             pn_list.push(pn.desc().device_id());
             run = run - 1;
         }
         
     }
-    let private_key = PrivateKey::generate_rsa(1024).unwrap();
+    //1024
+    let private_key = PrivateKey::generate_secp256k1().unwrap();
     let public_key = private_key.public();
     let mut device = Device::new(
         None,
@@ -202,7 +203,15 @@ pub async fn create_device(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns
 }
 
 
-pub async fn create_device_area(name:String,endpoints:Vec<String>,sns:Vec<Device>,pns:Vec<Device>,save_path:Option<PathBuf>,area:Area)->(Device,PrivateKey){
+pub async fn create_device_area(
+    name:String,
+    endpoints:Vec<String>,
+    sns:Vec<Device>,
+    pns:Vec<Device>,
+    save_path:Option<PathBuf>,
+    area:Area,
+    private_key:PrivateKey
+)->(Device,PrivateKey){
     let mut eps = Vec::new();
     for addr in endpoints.iter() {
         let ep = {
@@ -223,7 +232,7 @@ pub async fn create_device_area(name:String,endpoints:Vec<String>,sns:Vec<Device
     for pn in pns.iter() {
         pn_list.push(pn.desc().device_id());
     }
-    let private_key = PrivateKey::generate_rsa(1024).unwrap();
+    //let private_key = PrivateKey::generate_rsa(1024).unwrap();
     let public_key = private_key.public();
     let mut device = Device::new(
         None,

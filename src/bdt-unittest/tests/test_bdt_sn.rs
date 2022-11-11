@@ -872,7 +872,7 @@ mod tests {
                     pns.push(pn);
                     let  pn_list = load_pn(pns).await;
                     let mut eps1 = Vec::new();
-                    let port = 60000 - sum;
+                    let port = 60000-sum;
                     let ep = format!("L4udp192.168.100.74:{}",port);
                     eps1.push(ep.to_string());
                     let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
@@ -883,7 +883,7 @@ mod tests {
                     params.known_sn = Some(sn_list.clone());
                     params.active_pn = Some(pn_list.clone());
                     params.passive_pn = Some(pn_list.clone());
-                    params.config.interface.udp.sn_only = false;
+                    params.config.interface.udp.sn_only = true;
                     params.tcp_port_mapping = None;
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let stack = Stack::open(

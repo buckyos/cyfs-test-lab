@@ -116,7 +116,8 @@ mod tests {
                 let str_area = format!("{}:{}:{}:{}",run_sum.clone(),run_sum.clone(),run_sum.clone(),run_sum.clone()); 
                 let area = Area::from_str(str_area.as_str()).unwrap();
                 let name = format!("xhj{}",run_sum.clone());
-                let (device1,key1) = create_device_area(name,eps1,sn_list.clone(),pn_list.clone(),Some(save_path.clone()),area).await;
+                let private_key = PrivateKey::generate_rsa(1024).unwrap();
+                let (device1,key1) = create_device_area(name,eps1,sn_list.clone(),pn_list.clone(),Some(save_path.clone()),area,private_key).await;
             }
             
             
