@@ -59,7 +59,7 @@ async fn main() {
     let testcaseId = matches.value_of("testcaseId").map(str::to_string).unwrap();
     let interval = matches.value_of("interval").unwrap().parse::<u64>().unwrap();
 
-    let url = "http://192.168.200.175:5000/api/base/system_info/report";
+    let url = "http://192.168.100.205:5000/api/base/system_info/report";
     loop {
         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
         let sysInfo = BDTTestSystemInfo {
