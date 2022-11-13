@@ -184,15 +184,15 @@ async function checkJobRunState(jobId, timeout) {
             let job = check.data.jobs[index];
             //console.info(`识别到测试任务${jobId},状态为：${job.status}`)
             if (job.jobid == jobId) {
-                console.info(`识别到测试任务${jobId},状态为：${job.status},当前已经运行${Date.now() - start} `);
+                console.info(`jobId = ${jobId},status = ${job.status}, running time = ${Date.now() - start} `);
                 if (job.status != 1) {
-                    return { err: 0, log: `运行任务 ${jobId} 完成` };
+                    return { err: 0, log: `job ${jobId} run finished` };
                 }
             }
         }
     }
-    console.info(`运行任务 ${jobId} 超时退出`);
-    return { err: 0, log: `运行任务 ${jobId} 超时退出` };
+    console.error(`run job ${jobId} timeout`);
+    return { err: 0, log: `run job ${jobId} timeout` };
 }
 async function setVersion(version) {
     console.info("send cpmmand to server update testcase version");
