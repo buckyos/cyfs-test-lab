@@ -3,3 +3,4 @@
 /deploy/
 **/cyfs_node/
 **/cyfs/
+**/mochawesome-report/

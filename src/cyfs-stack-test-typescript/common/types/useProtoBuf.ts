@@ -12,7 +12,7 @@ import {
     ProtobufCodecHelper,
     ProtobufDescContentDecoder, ProtobufBodyContentDecoder, ProtobufBodyContent,
     DeviceId, OODWorkMode, CoreObjectType, DeviceIdDecoder
-} from '../../cyfs_node/cyfs_node';
+} from '../../cyfs_node';
 import {
     CustumObjectType,
 } from './index'

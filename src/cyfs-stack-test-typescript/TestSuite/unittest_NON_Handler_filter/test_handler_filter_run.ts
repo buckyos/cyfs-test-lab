@@ -1,5 +1,5 @@
-import assert = require('assert');
-import {cyfs} from '../../cyfs_node';
+import assert  from 'assert';
+import * as cyfs from '../../cyfs_node';
 import {simulator} from '../../config/zoneData'
 import JSBI from 'jsbi';
 import * as myHandler from '../../common/utils/handler'

@@ -1,4 +1,4 @@
-import {cyfs} from '../../cyfs_node'
+import * as cyfs from '../../cyfs_node';
 import { MyTest, MyTestDecoder } from '../../common/types/myTestObject'
 var assert = require("assert");
 const crypto = require("crypto")

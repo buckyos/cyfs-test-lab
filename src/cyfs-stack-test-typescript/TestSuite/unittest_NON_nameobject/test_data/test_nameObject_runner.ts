@@ -1,4 +1,4 @@
-import assert = require('assert');
+import assert  from 'assert';
 import {cyfs} from '../../../cyfs_node';
 import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../../common'
 import * as fs from "fs-extra"

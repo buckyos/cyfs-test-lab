@@ -1,4 +1,4 @@
-import * as cyfs from '../cyfs_node/cyfs_node';
+import * as cyfs from '../cyfs_node';
 import {RandomGenerator} from "../common/utils/generator"
 function create_people(): [cyfs.People, cyfs.PrivateKey] {
     let pk = cyfs.PrivateKey.generate_rsa(1024).unwrap();

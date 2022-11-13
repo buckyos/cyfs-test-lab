@@ -1,5 +1,5 @@
 const assert = require('assert');
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 import * as myHandler from '../../common/utils/handler'
 import { TestcaseManger, testcaseInfo } from "../../common/models/testcaseInfo";
 import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../common'

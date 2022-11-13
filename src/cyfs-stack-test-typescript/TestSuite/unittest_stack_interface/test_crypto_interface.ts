@@ -1,5 +1,5 @@
-import assert = require('assert');
-import {cyfs} from '../../cyfs_node'
+import assert from 'assert';
+import * as cyfs from '../../cyfs_node';
 import { ZoneSimulator, get_len_buf, create_people, create_device } from "../../common/utils";
 import * as myHandler from "./handler"
 
@@ -4130,7 +4130,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
 
 
         //sign_and_push_named_object  sign_and_set_named_object
-        it.only("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
+        it("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
 
             let [people, people_pk] = create_people();
 

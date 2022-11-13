@@ -1,4 +1,4 @@
-import {cyfs} from '../../cyfs_node'
+import * as cyfs from '../../cyfs_node';
 var assert = require("assert");
 
 

@@ -1,4 +1,4 @@
-import assert = require('assert');
+import assert  from 'assert';
 import { sleep } from '../../base';
 import * as fs from "fs-extra";
 import * as path from "path";

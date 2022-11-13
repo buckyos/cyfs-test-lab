@@ -1,5 +1,5 @@
 
-import {cyfs} from '../../cyfs_node'
+import * as cyfs from '../../cyfs_node';
 import { ZoneSimulator } from './simulator'
 
 export enum all_stacks {

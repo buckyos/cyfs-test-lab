@@ -1,4 +1,3 @@
-import * as cyfs from "../../cyfs";
 import mongoose from "mongoose";
 import {TestcaseManger} from "./testcaseInfo";
 import {stack} from '../utils/stack';

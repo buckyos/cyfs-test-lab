@@ -1,4 +1,4 @@
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 
 
 export type Handler = {

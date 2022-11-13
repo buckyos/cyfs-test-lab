@@ -1,13 +1,10 @@
-import assert = require('assert');
-import {cyfs} from '../../cyfs_node';
+import assert  from 'assert';
+import * as cyfs from '../../cyfs_node';
 import { RandomGenerator } from "./generator";
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from 'crypto';
-
-
 import { ZoneSimulator } from "./simulator"
-import { ObjectId } from 'mongoose';
 import { type } from 'os';
 
 export class NDNTestManager {

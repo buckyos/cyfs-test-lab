@@ -1,4 +1,7 @@
 import {
+    CustumObjectType,
+} from './index'
+import {
     DescContent,
     DescContentDecoder,
     DescTypeInfo, named_id_gen_default, named_id_from_base_58, named_id_try_from_object_id,  NamedObject,
@@ -18,12 +21,8 @@ import {
     BuckyString, BuckyStringDecoder,
     BuckyHashSet,BuckyHashSetDecoder,
     ObjectId,
-    ObjectIdDecoder, BuckyNumber, BuckyNumberDecoder
-} from  '../../cyfs_node/cyfs_node';
-import {
-    CustumObjectType,
-} from './index'
-
+    ObjectIdDecoder, BuckyNumber, BuckyNumberDecoder, CyfsChannel
+} from "../../cyfs_node";
 
 // 1. 定义一个Desc类型信息
 export class AgentDescTypeInfo extends DescTypeInfo{

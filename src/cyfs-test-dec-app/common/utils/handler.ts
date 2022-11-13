@@ -1,4 +1,4 @@
-import assert = require('assert');
+import assert  from 'assert';
 import * as cyfs from '../../cyfs';
 import * as events from 'events'
 export const Emitter = new events.EventEmitter();
