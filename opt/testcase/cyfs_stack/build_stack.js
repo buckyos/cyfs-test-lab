@@ -96,8 +96,8 @@ async function pack(){
 }
 
 const type = process.argv[2];
-if (type = "change_sdk"){
+if (type == "change_sdk"){
     change_sdk()
-}else if(type = "pack_test-typescript"){
+}else if(type == "pack_test-typescript"){
     pack()
 }
