@@ -92,7 +92,6 @@ async function pack(){
     ,'package.json')
     await sleep(10000)
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
-    args
 }
 
 const type = process.argv[2];
