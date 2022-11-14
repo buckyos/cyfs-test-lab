@@ -5,7 +5,7 @@ const Protocol = require('./protocol');
 const {ErrorCode} = require('./tcp_server');
 
 const EmptyBuffer = new Buffer(0);
-const MAX_PACKAGE_SIZE = 10240;
+const MAX_PACKAGE_SIZE =  1024*1024;
 
 const MAGIC = 0x1106;
 const VERSION = 0x0100;
