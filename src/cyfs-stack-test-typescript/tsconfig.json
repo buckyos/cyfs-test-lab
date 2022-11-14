@@ -12,10 +12,12 @@
     "dist",
     "deploy",
     "./common/models/**/*.ts",
+    "./common/utils/**/*.ts",
+    "../cyfs-ts-sdk//**/*.ts",
   ],
   "include": [
     "./common/**/*.ts",
     "./config/**/*.ts",
-    "./TestSuite/unittest_stack_interface/**/*.ts", "init.ts",
+    "./TestSuite/unittest_stack_interface/**/*.ts","mocha_run_ci.ts",
   ]
 }
