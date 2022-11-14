@@ -376,7 +376,7 @@ pub struct ConnectLpcCommandReq {
     //LpcCommand的buffer里面
     pub remote_desc: Device,
     //LpcCommand的json里面
-    pub question: Vec<u8>,
+    pub question: bool,
     //TODO 这个字段暂时是空，的remote的sn的deviceid从device里面去获取
     pub sn_files: Vec<String>,
     //标识链接过程中需要通过sn
@@ -417,10 +417,10 @@ impl TryFrom<LpcCommand> for ConnectLpcCommandReq {
 
         let question = match json.get("question") {
             Some(v) => match v {
-                serde_json::Value::String(s) => s.as_bytes().to_vec(),
-                _ => Vec::new(),
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
             },
-            _ => Vec::new(),
+            _ => false,
         };
 
         let mut sn_files = Vec::new();
@@ -729,18 +729,18 @@ pub struct SetAnswerLpcCommandReq {
 impl TryFrom<LpcCommand> for SetAnswerLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
-        let json = value.as_json_value();
-
-        let answer = match json.get("answer") {
-            Some(v) => match v {
-                serde_json::Value::String(s) => s.as_bytes().to_vec(),
-                _ => Vec::new(),
-            },
-            _ => Vec::new(),
-        };
+        //let json = value.as_json_value();
+        // let answer = match json.get("answer") {
+        //     Some(v) => match v {
+        //         serde_json::Value::String(s) => s.as_bytes().to_vec(),
+        //         _ => Vec::new(),
+        //     },
+        //     _ => Vec::new(),
+        // };
+        let buffer = value.as_buffer();
         Ok(Self {
             seq: value.seq(),
-            answer,
+            answer:buffer.to_vec(),
         })
     }
 }
@@ -753,7 +753,38 @@ impl TryFrom<SetAnswerLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
     fn try_from(value: SetAnswerLpcCommandResp) -> Result<Self, Self::Error> {
         let json = serde_json::json!({
-            "name": "set_answer",
+            "name": "set_answer_resp",
+            "result": value.result,
+
+        });
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+pub struct SetQuestionLpcCommandReq {
+    pub seq: u32,
+    pub question: Vec<u8>,
+}
+impl TryFrom<LpcCommand> for SetQuestionLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let buffer = value.as_buffer();
+        Ok(Self {
+            seq: value.seq(),
+            question:buffer.to_vec(),
+        })
+    }
+}
+
+pub struct SetQuestionLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+}
+impl TryFrom<SetQuestionLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: SetQuestionLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "set_qustion_resp",
             "result": value.result,
 
         });

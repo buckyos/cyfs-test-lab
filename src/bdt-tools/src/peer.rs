@@ -194,7 +194,8 @@ struct PeerImpl {
     temp_dir: PathBuf,
     tasks: Arc<Mutex<TaskMap>>,
     // dir_tasks: Arc<Mutex<DirTaskMap>>,
-    fristQA_answer : Mutex<Vec<u8>>
+    fristQA_answer : Mutex<Vec<u8>>,
+    fristQA_question : Mutex<Vec<u8>>
 }
 #[derive(Clone)]
 pub struct Peer(Arc<PeerImpl>);
@@ -205,6 +206,7 @@ impl Peer {
         // let dir_task_map = DirTaskMap::new();
         let peer_map = HashMap::new();
         let answer = Vec::new();
+        let question = Vec::new();
         Self(Arc::new(PeerImpl {
             lazy_components: Arc::new(Mutex::new(peer_map)),
             // stream_name_gen: TempSeqGenerator::new(), 
@@ -213,6 +215,7 @@ impl Peer {
             tasks: Arc::new(Mutex::new(task_map)),
             // dir_tasks : Arc::new(Mutex::new(dir_task_map)),
             fristQA_answer :Mutex::new(answer),
+            fristQA_question :Mutex::new(question),
         }))
     }
 
@@ -376,7 +379,11 @@ impl Peer {
                     };
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     let mut answer = [0;12800];
-                    match stack.stream_manager().connect(0, c.question, param).await {
+                    let mut question = Vec::new();
+                    if(c.question){
+                        question = peer.get_question();
+                    }
+                    match stack.stream_manager().connect(0, question, param).await {
                         Ok(mut stream) => {
                             let mut len = 0;
                             // 接收answer
@@ -661,6 +668,32 @@ impl Peer {
             Ok(c) => {
                 let _ = peer.set_answer(&c.answer);
                 SetAnswerLpcCommandResp {
+                    seq, 
+                    result: 0,
+                }
+            }
+        };
+        async_std::task::spawn(async move {
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+        
+    }
+    pub fn on_set_question(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on set_answer, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        let resp = match SetQuestionLpcCommandReq::try_from(c) {
+            Err(e) => {
+                log::error!("convert command to SetAnswerLpcCommandReq failed, e={}", &e);
+                SetQuestionLpcCommandResp {
+                    seq, 
+                    result: e.code().as_u16(),
+                }
+            },
+            Ok(c) => {
+                let _ = peer.set_question(&c.question);
+                SetQuestionLpcCommandResp {
                     seq, 
                     result: 0,
                 }
@@ -1989,6 +2022,13 @@ impl Peer {
     }
     fn get_answer(&self)-> Vec<u8>{
         self.0.fristQA_answer.lock().unwrap().clone()
+    }
+    fn set_question(&self,question:&Vec<u8>){
+        let mut question_self = self.0.fristQA_question.lock().unwrap();
+        *question_self = question.clone();
+    }
+    fn get_question(&self)-> Vec<u8>{
+        self.0.fristQA_question.lock().unwrap().clone()
     }
     fn get_acceptor(&self ,peer_name: &String) -> StreamListenerGuard {
         self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().acceptor.clone()

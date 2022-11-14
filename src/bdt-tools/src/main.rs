@@ -79,6 +79,8 @@ async fn main()->Result<(), BuckyError> {
             peer.on_confirm(c, lpc.clone());
         } else if name == String::from("set_answer") {
             peer.on_set_answer(c, lpc.clone());
+        } else if name == String::from("set_question") {
+            peer.on_set_question(c, lpc.clone());
         } else if name == String::from("close") {
             peer.on_close(c, lpc.clone());
         } else if name == String::from("reset") {
