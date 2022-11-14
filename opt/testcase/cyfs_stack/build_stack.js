@@ -84,8 +84,6 @@ async function change_sdk(){
 }
 
 async function pack(){
-    run_cmd('npm i  typescript' ,"../../../src/cyfs-stack-test-typescript","cmd")
-    await sleep(10000)
     run_cmd('tsc -p' ,"../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
     await sleep(10000)
     //copy package.json to deploy
