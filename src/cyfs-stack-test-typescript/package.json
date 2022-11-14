@@ -9,6 +9,7 @@
     "build": "webpack --config webpack.config.js",
     "watch": "tsc -w",
     "compile": "tsc",
+    "ci_build":"tsc -p",
     "install-vue": "npm install --prefix qaTest",
     "start-vue": "npm start --prefix qaTest ",
     "start-http": "ts-node ./service_http/server.ts",
