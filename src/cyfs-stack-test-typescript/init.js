@@ -5,7 +5,7 @@ var CyfsSDKType;
 (function (CyfsSDKType) {
     CyfsSDKType["cyfs_beta_ts"] = "export * from 'cyfs-sdk';";
     CyfsSDKType["cyfs_nightly_ts"] = "export * from 'cyfs-sdk-nightly';";
-    CyfsSDKType["cyfs_node_ts"] = "export * from './cyfs_node.ts';";
+    CyfsSDKType["cyfs_node_ts"] = "export * from './cyfs_node';";
     CyfsSDKType["cyfs_source_ts"] = "export * from '../../../cyfs-ts-sdk/src/sdk';";
 })(CyfsSDKType = exports.CyfsSDKType || (exports.CyfsSDKType = {}));
 async function changeImport(type) {
