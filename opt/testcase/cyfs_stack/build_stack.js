@@ -2,6 +2,7 @@ const exec = require('child_process').exec;
 const fs = require('fs');
 const { time } = require('console');
 const path = require('path')
+const process = require('process'); 
 
 function createFolder(dirpath, dirname) {
 	if (typeof dirname === "undefined") {
@@ -67,12 +68,22 @@ function run_cmd(cmd,file_path,type){
           console.log('stderr: ' + stderr);
         })
     }
-  
+}
+
+async function change_sdk(){
+    const sdk = process.argv[3];
+    if (sdk == "source") {
+        run_cmd("npm run init source ","../../../src/cyfs-stack-test-typescript/","local")
+
+    }else if (sdk == "cyfs-sdk-nightly") {
+        run_cmd("npm run init cyfs-sdk-nightly","../../../src/cyfs-stack-test-typescript/","local")
+    }
+    else if (sdk == "cyfs-sdk") {
+        run_cmd("npm run init cyfs-sdk","../../../src/cyfs-stack-test-typescript/","local")
+    }
 }
 
 async function pack(){
-    run_cmd("npm i typescript","../../../src/cyfs-stack-test-typescript/","local")
-    //pack stack_test
     run_cmd('tsc -p' ,"../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
     await sleep(10000)
     //copy package.json to deploy
@@ -81,6 +92,12 @@ async function pack(){
     ,'package.json')
     await sleep(10000)
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
+    args
 }
 
-pack()
+const type = process.argv[2];
+if (type = "change_sdk"){
+    change_sdk()
+}else if(type = "pack_test-typescript"){
+    pack()
+}
