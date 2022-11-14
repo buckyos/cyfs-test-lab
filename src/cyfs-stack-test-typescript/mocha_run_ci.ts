@@ -4,14 +4,11 @@ import * as SysProcess from 'process';
 var date = require("silly-datetime");
 import * as mocha from "mocha"
 import * as fs from "fs-extra"
-import { sleep } from './cyfs_node/cyfs_node';
-import {cyfs,changeImport,CyfsSDKType} from './cyfs_node'
+import * as cyfs from './cyfs_node'
 
 
 async function main(testsuit:string[]) {
     
-
-    let change = changeImport(CyfsSDKType.cyfs_nightly)
     
     let report_path = path.join(__dirname,"./mochawesome-report")
     //清空日志
@@ -41,13 +38,13 @@ async function main(testsuit:string[]) {
         let save = new Promise(async(V)=>{
             while(true){
                 if(fs.pathExistsSync(report_path)){
-                    await sleep(5*1000)
+                    await cyfs.sleep(5*1000)
                     fs.copySync(report_path,`${reportpath}/report_${currenttime}`)
                     run.emit("exit")
                     await fs.removeSync(report_path)
                     break;
                 }
-                await sleep(5*1000)
+                await cyfs.sleep(5*1000)
                 
             }
             V("run finashed")
@@ -57,15 +54,8 @@ async function main(testsuit:string[]) {
 
 }}
 let testsuit = [
-    "test_beta_non.ts",
-    "test_crypto_interface.ts",
-    "test_handler_interface.ts",
-    "test_NDN_interface.ts",
-    "test_NON_interface.ts",
-    "test_root_state.ts",
-    "test_sync_data_smoke.ts",
-    "test_trans_interface.ts",
-    "test_util_testcase.ts"
+   "test_NDN_interface.ts"
+
 ]
 
 main(testsuit).then(()=>{
