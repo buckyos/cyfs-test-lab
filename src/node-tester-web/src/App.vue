@@ -9,7 +9,8 @@
       <router-link to="/tasklist">用例管理</router-link> |
       <router-link to="/joblist">工作计划</router-link> |
       <router-link to="/jobresult">执行结果</router-link> |
-      <router-link to="/testreport">测试报告</router-link> |
+      <router-link to="/testreport">BDT测试报告</router-link> |
+      <router-link to="/stackreport">CYFS_Stack测试报告</router-link> |
     </div>
     <router-view/>
   </div>
