@@ -3,10 +3,11 @@ const fs = require('fs');
 const { time } = require('console');
 const path = require('path')
 const process = require('process'); 
-
-function ax_post(){
+const express = require('express')
+const axios = require('axios')
+function ax_post(req){
     axios
-    .post('http://192.168.100.244', {
+    .post(req, {
     })
     .then(res => {
         console.log(`状态码: ${res.statusCode}`)
@@ -17,8 +18,9 @@ function ax_post(){
     })
 }
 
-function ax_get()
-    {axios.get('http://192.168.100.244:85')
+function ax_get(req)
+    {axios
+    .get(req)
     .then(res => {    
         console.log(res.data);
     })
@@ -60,12 +62,11 @@ function sr(){
 //创建web服务器
 const app = express()
 //挂载路由
-app.get('/',(req,res)=>{
+app.get('/build',(req,res)=>{
     run_cmd("node","../opt/cyfs_stack/build_stack.js","cmd")
 })
-app.post('/',(req,res)=>{
-  res.send('xxxx')
-  run_cmd("node","../opt/cyfs_stack/build_stack.js","cmd")
+app.get('/run',(req,res)=>{
+    run_cmd("node","../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","cmd")
 })
 //启动服务器
 app.listen(85,()=>{
@@ -73,10 +74,13 @@ app.listen(85,()=>{
 })
 }
 
+let build = 'http://192.168.100.244/build'
+let run = 'http://192.168.100.244/run'
 
 const type = process.argv[2];
-if (type == "get"){
-    ax_get()
-}else if(type == "pack"){
-    pack()
+if (type == "build"){
+    ax_get(build)
+}
+else if(type == "run"){
+    ax_get(run)
 }
