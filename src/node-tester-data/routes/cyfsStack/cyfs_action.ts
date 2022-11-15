@@ -1,7 +1,7 @@
 //主要用于Login登录 register 注册
 import express from "express";
 export const router = express.Router();
-import {ActionModel,CyfsAction} from "../../model/cyfs/cyfs_action"
+import {ActionModel,CyfsAction} from "../../model/cyfsStack/cyfs_action"
 
 router.get("/text", (req, res) => {
     res.json({ msg: "testcase" });

@@ -6,16 +6,16 @@ import * as bdt_task from "./routes/bdt/bdt_task";
 import * as bdt_agent from "./routes/bdt/bdt_agent";
 import * as bdt_client from "./routes/bdt/bdt_client";
 import * as bdt_report from "./routes/bdt/bdt_report";
-import * as cyfs_report from "./routes/cyfs/cyfs_report";
+import * as cyfs_report from "./routes/cyfsStack/cyfs_report";
 import * as agent from "./routes/base/agent";
 import * as perf from "./routes/base/agent_perf";
 import * as system_info from "./routes/base/system_info";
 import * as nft_info from "./routes/nft/nft_info";
 import * as error from "./routes/base/error_info";
-import * as cyfs_action from "./routes/cyfs/cyfs_action";
-import * as cyfs_task from "./routes/cyfs/cyfs_task";
-import * as cyfs_testcase from "./routes/cyfs/cyfs_testcase";
-import * as cyfs_peer_info from "./routes/cyfs/cyfs_peer_info";
+import * as cyfs_action from "./routes/cyfsStack/cyfs_action";
+import * as cyfs_task from "./routes/cyfsStack/cyfs_task";
+import * as cyfs_testcase from "./routes/cyfsStack/cyfs_testcase";
+import * as cyfs_peer_info from "./routes/cyfsStack/cyfs_peer_info";
 
 const app = express();
 

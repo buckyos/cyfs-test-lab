@@ -1,7 +1,7 @@
 //主要用于Login登录 register 注册
 import express from "express";
 export const router = express.Router();
-import {PeerInfoModel,PeerInfo} from "../../model/cyfs/cyfs_peer_info"
+import {PeerInfoModel,PeerInfo} from "../../model/cyfsStack/cyfs_peer_info"
 
 router.get("/text", (req, res) => {
     res.json({ msg: "testcase" });
