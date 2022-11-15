@@ -58,11 +58,4 @@ function server(){
     console.log('express server running ')
     })}
 
-function server(){
-    app.use(router);
-    //启动服务器
-    app.listen(3000,()=>{
-    console.log('express server running ')
-    })}
-
 server()
