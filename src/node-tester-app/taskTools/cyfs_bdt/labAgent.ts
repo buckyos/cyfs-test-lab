@@ -73,7 +73,7 @@ export let labAgentData = [
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1",
     },
     {
@@ -89,7 +89,7 @@ export let labAgentData = [
         OS: "CentOS8.5",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.171','192.168.1.182'], // 
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1&Router5",
     },
     {
@@ -118,7 +118,7 @@ export let labAgentData = [
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.177'],
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1&Router6",
     },
     {
@@ -130,10 +130,10 @@ export let labAgentData = [
         router: "Bucky",
     },
 ];
-const shuffle = function (arr:Array<any>) {
+function shuffle (arr:Array<any>) {
     let newArr = Array.prototype.slice.call(arr), // copy 新数组
         temp = 0
-    for (let i = arr.length - 1; i > 0; i--) {
+    for (let i = arr.length; i > 0; i--) {
         temp = Math.floor(Math.random() * i);
         [newArr[i], newArr[temp]] = [newArr[temp], newArr[i]];
     }

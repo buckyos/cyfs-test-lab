@@ -50,6 +50,7 @@ export const enum  ActionType {
     start = "start",
     restart = "restart",
     connect = "connect",
+    FasTQA = "FasTQA" ,
     close_connect = "close-connect",
     destory = "destory",
     connect_second = "connect-second",  

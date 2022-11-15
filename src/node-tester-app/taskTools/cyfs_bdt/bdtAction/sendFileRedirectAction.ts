@@ -46,7 +46,7 @@ export class SendFileRedirectAction extends BaseAction implements ActionAbstract
         }
         // Cache Node 节点进行数据缓存
         if(this.action.config.ndn_event_config?.is_connect){
-            let cahce_conn = await LN.bdtClient!.connect(CacheNode.bdtClient!.device_object!,"",0,0,"conn_cahe_node");
+            let cahce_conn = await LN.bdtClient!.connect(CacheNode.bdtClient!.device_object!,0,0,0,"conn_cahe_node");
         }
         if(this.action.config.ndn_event_config?.is_cache_data){
             let savePath = path.join(CacheNodecachePath.cache_path!.file_download, randFile.fileName!)

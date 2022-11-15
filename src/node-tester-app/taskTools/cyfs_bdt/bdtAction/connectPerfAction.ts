@@ -16,13 +16,12 @@ export class ConnectPerfAction extends BaseAction implements ActionAbstract {
         }
         // (2) ConnectAction 操作的参数设置
         // 判断LN是否要进行FristQA  question数据发送
-        let FirstQ = ""
         // 判断是否要发起直连，默认不直连
         if (!this.action.config!.known_eps) {
             this.action.config!.known_eps = 0
         }
         // (3) ConnectAction 建立连接
-        let info = await LN!.bdtClient!.connect(RN!.bdtClient!.device_object!, FirstQ, this.action.config!.known_eps, this.action.config!.accept_answer!, this.action.config!.conn_tag!)
+        let info = await LN!.bdtClient!.connect(RN!.bdtClient!.device_object!, 0, this.action.config!.known_eps, this.action.config!.accept_answer!, this.action.config!.conn_tag!)
         // (4) ConnectAction 建立连接对结果的检查
         if (info.err) {
             return { err: BDTERROR.connnetFailed, log: `${this.action.LN} conenct ${this.action.RN!} err =${info.err}` }

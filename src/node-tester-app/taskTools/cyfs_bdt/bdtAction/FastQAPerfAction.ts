@@ -2,9 +2,9 @@ import { sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./baseAction"
 
-export class ConnectAction extends BaseAction implements ActionAbstract {
+export class FastQAPerfAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
-
+        this.action.type = ActionType.FasTQA;
         // (1) 检查测试bdt 客户端
         let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
         let RN = await this.agentManager!.getBdtPeerClient(this.action.RN!);
@@ -22,7 +22,7 @@ export class ConnectAction extends BaseAction implements ActionAbstract {
             //FirstQ = this.action.config!.firstQA_question!;
             this.action.fileSize = Buffer.byteLength(this.action.config!.firstQA_question!)
             this.logger?.info(`Set FirstQ question size ${this.action.fileSize}`)
-            let err = await LN.bdtClient!.set_question(this.action.config!.firstQA_question);
+            let err = await RN.bdtClient!.set_question(this.action.config!.firstQA_question);
             if (err) {
                 return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_question info failed ` }
             }

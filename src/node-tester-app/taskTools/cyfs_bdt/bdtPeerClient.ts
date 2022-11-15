@@ -26,6 +26,8 @@ export class BdtPeerClient extends EventEmitter{
     public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁  
     public NAT? : number;
     public stack_list : Map<string,Buffer>;
+    public is_set_question : boolean;
+    public is_set_answer : boolean;
     on(event: 'unlive', listener: () => void): this;
     on(event: string, listener: (...args: any[]) => void): this {
         super.on(event, listener);
@@ -47,6 +49,8 @@ export class BdtPeerClient extends EventEmitter{
         this.state = 0; 
         this.stack_list = new Map();
         this.m_timeout = 60*1000;
+        this.is_set_question = false;
+        this.is_set_answer =false;
         
     }
 
@@ -63,12 +67,12 @@ export class BdtPeerClient extends EventEmitter{
                 }
             },60*1000)
             // 测试
-            if(this.tags == "PC_0007"){
-                //this.cache_peer_info!.addrInfo[0] = this.cache_peer_info!.addrInfo[0].replace("udp","tcp");
-                for(let i =0;i<0;i++){
-                    this.cache_peer_info.passive_pn_files!.push("pn-miner.desc")
-                }
-            }
+            // if(this.tags == "PC_0007"){
+            //     this.cache_peer_info!.addrInfo[0] = this.cache_peer_info!.addrInfo[0].replace("udp","tcp");
+            //     for(let i =0;i<0;i++){
+            //         this.cache_peer_info.passive_pn_files!.push("pn-miner.desc")
+            //     }
+            // }
             let start_tool = await this.m_interface.callApi('startPeerClient', Buffer.from(''), {
                 RUST_LOG : this.cache_peer_info!.RUST_LOG!
             }, this.m_agentid!, 10*1000);
@@ -265,12 +269,12 @@ export class BdtPeerClient extends EventEmitter{
 
     }
 
-    async connect(remote: Buffer, question: string, known_eps: number,accept_answer: number, conn_tag:string, remote_sn?: string,): Promise<{err: ErrorCode, time?: number, conn?: BdtConnection,answer?:string}> {
+    async connect(remote: Buffer, question: number, known_eps: number,accept_answer: number, conn_tag:string, remote_sn?: string,): Promise<{err: ErrorCode, time?: number, conn?: BdtConnection,answer?:string,read_time?:number}> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  remote, {
             name: 'connect',
             peerName: this.peerName,
             unique_id : this.peerName,
-            question,
+            question:accept_answer?1:0,
             known_eps: known_eps?1:0,
             remote_sn,
             accept_answer : accept_answer?1:0,
@@ -293,7 +297,7 @@ export class BdtPeerClient extends EventEmitter{
             conn_tag
         });
         this.m_conns.set(info.value.stream_name,conn);
-        return {err: ErrorCode.succ, time: info.value.time, conn,answer:info.value.answer};
+        return {err: ErrorCode.succ, time: info.value.time, read_time:info.value.read_time,conn,answer:info.value.answer};
     }
     async connectList(remote_desc_list: Array<{device_path:string}>, question: string, known_eps: number,accept_answer: number, conn_tag:string, remote_sn?: string,): Promise<{err: ErrorCode,records?:string}> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
@@ -319,14 +323,28 @@ export class BdtPeerClient extends EventEmitter{
         return {err: ErrorCode.succ,records:info.value.records};
     }
     async set_answer(answer: string): Promise<ErrorCode> {
-        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(""), {
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(answer), {
             name: 'set_answer',
             peerName: this.peerName,
             unique_id : this.peerName,
-            answer,
         }, this.m_agentid, 0);
         if (info.err) {
             this.logger.error(`${this.tags} set_answer failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        } else{
+            this.is_set_answer = true;
+        }
+        return info.err;
+    }
+    async set_question(question: string): Promise<ErrorCode> {
+        let info = await this.m_interface.callApi('sendBdtLpcCommand',  Buffer.from(question), {
+            name: 'set_question',
+            peerName: this.peerName,
+            unique_id : this.peerName,
+        }, this.m_agentid, 0);
+        if (info.err) {
+            this.logger.error(`${this.tags} set_answer failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+        }else{
+            this.is_set_question = true;
         }
         return info.err;
     }
@@ -346,9 +364,13 @@ export class BdtPeerClient extends EventEmitter{
         if(this.m_acceptCookie==undefined){
             let rnAccept = await this.m_interface.attachEvent(`autoAccept_${this.peerid}`, (err: ErrorCode,namespace: Namespace, json:string) => {
                 let eventIfo = JSON.parse(json);
-                this.logger.info(`${this.tags} ${this.peerName} 触发 accept conn = ${eventIfo.stream_name}`);
-                let conn = new BdtConnection({agentid:this.m_agentid,peerName:this.peerName!,stream_name:eventIfo.stream_name,_interface:this.m_interface ,timeout:this.m_timeout,question:eventIfo.question,conn_tag:this.conn_tag})         
-                this.m_conns.set(eventIfo.stream_name,conn);
+                if(eventIfo.result == 0){
+                    this.logger.info(`${this.tags} ${this.peerName} 触发 accept conn = ${eventIfo.stream_name}`);
+                    let conn = new BdtConnection({agentid:this.m_agentid,peerName:this.peerName!,stream_name:eventIfo.stream_name,_interface:this.m_interface ,timeout:this.m_timeout,question:eventIfo.question,conn_tag:this.conn_tag,confirm_time:eventIfo.confirm_time})         
+                    this.m_conns.set(eventIfo.stream_name,conn);
+                }else {
+                    this.logger.error(`${this.tags} ${this.peerName} confirm 失败 `);
+                }
             }, this.m_agentid, this.m_timeout);
             this.m_acceptCookie = rnAccept.cookie!;
             return info.err;
@@ -773,6 +795,7 @@ export class BdtConnection extends EventEmitter {
     public id : string;
     public conn_tag? :string;
     public question? : string;
+    public confirm_time? : number;
     private m_agentid: string;
     private logger : Logger
     private m_stream_name: string;
@@ -799,6 +822,7 @@ export class BdtConnection extends EventEmitter {
         question?:string;
         conn_tag?:string;
         tags?:string;
+        confirm_time?:number;
     }) {
         super();
         this.m_agentid = options.agentid;
@@ -807,6 +831,7 @@ export class BdtConnection extends EventEmitter {
         this.peerName = options.peerName;
         this.m_interface = options._interface;
         this.m_timeout = options.timeout;
+        this.confirm_time = options.confirm_time;
         this.state = 1;
         this.local =  this.m_connInfo.split(", ")[1].split(":")[1]
         this.remote =  this.m_connInfo.split(", ")[2].split(":")[1]
@@ -817,6 +842,7 @@ export class BdtConnection extends EventEmitter {
         this.conn_tag = options.conn_tag;
         this.logger = this.m_interface.getLogger();
         this.tags = options.tags
+        
     }
     
     async close(): Promise<ErrorCode> {
