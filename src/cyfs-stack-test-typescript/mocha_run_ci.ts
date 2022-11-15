@@ -10,14 +10,15 @@ import * as cyfs from './cyfs_node'
 async function main(testsuit:string[]) {
     
     
-    let report_path = path.join(__dirname,"./mochawesome-report")
+   
+    
     //清空日志
     //fs.removeSync(path.join(__dirname,"../log"));
     let ppath = path.join(path.dirname(__filename),"/output")
     let logpath = path.join(ppath,"/log")
     fs.ensureDirSync(logpath);
     
-    let reportpath = path.join(ppath,"/mochawesome-report") 
+    let reportpath = path.join(ppath,"/report") 
     console.log(reportpath)
     fs.ensureDirSync(reportpath);
 
@@ -25,10 +26,10 @@ async function main(testsuit:string[]) {
     currenttime = currenttime.replace(/\D/g,"_");
     console.log(currenttime)
     for(const testcase of testsuit){
-        let TestSuite = ".\\TestSuite\\unittest_stack_interface\\" + `${testcase}`
-        console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=./report,reportFilename=${testcase},html=true --require ts-node/register `)
-        let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
-
+        let report_path = path.join(__dirname,`./output/report/${testcase}`)
+        let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/" + `${testcase}`)
+        console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=${report_path},reportFilename=${testcase},html=true --require ts-node/register `)
+        let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=${report_path},/reportreportFilename=${testcase},html=true --require ts-node/register`)
         run.on('exit', async (code: number, signal: string) => {
             console.info(`######运行结束`)
         });
@@ -39,7 +40,7 @@ async function main(testsuit:string[]) {
             while(true){
                 if(fs.pathExistsSync(report_path)){
                     await cyfs.sleep(5*1000)
-                    fs.copySync(report_path,`${reportpath}/report_${currenttime}`)
+                    fs.copySync(report_path,`${report_path}/report_${currenttime}`)
                     run.emit("exit")
                     await fs.removeSync(report_path)
                     break;
@@ -54,7 +55,7 @@ async function main(testsuit:string[]) {
 
 }}
 let testsuit = [
-   "test_NDN_interface.ts"
+   "test_beta_non.js"
 
 ]
 
