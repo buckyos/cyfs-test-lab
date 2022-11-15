@@ -20,7 +20,7 @@ export class StackReportProvider  {
     }
 
     public async list(): Promise<{succ: boolean, msg?: string, entrys?: StackReportEntry[]}> {
-        let info : any = await FetchHelper.PostFetchData("/api/stack/StackReport/StackReportList",{});
+        let info : any = await FetchHelper.PostFetchData("/api/cyfs/report/reportList",{});
         if (info.err) {
             return {succ:false,msg:info.log};
         }
