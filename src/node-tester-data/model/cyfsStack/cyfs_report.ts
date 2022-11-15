@@ -33,7 +33,7 @@ export class CyfsReport{
     async querList(){
       console.info(`query bdt testcase report`)
         try {
-          const result = await this.prisma.bdt_report.findMany({
+          const result = await this.prisma.cyfs_report.findMany({
             where: {},orderBy:[{id : "desc"}]  
           });
           return {err:0,log:"getRecords success",result}
