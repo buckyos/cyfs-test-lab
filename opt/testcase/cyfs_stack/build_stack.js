@@ -72,8 +72,8 @@ function run_cmd(cmd,file_path,type){
 
 async function change_sdk(){
     const sdk = process.argv[3];
-    if (sdk == "source") {
-        run_cmd("npm run init source ","../../../src/cyfs-stack-test-typescript/","local")
+    if (sdk == "cyfs-node") {
+        run_cmd("npm run init cyfs-node ","../../../src/cyfs-stack-test-typescript/","local")
 
     }else if (sdk == "cyfs-sdk-nightly") {
         run_cmd("npm run init cyfs-sdk-nightly","../../../src/cyfs-stack-test-typescript/","local")
@@ -84,20 +84,17 @@ async function change_sdk(){
 }
 
 async function pack(){
-    run_cmd('tsc -p' ,"../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
-    await sleep(10000)
     //copy package.json to deploy
     copyFile(path.join(__dirname,"../../../src/cyfs-stack-test-typescript/package.json")
     ,path.join(__dirname,"../../../deploy/cyfs-stack-test-typescript")
     ,'package.json')
     await sleep(10000)
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
-    args
 }
 
 const type = process.argv[2];
-if (type = "change_sdk"){
+if (type == "change_sdk"){
     change_sdk()
-}else if(type = "pack_test-typescript"){
+}else if(type == "pack_test-typescript"){
     pack()
 }

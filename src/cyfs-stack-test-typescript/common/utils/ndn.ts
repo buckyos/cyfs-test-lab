@@ -88,7 +88,7 @@ export class NDNTestManager {
                         level: level,
                         target: source.local_device_id().object_id,
                         // 需要处理数据的关联对象，主要用以chunk/file等
-                        referer_object: [new cyfs.NDNDataRefererObject(file_resp.file_id)],
+                        referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)],
                         flags: 0,
                     },
                     // 目前只支持ChunkId/FileId/DirId
@@ -184,7 +184,7 @@ export class NDNTestManager {
                         level: level,
                         target: source.local_device_id().object_id,
                         // 需要处理数据的关联对象，主要用以chunk/file等
-                        referer_object: [new cyfs.NDNDataRefererObject(file_resp.file_id)],
+                        referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)],
                         flags: 0,
                     },
                     // 目前只支持ChunkId/FileId/DirId
@@ -273,7 +273,7 @@ export class NDNTestManager {
                         level: level,
                         target: source.local_device_id().object_id,
                         // 需要处理数据的关联对象，主要用以chunk/file等
-                        referer_object: [new cyfs.NDNDataRefererObject(file_resp.file_id)],
+                        referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)],
                         flags: 0,
                     },
                     // 目前只支持ChunkId/FileId/DirId
@@ -356,7 +356,7 @@ export class NDNTestManager {
                 flags: 0,
                 dec_id: ZoneSimulator.APPID,
                 target: target.local_device_id().object_id,
-                referer_object: [new cyfs.NDNDataRefererObject(file_resp.file_id)]
+                referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
             },
             object_id: file_resp.file_id,
             local_path: savePath,
@@ -841,7 +841,7 @@ export class NDNTestManager {
                         level: level,
                         dec_id: ZoneSimulator.APPID,
                         flags: 0,
-                        referer_object: [new cyfs.NDNDataRefererObject(dir_obj_target.object.object_id)]
+                        referer_object: [new cyfs.NDNDataRefererObject(undefined,dir_obj_target.object.object_id)]
                     },
                     object_id: taskList[i].object_id,
                     local_path: taskList[i].savePath,
