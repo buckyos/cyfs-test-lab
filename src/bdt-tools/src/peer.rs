@@ -348,6 +348,7 @@ impl Peer {
                         stream_name: String::new(),
                         answer : Vec::new(),
                         time: 0,
+                        read_time : 0,
                     }
                 },
                 Ok(c) => {
@@ -377,19 +378,24 @@ impl Peer {
                             None
                         }
                     };
-                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut answer = [0;12800];
+                   
+                    let mut answer = [0;25*1024];
                     let mut question = Vec::new();
                     if(c.question){
                         question = peer.get_question();
                     }
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     match stack.stream_manager().connect(0, question, param).await {
                         Ok(mut stream) => {
+                            let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                             let mut len = 0;
                             // 接收answer
+                            let begin_read = system_time_to_bucky_time(&std::time::SystemTime::now());
+                            let mut read_time = 0;
                             if c.accept_answer {
                                 len = match stream.read(&mut answer).await{
                                     Ok(len) => {
+                                        let read_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_read;
                                         log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
                                         len
                                     },
@@ -410,7 +416,8 @@ impl Peer {
                                 result: 0 as u16,
                                 stream_name: conn.get_name().clone(),
                                 answer: answer[..len].to_vec(),
-                                time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                time: connect_time as u32,
+                                read_time : read_time  as u32,
                             }
                         },
                         Err(e) => {
@@ -421,6 +428,7 @@ impl Peer {
                                 stream_name: String::new(),
                                 answer : Vec::new(),
                                 time: 0,
+                                read_time : 0
                             }
                         }
                     }
@@ -577,6 +585,7 @@ impl Peer {
                             //let pre_stream = incoming.next().await.unwrap().unwrap();
                             let _ = match incoming.next().await{
                                 Some(stream)=>{
+                                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                                     let _ = match stream{
                                         Ok(pre_stream)=>{
                                             let question = pre_stream.question;
@@ -589,9 +598,11 @@ impl Peer {
                                                         result: e.code().as_u16(),
                                                         question,
                                                         stream_name: "".to_string(),
+                                                        confirm_time : 0,
                                                     }
                                                 },
                                                 Ok(_)=>{
+                                                    let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                                                     let conn = peer.add_stream(pre_stream.stream);
                                                     log::info!("confirm succ, name={}", conn.get_name());
                                                     ConfirmStreamLpcCommandResp {
@@ -599,6 +610,7 @@ impl Peer {
                                                         result: 0 as u16,
                                                         question,
                                                         stream_name: conn.get_name().clone(),
+                                                        confirm_time
                                                     }
                                                 }
                                             };
@@ -718,6 +730,7 @@ impl Peer {
                         result: e.code().as_u16(),
                         question : Vec::new(),
                         stream_name: String::new(),
+                        confirm_time : 0,
                     }
                 },
                 Ok(c) => {
@@ -729,6 +742,7 @@ impl Peer {
                                 result: BuckyErrorCode::NotFound.as_u16(),
                                 question : Vec::new(),
                                 stream_name: c.stream_name,
+                                confirm_time:0,
                             }
                         },
                         Some(conn) => {
@@ -740,6 +754,7 @@ impl Peer {
                                         result: e.code().as_u16(),
                                         question : Vec::new(),
                                         stream_name: c.stream_name,
+                                        confirm_time:0,
                                     }
                                 },
                                 Ok(_) => {
@@ -749,6 +764,7 @@ impl Peer {
                                         result: 0 as u16,
                                         question : Vec::new(),
                                         stream_name: c.stream_name,
+                                        confirm_time:0,
                                     }
                                 }
                             }

@@ -391,6 +391,7 @@ pub struct ConnectLpcCommandResp {
     pub stream_name: String,
     pub answer: Vec<u8>,
     pub time: u32,
+    pub read_time : u32,
 }
 
 impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
@@ -401,6 +402,7 @@ impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
             "result": value.result,
             "stream_name": value.stream_name.as_str(),
             "time": value.time,
+            "read_time":value.read_time,
             "answer" : String::from_utf8(value.answer).unwrap(),
         });
 
@@ -797,6 +799,7 @@ pub struct ConfirmStreamLpcCommandResp {
     pub result: u16,
     pub stream_name: String,
     pub question : Vec<u8>,
+    pub confirm_time : u64,
 }
 impl TryFrom<ConfirmStreamLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -805,6 +808,7 @@ impl TryFrom<ConfirmStreamLpcCommandResp> for LpcCommand {
             "name": "confirm_resp",
             "result": value.result,
             "stream_name": value.stream_name.as_str(),
+            "confirm_time" : value.confirm_time,
             "question" :  String::from_utf8(value.question).unwrap(),
         });
 
