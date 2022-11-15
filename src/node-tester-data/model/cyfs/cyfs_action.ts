@@ -25,31 +25,31 @@ export class CyfsAction{
     constructor(){
       this.prisma = prisma;
     }
-    async add(action:ActionModel){
-        try {
-          const result = await this.prisma.cyfs_action.create({data:{
-            testcaseId: action.testcaseId,
-            task_id:action.task_id,
-            action_id: action.action_id,
-            parent_action:action.parent_action,
-            type: action.type,
-            source: action.source,
-            target: action.target,
-            input_data: action.input_data,
-            timeout: action.timeout,
-            data_size: action.data_size,
-            opt_time: action.opt_time,
-            cache_size: action.cache_size,
-            result: action.result,
-            expect: action.expect,
-            createTime: Date.now().toString(),
-          }})
+    // async add(action:ActionModel){
+    //     try {
+    //       const result = await this.prisma.cyfs_action.create({data:{
+    //         testcaseId: action.testcaseId,
+    //         task_id:action.task_id,
+    //         action_id: action.action_id,
+    //         parent_action:action.parent_action,
+    //         type: action.type,
+    //         source: action.source,
+    //         target: action.target,
+    //         input_data: action.input_data,
+    //         timeout: action.timeout,
+    //         data_size: action.data_size,
+    //         opt_time: action.opt_time,
+    //         cache_size: action.cache_size,
+    //         result: action.result,
+    //         expect: action.expect,
+    //         createTime: Date.now().toString(),
+    //       }})
           
-          return {err:0,log:` ${action.task_id} ${action.type} add record success`}
-        } catch (error) {
-          console.info(error)
-          return {err:2,log:`${error}`}
-        }
+    //       return {err:0,log:` ${action.task_id} ${action.type} add record success`}
+    //     } catch (error) {
+    //       console.info(error)
+    //       return {err:2,log:`${error}`}
+    //     }
         
-    }
+    // }
 }

@@ -7,25 +7,25 @@ router.get("/text", (req, res) => {
     res.json({ msg: "testcase" });
   });
 
-router.post('/add',
-    async (req, res) => {
-        console.info(`#receive cyfs_task add request,body = ${JSON.stringify(req.body)} `)
-        const taskInfo:TaskModel = {
-            testcaseId : req.body.testcaseId,
-            task_id: req.body.task_id,
-            LN:req.body.LN,
-            RN:req.body.RN,
-            clients:req.body.clients,
-            action:req.body.action,
-            child_action:req.body.child_action,
-            expect: req.body.expect,
-            result: req.body.result,
-            state:req.body.state,
-            timeout:req.body.timeout,
-        };
-        let model = new CyfsTask();
-        let result =await  model.add(taskInfo);
-        return res.json(result)
+// router.post('/add',
+//     async (req, res) => {
+//         console.info(`#receive cyfs_task add request,body = ${JSON.stringify(req.body)} `)
+//         const taskInfo:TaskModel = {
+//             testcaseId : req.body.testcaseId,
+//             task_id: req.body.task_id,
+//             LN:req.body.LN,
+//             RN:req.body.RN,
+//             clients:req.body.clients,
+//             action:req.body.action,
+//             child_action:req.body.child_action,
+//             expect: req.body.expect,
+//             result: req.body.result,
+//             state:req.body.state,
+//             timeout:req.body.timeout,
+//         };
+//         let model = new CyfsTask();
+//         let result =await  model.add(taskInfo);
+//         return res.json(result)
     
-    }
-);
+//     }
+// );

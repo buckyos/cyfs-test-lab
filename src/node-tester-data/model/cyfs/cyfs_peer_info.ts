@@ -16,22 +16,22 @@ export class PeerInfo{
     constructor(){
       this.prisma = prisma;
     }
-    async add(peerInfo:PeerInfoModel){
-      console.info(`add testcase ${JSON.stringify(peerInfo)}`)
-        try {
-          const result = await this.prisma.cyfs_peer_info.create({data:{
-            testcaseId: peerInfo.testcaseId,
-            name: peerInfo.name,
-            device_id: peerInfo.device_id,
-            type: peerInfo.type,
-            SDK_type: peerInfo.SDK_type,
-            config: peerInfo.config,
-            createTime: Date.now().toString(),
-        }})
-        return {err:0,log:`${peerInfo.name} add record success`}
-      } catch (error) {
-        return {err:0,log:` ${JSON.stringify(error)}`}
-      }
+    // async add(peerInfo:PeerInfoModel){
+    //   console.info(`add testcase ${JSON.stringify(peerInfo)}`)
+    //     try {
+    //       const result = await this.prisma.cyfs_peer_info.create({data:{
+    //         testcaseId: peerInfo.testcaseId,
+    //         name: peerInfo.name,
+    //         device_id: peerInfo.device_id,
+    //         type: peerInfo.type,
+    //         SDK_type: peerInfo.SDK_type,
+    //         config: peerInfo.config,
+    //         createTime: Date.now().toString(),
+    //     }})
+    //     return {err:0,log:`${peerInfo.name} add record success`}
+    //   } catch (error) {
+    //     return {err:0,log:` ${JSON.stringify(error)}`}
+    //   }
         
-    }
+    // }
 }
