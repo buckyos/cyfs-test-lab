@@ -19,11 +19,11 @@ router.get("/text", (req, res) => {
 router.post('/reportHtml',
     async (req, res) => {
         console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
-        if( !req.body.version || !req.body.zip_url){
-            return res.json({err:true,log:"缺少输入参数 version zip_url"})
+        if( !req.body.version || !req.body.zip_url || !req.body.file_name){
+            return res.json({err:true,log:"缺少输入参数 version || zip_url || file_name"})
         }
         //解压文件
-        let zip_path = path.join(config.BDT_Report_Dir,req.body.version,"mochawesome-report.zip"); 
+        let zip_path = path.join(config.BDT_Report_Dir,req.body.version,req.body.file_name); 
         let zip_dir =  path.join(config.BDT_Report_Dir,req.body.version); 
         await compressing.zip.uncompress(zip_path,zip_dir);
         let zip_url = req.body.zip_url;
