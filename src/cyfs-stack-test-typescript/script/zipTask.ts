@@ -19,25 +19,28 @@ export function readDir(zip: any, nowPath: string) {
     });
 }
 export async function startZIP(targetPath:string,name:string) {
-
-    //console.info(targetPath)
-    let stat = fs.lstatSync(targetPath)
-    if(stat.isDirectory()){
-        readDir(zip, targetPath);
-    }
-    let zip_path = path.join(targetPath,name);
-    console.info(zip_path)
-    if(!fs.pathExistsSync(zip_path)){
-        fs.createFileSync(zip_path);
-    }
-    zip.generateAsync({//设置压缩格式，开始打包
-        type: "nodebuffer",//nodejs用
-        compression: "DEFLATE",//压缩算法
-        compressionOptions: {//压缩级别
-            level: 9
+    return new Promise(async(V)=>{
+        //console.info(targetPath)
+        let stat = fs.lstatSync(targetPath)
+        if(stat.isDirectory()){
+            readDir(zip, targetPath);
         }
-    }).then(function (content: any) {
-        fs.writeFileSync(zip_path, content, "utf-8");//将打包的内容写入 当前目录下的 result.zip中
-    });
+        let zip_path = path.join(targetPath,name);
+        console.info(zip_path)
+        if(!fs.pathExistsSync(zip_path)){
+            fs.createFileSync(zip_path);
+        }
+        zip.generateAsync({//设置压缩格式，开始打包
+            type: "nodebuffer",//nodejs用
+            compression: "DEFLATE",//压缩算法
+            compressionOptions: {//压缩级别
+                level: 9
+            }
+        }).then(function (content: any) {
+            fs.writeFileSync(zip_path, content, "utf-8");//将打包的内容写入 当前目录下的 result.zip中
+            V("")
+        });
+    })
+
 
 }
