@@ -141,6 +141,7 @@
     "websocket": "^1.0.33",
     "ws": "^8.8.1",
     "xlsx": "^0.14.1",
-    "xmlhttprequest": "^1.8.0"
+    "xmlhttprequest": "^1.8.0",
+    "semantic-release":"15.0.0"
   }
 }
