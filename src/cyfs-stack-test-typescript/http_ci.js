@@ -46,6 +46,7 @@ else if (type == "build"){
 }
 else if(type == "run"){
     ax_get(run)
+}
 }   
 
 
