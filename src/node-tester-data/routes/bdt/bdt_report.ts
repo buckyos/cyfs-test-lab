@@ -176,6 +176,7 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
         // 统计BDT client 配置数据
         
         let client_list = await client_mod.queryByTestcaseId(testcaseId);
+       
         if(client_list.result){
             testcase_info.client_info  = `./client/${testcaseId}.html`;
             let save = await reportDataToFile(client_list.result, path.join(__dirname, "./report_suite/ClientInfo.html"), path.join(config.BDT_Report_Dir,environment,"client"), `${testcaseId}.html`)
