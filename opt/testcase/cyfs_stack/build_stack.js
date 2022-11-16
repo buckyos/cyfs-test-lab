@@ -1,4 +1,4 @@
-const exec = require('child_process').exec;
+const exec = require('child_process').execSync;
 const fs = require('fs');
 const { time } = require('console');
 const path = require('path')
@@ -31,7 +31,6 @@ function copyFile(orgfilepath, desdirpath, desfilename) {
 			createFolder(desdirpath);
 			fs.copyFileSync(orgfilepath, desfilepath);
 		} else {
-            fs.writeFileSync(orgfilepath, desfilepath)
 			console.error(Date().toString() + "FolderAndFileOperation_copyFile: des file already existed." + " new path: " + desfilepath.toString());
 		}
 	} else {
@@ -49,13 +48,10 @@ function run_cmd(cmd,file_path,type){
     console.log("cmdstr",cmdStr)
     if (type == "cmd"){
         console.log("cmd",cmdStr+cmd_path)
-        const child = exec(cmdStr+cmd_path)
-        child.stdout.on('data', data => {
-            console.log('stdout 输出:', data);
-        })
-        child.stderr.on('data', err => {
-            console.log('error 输出:', err);    
-        })
+        try{const child = exec(cmdStr+cmd_path)}
+        catch (e) {
+            console.error(e);
+            throw(e)}
     }
     else if(type=="local") {
         console.log("local_cmd",cmdStr)
@@ -85,6 +81,8 @@ async function change_sdk(){
 }
 
 async function pack(){
+    run_cmd("tsc -p","../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
+    await sleep(10000)
     //copy package.json to deploy
     copyFile(path.join(__dirname,"../../../src/cyfs-stack-test-typescript/package.json")
     ,path.join(__dirname,"../../../deploy/cyfs-stack-test-typescript")
@@ -93,9 +91,19 @@ async function pack(){
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
 }
 
+async function run_test(){
+    await sleep(10000)
+    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","local")
+}
+
+async function main(){
 const type = process.argv[2];
 if (type == "change_sdk"){
-    change_sdk()
+    await change_sdk()
 }else if(type == "pack_test-typescript"){
-    pack()
+    await pack()
+    }
+else if(type == "run_test")
+    await run_test()
 }
+main()

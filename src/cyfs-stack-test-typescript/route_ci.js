@@ -31,29 +31,26 @@ function run_cmd(cmd,file_path,type){
     }
 }
 
-async function getTestReport(version) {
-  console.info("send cpmmand to server,build testcase report");
-  let run = await data_request.request("POST", "api/cyfs/report/reportHtml", { version }, request_1.ContentType.json);
-  console.info("create testcase report resp:");
-  console.info(JSON.stringify(run));
-}
-
 
 router.get('/change_sdk/:sdk_version', (req, res) => {
     run_cmd("node",`../../opt/testcase/cyfs_stack/build_stack.js change_sdk ${req.params.sdk_version}`,"cmd")
+    res.send("receive")
   });
 
 router.get('/build', (req, res) => {
     run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js pack_test-typescript","cmd")
+    res.send("receive")
   });
  
   
 router.get('/run', (req, res) => {
-    run_cmd("node","../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","cmd")
+    run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js run_test","cmd")
+    res.send("receive")
   });
 
 router.get('/report', (req, res) => {
-    res.send('/')
+    run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js report","cmd")
+    res.send("receive")
   });
 
 
