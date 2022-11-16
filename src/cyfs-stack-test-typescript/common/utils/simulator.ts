@@ -316,17 +316,10 @@ export class ZoneSimulator {
             });
             process.stdout?.on('data', (data) => {
                 let str: string = `${data.toString()}`;
-                let str_a: string = `${data.toString()}`;
-                let str_b: string = `${data.toString()}`;
-                console.info(str_a)
-                console.info(str_b)
-                str_a = str_a.split(' Console')[0].split(`zone-simulator.exe`)[1]
-                str_b = str_b.split(' RDP-Tcp')[0].split(`zone-simulator.exe`)[1]
-                if (str_a) {
-                    this.pid = Number(str_a)
-                
-                } else if(str_b){
-                    this.pid = Number(str_b)
+                console.info(str)
+                str = str.split(' Console')[0].split(`zone-simulator.exe`)[1]
+                if (str) {
+                    this.pid = Number(str)
                 }
                 else {
                     this.pid = 0;
