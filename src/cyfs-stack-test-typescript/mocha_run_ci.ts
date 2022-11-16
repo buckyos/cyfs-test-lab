@@ -1,8 +1,5 @@
 import * as ChildProcess from 'child_process';
 import * as path from 'path';
-import * as SysProcess from 'process';
-var date = require("silly-datetime");
-import * as mocha from "mocha"
 import * as fs from "fs-extra"
 import * as cyfs from './cyfs_node'
 
@@ -26,6 +23,7 @@ async function main(testsuit:string[]) {
     currenttime = currenttime.replace(/\D/g,"_");
     console.log(currenttime)
     for(const testcase of testsuit){
+        let reportpath = path.join(__dirname,`./output/report`)
         let report_path = path.join(__dirname,`./output/report/${testcase}`)
         let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/" + `${testcase}`)
         console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=${report_path},reportFilename=${testcase},html=true --require ts-node/register `)
@@ -40,7 +38,7 @@ async function main(testsuit:string[]) {
             while(true){
                 if(fs.pathExistsSync(report_path)){
                     await cyfs.sleep(5*1000)
-                    fs.copySync(report_path,`${report_path}/report_${currenttime}`)
+                    fs.copySync(report_path,`${reportpath}\\report_${currenttime}\\${testcase}`)
                     run.emit("exit")
                     await fs.removeSync(report_path)
                     break;

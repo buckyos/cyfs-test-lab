@@ -5,9 +5,9 @@ const axios = require('axios')
 const express = require('express')
 const app = express()
 let change_sdk = 'http://192.168.100.244:3000/change_sdk/'
-let build = 'http://192.168.100.244:86/build'
-let run = 'http://192.168.100.244:86/run'
-let report = 'http://192.168.100.244:86/report'
+let build = 'http://192.168.100.244:3000/build'
+let run = 'http://192.168.100.244:3000/run'
+let report = 'http://192.168.100.244:3000/report'
 
 
 function ax_post(req){
@@ -35,17 +35,17 @@ function ax_get(req)
     }
 
 
-const cmd = process.argv[2];
+
 function client(type){
 if (type == "change_sdk"){
-    console.log("change_sdk_url",change_sdk + process.argv[3])
-    ax_get(change_sdk + process.argv[3])
+    console.log("change_sdk_url",change_sdk + process.argv[4])
+    ax_get(change_sdk + process.argv[4])
 }
 else if (type == "build"){
     ax_get(build)
 }
 else if(type == "run"){
-    ax_post(run)
+    ax_get(run)
 }   
 else if(type == "report"){
     ax_get(report)
@@ -58,4 +58,13 @@ function server(){
     console.log('express server running ')
     })}
 
-server()
+function main(){
+    if(process.argv[2] == "client"){
+        client(process.argv[3])
+    }
+    else if(process.argv[2] == "server")
+    {
+        server()
+    }
+}
+main()
