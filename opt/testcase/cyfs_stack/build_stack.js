@@ -91,6 +91,12 @@ async function pack(){
     await sleep(10000)
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
 }
+
+async function run_test(){
+    await sleep(10000)
+    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","local")
+}
+
 async function main(){
 const type = process.argv[2];
 if (type == "change_sdk"){
@@ -98,5 +104,7 @@ if (type == "change_sdk"){
 }else if(type == "pack_test-typescript"){
     await pack()
     }
+else if(type == "run_test")
+    await run_test()
 }
 main()
