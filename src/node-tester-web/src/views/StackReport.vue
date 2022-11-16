@@ -1,15 +1,15 @@
 <template>
   <div v-loading="loading">
     <el-table :data="StackReportList" border style="width: 100%">
-      <el-table-column prop="id" label="id" width="200" align="center">
+      <el-table-column prop="id" label="id" width="300" align="center">
       </el-table-column>
       <el-table-column prop="version" label="测试版本" width="400" align="center"></el-table-column>
-      <el-table-column prop="zip_url" label="测试报告压缩包" width="300" align="center">
+      <el-table-column prop="zip_url" label="测试报告压缩包" width="400" align="center">
         <template slot-scope="scope">
           <a :href="scope.row.zip_url" target="_blank" class="buttonText">点击下载测试报告</a>
         </template>
       </el-table-column>
-      <el-table-column prop="testcase_url" label="测试报告链接" width="300" align="center">
+      <el-table-column prop="testcase_url" label="测试报告链接" width="400" align="center">
         <template slot-scope="scope">
           <a :href="scope.row.testcase_url" target="_blank" class="buttonText">点击查看测试报告</a>
         </template>
