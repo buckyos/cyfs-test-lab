@@ -7,6 +7,7 @@ export interface BDTClientModel{
   peerInfo?: string 
   sn_resp_eps?: string
   online_time?:number
+  status?:string
 }
 
 
@@ -25,6 +26,7 @@ export class BDTClient{
             peerInfo : action.peerInfo , 
             sn_resp_eps : action.sn_resp_eps ,
             online_time : action.online_time,
+            status:action.status,
           }})
           return {err:0,log:` ${action.name} add record success`}
         } catch (error) {
@@ -32,5 +34,15 @@ export class BDTClient{
           return {err:1,log:`${error}`}
         }
         
+    }
+    async queryByTestcaseId(testcaseId:string){
+      try {
+        const result = await this.prisma.bdt_client.findMany({
+          where: { testcaseId },orderBy:[{id : "asc"}]  
+        });
+        return {err:0,log:"getRecords success",result}
+      } catch (error) {
+        return {err:1,log:`${error}`}
+      }
     }
 }

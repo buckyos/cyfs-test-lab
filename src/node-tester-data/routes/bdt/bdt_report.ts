@@ -12,6 +12,8 @@ import {startZIP} from "./zip"
 import * as path from "path";
 import * as fs from "fs-extra";
 import { BdtReport ,ReportModel} from "../../model/bdt/bdt_report"
+import {BDTClientModel,BDTClient} from "../../model/bdt/bdt_client"
+
 var date = require("silly-datetime");
 router.get("/text", (req, res) => {
     res.json({ msg: "bdt testcase report" });
@@ -140,6 +142,7 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
     let running = [];
     let action_mod = new BdtAction();
     let SystemInfo_mod = new SystemInfo();
+    let client_mod = new BDTClient();
     for (let testcase of testcase_list.result!) {
         let testcaseId = testcase.testcaseId!;
         console.info(`testcase: ${testcaseId}`)
@@ -170,6 +173,15 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
             let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcaseId}.html`) 
     
         }
+        // 统计BDT client 配置数据
+        
+        let client_list = await client_mod.queryByTestcaseId(testcaseId);
+        if(client_list.result){
+            testcase_info.client_info  = `./client/${testcaseId}.html`;
+            let save = await reportDataToFile(client_list.result, path.join(__dirname, "./report_suite/ClientInfo.html"), path.join(config.BDT_Report_Dir,environment,"client"), `${testcaseId}.html`)
+    
+        }
+        
         await sleep(100)
 
     }
@@ -239,6 +251,7 @@ async function reportTestcase(testcaseId: string,environment:string) {
     
     return { err: 0, log: `查询测试用例成功` }
 }
+
 
 async function reportTask(taskId: string,environment:string) {
     // 统计所有Action

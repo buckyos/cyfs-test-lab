@@ -17,6 +17,7 @@ router.post('/add',
             peerInfo: req.body.peerInfo, 
             sn_resp_eps : req.body.sn_resp_eps,
             online_time : req.body.online_time,
+            status : req.body.status,
         };
         let model = new BDTClient();
         let result =await  model.add(client);

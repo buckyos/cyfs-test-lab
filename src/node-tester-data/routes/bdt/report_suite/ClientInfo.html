@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BDT Stack 客户端数据</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align:center;
+            min-height: 20px;
+            max-width: 300px;
+            min-width: 50px;
+            white-space:normal;
+            word-wrap:break-word;
+            word-break:break-all;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        th {
+            background-color: #7799AA;
+            color: white;
+        }
+    </style>
+</head>
+<script src="../jquery-3.3.1.min.js"></script>
+<body>
+    
+    <script>
+        $(function () {
+            let data = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = table.insertRow(table.rows.length);
+                var c2 = row.insertCell(0);
+                c2.innerHTML = data[i].name;
+                var c3 = row.insertCell(1);
+                c3.innerHTML = data[i].peerid;
+                var c4 = row.insertCell(2);
+                c4.innerHTML = data[i].peerInfo;
+                var c5 = row.insertCell(3);
+                c5.innerHTML = data[i].status;
+                var c6 = row.insertCell(4);
+                c6.innerHTML = data[i].sn_online_time;
+            }  
+        })
+    </script>
+    <table id="table" border="1" cellspacing="0" cellpadding="0">
+        <tr>
+            <th>机器名称</th>
+            <th>PeerId</th>
+            <th>节点配置信息</th>
+            <th>SN上线返回EP</th>
+            <th>SN上线时间</th>
+            <th>节点状态</th>
+        </tr>
+    </table>
+</body>
+
+</html>
