@@ -31,7 +31,6 @@ function copyFile(orgfilepath, desdirpath, desfilename) {
 			createFolder(desdirpath);
 			fs.copyFileSync(orgfilepath, desfilepath);
 		} else {
-            fs.writeFileSync(orgfilepath, desfilepath)
 			console.error(Date().toString() + "FolderAndFileOperation_copyFile: des file already existed." + " new path: " + desfilepath.toString());
 		}
 	} else {
