@@ -34,19 +34,23 @@ function run_cmd(cmd,file_path,type){
 
 router.get('/change_sdk/:sdk_version', (req, res) => {
     run_cmd("node",`../../opt/testcase/cyfs_stack/build_stack.js change_sdk ${req.params.sdk_version}`,"cmd")
+    res.send("receive")
   });
 
 router.get('/build', (req, res) => {
     run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js pack_test-typescript","cmd")
+    res.send("receive")
   });
  
   
 router.get('/run', (req, res) => {
     run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js run_test","cmd")
+    res.send("receive")
   });
 
 router.get('/report', (req, res) => {
     run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js report","cmd")
+    res.send("receive")
   });
 
 
