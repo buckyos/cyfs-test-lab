@@ -92,6 +92,7 @@ model bdt_client {
   peerInfo    String? @db.Text
   sn_resp_eps String? @db.Text
   online_time Float?  @db.Float
+  status      String? @db.VarChar(255)
 }
 
 model bdt_task {
