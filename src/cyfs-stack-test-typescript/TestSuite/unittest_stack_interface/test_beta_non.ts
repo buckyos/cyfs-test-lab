@@ -68,7 +68,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     this.timeout(0);
     this.beforeAll(async function () {
 
-        await ZoneSimulator.init();
+        await ZoneSimulator.init(false,false,' RDP-Tcp',"http");
         zone1device1_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
         zone1device2_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
         zone1ooddec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1ooddecapp")

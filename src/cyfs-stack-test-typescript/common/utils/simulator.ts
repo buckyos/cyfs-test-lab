@@ -43,7 +43,7 @@ export class ZoneSimulator {
      * 初始化模拟器测试程序
      * debug 要手动启动模拟器
      */
-    static async init(debug: boolean = false, clear: boolean = false) {
+    static async init(debug: boolean = false, clear: boolean = false,pid_key:string=' Console',RequestorType:string="http") {
         if (clear) {
             //(0) 清理模拟器的数据
             await this.clearZoneSimulator();
@@ -51,18 +51,18 @@ export class ZoneSimulator {
 
         //（1）启动模拟器
         console.info(`###启动模拟器`)
-        await this.startZoneSimulator();
+        await this.startZoneSimulator(pid_key);
         if (debug) {
             await cyfs.sleep(50000);
         }
         await cyfs.sleep(15000);
         // (2) 读取模拟器的peerId 数据
-        await this.getPeerId();
+        await this.getPeerId(pid_key);
         ZoneSimulator.APPID = TEST_DEC_ID;
 
         // (3)连接协议栈,默认http方式
         console.info(`###连接协议栈`)
-        await this.connecStimulator("http");
+        await this.connecStimulator(RequestorType);
 
     }
 
@@ -75,11 +75,11 @@ export class ZoneSimulator {
         await fs.emptyDirSync(LOG_PATH);
         await fs.removeSync(LOG_PATH);
     }
-    static async getPeerId() {
+    static async getPeerId(pid_key:string=' Console') {
         let config = path.join(CONFIG_PATH, "desc_list")
         if (!fs.pathExistsSync(config)) {
             //如果没有文件自动进行初始化
-            await this.startZoneSimulator();
+            await this.startZoneSimulator(pid_key);
             await cyfs.sleep(10 * 1000)
             await this.stopZoneSimulator();
         }
@@ -206,7 +206,7 @@ export class ZoneSimulator {
         let res1 = await this.zone2_device1_stack.wait_online(JSBI.BigInt(10000));
         return res1
     }
-    static async connecStimulator(RequestorType = "http") {
+    static async connecStimulator(RequestorType:string) {
         let connect = 0;
         setTimeout(async () => {
             if (connect < 6) {
@@ -278,8 +278,8 @@ export class ZoneSimulator {
         }
 
     }
-    static async removeAllConfig() {
-        await this.getPeerId();
+    static async removeAllConfig(pid_key:string=' Console') {
+        await this.getPeerId(pid_key);
         let list = [
             this.zone1_people,
             this.zone1_ood_peerId,
@@ -307,7 +307,7 @@ export class ZoneSimulator {
             v(this.process)
         })
     }
-    static async initPid() {
+    static async initPid(pid_key:string=' Console') {
         return new Promise(async (v) => {
             let process = ChildProcess.exec(`tasklist|findstr /c:zone-simulator.exe`)
             process!.on('exit', (code: number, singal: any) => {
@@ -317,7 +317,8 @@ export class ZoneSimulator {
             process.stdout?.on('data', (data) => {
                 let str: string = `${data.toString()}`;
                 console.info(str)
-                str = str.split(' Console')[0].split(`zone-simulator.exe`)[1]
+                str = str.split(pid_key)[0].split(`zone-simulator.exe`)[1]
+                //str = str.split(' Console')[0].split(`zone-simulator.exe`)[1]
                 if (str) {
                     this.pid = Number(str)
                 }
@@ -332,9 +333,9 @@ export class ZoneSimulator {
         })
 
     }
-    static async restartZoneSimulator() {
+    static async restartZoneSimulator(pid_key:string=' Console') {
         await this.stopZoneSimulator();
-        await this.startZoneSimulator();
+        await this.startZoneSimulator(pid_key);
     }
     static async stopZoneSimulator() {
         return new Promise(async (v) => {
@@ -350,13 +351,13 @@ export class ZoneSimulator {
         })
 
     }
-    static async startZoneSimulator() {
+    static async startZoneSimulator(pid_key:string=' Console') {
         await this.stopZoneSimulator();
         return new Promise(async (v) => {
             console.info(`### start Zone Simulator`)
             this.process = ChildProcess.spawn(simulatorPath, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(simulatorPath) })
             while (!this.pid) {
-                await this.initPid();
+                await this.initPid(pid_key);
             }
             v(this.pid)
         })
