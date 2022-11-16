@@ -1,4 +1,4 @@
-const exec = require('child_process').execSync;
+const exec = require('child_process').exec;
 const fs = require('fs');
 const { time } = require('console');
 const path = require('path')
@@ -48,11 +48,15 @@ function run_cmd(cmd,file_path,type){
     console.log("cmdstr",cmdStr)
     if (type == "cmd"){
         console.log("cmd",cmdStr+cmd_path)
-        try{const child = exec(cmdStr+cmd_path)}
-        catch (e) {
-            console.error(e);
-            throw(e)}
-    }
+        exec(cmdStr+cmd_path , (error, stdout, stderr) => {
+            if (error) {
+                console.error('error:', error);
+                return;
+              }
+              console.log('stdout: ' + stdout);
+              console.log('stderr: ' + stderr);
+            
+    })}
     else if(type=="local") {
         console.log("local_cmd",cmdStr)
         console.log("local_file_path",file_path)
@@ -93,7 +97,7 @@ async function pack(){
 
 async function run_test(){
     await sleep(10000)
-    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","local")
+    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","cmd")
 }
 
 async function main(){

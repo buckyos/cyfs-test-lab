@@ -40,7 +40,7 @@ async function main() {
                 await cyfs.sleep(5*1000)
                 fs.copySync(report_path,`${reportpath}/report_${currenttime}`)
                 run.emit("exit")
-                await upload_report.uplaodTestcase(`${reportpath}`,version)
+                await upload_report.uplaodTestcase(`${reportpath}/report_${currenttime}`,version)
                 await fs.removeSync(`${reportpath}/report_${currenttime}/mochawesome-report.zip`);
                 await cyfs.sleep(5*1000)
                 await fs.removeSync(report_path)
