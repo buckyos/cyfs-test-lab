@@ -8,7 +8,8 @@ var date = require("silly-datetime");
 async function main() {
     let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/test_beta_non.js")
     //let TestSuite = ".\\TestSuite\\TestSuiteTool\\unittest-with_real_stack_xxx\\test_xxx.ts"
-    let report_path = path.join(__dirname,"./mochawesome-report")
+    //let report_path = path.join(__dirname,"./mochawesome-report")
+    let report_path = path.join(__dirname,"../../opt/testcase/cyfs_stack/mochawesome-report")
     console.log("report_path",report_path)
     //清空日志
     //fs.removeSync(path.join(__dirname,"../log"));
