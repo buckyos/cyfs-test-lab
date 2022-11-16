@@ -4,7 +4,7 @@ import * as fs from "fs-extra"
 import * as cyfs from './cyfs_node'
 
 
-async function main(testsuit:string[]) {
+async function main() {
     
     
    
@@ -22,10 +22,8 @@ async function main(testsuit:string[]) {
     let currenttime =  new Date().toLocaleString();
     currenttime = currenttime.replace(/\D/g,"_");
     console.log(currenttime)
-    for(const testcase of testsuit){
-        let reportpath = path.join(__dirname,`./output/report`)
-        let report_path = path.join(__dirname,`./output/report/${testcase}`)
-        let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/" + `${testcase}`)
+        let report_path = path.join(__dirname,`./output/report/`)
+        let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/")
         console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=${report_path},reportFilename=${testcase},html=true --require ts-node/register `)
         let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --reporter-options reportDir=${report_path},/reportreportFilename=${testcase},html=true --require ts-node/register`)
         run.on('exit', async (code: number, signal: string) => {
@@ -38,7 +36,8 @@ async function main(testsuit:string[]) {
             while(true){
                 if(fs.pathExistsSync(report_path)){
                     await cyfs.sleep(5*1000)
-                    fs.copySync(report_path,`${reportpath}\\report_${currenttime}\\${testcase}`)
+                    fs.copySync(report_path,`${reportpath}\\report_${currenttime}`)
+
                     run.emit("exit")
                     await fs.removeSync(report_path)
                     break;
@@ -52,11 +51,11 @@ async function main(testsuit:string[]) {
         process.exit(0);
 
 }}
-let testsuit = [
+/*let testsuit = [
    "test_beta_non.js"
 
-]
+]*/
 
-main(testsuit).then(()=>{
+main().then(()=>{
     process.exit(0);
 });
