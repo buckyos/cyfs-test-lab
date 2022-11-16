@@ -44,10 +44,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
     //(4) 测试用例执行器添加测试任务
     
     for(let [i,j] of randShuffle(agent_ipv6.length)){
-            if(i != j  && labAgent[i].ipv6 &&  labAgent[j].ipv6){
+            if(i != j   ){
                 let info = await testRunner.createPrevTask({
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     timeout : 5*30*1000,
                     action : []
                 })
@@ -55,8 +55,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : RandomGenerator.string(100),
@@ -68,8 +68,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }))
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : RandomGenerator.string(100),
@@ -81,8 +81,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }))
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : RandomGenerator.string(100),
@@ -94,8 +94,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 }))
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : RandomGenerator.string(100),
@@ -108,8 +108,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
                 info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${agent_ipv6[i].tags[0]}$1`,
+                    RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : RandomGenerator.string(1 + 25*1024),

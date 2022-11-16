@@ -1,6 +1,6 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
 import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
-import {Agent,Peer,BDTERROR} from './type'
+import {Agent,Peer,BDTERROR, Task} from './type'
 import {BdtPeerClient} from "./bdtPeerClient"
 import {AgentClient} from "./agentClient"
 export class AgentManager {
@@ -8,7 +8,6 @@ export class AgentManager {
     private m_interface: TaskClientInterface;
     public agentMap : Map<string,AgentClient>
     public agentListState : Array<{name:string,state:string}>
-    
    
     constructor(_interface: TaskClientInterface){
         this.m_interface = _interface;
@@ -43,6 +42,7 @@ export class AgentManager {
             }
         }
     }
+    
     async checkBdtPeerClient(name:string):Promise<{err:number,log?:string}> {
         let agentName = name.split("_")[0];
         let BDTIndex = name.split("_")[1];
@@ -136,7 +136,7 @@ export class AgentManager {
                         peer_name = agent.tags + "_" + RandomGenerator.string(10);
                     }
                     this.m_interface.getLogger().info(`start peer ${peer_name}`)
-                    await agent.startPeerClient(config,peer_name,bdt_port);
+                    let result =  await agent.startPeerClient(config,peer_name,bdt_port);
                     bdt_port = bdt_port + 10;
                     await sleep(100);
                 }

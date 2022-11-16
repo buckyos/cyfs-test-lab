@@ -183,7 +183,7 @@ export class AgentClient {
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
     
-    async startPeerClient(config:BdtPeerClientConfig,local?:string,bdt_port:number=50000):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
+    async startPeerClient(config:BdtPeerClientConfig,local?:string,bdt_port:number=50000):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient,online_time?:number}>{
         if(myconfig.AgentConcurrencyIgnoreWAN && this.agentMult > 0 && this.agentInfo.NAT == 0){
             this.logger.error(`${this.tags} Perf test WAN agent Ignore WAN Concurrency BDT client`)
             return {err:BDTERROR.success,log:"Perf test WAN agent Ignore WAN Concurrency BDT client"}
@@ -205,7 +205,7 @@ export class AgentClient {
         this.agentMult = this.agentMult + 1;
         this.logger.info(`${this.tags} add a new bdt client, agentMult = ${this.agentMult}`)
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
-        return {err:result.err,log:result.log,bdtClient}
+        return {err:result.err,log:result.log,bdtClient,online_time:bdtClient.sn_online_time}
     }
 
     async getBdtPeerClient(index:string):Promise<{err:ErrorCode,log?:string,bdtClient?:BdtPeerClient}>{

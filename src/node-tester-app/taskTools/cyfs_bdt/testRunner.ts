@@ -271,12 +271,14 @@ export class TestRunner{
         }else{
             this.Testcase!.result = this.failed;
         }
+        // 保存日志测试数据
         try {
             await this.agentManager.uploadLog(this.Testcase!.testcaseId)
             await this.saveRecord();
         } catch (error) {
             this.logger.error(error);
         }
+        //打印错误数据
         this.logger.info(`######## Tescase run finished ,testcaseId = ${this.Testcase!.testcaseId}`)
         this.logger.info(`######## run total = ${this.total}`)
         this.logger.info(`######## success = ${this.success} `)

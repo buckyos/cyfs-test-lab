@@ -130,10 +130,10 @@ export let labAgentData = [
         router: "Bucky",
     },
 ];
-function shuffle (arr:Array<any>) {
+const shuffle = function (arr:Array<any>) {
     let newArr = Array.prototype.slice.call(arr), // copy 新数组
         temp = 0
-    for (let i = arr.length; i > 0; i--) {
+    for (let i = arr.length - 1; i > 0; i--) {
         temp = Math.floor(Math.random() * i);
         [newArr[i], newArr[temp]] = [newArr[temp], newArr[i]];
     }

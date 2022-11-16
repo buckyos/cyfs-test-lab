@@ -23,7 +23,7 @@ export class BdtPeerClient extends EventEmitter{
     public sn_online_time?:number;
     public tags:string;
     public util_client? :UtilClient;
-    public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁  
+    public state : number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁   -9999 异常导致退出
     public NAT? : number;
     public stack_list : Map<string,Buffer>;
     public is_set_question : boolean;
@@ -133,8 +133,8 @@ export class BdtPeerClient extends EventEmitter{
             //this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
             // 3. attachEvent bdt-tool unlive
             let info = await this.m_interface.attachEvent(`unlive_${this.peerName}`, (err: ErrorCode,namespace: Namespace) => {
-                this.state = -1;
-                this.logger.error(`${this.tags} unlive_${this.peerName}`)
+                this.state = -9999;
+                this.logger.error(`${this.tags} maybe panic unlive_${this.peerName}`)
             }, this.m_agentid, this.m_timeout);
             this.m_unliveCookie = info.cookie;
             // 4. bdt client start autoAccept
@@ -199,6 +199,7 @@ export class BdtPeerClient extends EventEmitter{
             peerInfo : JSON.stringify(this.cache_peer_info),
             sn_resp_eps : JSON.stringify(this.sn_resp_eps) ,
             online_time : this.sn_online_time,
+            status : `${this.state}`,
         }
     }
     async restart(ndn_event?:string,ndn_event_target?:string):Promise<{err:number,log?:string}> {
