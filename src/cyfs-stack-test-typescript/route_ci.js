@@ -48,10 +48,4 @@ router.get('/run', (req, res) => {
     res.send("receive")
   });
 
-router.get('/report', (req, res) => {
-    run_cmd("node","../../opt/testcase/cyfs_stack/build_stack.js report","cmd")
-    res.send("receive")
-  });
-
-
 module.exports = router

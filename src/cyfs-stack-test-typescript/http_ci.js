@@ -47,9 +47,7 @@ else if (type == "build"){
 else if(type == "run"){
     ax_get(run)
 }   
-else if(type == "report"){
-    ax_get(report)
-}}
+
 
 function server(){
     app.use(router);
