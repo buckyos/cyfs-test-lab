@@ -661,6 +661,176 @@ impl TryFrom<AutoAcceptStreamLpcCommandResp> for LpcCommand {
     }
 }
 
+
+pub struct ListenerStreamLpcCommandReq {
+    pub seq: u32,
+    pub answer_size: u64,
+}
+impl TryFrom<LpcCommand> for ListenerStreamLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+
+        let answer_size = match json.get("answer_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap(),
+                _ => {
+                    return Err(BuckyError::new(
+                        BuckyErrorCode::InvalidData,
+                        "answer_size format err",
+                    ))
+                },
+            },
+            _ => {
+                return Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "answer_size format err",
+                ))
+            },
+        };
+        Ok(Self {
+            seq: value.seq(),
+            answer_size,
+        })
+    }
+}
+
+pub struct ListenerStreamLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+}
+impl TryFrom<ListenerStreamLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ListenerStreamLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "listener_stream_resp",
+            "result": value.result,
+
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+pub struct ListenerStreamEventLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub stream_name: String,
+    pub confirm_time : u64,
+    pub recv_time : u64,
+    pub recv_total_time : u64,
+    pub send_time : u64,
+    pub send_total_time : u64,
+    pub send_hash : HashValue,
+    pub recv_hash : HashValue,
+}
+impl TryFrom<ListenerStreamEventLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ListenerStreamEventLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "listener_stream_event_resp",
+            "result": value.result,
+            "stream_name": value.stream_name.as_str(),
+            "confirm_time" : value.confirm_time,
+            "recv_time" : value.recv_time,
+            "send_time" : value.send_time,
+            "recv_total_time" : value.recv_total_time,
+            "send_total_time" : value.send_total_time,
+            "send_hash" : hex::encode(value.send_hash.as_slice()),
+            "recv_hash" : hex::encode(value.recv_hash.as_slice()),
+        });
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+
+pub struct ConnectSendStreamLpcCommandReq {
+    pub seq: u32,
+    //LpcCommand的buffer里面
+    pub remote: Device,
+    //LpcCommand的json里面
+    pub question_size: u64,
+    //标识链接过程中需要通过sn
+    pub known_eps: bool,
+}
+
+impl TryFrom<LpcCommand> for ConnectSendStreamLpcCommandReq {
+    type Error = BuckyError;
+    fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let buffer = value.as_buffer();
+        let (device, _other) = Device::raw_decode(&buffer)?;
+
+        let json = value.as_json_value();
+
+        let question_size =match json.get("question_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap(),
+                _ => {
+                    return Err(BuckyError::new(
+                        BuckyErrorCode::InvalidData,
+                        "question_size format err",
+                    ))
+                },
+            },
+            _ => {
+                return Err(BuckyError::new(
+                    BuckyErrorCode::InvalidData,
+                    "question_size format err",
+                ))
+            },
+        };
+        let known_eps = match json.get("known_eps") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap() == 1,
+                _ => false,
+            },
+            _ => false,
+        };
+        Ok(Self {
+            seq: value.seq(),
+            remote: device,
+            question_size,
+            known_eps,
+        })
+    }
+}
+
+pub struct ConnectSendStreamResp {
+    pub seq: u32,
+    pub result: u16,
+    pub stream_name: String,
+    pub send_hash: HashValue,
+    pub recv_hash: HashValue,
+    pub connect_time: u64,
+    pub send_time : u64,
+    pub send_total_time : u64,
+    pub recv_time : u64,
+    pub recv_total_time : u64,
+}
+
+impl TryFrom<ConnectSendStreamResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ConnectSendStreamResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "connect_send_stream_resp",
+            "result": value.result,
+            "stream_name": value.stream_name.as_str(),
+            "send_hash" :  hex::encode(value.send_hash.as_slice()),
+            "recv_hash" :  hex::encode(value.recv_hash.as_slice()),
+            "connect_time": value.connect_time,
+            "send_total_time":value.send_total_time,
+            "send_time":value.send_time,
+            "recv_time":value.recv_time,
+            "recv_total_time":value.recv_total_time,
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
+    }
+}
+
+
+
+
 // pub struct AcceptStreamLpcCommandReq {
 
 // }

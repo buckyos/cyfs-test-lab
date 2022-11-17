@@ -89,7 +89,11 @@ async fn main()->Result<(), BuckyError> {
             peer.on_send(c, lpc.clone());
         } else if name == String::from("recv") {
             peer.on_recv(c, lpc.clone());
-        }else if name == String::from("send_object") {
+        }else if name == String::from("connect_send_stream") {
+            peer.on_connect_send_stream(c, lpc.clone());
+        }else if name == String::from("auto_response_stream") {
+            peer.on_auto_response_stream(c, lpc.clone());
+        } else if name == String::from("send_object") {
             peer.on_send_object(c, lpc.clone());
         } else if name == String::from("recv_object") {
             peer.on_recv_object(c, lpc.clone());

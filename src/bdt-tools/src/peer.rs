@@ -35,7 +35,6 @@ use cyfs_bdt::{
     DownloadTask, 
     DownloadTaskState, 
     StackOpenParams, 
-    SingleDownloadContext, 
     local_chunk_store::LocalChunkListWriter,
     mem_tracker::MemTracker,
     mem_chunk_store::MemChunkStore,
@@ -466,6 +465,7 @@ impl Peer {
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
+    
     pub fn on_connect_list(&self, c: LpcCommand, lpc: Lpc) {
 
         log::info!("on connect, c={:?}", &c);
@@ -642,6 +642,315 @@ impl Peer {
         };
         task::spawn(async move {
             let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+
+    /**
+     * （1）发起连接请求
+     * （2）连接成功后Stream发送数据
+     *  (3) Stream 读取响应数据
+     */
+    pub fn on_connect_send_stream(&self, c: LpcCommand, lpc: Lpc) {
+
+        log::info!("on connect_send_stream, c={:?}", &c);
+        let seq = c.seq();
+        let peer = self.clone();
+        task::spawn(async move {
+            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // (1) 解析连接请求参数
+            let resp = match ConnectSendStreamLpcCommandReq::try_from(c) {
+                Err(e) => {
+                    log::error!("convert command to ConnectSendStreamLpcCommandReq failed, e={}", &e);
+                    ConnectSendStreamResp {
+                        seq, 
+                        result: e.code().as_u16(),
+                        stream_name: String::new(),
+                        connect_time: 0,
+                        send_time : 0,
+                        recv_time : 0,
+                        send_total_time : 0,
+                        recv_total_time : 0,
+                        send_hash : HashValue::default(),
+                        recv_hash : HashValue::default(),
+                    }
+                },
+                Ok(c) => {
+                    // (2)配置连接参数
+                    // 默认不直连
+                    let mut wan_addr = false;
+                    for addr in c.remote.connect_info().endpoints().iter() {
+                        // 有外网地址直连
+                        if addr.is_static_wan() {
+                            wan_addr = true;
+                        }
+                    }
+                    // 主动发起直连，使用者主观判断
+                    if c.known_eps {
+                        wan_addr = true;
+                    }
+                    let remote_sn = match c.remote.body().as_ref() {
+                        None => {
+                            // 如果没有SN，只能尝试直连
+                            wan_addr = true;
+                            Vec::new()
+                        },
+                        Some(b) => {
+                            // 连接只能选择对端在线的SN 发起 sncall
+                            b.content().sn_list().clone()
+                        },
+                    };
+                    let param = BuildTunnelParams {
+                        remote_const: c.remote.desc().clone(),
+                        remote_sn,
+                        remote_desc: if wan_addr {
+                            Some(c.remote)
+                        } else {
+                            None
+                        }
+                    };
+                    //(3) 发起连接
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    match stack.stream_manager().connect(0, Vec::new(), param).await {
+                        Ok(mut stream) => {
+                            let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                            let mut len = 0;
+                            // 加入Stream连接池
+                            let conn = peer.add_stream(stream);
+                            // (4) 发送request 请求给RN 
+                            let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
+                            match conn.clone().send_file(c.question_size).await{
+                                Ok((send_hash,send_time))=>{
+                                    log::info!("send stream data success send_hash = {},send_time = {}",send_hash.clone(),send_time.clone());
+                                    let send_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+                                    let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                    match conn.clone().recv_file().await {
+                                        Ok((file_size,recv_time,recv_hash))=>{
+                                            let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                                            log::info!("recv stream data success recv_hash={},recv_time = {}",recv_hash.clone(),recv_time.clone());
+                                            ConnectSendStreamResp {
+                                                seq, 
+                                                result: 0,
+                                                stream_name: conn.get_name().clone(),
+                                                connect_time,
+                                                send_time,
+                                                recv_time,
+                                                send_total_time,
+                                                recv_total_time,
+                                                send_hash,
+                                                recv_hash,
+                                            }
+                                        },
+                                        Err(e) =>{
+                                            log::error!("recv stream data failed, e={}", &e);
+                                            ConnectSendStreamResp {
+                                                seq, 
+                                                result: e.code().as_u16(),
+                                                stream_name: conn.get_name().clone(),
+                                                connect_time: 0,
+                                                send_time,
+                                                recv_time : 0,
+                                                send_total_time,
+                                                recv_total_time : 0,
+                                                send_hash,
+                                                recv_hash : HashValue::default(),
+                                            }
+                                        }
+                                    }
+                                },
+                                Err(e) =>{
+                                    log::error!("send stream data failed, e={}", &e);
+                                    ConnectSendStreamResp {
+                                        seq, 
+                                        result: e.code().as_u16(),
+                                        stream_name: conn.get_name().clone(),
+                                        connect_time,
+                                        send_time : 0,
+                                        recv_time : 0,
+                                        send_total_time : 0,
+                                        recv_total_time : 0,
+                                        send_hash : HashValue::default(),
+                                        recv_hash : HashValue::default(),
+                                    }
+                                }
+
+                            }
+                        },
+                        Err(e) => {
+                            log::error!("connect failed, e={}", &e);
+                            ConnectSendStreamResp {
+                                seq, 
+                                result: e.code().as_u16(),
+                                stream_name: String::new(),
+                                connect_time: 0,
+                                send_time : 0,
+                                recv_time : 0,
+                                send_total_time : 0,
+                                recv_total_time : 0,
+                                send_hash : HashValue::default(),
+                                recv_hash : HashValue::default(),
+                            }
+                        }
+                    }
+                    
+                }
+            };
+
+            let mut lpc = lpc;
+            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+        });
+    }
+    /**
+     * （1）监听连接请求
+     * （2）confirm 连接请求
+     * （3）Stream 读取请求数据
+     * （4）Stream 发送请求数据
+     */
+    pub fn on_auto_response_stream(&self, c: LpcCommand, lpc: Lpc) {
+        log::info!("on auto accept and recv stream, c={:?}", &c);
+        let seq = c.seq();
+        let peer_name = c.get_unique_id();
+        let peer = self.clone();
+        let mut lpc = lpc.clone();
+        let resp = match ListenerStreamLpcCommandReq::try_from(c) {
+            Err(e) => {
+                log::error!("convert command to ListenerStreamLpcCommandReq failed, e={}", &e);
+                ListenerStreamLpcCommandResp {
+                    seq, 
+                    result: e.code().as_u16()
+                }
+            },
+            Ok(c) => {
+                {
+                    let mut lpc = lpc.clone();
+                    task::spawn(async move {
+                        let acceptor = peer.get_acceptor(&peer_name);
+                        // 获取连接请求
+                        let mut incoming = acceptor.incoming();
+                        loop {
+                            //let pre_stream = incoming.next().await.unwrap().unwrap();
+                            let _ = match incoming.next().await{
+                                Some(stream)=>{
+                                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                    let resp = match stream{
+                                        Ok(pre_stream)=>{
+                                            let question = pre_stream.question;
+                                            log::debug!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
+                                            match pre_stream.stream.confirm(&Vec::new()).await{
+                                                Err(e)=>{
+                                                    log::error!("confirm err, err={}",e);
+                                                    ListenerStreamEventLpcCommandResp {
+                                                        seq,
+                                                        result: e.code().as_u16(),
+                                                        stream_name: String::new(),
+                                                        confirm_time: 0,
+                                                        send_time : 0,
+                                                        recv_time : 0,
+                                                        send_total_time : 0,
+                                                        recv_total_time : 0,
+                                                        send_hash : HashValue::default(),
+                                                        recv_hash : HashValue::default(),
+                                                    }
+                                                },
+                                                Ok(_)=>{
+                                                    let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                                                    let conn = peer.add_stream(pre_stream.stream);
+                                                    log::info!("confirm succ, name={}，confirm_time = {}", conn.get_name(),confirm_time);
+                                                    let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                                    match conn.clone().recv_file().await{
+                                                        Ok((file_size,recv_time,recv_hash))=>{
+                                                            log::info!("recv stream succ, name={}，recv_time = {},recv_hash = {}", conn.get_name(),recv_time,recv_hash);
+                                                            let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                                                            let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                                            match conn.clone().send_file(c.answer_size).await {
+                                                                Ok((send_hash,send_time))=>{
+                                                                    log::info!("send stream succ, name={},send_time = {},send_hash = {}", conn.get_name(),send_time,send_hash);
+                                                                    let send_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+                                                                    ListenerStreamEventLpcCommandResp {
+                                                                        seq,
+                                                                        result: 0,
+                                                                        stream_name:conn.get_name().clone(),
+                                                                        confirm_time,
+                                                                        send_time,
+                                                                        recv_time,
+                                                                        send_total_time,
+                                                                        recv_total_time,
+                                                                        send_hash,
+                                                                        recv_hash,
+                                                                    }
+                                                                },
+                                                                Err(e)=>{
+                                                                    log::error!("send stream err ={} name={}" ,e,conn.get_name());
+                                                                    ListenerStreamEventLpcCommandResp {
+                                                                        seq,
+                                                                        result: e.code().as_u16(),
+                                                                        stream_name: conn.get_name().clone(),
+                                                                        confirm_time: 0,
+                                                                        send_time : 0,
+                                                                        recv_time,
+                                                                        send_total_time : 0,
+                                                                        recv_total_time,
+                                                                        send_hash : HashValue::default(),
+                                                                        recv_hash,
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        Err(e)=>{
+                                                            log::error!("recv stream err ={}  name={}" ,e,conn.get_name());
+                                                            ListenerStreamEventLpcCommandResp {
+                                                                seq,
+                                                                result: e.code().as_u16(),
+                                                                stream_name: conn.get_name().clone(),
+                                                                confirm_time,
+                                                                send_time : 0,
+                                                                recv_time : 0,
+                                                                send_total_time : 0,
+                                                                recv_total_time : 0,
+                                                                send_hash : HashValue::default(),
+                                                                recv_hash : HashValue::default(),
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            
+                                        },
+                                        Err(err) =>{
+                                            log::error!("accept stream err ={}" ,err);
+                                            ListenerStreamEventLpcCommandResp {
+                                                seq,
+                                                result: 1,
+                                                stream_name: String::new(),
+                                                confirm_time: 0,
+                                                send_time : 0,
+                                                recv_time : 0,
+                                                send_total_time : 0,
+                                                recv_total_time : 0,
+                                                send_hash : HashValue::default(),
+                                                recv_hash : HashValue::default(),
+                                            }
+                                        }
+                                    };
+                                    let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;                                
+                                },
+                                _ =>{
+                                    log::error!("bdt incoming.next() is None");
+                                }
+                            };
+                            
+                        }
+                    });
+                }
+                
+                ListenerStreamLpcCommandResp {
+                    seq, 
+                    result: 0 as u16,
+                }
+            }
+        };
+        task::spawn(async move {
+            let mut lpc = lpc.clone();
             let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
         });
     }
@@ -937,13 +1246,13 @@ impl Peer {
                                             hash: HashValue::default()
                                         }
                                     },
-                                    Ok(hash) => {
+                                    Ok((hash,send_time)) => {
                                         log::info!("send succ, name={}", &c.stream_name);
                                         SendLpcCommandResp {
                                             seq, 
                                             result: 0 as u16,
                                             stream_name: c.stream_name,
-                                            time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
+                                            time: send_time as u32,
                                             hash
                                         }
                                     }
@@ -1003,7 +1312,7 @@ impl Peer {
                                         hash: HashValue::default()
                                     }
                                 },
-                                Ok((file_size,hash)) => {
+                                Ok((file_size,recv_time,hash)) => {
                                     log::info!("recv succ, name={}", &c.stream_name);
                                     RecvLpcCommandResp {
                                         seq, 
@@ -1587,12 +1896,12 @@ impl Peer {
                         &stack, 
                         c.chunk_id.clone(), 
                         None,
-                        Some(SingleDownloadContext::desc_streams(None, vec![c.remote.desc().clone()])), 
+                        cyfs_bdt::download::SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()]), 
                     ).await {
-                        Ok(task) => {
+                        Ok((task,reader)) => {
                             match cyfs_bdt::download::local_chunk_writer(&*stack, &c.chunk_id, path).await {
                                 Ok(writer) => {
-                                    match writer.write(task.reader()).await {
+                                    match writer.write(reader).await {
                                         Ok(_) => {
                                             InterestChunkLpcCommandResp { 
                                                 seq, 
@@ -1659,11 +1968,11 @@ impl Peer {
                   
                    
                     
-                    let task = cyfs_bdt::download::download_chunk_list(&stack, 
+                    let (task,reader) = cyfs_bdt::download::download_chunk_list(&stack, 
                         c.task_name.clone(),
                         &c.chunk_list.clone(),
                         None, 
-                        Some(SingleDownloadContext::desc_streams(None, vec![c.remote.desc().clone()]))
+                        cyfs_bdt::download::SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()])
                     ).await.unwrap();
 
                     {
@@ -1672,7 +1981,7 @@ impl Peer {
                             &ChunkListDesc::from_chunks(&c.chunk_list.clone()), 
                             stack.ndn().chunk_manager().ndc(), 
                             stack.ndn().chunk_manager().tracker());
-                        let reader = task.reader(0);
+                        //let reader = task.reader(0);
                         async_std::task::spawn(async move {
                             let _ = writer.write(reader).await;
                         });
@@ -1873,16 +2182,16 @@ impl Peer {
                         Ok((task_id, file))
                     } else {
                         if let Some(file) = c.file.as_ref() {
-                            let task = cyfs_bdt::download::download_file(&stack, 
+                            let (task,reader) = cyfs_bdt::download::download_file(&stack, 
                                 file.clone(),
                                 None, 
-                                Some(SingleDownloadContext::id_streams(&*stack, None, vec![c.default_hub]).await.unwrap()), 
+                                cyfs_bdt::download::SingleDownloadContext::id_streams(&*stack, "".to_string(), vec![c.default_hub]).await.unwrap(), 
                             ).await.unwrap();
 
 
                             {
                                 let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
-                                let reader = task.reader();
+                                //let reader = task.reader();
                                 async_std::task::spawn(async move {
                                     let _ = writer.write(reader).await.unwrap();
                                 });
@@ -2600,13 +2909,13 @@ impl Peer {
                 },
                 Ok(c) => {
                     let ret = {         
-                        let context = match c.context {
-                            Some(v) =>{
-                                Some(cyfs_bdt::SingleDownloadContext::id_streams(&stack, Some(v), c.remotes).await.unwrap())
-                            },
-                            None => None
-                        };          
-                        let task = cyfs_bdt::download::create_download_group(&stack, c.path.clone(), context).unwrap();
+                        // let context = match c.context {
+                        //     Some(v) =>{
+                        //         Some(cyfs_bdt::SingleDownloadContext::id_streams(&stack, Some(v), c.remotes).await.unwrap())
+                        //     },
+                        //     None => None
+                        // };          
+                        let task = cyfs_bdt::download::create_download_group(&stack, c.path.clone()).unwrap();
                         let task_id = task_id_gen(c.path);
                         log::info!("recver: task_id {}", &task_id);
                         let mut tasks = peer.0.tasks.lock().unwrap();
@@ -2693,15 +3002,15 @@ impl Peer {
                     // 缓存对端设置Device
                     let ret = {                   
                         if let Some(file) = c.file.as_ref() {
-                            let task = cyfs_bdt::download::download_file(&stack, 
+                            let (task,reader) = cyfs_bdt::download::download_file(&stack, 
                                 file.clone(),
                                 c.group, 
-                                Some(SingleDownloadContext::id_streams(&stack, c.referer, c.remotes).await.unwrap()) , 
+                                cyfs_bdt::download::SingleDownloadContext::id_streams(&stack, "".to_string(), c.remotes).await.unwrap() , 
                             ).await.unwrap();
                             
                             {
                                 let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
-                                let reader = task.reader();
+                                //let reader = task.reader();
                                 async_std::task::spawn(async move {
                                     let _ = writer.write(reader).await.unwrap();
                                 });
