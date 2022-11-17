@@ -327,6 +327,7 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
 pub struct CreateLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub local: Option<Device>,
     pub ep_info : BTreeSet<cyfs_base::Endpoint>,
     pub ep_resp : Vec<cyfs_base::Endpoint>,
@@ -357,6 +358,7 @@ impl TryFrom<CreateLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "create_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "id": id.as_str(),
             "ep_info" : ep_info,
             "ep_resp" : ep_resp,
@@ -388,6 +390,7 @@ pub struct ConnectLpcCommandReq {
 pub struct ConnectLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub answer: Vec<u8>,
     pub time: u32,
@@ -400,6 +403,7 @@ impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "connect_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "time": value.time,
             "read_time":value.read_time,
@@ -602,6 +606,7 @@ pub struct ConnectRecord{
 pub struct ConnectListLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub records : Vec<ConnectRecord>,
 }
 
@@ -616,6 +621,7 @@ impl TryFrom<ConnectListLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "connect_list_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "records":  records
         });
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -624,29 +630,30 @@ impl TryFrom<ConnectListLpcCommandResp> for LpcCommand {
 
 pub struct AutoAcceptStreamLpcCommandReq {
     pub seq: u32,
-    pub answer: Vec<u8>,
+    pub answer_size: u64,
 }
 impl TryFrom<LpcCommand> for AutoAcceptStreamLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
         let json = value.as_json_value();
 
-        let answer = match json.get("answer") {
+        let answer_size = match json.get("answer_size") {
             Some(v) => match v {
-                serde_json::Value::String(s) => s.as_bytes().to_vec(),
-                _ => Vec::new(),
+                serde_json::Value::Number(n) => n.as_u64().unwrap(),
+                _ => 0,
             },
-            _ => Vec::new(),
+            _ => 0,
         };
         Ok(Self {
             seq: value.seq(),
-            answer,
+            answer_size,
         })
     }
 }
 pub struct AutoAcceptStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 impl TryFrom<AutoAcceptStreamLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -654,6 +661,7 @@ impl TryFrom<AutoAcceptStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "auto_accept_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
 
         });
 
@@ -698,6 +706,7 @@ impl TryFrom<LpcCommand> for ListenerStreamLpcCommandReq {
 pub struct ListenerStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 impl TryFrom<ListenerStreamLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -705,6 +714,7 @@ impl TryFrom<ListenerStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "listener_stream_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
 
         });
 
@@ -715,6 +725,7 @@ impl TryFrom<ListenerStreamLpcCommandResp> for LpcCommand {
 pub struct ListenerStreamEventLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub confirm_time : u64,
     pub recv_time : u64,
@@ -730,6 +741,7 @@ impl TryFrom<ListenerStreamEventLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "listener_stream_event_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "confirm_time" : value.confirm_time,
             "recv_time" : value.recv_time,
@@ -798,6 +810,7 @@ impl TryFrom<LpcCommand> for ConnectSendStreamLpcCommandReq {
 pub struct ConnectSendStreamResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub send_hash: HashValue,
     pub recv_hash: HashValue,
@@ -814,6 +827,7 @@ impl TryFrom<ConnectSendStreamResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "connect_send_stream_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "send_hash" :  hex::encode(value.send_hash.as_slice()),
             "recv_hash" :  hex::encode(value.recv_hash.as_slice()),
@@ -843,6 +857,7 @@ impl TryFrom<ConnectSendStreamResp> for LpcCommand {
 pub struct AcceptStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub question: Vec<u8>,
     pub stream_name: String,
 }
@@ -852,6 +867,7 @@ impl TryFrom<AcceptStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "accept_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "question": String::from_utf8(value.question).unwrap(),
         });
@@ -896,23 +912,23 @@ impl TryFrom<LpcCommand> for ConfirmStreamLpcCommandReq {
 
 pub struct SetAnswerLpcCommandReq {
     pub seq: u32,
-    pub answer: Vec<u8>,
+    pub answer_size: u64,
 }
 impl TryFrom<LpcCommand> for SetAnswerLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
-        //let json = value.as_json_value();
-        // let answer = match json.get("answer") {
-        //     Some(v) => match v {
-        //         serde_json::Value::String(s) => s.as_bytes().to_vec(),
-        //         _ => Vec::new(),
-        //     },
-        //     _ => Vec::new(),
-        // };
+        let json = value.as_json_value();
+        let answer_size = match json.get("answer_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap(),
+                _ => 0,
+            },
+            _ => 0,
+        };
         let buffer = value.as_buffer();
         Ok(Self {
             seq: value.seq(),
-            answer:buffer.to_vec(),
+            answer_size,
         })
     }
 }
@@ -920,6 +936,7 @@ impl TryFrom<LpcCommand> for SetAnswerLpcCommandReq {
 pub struct SetAnswerLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 impl TryFrom<SetAnswerLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -927,6 +944,7 @@ impl TryFrom<SetAnswerLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "set_answer_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
 
         });
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -935,15 +953,23 @@ impl TryFrom<SetAnswerLpcCommandResp> for LpcCommand {
 
 pub struct SetQuestionLpcCommandReq {
     pub seq: u32,
-    pub question: Vec<u8>,
+    pub question_size: u64,
 }
 impl TryFrom<LpcCommand> for SetQuestionLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
+        let json = value.as_json_value();
+        let question_size = match json.get("question_size") {
+            Some(v) => match v {
+                serde_json::Value::Number(n) => n.as_u64().unwrap(),
+                _ => 0,
+            },
+            _ => 0,
+        };
         let buffer = value.as_buffer();
         Ok(Self {
             seq: value.seq(),
-            question:buffer.to_vec(),
+            question_size,
         })
     }
 }
@@ -951,6 +977,7 @@ impl TryFrom<LpcCommand> for SetQuestionLpcCommandReq {
 pub struct SetQuestionLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 impl TryFrom<SetQuestionLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -958,6 +985,7 @@ impl TryFrom<SetQuestionLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "set_qustion_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
 
         });
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -967,8 +995,11 @@ impl TryFrom<SetQuestionLpcCommandResp> for LpcCommand {
 pub struct ConfirmStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
-    pub question : Vec<u8>,
+    pub send_hash : HashValue,
+    pub recv_hash : HashValue,
+    pub calculate_time : u64,
     pub confirm_time : u64,
 }
 impl TryFrom<ConfirmStreamLpcCommandResp> for LpcCommand {
@@ -977,9 +1008,12 @@ impl TryFrom<ConfirmStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "confirm_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "confirm_time" : value.confirm_time,
-            "question" :  String::from_utf8(value.question).unwrap(),
+            "calculate_time" : value.calculate_time,
+            "recv_hash" : hex::encode(value.recv_hash.as_slice()),
+            "send_hash" : hex::encode(value.recv_hash.as_slice()),
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -1027,6 +1061,7 @@ impl TryFrom<LpcCommand> for CloseStreamLpcCommandReq {
 pub struct CloseStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
 }
 impl TryFrom<CloseStreamLpcCommandResp> for LpcCommand {
@@ -1035,6 +1070,7 @@ impl TryFrom<CloseStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "close_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
         });
 
@@ -1066,6 +1102,7 @@ impl TryFrom<LpcCommand> for ResetStreamLpcCommandReq {
 pub struct ResetStreamLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
 }
 impl TryFrom<ResetStreamLpcCommandResp> for LpcCommand {
@@ -1074,6 +1111,7 @@ impl TryFrom<ResetStreamLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "reset_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
         });
 
@@ -1118,6 +1156,7 @@ impl TryFrom<LpcCommand> for SendLpcCommandReq {
 pub struct SendLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub time: u32,
     pub hash: HashValue,
@@ -1128,6 +1167,7 @@ impl TryFrom<SendLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "send_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "time": value.time,
             "hash": hex::encode(value.hash.as_slice())
@@ -1163,6 +1203,7 @@ impl TryFrom<LpcCommand> for RecvLpcCommandReq {
 pub struct RecvLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub file_size: u64,
     pub hash: HashValue,
@@ -1173,6 +1214,7 @@ impl TryFrom<RecvLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "recv_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "hash": hex::encode(value.hash.as_slice()),
             "file_size": value.file_size,
@@ -1254,6 +1296,7 @@ impl TryFrom<LpcCommand> for SetChunkLpcCommandReq {
 pub struct SetChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub chunk_id: ChunkId,
     pub set_time : u32,
 }
@@ -1264,6 +1307,7 @@ impl TryFrom<SetChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "set-chunk-resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "chunk_id": value.chunk_id.to_string(),
             "set_time" : value.set_time,
         });
@@ -1325,6 +1369,7 @@ impl TryFrom<LpcCommand> for CalculateChunkLpcCommandReq {
 pub struct CalculateChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub chunk_id: ChunkId,
     pub calculate_time : u32,
 }
@@ -1335,6 +1380,7 @@ impl TryFrom<CalculateChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "calculate-chunk-resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "chunk_id": value.chunk_id.to_string(),
             "calculate_time" : value.calculate_time,
         });
@@ -1397,6 +1443,7 @@ impl TryFrom<LpcCommand> for TrackChunkLpcCommandReq {
 pub struct TrackChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub chunk_id: ChunkId,
     pub calculate_time : u32,
     pub set_time : u32,
@@ -1408,6 +1455,7 @@ impl TryFrom<TrackChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "calculate-chunk-resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "chunk_id": value.chunk_id.to_string(),
             "calculate_time" : value.calculate_time,
             "set_time" : value.set_time,
@@ -1460,6 +1508,7 @@ impl TryFrom<LpcCommand> for InterestChunkLpcCommandReq {
 pub struct InterestChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 
 impl TryFrom<InterestChunkLpcCommandResp> for LpcCommand {
@@ -1468,6 +1517,7 @@ impl TryFrom<InterestChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "interest-chunk-resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -1731,6 +1781,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
 pub struct UploadSystemInfoLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 }
 impl TryFrom<UploadSystemInfoLpcCommandResp> for LpcCommand {
     type Error = BuckyError;
@@ -1738,6 +1789,7 @@ impl TryFrom<UploadSystemInfoLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "upload_system_info_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
 
         });
 
@@ -1780,6 +1832,7 @@ impl TryFrom<LpcCommand> for CheckChunkLpcCommandReq {
 pub struct CheckChunkLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub state: ChunkState,
 }
 
@@ -1798,6 +1851,7 @@ impl TryFrom<CheckChunkLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "check-chunk-resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "state": state
         });
 
@@ -3214,6 +3268,7 @@ impl TryFrom<LpcCommand> for SendObjectLpcCommandReq {
 pub struct SendObjectLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub time: u32,
     pub hash: HashValue,
@@ -3224,6 +3279,7 @@ impl TryFrom<SendObjectLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "send_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "time": value.time,
             "hash": hex::encode(value.hash.as_slice())
@@ -3288,6 +3344,7 @@ impl TryFrom<LpcCommand> for RecvObjectLpcCommandReq {
 pub struct RecvObjectLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub stream_name: String,
     pub file_size: u64,
     pub hash: HashValue,
@@ -3299,6 +3356,7 @@ impl TryFrom<RecvObjectLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "recv_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "stream_name": value.stream_name.as_str(),
             "hash": hex::encode(value.hash.as_slice()),
             "file_size": value.file_size,
@@ -3415,6 +3473,7 @@ impl TryFrom<LpcCommand> for SendDatagramLpcCommandReq {
 pub struct SendDatagramLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub hash: HashValue, //计算内容的hash
     pub time : u32,
     pub create_time : Option<u64>, // local time now +  create_time
@@ -3427,6 +3486,7 @@ impl TryFrom<SendDatagramLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "send_datagram_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "time": value.time,
             "create_time" : value.create_time,
             "send_time" : value.send_time,
@@ -3465,6 +3525,7 @@ impl TryFrom<LpcCommand> for RecvDatagramMonitorLpcCommandReq {
 pub struct RecvDatagramMonitorLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
 
 }
 
@@ -3475,6 +3536,7 @@ impl TryFrom<RecvDatagramMonitorLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "recv_datagram_monitor_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
         });
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
     }
@@ -3483,6 +3545,7 @@ impl TryFrom<RecvDatagramMonitorLpcCommandResp> for LpcCommand {
 pub struct RecvDatagramLpcCommandResp {
     pub seq: u32,
     pub result: u16,
+    pub msg: String,
     pub content: Vec<u8>, //接收具体数据内容
     pub remote_id:  Option<cyfs_base::DeviceId>,//对端device Id
     pub sequence : u64, //连接的id
@@ -3500,6 +3563,7 @@ impl TryFrom<RecvDatagramLpcCommandResp> for LpcCommand {
         let json = serde_json::json!({
             "name": "recv_datagram_resp",
             "result": value.result,
+            "msg": value.msg.as_str(),
             "hash": hex::encode(value.hash.as_slice()),
             "sequence" : value.sequence,
             "remote_id" : device_id,

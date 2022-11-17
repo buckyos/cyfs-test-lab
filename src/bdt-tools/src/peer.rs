@@ -193,8 +193,8 @@ struct PeerImpl {
     temp_dir: PathBuf,
     tasks: Arc<Mutex<TaskMap>>,
     // dir_tasks: Arc<Mutex<DirTaskMap>>,
-    fristQA_answer : Mutex<Vec<u8>>,
-    fristQA_question : Mutex<Vec<u8>>
+    fristQA_answer : Mutex<u64>,
+    fristQA_question : Mutex<u64>
 }
 #[derive(Clone)]
 pub struct Peer(Arc<PeerImpl>);
@@ -204,8 +204,6 @@ impl Peer {
         let task_map = TaskMap::new();
         // let dir_task_map = DirTaskMap::new();
         let peer_map = HashMap::new();
-        let answer = Vec::new();
-        let question = Vec::new();
         Self(Arc::new(PeerImpl {
             lazy_components: Arc::new(Mutex::new(peer_map)),
             // stream_name_gen: TempSeqGenerator::new(), 
@@ -213,8 +211,8 @@ impl Peer {
             temp_dir: PathBuf::from_str(temp_dir.as_str()).unwrap(),
             tasks: Arc::new(Mutex::new(task_map)),
             // dir_tasks : Arc::new(Mutex::new(dir_task_map)),
-            fristQA_answer :Mutex::new(answer),
-            fristQA_question :Mutex::new(question),
+            fristQA_answer :Mutex::new(0),
+            fristQA_question :Mutex::new(0),
         }))
     }
 
@@ -236,6 +234,7 @@ impl Peer {
                     CreateLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         local: None,
                         ep_info: BTreeSet::new(),
                         ep_resp:Vec::new(),
@@ -316,6 +315,7 @@ impl Peer {
                     CreateLpcCommandResp {
                         seq, 
                         result: result as u16,
+                        msg : "success".to_string(),
                         local: Some(local),
                         ep_info : ep_list,
                         ep_resp,
@@ -344,6 +344,7 @@ impl Peer {
                     ConnectLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         answer : Vec::new(),
                         time: 0,
@@ -381,7 +382,9 @@ impl Peer {
                     let mut answer = [0;25*1024];
                     let mut question = Vec::new();
                     if(c.question){
-                        question = peer.get_question();
+                        let question_size = peer.get_question() as usize;
+                        question.resize(question_size, 0u8);
+                        Self::random_data(question[0..question_size].as_mut());
                     }
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     match stack.stream_manager().connect(0, question, param).await {
@@ -413,6 +416,7 @@ impl Peer {
                             ConnectLpcCommandResp {
                                 seq, 
                                 result: 0 as u16,
+                                msg : "success".to_string(),
                                 stream_name: conn.get_name().clone(),
                                 answer: answer[..len].to_vec(),
                                 time: connect_time as u32,
@@ -424,6 +428,7 @@ impl Peer {
                             ConnectLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                                 stream_name: String::new(),
                                 answer : Vec::new(),
                                 time: 0,
@@ -440,6 +445,7 @@ impl Peer {
                     //             ConnectLpcCommandResp {
                     //                 seq, 
                     //                 result: 0 as u16,
+                    //                 msg : "success".to_string(),
                     //                 stream_name: conn.get_name().clone(),
                     //                 answer: Vec::new(),
                     //                 time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
@@ -450,6 +456,7 @@ impl Peer {
                     //             ConnectLpcCommandResp {
                     //                 seq, 
                     //                 result: e.code().as_u16(),
+                    //                 msg : e.msg().to_string(),
                     //                 stream_name: String::new(),
                     //                 answer : Vec::new(),
                     //                 time: 0,
@@ -479,6 +486,7 @@ impl Peer {
                     ConnectListLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         records: vec![],
                     }
                 },
@@ -552,6 +560,7 @@ impl Peer {
                     ConnectListLpcCommandResp {
                         seq, 
                         result: 0 as u16,
+                                msg : "success".to_string(),
                         records: record,
                     }
                 }
@@ -573,31 +582,44 @@ impl Peer {
                     log::error!("convert command to AutoAcceptStreamLpcCommandReq failed, e={}", &e);
                     AutoAcceptStreamLpcCommandResp {
                         seq, 
-                        result: e.code().as_u16()
+                        result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                     }
                 },
                 Ok(c) => {
                     task::spawn(async move {
                         let acceptor = peer.get_acceptor(&peer_name);
                         let mut incoming = acceptor.incoming();
-                        let _ = peer.set_answer(&c.answer);
+                        let _ = peer.set_answer(c.answer_size);
                         loop {
                             //let pre_stream = incoming.next().await.unwrap().unwrap();
-                            let _ = match incoming.next().await{
+                            let resp = match incoming.next().await{
                                 Some(stream)=>{
                                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                    let _ = match stream{
+                                    match stream{
                                         Ok(pre_stream)=>{
                                             let question = pre_stream.question;
                                             log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
-                                            let resp = match pre_stream.stream.confirm(&peer.get_answer()).await{
+                                            let begin_calculate = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                            let recv_hash = hash_data(&question);
+                                            let answer_size = peer.get_answer() as usize;
+                                            let mut answer = Vec::new();
+                                            answer.resize(answer_size, 0u8);
+                                            Self::random_data(answer[0..answer_size].as_mut());
+                                            let send_hash = hash_data(&answer);
+                                            let calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate;
+                                            match pre_stream.stream.confirm(&answer).await{
                                                 Err(e)=>{
                                                     log::error!("confirm err, err={}",e);
+                                                    
                                                     ConfirmStreamLpcCommandResp {
                                                         seq,
                                                         result: e.code().as_u16(),
-                                                        question,
-                                                        stream_name: "".to_string(),
+                                                        msg : e.msg().to_string(),
+                                                        send_hash,
+                                                        recv_hash,
+                                                        calculate_time,
+                                                        stream_name:"".to_string(),
                                                         confirm_time : 0,
                                                     }
                                                 },
@@ -608,29 +630,54 @@ impl Peer {
                                                     ConfirmStreamLpcCommandResp {
                                                         seq, 
                                                         result: 0 as u16,
-                                                        question,
-                                                        stream_name: conn.get_name().clone(),
-                                                        confirm_time
+                                                        msg : "success".to_string(),
+                                                        send_hash,
+                                                        recv_hash,
+                                                        calculate_time,
+                                                        stream_name:conn.get_name().clone(),
+                                                        confirm_time,
                                                     }
                                                 }
-                                            };
-                                            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+                                            }
+                                            
                                         },
                                         Err(err) =>{
                                             log::error!("accept question err ={}" ,err);
+                                            ConfirmStreamLpcCommandResp {
+                                                seq,
+                                                result: 1,
+                                                msg:"match stream error".to_string(),
+                                                send_hash:HashValue::default(),
+                                                recv_hash:HashValue::default(),
+                                                calculate_time:0,
+                                                stream_name: "".to_string(),
+                                                confirm_time : 0,
+                                            }
                                         }
-                                    };                                
+                                    }                                
                                 },
                                 _ =>{
                                     log::error!("bdt incoming.next() is None");
+                                    ConfirmStreamLpcCommandResp {
+                                        seq,
+                                        result: 1,
+                                        msg:"bdt incoming.next() is None".to_string(),
+                                        send_hash:HashValue::default(),
+                                        recv_hash:HashValue::default(),
+                                        calculate_time:0,
+                                        stream_name: "".to_string(),
+                                        confirm_time : 0,
+                                    }
                                 }
                             };
+                            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
                             
                         }
                     });
                     AutoAcceptStreamLpcCommandResp {
                         seq, 
                         result: 0 as u16,
+                                msg : "success".to_string(),
                     }
                 }
             };
@@ -639,6 +686,7 @@ impl Peer {
         let resp = AutoAcceptStreamLpcCommandResp {
             seq, 
             result: 0 as u16,
+                                msg : "success".to_string(),
         };
         task::spawn(async move {
             let mut lpc = lpc;
@@ -665,6 +713,7 @@ impl Peer {
                     ConnectSendStreamResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         connect_time: 0,
                         send_time : 0,
@@ -731,6 +780,7 @@ impl Peer {
                                             ConnectSendStreamResp {
                                                 seq, 
                                                 result: 0,
+                                                 msg : "success".to_string(),
                                                 stream_name: conn.get_name().clone(),
                                                 connect_time,
                                                 send_time,
@@ -746,6 +796,7 @@ impl Peer {
                                             ConnectSendStreamResp {
                                                 seq, 
                                                 result: e.code().as_u16(),
+                                                 msg : e.msg().to_string(),
                                                 stream_name: conn.get_name().clone(),
                                                 connect_time: 0,
                                                 send_time,
@@ -763,6 +814,7 @@ impl Peer {
                                     ConnectSendStreamResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                         stream_name: conn.get_name().clone(),
                                         connect_time,
                                         send_time : 0,
@@ -781,6 +833,7 @@ impl Peer {
                             ConnectSendStreamResp {
                                 seq, 
                                 result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                                 stream_name: String::new(),
                                 connect_time: 0,
                                 send_time : 0,
@@ -817,7 +870,8 @@ impl Peer {
                 log::error!("convert command to ListenerStreamLpcCommandReq failed, e={}", &e);
                 ListenerStreamLpcCommandResp {
                     seq, 
-                    result: e.code().as_u16()
+                    result: e.code().as_u16(),
+                    msg : e.msg().to_string(),
                 }
             },
             Ok(c) => {
@@ -842,6 +896,7 @@ impl Peer {
                                                     ListenerStreamEventLpcCommandResp {
                                                         seq,
                                                         result: e.code().as_u16(),
+                                                        msg : e.msg().to_string(),
                                                         stream_name: String::new(),
                                                         confirm_time: 0,
                                                         send_time : 0,
@@ -869,6 +924,7 @@ impl Peer {
                                                                     ListenerStreamEventLpcCommandResp {
                                                                         seq,
                                                                         result: 0,
+                                                                        msg : "success".to_string(),
                                                                         stream_name:conn.get_name().clone(),
                                                                         confirm_time,
                                                                         send_time,
@@ -884,6 +940,7 @@ impl Peer {
                                                                     ListenerStreamEventLpcCommandResp {
                                                                         seq,
                                                                         result: e.code().as_u16(),
+                                                                        msg : e.msg().to_string(),
                                                                         stream_name: conn.get_name().clone(),
                                                                         confirm_time: 0,
                                                                         send_time : 0,
@@ -901,6 +958,7 @@ impl Peer {
                                                             ListenerStreamEventLpcCommandResp {
                                                                 seq,
                                                                 result: e.code().as_u16(),
+                                                                msg : e.msg().to_string(),
                                                                 stream_name: conn.get_name().clone(),
                                                                 confirm_time,
                                                                 send_time : 0,
@@ -921,6 +979,7 @@ impl Peer {
                                             ListenerStreamEventLpcCommandResp {
                                                 seq,
                                                 result: 1,
+                                                msg : "accept match stream error".to_string(),
                                                 stream_name: String::new(),
                                                 confirm_time: 0,
                                                 send_time : 0,
@@ -946,6 +1005,7 @@ impl Peer {
                 ListenerStreamLpcCommandResp {
                     seq, 
                     result: 0 as u16,
+                                msg : "success".to_string(),
                 }
             }
         };
@@ -967,6 +1027,7 @@ impl Peer {
             let resp = AcceptStreamLpcCommandResp {
                 seq, 
                 result: 0 as u16,
+                                msg : "success".to_string(),
                 stream_name: conn.get_name().clone(),
                 question: pre_stream.question,
             };
@@ -984,13 +1045,15 @@ impl Peer {
                 SetAnswerLpcCommandResp {
                     seq, 
                     result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                 }
             },
             Ok(c) => {
-                let _ = peer.set_answer(&c.answer);
+                let _ = peer.set_answer(c.answer_size);
                 SetAnswerLpcCommandResp {
                     seq, 
                     result: 0,
+                    msg : "success".to_string(),
                 }
             }
         };
@@ -1010,13 +1073,15 @@ impl Peer {
                 SetQuestionLpcCommandResp {
                     seq, 
                     result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                 }
             },
             Ok(c) => {
-                let _ = peer.set_question(&c.question);
+                let _ = peer.set_question(c.question_size);
                 SetQuestionLpcCommandResp {
                     seq, 
                     result: 0,
+                    msg : "success".to_string(),
                 }
             }
         };
@@ -1035,10 +1100,13 @@ impl Peer {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
                     ConfirmStreamLpcCommandResp {
-                        seq, 
+                        seq,
                         result: e.code().as_u16(),
-                        question : Vec::new(),
-                        stream_name: String::new(),
+                        msg : e.msg().to_string(),
+                        send_hash:HashValue::default(),
+                        recv_hash:HashValue::default(),
+                        calculate_time:0,
+                        stream_name: "".to_string(),
                         confirm_time : 0,
                     }
                 },
@@ -1047,11 +1115,14 @@ impl Peer {
                         None => {
                             log::error!("not found stream, name={}", &c.stream_name);
                             ConfirmStreamLpcCommandResp {
-                                seq, 
+                                seq,
                                 result: BuckyErrorCode::NotFound.as_u16(),
-                                question : Vec::new(),
-                                stream_name: c.stream_name,
-                                confirm_time:0,
+                                msg : "not found stream".to_string(),
+                                send_hash:HashValue::default(),
+                                recv_hash:HashValue::default(),
+                                calculate_time:0,
+                                stream_name: "".to_string(),
+                                confirm_time : 0,
                             }
                         },
                         Some(conn) => {
@@ -1059,21 +1130,27 @@ impl Peer {
                                 Err(e) => {
                                     log::error!("confirm failed, name={}, e={}", &c.stream_name, &e);
                                     ConfirmStreamLpcCommandResp {
-                                        seq, 
+                                        seq,
                                         result: e.code().as_u16(),
-                                        question : Vec::new(),
-                                        stream_name: c.stream_name,
-                                        confirm_time:0,
+                                        msg : e.msg().to_string(),
+                                        send_hash:HashValue::default(),
+                                        recv_hash:HashValue::default(),
+                                        calculate_time:0,
+                                        stream_name: c.stream_name.clone(),
+                                        confirm_time : 0,
                                     }
                                 },
                                 Ok(_) => {
                                     log::info!("confirm succ, name={}", &c.stream_name);
                                     ConfirmStreamLpcCommandResp {
-                                        seq, 
-                                        result: 0 as u16,
-                                        question : Vec::new(),
-                                        stream_name: c.stream_name,
-                                        confirm_time:0,
+                                        seq,
+                                        result: 0,
+                                        msg : "success".to_string(),
+                                        send_hash:HashValue::default(),
+                                        recv_hash:HashValue::default(),
+                                        calculate_time:0,
+                                        stream_name: c.stream_name.clone(),
+                                        confirm_time : 0,
                                     }
                                 }
                             }
@@ -1096,6 +1173,7 @@ impl Peer {
                 CloseStreamLpcCommandResp {
                     seq, 
                     result: e.code().as_u16(),
+                    msg : e.msg().to_string(),
                     stream_name: String::new(),
                 }
             },
@@ -1106,6 +1184,7 @@ impl Peer {
                         CloseStreamLpcCommandResp {
                             seq, 
                             result: BuckyErrorCode::NotFound.as_u16(),
+                            msg : "not found stream".to_string(),
                             stream_name: c.stream_name,
                         }
                     },
@@ -1117,6 +1196,7 @@ impl Peer {
                                 CloseStreamLpcCommandResp {
                                     seq, 
                                     result: BuckyErrorCode::Failed.as_u16(),
+                                    msg : "stream shutdown error".to_string(),
                                     stream_name: c.stream_name,
                                 }
                             },
@@ -1125,6 +1205,7 @@ impl Peer {
                                 CloseStreamLpcCommandResp {
                                     seq, 
                                     result: 0 as u16,
+                                    msg : "success".to_string(),
                                     stream_name: c.stream_name,
                                 }
                             }
@@ -1149,6 +1230,7 @@ impl Peer {
                 ResetStreamLpcCommandResp {
                     seq, 
                     result: e.code().as_u16(),
+                    msg : e.msg().to_string(),
                     stream_name: String::new(),
                 }
             },
@@ -1159,6 +1241,7 @@ impl Peer {
                         ResetStreamLpcCommandResp {
                             seq, 
                             result: BuckyErrorCode::NotFound.as_u16(),
+                            msg : "not found stream".to_string(),
                             stream_name: c.stream_name,
                         }
                     },
@@ -1170,6 +1253,7 @@ impl Peer {
                                 ResetStreamLpcCommandResp {
                                     seq, 
                                     result: BuckyErrorCode::Failed.as_u16(),
+                                    msg : "stream shutdown failed".to_string(),
                                     stream_name: c.stream_name,
                                 }
                             },
@@ -1178,6 +1262,7 @@ impl Peer {
                                 ResetStreamLpcCommandResp {
                                     seq, 
                                     result: 0 as u16,
+                                    msg : "success".to_string(),
                                     stream_name: c.stream_name,
                                 }
                             }
@@ -1204,6 +1289,7 @@ impl Peer {
                     SendLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         time: 0,
                         hash: HashValue::default()
@@ -1216,6 +1302,7 @@ impl Peer {
                             SendLpcCommandResp {
                                 seq, 
                                 result: BuckyErrorCode::NotFound.as_u16(),
+                                msg : "not found stream".to_string(),
                                 stream_name: c.stream_name,
                                 time: 0,
                                 hash: HashValue::default()
@@ -1229,7 +1316,8 @@ impl Peer {
                             if connState == "# StreamState::Closing" || connState == "StreamState::Closed" {
                                 SendLpcCommandResp {
                                     seq, 
-                                    result: 105,
+                                    result: 1,
+                                    msg : "StreamState::Closeing".to_string(),
                                     stream_name: c.stream_name,
                                     time: 0,
                                     hash: HashValue::default()
@@ -1241,6 +1329,7 @@ impl Peer {
                                         SendLpcCommandResp {
                                             seq, 
                                             result: e.code().as_u16(),
+                                            msg : e.msg().to_string(),
                                             stream_name: c.stream_name,
                                             time: 0,
                                             hash: HashValue::default()
@@ -1251,6 +1340,7 @@ impl Peer {
                                         SendLpcCommandResp {
                                             seq, 
                                             result: 0 as u16,
+                                            msg : "success".to_string(),
                                             stream_name: c.stream_name,
                                             time: send_time as u32,
                                             hash
@@ -1282,6 +1372,7 @@ impl Peer {
                     RecvLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         file_size: 0,
                         hash: HashValue::default()
@@ -1294,6 +1385,7 @@ impl Peer {
                             RecvLpcCommandResp {
                                 seq, 
                                 result: BuckyErrorCode::NotFound.as_u16(),
+                                msg : "not found stream".to_string(),
                                 stream_name: c.stream_name,
                                 file_size: 0,
                                 hash: HashValue::default()
@@ -1307,6 +1399,7 @@ impl Peer {
                                     RecvLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                         stream_name: c.stream_name,
                                         file_size: 0,
                                         hash: HashValue::default()
@@ -1317,6 +1410,7 @@ impl Peer {
                                     RecvLpcCommandResp {
                                         seq, 
                                         result: 0 as u16,
+                                        msg : "success".to_string(),
                                         stream_name: c.stream_name,
                                         file_size,
                                         hash
@@ -1343,6 +1437,7 @@ impl Peer {
                     SendObjectLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         time: 0,
                         hash: HashValue::default()
@@ -1355,6 +1450,7 @@ impl Peer {
                             SendObjectLpcCommandResp {
                                 seq, 
                                 result: BuckyErrorCode::NotFound.as_u16(),
+                                msg : "not found stream".to_string(),
                                 stream_name: c.stream_name,
                                 time: 0,
                                 hash: HashValue::default()
@@ -1369,6 +1465,7 @@ impl Peer {
                                     SendObjectLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                         stream_name: c.stream_name,
                                         time: 0,
                                         hash: HashValue::default()
@@ -1379,6 +1476,7 @@ impl Peer {
                                     SendObjectLpcCommandResp {
                                         seq, 
                                         result: 0 as u16,
+                                        msg : "success".to_string(),
                                         stream_name: c.stream_name,
                                         time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
                                         hash
@@ -1407,6 +1505,7 @@ impl Peer {
                     RecvObjectLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         stream_name: String::new(),
                         file_size: 0,
                         hash: HashValue::default(),
@@ -1420,6 +1519,7 @@ impl Peer {
                             RecvObjectLpcCommandResp {
                                 seq, 
                                 result: BuckyErrorCode::NotFound.as_u16(),
+                                msg : "not found stream".to_string(),
                                 stream_name: c.stream_name,
                                 file_size: 0,
                                 hash: HashValue::default(),
@@ -1434,6 +1534,7 @@ impl Peer {
                                     RecvObjectLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                         stream_name: c.stream_name,
                                         file_size: 0,
                                         hash: HashValue::default(),
@@ -1445,6 +1546,7 @@ impl Peer {
                                     RecvObjectLpcCommandResp {
                                         seq, 
                                         result: 0 as u16,
+                                        msg : "success".to_string(),
                                         stream_name: c.stream_name,
                                         file_size,
                                         hash,
@@ -1473,6 +1575,7 @@ impl Peer {
                     SendDatagramLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         time: 0,
                         hash: HashValue::default(),
                         create_time : None,
@@ -1506,6 +1609,7 @@ impl Peer {
                             SendDatagramLpcCommandResp {
                                 seq, 
                                 result: 0,
+                                msg : "success".to_string(),
                                 time: ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
                                 hash:hash,
                                 create_time,
@@ -1517,6 +1621,7 @@ impl Peer {
                             SendDatagramLpcCommandResp {
                                 seq, 
                                 result: 1,
+                                msg :"Send Datagram error".to_string(),
                                 time: 0,
                                 hash: HashValue::default(),
                                 create_time : None,
@@ -1546,6 +1651,7 @@ impl Peer {
                     RecvDatagramMonitorLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                     }
                 },
                 Ok(_) => {
@@ -1563,6 +1669,7 @@ impl Peer {
                                 let notify = RecvDatagramLpcCommandResp {
                                     seq, 
                                     result: 0 as u16,
+                                    msg : "success".to_string(),
                                     content,
                                     remote_id,
                                     sequence,
@@ -1576,6 +1683,7 @@ impl Peer {
                     RecvDatagramMonitorLpcCommandResp{
                         seq, 
                         result: 0,
+                        msg : "success".to_string(),
                     }
                     
                 }
@@ -1585,6 +1693,7 @@ impl Peer {
         let resp  = RecvDatagramMonitorLpcCommandResp{
             seq, 
             result: 0,
+            msg : "success".to_string(),
         };
         task::spawn(async move {
             let mut lpc = lpc.clone();
@@ -1606,6 +1715,7 @@ impl Peer {
                     CalculateChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         chunk_id: Default::default(),
                         calculate_time:0,
                     }
@@ -1625,6 +1735,7 @@ impl Peer {
                                 CalculateChunkLpcCommandResp {
                                     seq, 
                                     result: 0 as u16,
+                                    msg : "success".to_string(),
                                     chunk_id,
                                     calculate_time:((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32,
                                 }
@@ -1634,6 +1745,7 @@ impl Peer {
                                 CalculateChunkLpcCommandResp {
                                     seq, 
                                     result: e.code().as_u16(),
+                                    msg : e.msg().to_string(),
                                     chunk_id: Default::default(),
                                     calculate_time:0,
                                 }
@@ -1645,6 +1757,7 @@ impl Peer {
                         CalculateChunkLpcCommandResp {
                             seq, 
                             result: 1,
+                            msg : "set-chunk failed for path not exist".to_string(),
                             chunk_id: Default::default(),
                             calculate_time:0,
                         }
@@ -1670,6 +1783,7 @@ impl Peer {
                     SetChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         chunk_id: Default::default(),
                         set_time:0,
                         
@@ -1703,6 +1817,7 @@ impl Peer {
                                     SetChunkLpcCommandResp {
                                         seq, 
                                         result: 0 as u16,
+                                msg : "success".to_string(),
                                         chunk_id:c.chunk_id.clone(),
                                         set_time,
                                         
@@ -1713,6 +1828,7 @@ impl Peer {
                                     SetChunkLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                                         chunk_id:c.chunk_id.clone(),
                                         set_time:0,
                                         
@@ -1725,6 +1841,7 @@ impl Peer {
                             SetChunkLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                                 chunk_id:c.chunk_id.clone(),
                                 set_time:0,
                                 
@@ -1737,6 +1854,7 @@ impl Peer {
                     //         SetChunkLpcCommandResp {
                     //             seq, 
                     //             result: 0 as u16,
+                    //             msg : "success".to_string(),
                     //             chunk_id:c.chunk_id.clone(),
                     //             set_time,
                                 
@@ -1747,6 +1865,7 @@ impl Peer {
                     //         SetChunkLpcCommandResp {
                     //             seq, 
                     //             result: e.code().as_u16(),
+                    //             msg : e.msg().to_string(),
                     //             chunk_id:c.chunk_id.clone(),
                     //             set_time:0,
                                 
@@ -1772,6 +1891,7 @@ impl Peer {
                     TrackChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         chunk_id: Default::default(),
                         calculate_time:0,
                         set_time : 0,
@@ -1808,6 +1928,7 @@ impl Peer {
                                                 TrackChunkLpcCommandResp {
                                                     seq, 
                                                     result: 0 as u16,
+                                                    msg : "success".to_string(),
                                                     chunk_id:chunk_id.clone(),
                                                     calculate_time:calculate_time,
                                                     set_time : set_time,
@@ -1819,6 +1940,7 @@ impl Peer {
                                                 TrackChunkLpcCommandResp {
                                                     seq, 
                                                     result: e.code().as_u16(),
+                                                    msg : e.msg().to_string(),
                                                     chunk_id:chunk_id.clone(),
                                                     calculate_time:0,
                                                     set_time : 0,
@@ -1832,6 +1954,7 @@ impl Peer {
                                         TrackChunkLpcCommandResp {
                                             seq, 
                                             result: e.code().as_u16(),
+                                            msg : e.msg().to_string(),
                                             chunk_id:chunk_id.clone(),
                                             calculate_time:0,
                                             set_time : 0,
@@ -1845,6 +1968,7 @@ impl Peer {
                                 TrackChunkLpcCommandResp {
                                     seq, 
                                     result: e.code().as_u16(),
+                                    msg : e.msg().to_string(),
                                     chunk_id: Default::default(),
                                     calculate_time:0,
                                     set_time : 0,
@@ -1857,6 +1981,7 @@ impl Peer {
                         TrackChunkLpcCommandResp {
                             seq, 
                             result: 1,
+                            msg : "set-chunk failed for path not exist".to_string(),
                             chunk_id: Default::default(),
                             calculate_time:0,
                             set_time : 0,
@@ -1883,6 +2008,7 @@ impl Peer {
                     InterestChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                     }
                 },
                 Ok(c) => {
@@ -1906,6 +2032,7 @@ impl Peer {
                                             InterestChunkLpcCommandResp { 
                                                 seq, 
                                                 result: 0 as u16,
+                                                msg : "success".to_string(),
                                             }
                                         },
                                         Err(e) => {
@@ -1913,6 +2040,7 @@ impl Peer {
                                             InterestChunkLpcCommandResp {
                                                 seq, 
                                                 result: e.code().as_u16(),
+                                                msg : e.msg().to_string(),
                                             }
                                         }
                                     }
@@ -1922,6 +2050,7 @@ impl Peer {
                                     InterestChunkLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                     }
                                 }
                             }
@@ -1931,6 +2060,7 @@ impl Peer {
                             InterestChunkLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
+                                msg : e.msg().to_string(),
                             }
                         }
                     }
@@ -2013,6 +2143,7 @@ impl Peer {
                     CheckChunkLpcCommandResp {
                         seq, 
                         result: e.code().as_u16(),
+                        msg : e.msg().to_string(),
                         state: ChunkState::NotFound
                     }
                 },
@@ -2024,6 +2155,7 @@ impl Peer {
                                     CheckChunkLpcCommandResp {
                                         seq, 
                                         result: 0,
+                                        msg : "success".to_string(),
                                         state
                                     }
                                 }
@@ -2032,6 +2164,7 @@ impl Peer {
                                     CheckChunkLpcCommandResp {
                                         seq, 
                                         result: e.code().as_u16(),
+                                        msg : e.msg().to_string(),
                                         state: ChunkState::NotFound
                                     }
                                 }
@@ -2041,7 +2174,8 @@ impl Peer {
                             log::error!("get chunk failed, e={}", &e);
                             CheckChunkLpcCommandResp {
                                 seq, 
-                                result: 0,//e.code() as u16,
+                                result: 0,
+                                msg : "success".to_string(),//e.code() as u16,
                                 state: ChunkState::Pending//ChunkState::NotFound
                             }
                         }
@@ -2341,18 +2475,34 @@ impl Peer {
        Some(self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().stack.clone())
     }
 
-    fn set_answer(&self,answer:&Vec<u8>){
-        let mut answer_self = self.0.fristQA_answer.lock().unwrap();
-        *answer_self = answer.clone();
+    
+    pub fn random_data(buffer: &mut [u8]) {
+        let len = buffer.len();
+        let mut gen_count = 0;
+        while len - gen_count >= 8 {
+            let r = rand::random::<u64>();
+            buffer[gen_count..gen_count + 8].copy_from_slice(&r.to_be_bytes());
+            gen_count += 8;
+        }
+
+        while len - gen_count > 0 {
+            let r = rand::random::<u8>();
+            buffer[gen_count..gen_count + 1].copy_from_slice(&r.to_be_bytes());
+            gen_count += 1;
+        }
     }
-    fn get_answer(&self)-> Vec<u8>{
+    fn set_answer(&self,answer_size: u64){
+        let mut answer_self = self.0.fristQA_answer.lock().unwrap();
+        *answer_self = answer_size;
+    }
+    fn get_answer(&self)-> u64{
         self.0.fristQA_answer.lock().unwrap().clone()
     }
-    fn set_question(&self,question:&Vec<u8>){
+    fn set_question(&self,question_size:u64){
         let mut question_self = self.0.fristQA_question.lock().unwrap();
-        *question_self = question.clone();
+        *question_self = question_size;
     }
-    fn get_question(&self)-> Vec<u8>{
+    fn get_question(&self)-> u64{
         self.0.fristQA_question.lock().unwrap().clone()
     }
     fn get_acceptor(&self ,peer_name: &String) -> StreamListenerGuard {
@@ -3526,6 +3676,7 @@ impl Peer {
                 UploadSystemInfoLpcCommandResp {
                     seq, 
                     result : 1,
+                    msg : "convert command to InterestChunkLpcCommandReq failed".to_string(),
                 }
             },
             Ok(c) => {
@@ -3556,6 +3707,7 @@ impl Peer {
                 UploadSystemInfoLpcCommandResp {
                     seq, 
                     result: 0 as u16,
+                    msg : "success".to_string(),
                 }
             }
         };
