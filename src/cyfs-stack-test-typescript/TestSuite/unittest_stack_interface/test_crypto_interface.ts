@@ -4130,7 +4130,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
 
 
         //sign_and_push_named_object  sign_and_set_named_object
-        it.only("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
+        it("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
 
             let [people, people_pk] = create_people();
 

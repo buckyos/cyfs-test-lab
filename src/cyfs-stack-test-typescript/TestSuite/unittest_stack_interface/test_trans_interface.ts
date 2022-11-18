@@ -315,7 +315,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
                     dec_id: ZoneSimulator.APPID,
                     level: cyfs.NDNAPILevel.Router,
                     //target : stack_runtime.local_device_id().object_id,
-                    referer_object: [new cyfs.NDNDataRefererObject(test_file)],
+                    referer_object: [new cyfs.NDNDataRefererObject(undefined,test_file)],
                     flags: 1,
                 },
                 object_id: test_file,
