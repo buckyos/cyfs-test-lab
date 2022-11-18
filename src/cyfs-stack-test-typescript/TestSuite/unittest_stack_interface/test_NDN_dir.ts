@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from "../../cyfs_node"
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, all_stacks, getStack, NDNTestManager, getDecId, all_dec_id } from "../../common";
 import * as path from 'path';
 import * as fs from 'fs-extra'
@@ -1399,7 +1399,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
             assert(!resp.err, `get_data 传输chunk失败`)
 
         })
-        it.only("getData chunk目标对象 关联file reqPath 无该path权限&相应chunck 获取失败", async () => {
+        it("getData chunk目标对象 关联file reqPath 无该path权限&相应chunck 获取失败", async () => {
 
             let { file_id, dir_id, inner_path, chunkIdList, req_path } = await NDNTestManager.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-file").then()
 
