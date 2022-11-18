@@ -793,9 +793,10 @@ export class BdtPeerClient extends EventEmitter {
             stream_name: info.value.stream_name,
             _interface: this.m_interface,
             timeout: this.m_timeout,
-            conn_tag
+            conn_tag,
+            fastQAInfo
         });
-        return info.value.result;
+        return{resp:info.value,conn};
     }
 
     async auto_response_stream(answer_size?: number): Promise<api.ListenerStreamLpcCommandResp> {
@@ -804,7 +805,7 @@ export class BdtPeerClient extends EventEmitter {
             peerName: this.peerName,
             unique_id: this.peerName,
             answer_size,
-            eventType: "listener_stream_resp",
+            eventType: "listener_stream_event_resp",
             eventName: `auto_response_stream_${this.peerid}`
         }, this.m_agentid, 0);
         this.logger.debug(`callApi auto_response_stream BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
@@ -894,6 +895,7 @@ export class BdtPeerClient extends EventEmitter {
         if (this.m_acceptCookie == undefined) {
             let rnAccept = await this.m_interface.attachEvent(`autoAccept_${this.peerid}`, (err: ErrorCode, namespace: Namespace, json: string) => {
                 let eventIfo: api.ConfirmStreamLpcCommandResp = JSON.parse(json);
+                //this.logger.info(JSON.stringify(eventIfo));
                 if (eventIfo.result == 0) {
                     this.logger.info(`${this.tags} ${this.peerName} 触发 accept conn = ${eventIfo.stream_name}`);
                     let fastQAInfo: FastQAInfo = {

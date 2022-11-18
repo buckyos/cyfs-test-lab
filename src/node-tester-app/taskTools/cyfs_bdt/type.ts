@@ -47,7 +47,7 @@ export const BDTERROR = {
 }
 export const enum  Listern_type{
     auto_accept = "auto_accept",
-    auto_response_stream="auto_response_stream",
+    auto_response_stream = "auto_response_stream",
 }
 
 export const enum  ActionType {
