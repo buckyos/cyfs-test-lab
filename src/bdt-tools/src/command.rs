@@ -387,32 +387,6 @@ pub struct ConnectLpcCommandReq {
     pub accept_answer:bool,
     pub no_cache : bool,
 }
-pub struct ConnectLpcCommandResp {
-    pub seq: u32,
-    pub result: u16,
-    pub msg: String,
-    pub stream_name: String,
-    pub answer: Vec<u8>,
-    pub time: u32,
-    pub read_time : u32,
-}
-
-impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
-    type Error = BuckyError;
-    fn try_from(value: ConnectLpcCommandResp) -> Result<Self, Self::Error> {
-        let json = serde_json::json!({
-            "name": "connect_resp",
-            "result": value.result,
-            "msg": value.msg.as_str(),
-            "stream_name": value.stream_name.as_str(),
-            "time": value.time,
-            "read_time":value.read_time,
-            "answer" : String::from_utf8(value.answer).unwrap(),
-        });
-
-        Ok(LpcCommand::new(value.seq, Vec::new(), json))
-    }
-}
 impl TryFrom<LpcCommand> for ConnectLpcCommandReq {
     type Error = BuckyError;
     fn try_from(value: LpcCommand) -> Result<Self, Self::Error> {
@@ -479,6 +453,37 @@ impl TryFrom<LpcCommand> for ConnectLpcCommandReq {
             accept_answer,
             no_cache
         })
+    }
+}
+
+pub struct ConnectLpcCommandResp {
+    pub seq: u32,
+    pub result: u16,
+    pub msg: String,
+    pub stream_name: String,
+    pub send_hash: HashValue,
+    pub recv_hash: HashValue,
+    pub connect_time: u64,
+    pub calculate_time : u64,
+    pub total_time : u64,
+}
+
+impl TryFrom<ConnectLpcCommandResp> for LpcCommand {
+    type Error = BuckyError;
+    fn try_from(value: ConnectLpcCommandResp) -> Result<Self, Self::Error> {
+        let json = serde_json::json!({
+            "name": "connect_resp",
+            "result": value.result,
+            "msg": value.msg.as_str(),
+            "stream_name": value.stream_name.as_str(),
+            "connect_time": value.connect_time,
+            "calculate_time":value.calculate_time,
+            "total_time" : value.total_time,
+            "send_hash" : hex::encode(value.send_hash.as_slice()),
+            "recv_hash" : hex::encode(value.recv_hash.as_slice()),
+        });
+
+        Ok(LpcCommand::new(value.seq, Vec::new(), json))
     }
 }
 pub struct ConnectListLpcCommandReq {
@@ -682,19 +687,9 @@ impl TryFrom<LpcCommand> for ListenerStreamLpcCommandReq {
         let answer_size = match json.get("answer_size") {
             Some(v) => match v {
                 serde_json::Value::Number(n) => n.as_u64().unwrap(),
-                _ => {
-                    return Err(BuckyError::new(
-                        BuckyErrorCode::InvalidData,
-                        "answer_size format err",
-                    ))
-                },
+                _ => 0,
             },
-            _ => {
-                return Err(BuckyError::new(
-                    BuckyErrorCode::InvalidData,
-                    "answer_size format err",
-                ))
-            },
+            _ => 0,
         };
         Ok(Self {
             seq: value.seq(),
@@ -816,9 +811,9 @@ pub struct ConnectSendStreamResp {
     pub recv_hash: HashValue,
     pub connect_time: u64,
     pub send_time : u64,
-    pub send_total_time : u64,
     pub recv_time : u64,
-    pub recv_total_time : u64,
+    pub calculate_time : u64,
+    pub total_time : u64,
 }
 
 impl TryFrom<ConnectSendStreamResp> for LpcCommand {
@@ -832,10 +827,10 @@ impl TryFrom<ConnectSendStreamResp> for LpcCommand {
             "send_hash" :  hex::encode(value.send_hash.as_slice()),
             "recv_hash" :  hex::encode(value.recv_hash.as_slice()),
             "connect_time": value.connect_time,
-            "send_total_time":value.send_total_time,
+            "calculate_time":value.calculate_time,
             "send_time":value.send_time,
             "recv_time":value.recv_time,
-            "recv_total_time":value.recv_total_time,
+            "total_time" : value.total_time,
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))
@@ -1013,7 +1008,7 @@ impl TryFrom<ConfirmStreamLpcCommandResp> for LpcCommand {
             "confirm_time" : value.confirm_time,
             "calculate_time" : value.calculate_time,
             "recv_hash" : hex::encode(value.recv_hash.as_slice()),
-            "send_hash" : hex::encode(value.recv_hash.as_slice()),
+            "send_hash" : hex::encode(value.send_hash.as_slice()),
         });
 
         Ok(LpcCommand::new(value.seq, Vec::new(), json))

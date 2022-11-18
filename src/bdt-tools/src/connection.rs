@@ -41,35 +41,37 @@ impl TestConnection {
         if gen_count as u64 > size_need_to_send {
             gen_count = size_need_to_send as usize;
         }
+        // 构造请求头部协议，设置发送数据长度
         send_buffer[0..8].copy_from_slice(&size_need_to_send.to_be_bytes());
+
+        // 生成测试数据 计算hash
         Self::random_data(send_buffer[8..].as_mut());
-        let mut send_time = 0;
+        let hash = hash_data(&send_buffer[0..gen_count]);
+       
+        let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
         loop {
-            let hash = hash_data(&send_buffer[0..gen_count]);
-            hashs.push(hash);
-            //统计实际write的时间
-            let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
             let result_err = self.stream.write_all(&send_buffer[0..gen_count]).await.map_err(|e| {
                 log::error!("send file failed, e={}",&e);
                 e
             });
-            send_time = send_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+            hashs.push(hash);
             let _ = match result_err{
                 Err(_)=>{break},
                 Ok(_)=>{}
             };
             size_need_to_send -= gen_count as u64;
-
             if size_need_to_send == 0 {
                 break;
             }
-
             gen_count = PIECE_SIZE;
             if gen_count as u64 > size_need_to_send {
                 gen_count = size_need_to_send as usize;
             }
-            Self::random_data(send_buffer[0..].as_mut());
+            // 为了优化暂不完全随机全部数据
+            // Self::random_data(send_buffer[0..].as_mut());
         }
+        let mut  send_time =  system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+
         if size_need_to_send > 0 {
             return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "remote close"));
         }
@@ -154,13 +156,14 @@ impl TestConnection {
         let mut file_size: u64 = 0;
         let mut total_recv: u64 = 0;
         let mut recv_time = 0;
+        let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
         loop {
-            let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
+            
             let len = self.stream.read(recv_buffer[piece_recv..].as_mut()).await.map_err(|e| {
                 log::error!("recv failed, e={}", &e);
                 e
             })?;
-            recv_time = recv_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+            
             if len == 0 {
                 log::error!("remote close");
                 return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "remote close"));
@@ -182,14 +185,17 @@ impl TestConnection {
             }
 
             if file_size > 0 {
-                if total_recv == file_size || piece_recv == PIECE_SIZE {
+                if total_recv == file_size {
+                    // 统计接收数据网络时间耗时
+                    recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
                     let recv_hash = hash_data(&recv_buffer[0..piece_recv].as_ref());
                     hashs.push(recv_hash);
-                }
-
-                if total_recv == file_size {
                     log::info!("=====================================recv finish");
                     break;
+                }
+                if total_recv != file_size || piece_recv == PIECE_SIZE {
+                    let recv_hash = hash_data(&recv_buffer[0..piece_recv].as_ref());
+                    hashs.push(recv_hash);
                 }
             }
 

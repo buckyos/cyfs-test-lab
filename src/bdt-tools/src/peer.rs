@@ -338,6 +338,7 @@ impl Peer {
         let peer = self.clone();
         task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // （1）解析请求参数
             let resp = match ConnectLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to ConnectLpcCommandReq failed, e={}", &e);
@@ -346,21 +347,28 @@ impl Peer {
                         result: e.code().as_u16(),
                         msg : e.msg().to_string(),
                         stream_name: String::new(),
-                        answer : Vec::new(),
-                        time: 0,
-                        read_time : 0,
+                        send_hash : HashValue::default(),
+                        recv_hash : HashValue::default(),
+                        connect_time : 0,
+                        calculate_time : 0,
+                        total_time : 0,
                     }
                 },
                 Ok(c) => {
+                    // (2) 构造连接参数
+                    // 默认不直连
                     let mut wan_addr = false;
+                    // 有W地址直连
                     for addr in c.remote_desc.connect_info().endpoints().iter() {
                         if addr.is_static_wan() {
                             wan_addr = true;
                         }
                     }
+                    // 用例主动判断直连
                     if c.known_eps {
                         wan_addr = true;
                     }
+                    // 使用对端SN发起连接请求
                     let remote_sn = match c.remote_desc.body().as_ref() {
                         None => {
                             Vec::new()
@@ -378,7 +386,10 @@ impl Peer {
                             None
                         }
                     };
-                   
+                    // 构造FastQA 请求数据
+                    // FastQA 最大answer为 25KB
+                    let begin_set = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let mut calculate_time = 0;
                     let mut answer = [0;25*1024];
                     let mut question = Vec::new();
                     if(c.question){
@@ -386,19 +397,25 @@ impl Peer {
                         question.resize(question_size, 0u8);
                         Self::random_data(question[0..question_size].as_mut());
                     }
+                    let send_hash = hash_data(&question);
+                    calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set;
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    //(3)发起连接
                     match stack.stream_manager().connect(0, question, param).await {
                         Ok(mut stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                             let mut len = 0;
                             // 接收answer
-                            let begin_read = system_time_to_bucky_time(&std::time::SystemTime::now());
-                            let mut read_time = 0;
+                            let mut recv_hash = HashValue::default();
+                            
+                            // 读取answer 数据
                             if c.accept_answer {
                                 len = match stream.read(&mut answer).await{
                                     Ok(len) => {
-                                        let read_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_read;
-                                        log::info!("Read answer success,len={} content={:?}",len,String::from_utf8(answer[..len].to_vec()).expect(""));
+                                        let begin_read = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                        recv_hash = hash_data(&answer[..len]);
+                                        calculate_time = calculate_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_read;
+                                        log::info!("Read answer success,len={} content={:?}",len,recv_hash.clone());
                                         len
                                     },
                                     Err(_) => {
@@ -408,19 +425,18 @@ impl Peer {
                                     }
                                 };
                             }
-                            // 删除cache
-                            // let mut cache = stack.device_cache ;
-                            
                             let conn = peer.add_stream(stream);
-                            
+                            let total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set;
                             ConnectLpcCommandResp {
                                 seq, 
                                 result: 0 as u16,
                                 msg : "success".to_string(),
                                 stream_name: conn.get_name().clone(),
-                                answer: answer[..len].to_vec(),
-                                time: connect_time as u32,
-                                read_time : read_time  as u32,
+                                send_hash ,
+                                recv_hash,
+                                connect_time,
+                                calculate_time,
+                                total_time,
                             }
                         },
                         Err(e) => {
@@ -428,11 +444,13 @@ impl Peer {
                             ConnectLpcCommandResp {
                                 seq, 
                                 result: e.code().as_u16(),
-                        msg : e.msg().to_string(),
+                                msg : e.msg().to_string(),
                                 stream_name: String::new(),
-                                answer : Vec::new(),
-                                time: 0,
-                                read_time : 0
+                                send_hash : HashValue::default(),
+                                recv_hash : HashValue::default(),
+                                connect_time: 0,
+                                calculate_time : 0,
+                                total_time : 0,
                             }
                         }
                     }
@@ -599,9 +617,9 @@ impl Peer {
                                     match stream{
                                         Ok(pre_stream)=>{
                                             let question = pre_stream.question;
-                                            log::info!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
                                             let begin_calculate = system_time_to_bucky_time(&std::time::SystemTime::now());
                                             let recv_hash = hash_data(&question);
+                                            log::info!("accept question succ,  hash = {}",recv_hash.clone());
                                             let answer_size = peer.get_answer() as usize;
                                             let mut answer = Vec::new();
                                             answer.resize(answer_size, 0u8);
@@ -677,7 +695,7 @@ impl Peer {
                     AutoAcceptStreamLpcCommandResp {
                         seq, 
                         result: 0 as u16,
-                                msg : "success".to_string(),
+                        msg : "success".to_string(),
                     }
                 }
             };
@@ -718,10 +736,10 @@ impl Peer {
                         connect_time: 0,
                         send_time : 0,
                         recv_time : 0,
-                        send_total_time : 0,
-                        recv_total_time : 0,
+                        calculate_time : 0,
                         send_hash : HashValue::default(),
                         recv_hash : HashValue::default(),
+                        total_time : 0,
                     }
                 },
                 Ok(c) => {
@@ -760,6 +778,7 @@ impl Peer {
                     };
                     //(3) 发起连接
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let mut calculate_time = 0;
                     match stack.stream_manager().connect(0, Vec::new(), param).await {
                         Ok(mut stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
@@ -771,11 +790,12 @@ impl Peer {
                             match conn.clone().send_file(c.question_size).await{
                                 Ok((send_hash,send_time))=>{
                                     log::info!("send stream data success send_hash = {},send_time = {}",send_hash.clone(),send_time.clone());
-                                    let send_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+                                    calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send - send_time;
                                     let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
                                     match conn.clone().recv_file().await {
                                         Ok((file_size,recv_time,recv_hash))=>{
-                                            let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                                            calculate_time = calculate_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv - recv_time;
+                                            let total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) -begin_time;
                                             log::info!("recv stream data success recv_hash={},recv_time = {}",recv_hash.clone(),recv_time.clone());
                                             ConnectSendStreamResp {
                                                 seq, 
@@ -785,10 +805,10 @@ impl Peer {
                                                 connect_time,
                                                 send_time,
                                                 recv_time,
-                                                send_total_time,
-                                                recv_total_time,
+                                                calculate_time,
                                                 send_hash,
                                                 recv_hash,
+                                                total_time,
                                             }
                                         },
                                         Err(e) =>{
@@ -801,10 +821,10 @@ impl Peer {
                                                 connect_time: 0,
                                                 send_time,
                                                 recv_time : 0,
-                                                send_total_time,
-                                                recv_total_time : 0,
+                                                calculate_time : 0,
                                                 send_hash,
                                                 recv_hash : HashValue::default(),
+                                                total_time : 0,
                                             }
                                         }
                                     }
@@ -819,10 +839,10 @@ impl Peer {
                                         connect_time,
                                         send_time : 0,
                                         recv_time : 0,
-                                        send_total_time : 0,
-                                        recv_total_time : 0,
+                                        calculate_time : 0,
                                         send_hash : HashValue::default(),
                                         recv_hash : HashValue::default(),
+                                        total_time : 0,
                                     }
                                 }
 
@@ -833,15 +853,15 @@ impl Peer {
                             ConnectSendStreamResp {
                                 seq, 
                                 result: e.code().as_u16(),
-                        msg : e.msg().to_string(),
+                                msg : e.msg().to_string(),
                                 stream_name: String::new(),
                                 connect_time: 0,
                                 send_time : 0,
                                 recv_time : 0,
-                                send_total_time : 0,
-                                recv_total_time : 0,
+                                calculate_time : 0,
                                 send_hash : HashValue::default(),
                                 recv_hash : HashValue::default(),
+                                total_time : 0,
                             }
                         }
                     }
