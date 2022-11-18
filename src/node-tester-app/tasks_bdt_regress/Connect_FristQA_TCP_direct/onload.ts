@@ -66,8 +66,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         RN : `${labAgent[j].tags[0]}$1`,
                         config:{
                             conn_tag: connect_1,
-                            firstQA_answer : RandomGenerator.string(100),
-                            firstQA_question : RandomGenerator.string(100),
+                            firstQA_answer : 100,
+                            firstQA_question : 100,
                             accept_answer : 1,
                             timeout : 20*1000,
                         },
@@ -87,8 +87,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                             
                 //             conn_tag: connect_2,
                 //             timeout : 20*1000,
-                //             firstQA_answer : RandomGenerator.string(100),
-                //             firstQA_question : RandomGenerator.string(100),
+                //             firstQA_answer : 100,
+                //             firstQA_question : 100,
                 //             accept_answer : 1,
                 //         },
                 //         expect : {err:0},      

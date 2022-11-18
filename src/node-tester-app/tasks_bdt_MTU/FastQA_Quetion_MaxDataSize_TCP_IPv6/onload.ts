@@ -61,8 +61,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${agent_ipv6[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
-                        firstQA_answer : RandomGenerator.string(100),
-                        firstQA_question : RandomGenerator.string(100+ x*1024),
+                        firstQA_answer : 100,
+                        firstQA_question : 100+ x*1024,
                         accept_answer : 1,
                         timeout : 30*1000,
                     },
@@ -76,8 +76,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 RN : `${agent_ipv6[j].tags[0]}$1`,
                 config:{
                     conn_tag: connect_1,
-                    firstQA_answer : RandomGenerator.string(100),
-                    firstQA_question : RandomGenerator.string(1 + 25*1024),
+                    firstQA_answer : 100,
+                    firstQA_question : 1 + 25*1024,
                     accept_answer : 1,
                     timeout : 30*1000,
                 },

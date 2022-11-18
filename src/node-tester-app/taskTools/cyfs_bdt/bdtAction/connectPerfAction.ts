@@ -23,19 +23,18 @@ export class ConnectPerfAction extends BaseAction implements ActionAbstract {
         // (3) ConnectAction 建立连接
         let info = await LN!.bdtClient!.connect(RN!.bdtClient!.device_object!, 0, this.action.config!.known_eps, this.action.config!.accept_answer!, this.action.config!.conn_tag!)
         // (4) ConnectAction 建立连接对结果的检查
-        if (info.err) {
-            return { err: BDTERROR.connnetFailed, log: `${this.action.LN} conenct ${this.action.RN!} err =${info.err}` }
+        if (info.resp.result) {
+            return { err: info.resp.result, log: info.resp.msg }
         }
-        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.time!} ,stream_name = ${info.conn?.stream_name}`)      
+        this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success,time = ${info.resp.connect_time!} ,stream_name = ${info.conn?.stream_name}`)      
         // (5) 保存测试数据
         if (!this.action.info) {
             this.action.info = { conn: [] };
         } else {
             this.action.info.conn = [];
         }
-        this.action.info!.conn!.push(info.conn!.stream_name!);
-        this.action.connect_time = info.time
+        this.action.connect_time = info.resp.connect_time
         this.action.info!.conn_name = info.conn!.stream_name
-        return { err: BDTERROR.success, log: "ConnectAction run success" }
+        return { err: info.resp.result, log: info.resp.msg }
     }
 }

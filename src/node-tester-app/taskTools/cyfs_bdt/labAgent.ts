@@ -183,6 +183,7 @@ export type BdtPeerClientConfig={
     },
     SN : Array<string>,
     logType? : string,
+    listern_type? : string, 
     firstQA_answer? : string,
     resp_ep_type? : string,
     udp_sn_only? : number,
@@ -233,6 +234,9 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if(config.chunk_cache){
         chunk_cache = config.chunk_cache
     }
+    if(!config.listern_type){
+        config.listern_type = "auto_accept"
+    }
     return {
         agent: agent,
         addrInfo: epList,
@@ -241,11 +245,12 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
         active_pn_files: config.PN.activePnFiles,
         passive_pn_files: config.PN.passivePnFiles,
         known_peer_files: config.PN.knownPeerFiles,
-        FristQA_answer: config.firstQA_answer,
+        answer_size: config.firstQA_answer?.length,
         ep_type: config.resp_ep_type,
         udp_sn_only:config.udp_sn_only,
         tcp_port_mapping: config.tcp_port_mapping,
-        chunk_cache
+        chunk_cache,
+        listern_type : config.listern_type,
     };
 }
 

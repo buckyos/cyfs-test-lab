@@ -11,16 +11,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "FastQA_SNcall_BigPackage_IPv4"
+    let testcaseName = "FastQA_SNPing_BigPackage_IPv4"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `操作步骤：
-        (1)Device直接建立连接，在Syn和Ack过程中完成首次数据发送，FastQA机制
-        //(2) (3)过程随机执行一个
-        (2)使用UDP协议，设置Quetion 25KB 发送成功
-        (3)使用UDP协议，设置Quetion 25KB + 1Byte,超出最大限制出现报错
-        `,
+        remark: `(1) 构造100个PN 增加Device Desc 部分的大小,等待SN上线
+        (2) 具体30KB限制在单元测试代码中进行，实际不存在30KB SNPing`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -42,8 +38,27 @@ export async function TaskMain(_interface: TaskClientInterface) {
         config.PN!.activePnFiles.push("pn-miner.desc");
     }
     // 每台机器运行一个bdt 客户端
+    
     await agentManager.allAgentStartBdtPeer(config)
     await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
+    for(let i in labAgent){
+        let info = await testRunner.createPrevTask({
+            LN : `${labAgent[i].tags[0]}$1`,
+            RN : `${labAgent[i].tags[0]}$1`,
+            timeout : 5*30*1000,
+            action : []
+        })
+        info = await testRunner.prevTaskAddAction(new BDTAction.UploadSnOnlineAction({
+            type : ActionType.connect,
+            LN : `${labAgent[i].tags[0]}$1`,
+            RN : `${labAgent[i].tags[0]}$1`,
+            config:{
+                timeout : 30*1000,
+            },
+            expect : {err:0},    
+        }))
+        await testRunner.prevTaskRun();
+    }
     await testRunner.waitFinished()
     
     

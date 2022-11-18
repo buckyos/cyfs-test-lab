@@ -41,7 +41,7 @@ export class StreamSyncDeviceAction extends BaseAction implements ActionAbstract
                 let clientB = agentB.bdtPeerMap.get(`1`);
                 let conn_tag = RandomGenerator.string(20)
                 let conn = await clientA!.connect(clientB!.device_object!,0,0,0,conn_tag);
-                if(conn.err){
+                if(conn.resp.result){
                     continue;
                 }
                 let check = await clientB!.remark_accpet_conn_name(conn.conn!.TempSeq, clientA!.peerid!, conn_tag);
