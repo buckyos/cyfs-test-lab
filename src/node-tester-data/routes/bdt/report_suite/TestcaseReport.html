@@ -64,6 +64,8 @@
                 c11.innerHTML = `<a href = ${data[i].action_info} target="_blank">操作统计</a>` ;
                 var c12 = row.insertCell(11);
                 c12.innerHTML = `<a href = ${data[i].perf_info} target="_blank">性能监控</a>` ;
+                var c13 = row.insertCell(12);
+                c13.innerHTML = `<a href = ${data[i].client_info} target="_blank">节点信息</a>` ;
             }  
         })
     </script>
@@ -81,6 +83,7 @@
             <th>详细信息</th>
             <th>操作统计</th>
             <th>性能监控</th>
+            <th>BDTClient信息</th>
         </tr>
     </table>
 </body>

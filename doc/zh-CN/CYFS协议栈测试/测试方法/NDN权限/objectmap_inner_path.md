@@ -69,8 +69,9 @@
 * 1 MB
 * 2 MB
 * 8 MB
-* 128 MB    
-
+* 128 MB
+    
+#### 测试点
 * get_data,chunk对象,同zone同dec,权限验证
 * get_data,chunk对象,同zone不同dec,权限验证
 * get_data,chunk对象,不同zone同dec,权限验证
@@ -115,7 +116,7 @@
 * get_data,同zone不同dec,objectmap+inner_path,取出file，传输权限验证
 * get_data,不同zone同dec,objectmap+inner_path,取出file，传输权限验证
 * get_data,不同zone不同dec,objectmap+inner_path,取出file，传输权限验证
-* * get_data,不同zone不同dec,objectmap+inner_path,取出file，无req_path,传输权限验证
+* get_data,不同zone不同dec,objectmap+inner_path,取出file，无req_path,传输权限验证
 * get_data,同zone同dec,objectmap+inner_path,取出dir，传输权限验证
 * get_data,同zone不同dec,objectmap+inner_path,取出dir，传输权限验证
 * get_data,不同zone同dec,objectmap+inner_path,取出dir，传输权限验证

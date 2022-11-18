@@ -1,5 +1,5 @@
 
-import * as cyfs from "../cyfs_node/cyfs_node"
+import * as cyfs from "../cyfs_node"
 export const NIGHTLY_DEC_ID = "9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT2ze";
 export const NIGHTLY_SERVICE_OOD = "5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP";
 

@@ -1,6 +1,6 @@
 import assert from "assert";
 import { access } from "fs";
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 import { NONAPILevel, NONObjectInfo, Some } from '../../cyfs_node';
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo} from "../../common";
 

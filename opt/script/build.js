@@ -93,13 +93,13 @@ async function main(){
     }
     
     // 编译文件
-    console.info(`###### 编译文件`)
+    console.info(`###### compile`)
     for (const type of types) {
         let need_pack = type === "services" || type === "apps"
         let need_bin = type === "services"
         build(type, need_pack, need_bin)
     }
-    console.info("######## 打包上传")
+    console.info("######## zip")
     // 复制文件打包上传
     let serviceid = build_config.service.cyfs_bdt.serviceid;
     let servicename = build_config.service.cyfs_bdt.servicename;
@@ -118,9 +118,9 @@ async function main(){
     }
     let zip = await zipTask.startZIP("cyfs_bdt");
     let upload_zip = await request.upload(path.join(__dirname,"../service/cyfs_bdt","cyfs_bdt.zip"),"cyfs_bdt.zip");
-    console,info(`上传压缩包：${JSON.stringify(upload_zip).replace("192.168.200.175","192.168.100.205")}`)
+    console,info(`zip：${JSON.stringify(upload_zip).replace("192.168.200.175","192.168.100.205")}`)
     let upload_service = await updateService(serviceid,servicename,upload_zip.url, upload_zip.md5)
-    console,info(`更新服务：${JSON.stringify(upload_service)}`)
+    console,info(`update service resp：${JSON.stringify(upload_service)}`)
 }
 main().finally(()=>{
     process.exit(0);

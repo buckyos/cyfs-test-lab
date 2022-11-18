@@ -92,6 +92,7 @@ model bdt_client {
   peerInfo    String? @db.Text
   sn_resp_eps String? @db.Text
   online_time Float?  @db.Float
+  status      String? @db.VarChar(255)
 }
 
 model bdt_task {
@@ -131,17 +132,15 @@ model bdt_testcase {
 model cyfs_action {
   id            Int     @id @default(autoincrement())
   testcaseId    String? @db.VarChar(255)
-  task_id       String? @db.VarChar(255)
-  action_id     String? @db.VarChar(255)
+  taskId        String? @db.VarChar(255)
+  actionId      String? @db.VarChar(255)
   parent_action String? @db.VarChar(255)
   type          String? @db.VarChar(255)
   source        String? @db.VarChar(255)
   target        String? @db.VarChar(255)
-  input_data    String? @db.Text
   timeout       Int?
   data_size     Float?
   opt_time      Float?
-  cache_size    Float?
   result        String? @db.VarChar(255)
   expect        String? @db.VarChar(255)
   createTime    String? @db.VarChar(255)
@@ -159,34 +158,29 @@ model cyfs_peer_info {
 }
 
 model cyfs_task {
-  task_id      String  @id @db.VarChar(255)
-  testcaseId   String? @db.VarChar(255)
-  LN           String? @db.VarChar(255)
-  RN           String? @db.VarChar(255)
-  clients      String? @db.Text
-  action       String? @db.Text
-  child_action String? @db.Text
-  expect       String? @db.Text
-  result       String? @db.Text
-  state        String? @db.VarChar(255)
-  timeout      Int?
-  createTime   String? @db.VarChar(255)
+  id         Int     @id @default(autoincrement())
+  taskId     String  @db.VarChar(255)
+  testcaseId String? @db.VarChar(255)
+  source     String? @db.VarChar(255)
+  target     String? @db.VarChar(255)
+  expect     String? @db.Text
+  result     String? @db.Text
+  timeout    Int?
+  createTime String? @db.VarChar(255)
 }
 
 model cyfs_testcase {
   id           Int     @id @default(autoincrement())
   testcaseId   String? @db.VarChar(255)
-  TestcaseName String? @db.VarChar(255)
+  testcaseName String? @db.VarChar(255)
   remark       String? @db.VarChar(255)
-  agentList    String? @db.Text
-  taskList     String? @db.Text
   environment  String? @db.VarChar(255)
   taskMult     String? @db.VarChar(255)
+  total        Int?
   success      Int?
   failed       Int?
   result       String? @db.VarChar(255)
   errorList    String? @db.Text
-  test_date    String? @db.VarChar(255)
   createTime   String? @db.VarChar(255)
 }
 
@@ -325,4 +319,12 @@ model bdt_report {
   testcase_url     String? @db.VarChar(255)
   action_total_url String? @db.VarChar(255)
   date             String? @db.VarChar(255)
+}
+
+model cyfs_report {
+  id           Int     @id @default(autoincrement())
+  version      String? @db.VarChar(255)
+  zip_url      String? @db.VarChar(255)
+  testcase_url String? @db.VarChar(255)
+  date         String? @db.VarChar(255)
 }

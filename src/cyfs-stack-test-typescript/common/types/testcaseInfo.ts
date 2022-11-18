@@ -14,15 +14,15 @@ import {
     BodyContentDecoder,
     DescContent,
     DescContentDecoder
-} from '../../cyfs_node/cyfs_node';
+} from '../../cyfs_node';
 
-import { Err, Ok, BuckyResult, BuckyError, BuckyErrorCode } from '../../cyfs_node/cyfs_node';
-import { Option } from '../../cyfs_node/cyfs_node';
-import { ObjectId, ObjectIdDecoder } from '../../cyfs_node/cyfs_node';
+import { Err, Ok, BuckyResult, BuckyError, BuckyErrorCode } from '../../cyfs_node';
+import { Option } from '../../cyfs_node';
+import { ObjectId, ObjectIdDecoder } from '../../cyfs_node';
 import * as cyfs from  '../../cyfs_node';
-import { CoreObjectType } from '../../cyfs_node/cyfs_node';
-import { protos } from '../../cyfs_node/cyfs_node';
-import { ProtobufBodyContent, ProtobufBodyContentDecoder, ProtobufDescContent, ProtobufDescContentDecoder }from '../../cyfs_node/cyfs_node';
+import { CoreObjectType } from '../../cyfs_node';
+import { protos } from '../../cyfs_node';
+import { ProtobufBodyContent, ProtobufBodyContentDecoder, ProtobufDescContent, ProtobufDescContentDecoder }from '../../cyfs_node';
 import {
     CustumObjectType,
 } from './index'

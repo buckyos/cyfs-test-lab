@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as SysProcess from 'process';
 import * as ChildProcess from 'child_process';
 import * as os from 'os';
-import assert = require('assert'); 
+import assert  from 'assert'; 
 import * as cyfs from '../../cyfs';
 import JSBI from 'jsbi';
 

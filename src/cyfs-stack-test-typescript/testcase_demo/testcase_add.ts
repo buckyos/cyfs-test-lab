@@ -1,7 +1,7 @@
 import { TestcaseManger, testcaseInfo } from "../common/models/testcaseInfo";
 import { stack, stackInfo } from "../common/utils/stack";
 import { InputInfo, ResultInfo } from "../common/types/type";
-import * as cyfs from "../cyfs_node/cyfs_node"
+import * as cyfs from "../cyfs_node"
 
 
 let input_data: InputInfo = {

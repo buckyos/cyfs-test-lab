@@ -1,4 +1,4 @@
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 import mongoose from "mongoose";
 import {stack} from '../utils/stack';
 import {DEC_ID_BASE58} from "../../config/decApp"

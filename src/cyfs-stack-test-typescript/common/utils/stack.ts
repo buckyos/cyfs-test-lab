@@ -1,6 +1,6 @@
 
 
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 export let stack : cyfs.SharedCyfsStack;
 
 import child_process, { ChildProcess } from 'child_process';

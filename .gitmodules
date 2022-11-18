@@ -1,6 +1,6 @@
 [submodule "CYFS"]
 	path = CYFS
-	url = https://github.com/buckyos/CYFS.git
+	url = https://github.com/buckyos/cyfs.git
 [submodule "cyfs-ts-sdk"]
 	path = cyfs-ts-sdk
 	url = https://github.com/buckyos/cyfs-ts-sdk.git

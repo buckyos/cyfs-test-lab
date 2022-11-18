@@ -30,6 +30,8 @@
     "keypair": "^1.0.4",
     "node-echarts-canvas": "^1.2.6",
     "node-fetch": "^2.6.7",
-    "silly-datetime": "^0.1.2"
+    "silly-datetime": "^0.1.2",
+    "express": "^4.18.1",
+    "axios": "^0.18.0"
   }
 }

@@ -2,6 +2,7 @@ const exec = require('child_process').exec;
 const fs = require('fs');
 const { time } = require('console');
 const path = require('path')
+const process = require('process'); 
 
 function createFolder(dirpath, dirname) {
 	if (typeof dirname === "undefined") {
@@ -47,14 +48,15 @@ function run_cmd(cmd,file_path,type){
     console.log("cmdstr",cmdStr)
     if (type == "cmd"){
         console.log("cmd",cmdStr+cmd_path)
-        const child = exec(cmdStr+cmd_path)
-        child.stdout.on('data', data => {
-            console.log('stdout 输出:', data);
-        })
-        child.stderr.on('data', err => {
-            console.log('error 输出:', err);    
-        })
-    }
+        exec(cmdStr+cmd_path , (error, stdout, stderr) => {
+            if (error) {
+                console.error('error:', error);
+                return;
+              }
+              console.log('stdout: ' + stdout);
+              console.log('stderr: ' + stderr);
+            
+    })}
     else if(type=="local") {
         console.log("local_cmd",cmdStr)
         console.log("local_file_path",file_path)
@@ -67,12 +69,23 @@ function run_cmd(cmd,file_path,type){
           console.log('stderr: ' + stderr);
         })
     }
-  
+}
+
+async function change_sdk(){
+    const sdk = process.argv[3];
+    if (sdk == "cyfs-node") {
+        run_cmd("npm run init cyfs-node ","../../../src/cyfs-stack-test-typescript/","local")
+
+    }else if (sdk == "cyfs-sdk-nightly") {
+        run_cmd("npm run init cyfs-sdk-nightly","../../../src/cyfs-stack-test-typescript/","local")
+    }
+    else if (sdk == "cyfs-sdk") {
+        run_cmd("npm run init cyfs-sdk","../../../src/cyfs-stack-test-typescript/","local")
+    }
 }
 
 async function pack(){
-    //pack stack_test
-    run_cmd('tsc -p' ,"../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
+    run_cmd("tsc -p","../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
     await sleep(10000)
     //copy package.json to deploy
     copyFile(path.join(__dirname,"../../../src/cyfs-stack-test-typescript/package.json")
@@ -82,4 +95,19 @@ async function pack(){
     run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
 }
 
-pack()
+async function run_test(){
+    await sleep(10000)
+    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","cmd")
+}
+
+async function main(){
+const type = process.argv[2];
+if (type == "change_sdk"){
+    await change_sdk()
+}else if(type == "pack_test-typescript"){
+    await pack()
+    }
+else if(type == "run_test")
+    await run_test()
+}
+main()

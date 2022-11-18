@@ -1,6 +1,6 @@
-//import assert = require('assert'); 
+//import assert  from 'assert'; 
 import * as assert from "assert";
-import {cyfs} from '../../cyfs_node';
+import * as cyfs from '../../cyfs_node';
 import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo,AclManager, stack} from "../../common";
 import * as path from 'path';
 //初始化日志

@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "init": "node init.js",
     "build": "webpack --config webpack.config.js",
     "watch": "tsc -w",
     "compile": "tsc",
+    "ci_build": "tsc -p",
     "install-vue": "npm install --prefix qaTest",
     "start-vue": "npm start --prefix qaTest ",
     "start-http": "ts-node ./service_http/server.ts",
@@ -23,6 +25,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/bs58": "^4.0.1",
+    "@types/mocha": "^10.0.0",
     "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^4.13.0",
     "@typescript-eslint/parser": "^4.13.0",
@@ -44,15 +47,14 @@
     "@types/fs-extra": "^9.0.13",
     "@types/gravatar": "^1.8.3",
     "@types/jsonwebtoken": "^8.5.6",
-    "@types/mocha": "^9.1.1",
     "@types/mochawesome": "^6.2.1",
-    "@types/mongoose": "^5.11.97",
     "@types/mysql": "^2.15.21",
     "@types/node": "^14.14.22",
     "@types/react": "^18.0.6",
     "@types/request": "^2.48.8",
     "@types/sharp": "^0.30.2",
     "agentkeepalive": "^4.0.0",
+    "assert": "^2.0.0",
     "axios": "^0.18.0",
     "base58": "^2.0.1",
     "bcryptjs": "^2.4.3",
@@ -93,6 +95,7 @@
     "jsencrypt": "^3.0.0-rc.1",
     "jsoneditor": "^9.5.7",
     "jsonwebtoken": "^8.5.1",
+    "jszip": "^3.10.1",
     "jwt-decode": "^2.2.0",
     "keypair": "^1.0.4",
     "lightpick": "^1.6.2",
@@ -119,7 +122,7 @@
     "qrcode-terminal": "^0.12.0",
     "request": "^2.88.2",
     "secp256k1": "^4.0.3",
-    "sharp": "^0.30.4",
+    "sharp": "^0.30.7",
     "should": "^13.2.3",
     "silly-datetime": "^0.1.2",
     "simples": "^0.8.8",
@@ -138,6 +141,7 @@
     "websocket": "^1.0.33",
     "ws": "^8.8.1",
     "xlsx": "^0.14.1",
-    "xmlhttprequest": "^1.8.0"
+    "xmlhttprequest": "^1.8.0",
+    "semantic-release":"15.0.0"
   }
 }

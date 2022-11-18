@@ -22,6 +22,7 @@
     "@prisma/client": "^3.13.0",
     "@types/express": "^4.17.13",
     "bs58": "^4.0.1",
+    "compressing": "^1.6.2",
     "express": "^4.17.1",
     "fs-extra": "^9.0.1",
     "js-sha256": "^0.9.0",

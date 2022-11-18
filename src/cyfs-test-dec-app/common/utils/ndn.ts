@@ -1,13 +1,9 @@
-import assert = require('assert'); 
+import assert  from 'assert'; 
 import * as cyfs from '../../cyfs';
 import {RandomGenerator} from "./tools";
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from 'crypto';
-
-
-
-
 export class NDNTestManager {
     static async createRandomFile(pathDir:string,name:string,size:number) {
         if(!fs.pathExistsSync(pathDir)){
