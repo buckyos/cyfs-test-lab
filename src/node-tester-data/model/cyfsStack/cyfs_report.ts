@@ -6,6 +6,7 @@ export type CyfsReportModel = {
     version : string, 
     zip_url: string,
     testcase_url: string,
+    coverage_url : string,
     date: string,
   }
 
@@ -21,6 +22,7 @@ export class CyfsReport{
             version : report.version, 
             zip_url: report.zip_url,
             testcase_url: report.testcase_url,
+            coverage_url : report.coverage_url,
             date: report.date,
         }})
         return {err:0,log:`${report.version} add record success`}
