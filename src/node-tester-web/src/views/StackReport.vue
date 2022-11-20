@@ -3,8 +3,8 @@
     <el-table :data="StackReportList" border style="width: 100%">
       <el-table-column prop="id" label="id" width="300" align="center">
       </el-table-column>
-      <el-table-column prop="version" label="测试版本" width="400" align="center"></el-table-column>
-      <el-table-column prop="zip_url" label="测试报告压缩包" width="400" align="center">
+      <el-table-column prop="version" label="测试版本" width="300" align="center"></el-table-column>
+      <el-table-column prop="zip_url" label="测试报告压缩包" width="300" align="center">
         <template slot-scope="scope">
           <a :href="scope.row.zip_url" target="_blank" class="buttonText">点击下载测试报告</a>
         </template>
@@ -14,7 +14,12 @@
           <a :href="scope.row.testcase_url" target="_blank" class="buttonText">点击查看测试报告</a>
         </template>
       </el-table-column>
-      <el-table-column prop="date" label="统计日期" width="400" align="center"></el-table-column>
+       <el-table-column prop="coverage_url" label="测试覆盖率" width="300" align="center">
+        <template slot-scope="scope">
+          <a :href="scope.row.coverage_url" target="_blank" class="buttonText">点击查看覆盖率</a>
+        </template>
+      </el-table-column>
+      <el-table-column prop="date" label="统计日期" width="300" align="center"></el-table-column>
     </el-table>
   </div>
 </template>
