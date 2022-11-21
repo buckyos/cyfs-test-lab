@@ -1,8 +1,20 @@
-const exec = require('child_process').exec;
-const fs = require('fs');
-const { time } = require('console');
-const path = require('path')
-const process = require('process'); 
+var exec = require('child_process').exec;
+var fs = require('fs');
+var { time } = require('console');
+var path = require('path')
+var process = require('process');
+
+var doing = false;
+var commandQueue = []; 
+
+function exec_ex(command) {
+  doing = true;
+  console.log(command);
+ exec(command, {}, (err, stdout, stderr) => {
+    console.log(`stdout: ${stdout}\n stderr: ${stderr}`);
+    commandQueue.length > 0 ? exec(commandQueue.shift()) : doing = false;
+  });
+}
 
 function createFolder(dirpath, dirname) {
 	if (typeof dirname === "undefined") {
@@ -31,6 +43,7 @@ function copyFile(orgfilepath, desdirpath, desfilename) {
 			createFolder(desdirpath);
 			fs.copyFileSync(orgfilepath, desfilepath);
 		} else {
+            fs.copyFileSync(orgfilepath, desfilepath);
 			console.error(Date().toString() + "FolderAndFileOperation_copyFile: des file already existed." + " new path: " + desfilepath.toString());
 		}
 	} else {
@@ -41,73 +54,80 @@ function copyFile(orgfilepath, desdirpath, desfilename) {
 function sleep(ms) {
     return new Promise(resolve=>setTimeout(resolve, ms))
 }
-function run_cmd(cmd,file_path,type){
 
-    const cmd_path = path.join(__dirname,file_path)
-    const cmdStr = `${cmd} `
-    console.log("cmdstr",cmdStr)
-    if (type == "cmd"){
-        console.log("cmd",cmdStr+cmd_path)
-        exec(cmdStr+cmd_path , (error, stdout, stderr) => {
-            if (error) {
-                console.error('error:', error);
-                return;
-              }
-              console.log('stdout: ' + stdout);
-              console.log('stderr: ' + stderr);
-            
-    })}
-    else if(type=="local") {
-        console.log("local_cmd",cmdStr)
-        console.log("local_file_path",file_path)
-        exec(cmdStr, {cwd: path.join(__dirname,file_path)},(error, stdout, stderr) => {
-        if (error) {
-            console.error('error:', error);
-            return;
-          }
-          console.log('stdout: ' + stdout);
-          console.log('stderr: ' + stderr);
-        })
+function run_cmd(cmd,path,type) { 
+    let cmd_group = {"cmd":cmd,"path":path,"type":type}
+    commandQueue.push(cmd_group);
+    if (!doing) {
+            let cmd_g = commandQueue.shift()
+            console.log("cmd_g",cmd_g)
+            exec_cmd(cmd_g);
     }
 }
 
-async function change_sdk(){
-    const sdk = process.argv[3];
-    if (sdk == "cyfs-node") {
-        run_cmd("npm run init cyfs-node ","../../../src/cyfs-stack-test-typescript/","local")
+ function exec_cmd(cmd_g){
+    doing = true;
+    console.log("command: ", cmd_g.cmd + " " + cmd_g.path)   
+    //目标目录执行
+    if(cmd_g.type == "local"){
+        exec(cmd_g.cmd + " " + cmd_g.path, {},(error, stdout, stderr) => {
+        console.log(`stdout: ${stdout}\n stderr: ${stderr}`);
+        commandQueue.length > 0 ? exec_cmd(commandQueue.shift()) : doing = false;
+        })
+    }
+             
+}    
 
-    }else if (sdk == "cyfs-sdk-nightly") {
-        run_cmd("npm run init cyfs-sdk-nightly","../../../src/cyfs-stack-test-typescript/","local")
+async function change_sdk(){
+    var sdk = process.argv[3];
+    var file_path = "../../../src/cyfs-stack-test-typescript"
+    var cmd_path = path.join(__dirname,file_path)
+    run_cmd ("cd",cmd_path)
+    console.log("cmd_path",cmd_path)
+    if (sdk == "cyfs-sdk-nightly") {
+        run_cmd("npm run init cyfs-sdk-nightly", cmd_path , "local")
     }
     else if (sdk == "cyfs-sdk") {
-        run_cmd("npm run init cyfs-sdk","../../../src/cyfs-stack-test-typescript/","local")
+        run_cmd("npm run init cyfs-sdk", cmd_path , "local")
     }
+    else if (sdk == "source") {
+        run_cmd("npm run init source", cmd_path , "local")
+    }
+    else if (sdk == "cyfs-node") {
+        run_cmd("npm run init cyfs-node", cmd_path , "local")
+    }
+    
 }
 
 async function pack(){
-    run_cmd("tsc -p","../../../src/cyfs-stack-test-typescript/tsconfig.json","cmd")
-    await sleep(10000)
+    var tsconf_path = "../../../src/cyfs-stack-test-typescript/tsconfig.json"
+    var ts_pkconf_path = "../../../src/cyfs-stack-test-typescript/package.json"
+    var js_pkconf_path = "../../../deploy/cyfs-stack-test-typescript"
+    run_cmd("tsc -p", path.join(__dirname,tsconf_path), "local")
     //copy package.json to deploy
-    copyFile(path.join(__dirname,"../../../src/cyfs-stack-test-typescript/package.json")
-    ,path.join(__dirname,"../../../deploy/cyfs-stack-test-typescript")
+    copyFile(path.join(__dirname,ts_pkconf_path)
+    ,path.join(__dirname, js_pkconf_path)
     ,'package.json')
-    await sleep(10000)
-    run_cmd("npm i","../../../deploy/cyfs-stack-test-typescript","local")
+    run_cmd("npm i", path.join(__dirname,js_pkconf_path), "local")
 }
 
 async function run_test(){
-    await sleep(10000)
-    run_cmd("node","../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js","cmd")
+    var file_path = "../../../deploy/cyfs-stack-test-typescript/mocha_run_ci.js"
+    run_cmd("node", path.join(__dirname,file_path), "local")
 }
 
 async function main(){
-const type = process.argv[2];
-if (type == "change_sdk"){
-    await change_sdk()
-}else if(type == "pack_test-typescript"){
-    await pack()
+    var type = process.argv[2];
+    if (type == "change_sdk"){
+        await change_sdk()
     }
-else if(type == "run_test")
-    await run_test()
+    else if(type == "pack_test"){
+        await pack()
+    }
+    else if(type == "run_test")
+        await run_test()
 }
+
 main()
+
+module.exports = run_cmd
