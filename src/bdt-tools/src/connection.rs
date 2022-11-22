@@ -70,7 +70,7 @@ impl TestConnection {
             // 为了优化暂不完全随机全部数据
             // Self::random_data(send_buffer[0..].as_mut());
         }
-        let mut  send_time =  system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+        let send_time =  system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
 
         if size_need_to_send > 0 {
             return Err(BuckyError::new(BuckyErrorCode::ConnectionReset, "remote close"));
@@ -83,7 +83,7 @@ impl TestConnection {
 
         log::info!("send file finish, hash={:?}", &hash);
 
-        Ok((hash,send_time))
+        Ok((hash, send_time))
     }
     pub async fn send_object(&mut self, obj_type:u64,obj_path:PathBuf) -> Result<HashValue, BuckyError> {
         let mut file = std::fs::File::open(obj_path).unwrap();
@@ -155,9 +155,9 @@ impl TestConnection {
         let mut piece_recv: usize = 0;
         let mut file_size: u64 = 0;
         let mut total_recv: u64 = 0;
-        let mut recv_time = 0;
+        // let mut recv_time = 0;
         let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
-        loop {
+        let recv_time = loop {
             
             let len = self.stream.read(recv_buffer[piece_recv..].as_mut()).await.map_err(|e| {
                 log::error!("recv failed, e={}", &e);
@@ -187,11 +187,11 @@ impl TestConnection {
             if file_size > 0 {
                 if total_recv == file_size {
                     // 统计接收数据网络时间耗时
-                    recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                    let recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
                     let recv_hash = hash_data(&recv_buffer[0..piece_recv].as_ref());
                     hashs.push(recv_hash);
                     log::info!("=====================================recv finish");
-                    break;
+                    break recv_time;
                 }
                 if total_recv != file_size || piece_recv == PIECE_SIZE {
                     let recv_hash = hash_data(&recv_buffer[0..piece_recv].as_ref());
@@ -202,7 +202,7 @@ impl TestConnection {
             if piece_recv == PIECE_SIZE {
                 piece_recv = 0;
             }
-        }
+        };
 
         let mut total_hash = Vec::new();
         for h in hashs.iter() {
@@ -210,7 +210,7 @@ impl TestConnection {
         }
         let hash = hash_data(total_hash.as_slice());
         log::info!("recv file finish, hash={:?}", &hash);
-        Ok((file_size,recv_time,hash))
+        Ok((file_size, recv_time, hash))
     }
     pub async fn recv_object(&mut self, obj_path:PathBuf,file_name:Option<String>) -> Result<(u64, HashValue,String), BuckyError> {
         let mut hashs = Vec::<HashValue>::new();
@@ -318,7 +318,7 @@ impl TestConnection {
                     log::error!("decode dir object failed! , {}", e);
                     let file_obj_path =  obj_path.clone().join("dir_obj").join(hash.to_string().as_str());
                     let mut file = std::fs::File::create(file_obj_path).unwrap();
-                    file.write_all( &file_buffer[16..total_recv as usize]);
+                    let _ = file.write_all( &file_buffer[16..total_recv as usize]);
                     Err(e)
                 }
             }.unwrap();

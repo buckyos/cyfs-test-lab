@@ -78,16 +78,16 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             Some(v) => match v {
                 serde_json::Value::String(s) => {
                     if s.len() > 0 {
-                        let deviceId = match cyfs_base::DeviceId::from_str(&s){
+                        let device_id = match cyfs_base::DeviceId::from_str(&s){
                             Ok(d) => {
                                 Some(d)
                             },
                             Err(e)=>{
-                                let errInfo = format!("CreateLpcCommandReq ndn_event_target decode to Device Id failed,err= {}", e);
-                                return Err(BuckyError::new(BuckyErrorCode::OutOfLimit, errInfo.as_str()));
+                                let err_info = format!("CreateLpcCommandReq ndn_event_target decode to Device Id failed,err= {}", e);
+                                return Err(BuckyError::new(BuckyErrorCode::OutOfLimit, err_info.as_str()));
                             }
                         };
-                        deviceId
+                        device_id
                     } else {
                         None
                     }
@@ -559,8 +559,8 @@ impl TryFrom<LpcCommand> for ConnectListLpcCommandReq {
         match json.get("remote_desc_list"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for fileInfo in infos {
-                        let device = match fileInfo.get("device_path") {
+                    for file_info in infos {
+                        let device = match file_info.get("device_path") {
                             Some(v) => match v {
                                 serde_json::Value::String(s) => {
                                     let device_path =  PathBuf::from_str(s.as_str()).unwrap();
@@ -920,7 +920,7 @@ impl TryFrom<LpcCommand> for SetAnswerLpcCommandReq {
             },
             _ => 0,
         };
-        let buffer = value.as_buffer();
+        // let buffer = value.as_buffer();
         Ok(Self {
             seq: value.seq(),
             answer_size,
@@ -961,7 +961,7 @@ impl TryFrom<LpcCommand> for SetQuestionLpcCommandReq {
             },
             _ => 0,
         };
-        let buffer = value.as_buffer();
+        // let buffer = value.as_buffer();
         Ok(Self {
             seq: value.seq(),
             question_size,
@@ -1547,8 +1547,8 @@ impl TryFrom<LpcCommand> for InterestChunkListLpcCommandReq {
         match json.get("chunk_list"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for fileInfo in infos {
-                        let chunk_id = match fileInfo.get("chunk_id") {
+                    for file_info in infos {
+                        let chunk_id = match file_info.get("chunk_id") {
                             Some(v) => match v {
                                 serde_json::Value::String(s) => {
                                     let chunk_id = ChunkId::from_str(s).unwrap();
@@ -1660,7 +1660,7 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                     // DownloadTaskState::Finished(speed) => format!("Finished({})", speed),
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
+                    DownloadTaskState::Error(error_code)=>format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -1731,7 +1731,7 @@ impl TryFrom<GetSystemInfoLpcCommandResp> for LpcCommand {
 pub struct UploadSystemInfoLpcCommandReq {
     pub seq: u32,
     pub agent_name : String,
-    pub testcaseId : String,
+    pub test_case_id : String,
     pub interval : u64,
 }
 impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
@@ -1755,7 +1755,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
             },
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "name lost")),
         }?;
-        let testcaseId = match json.get("testcaseId") {
+        let test_case_id = match json.get("testcaseId") {
             Some(v) => match v {
                 serde_json::Value::String(s) => Ok(s.clone()),
                 _ => Err(BuckyError::new(
@@ -1768,7 +1768,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
         Ok(Self {
             seq: value.seq(),
             agent_name,
-            testcaseId,
+            test_case_id,
             interval,
         })
     }
@@ -2531,7 +2531,7 @@ impl TryFrom<LpcCommand> for CreateDownloadGroupCommandReq {
 }
 pub struct CreateDownloadGroupCommandResp {
     pub seq: u32,
-    pub result: BuckyResult<(String)>,
+    pub result: BuckyResult<String>,
 }
 
 impl TryFrom<CreateDownloadGroupCommandResp> for LpcCommand {
@@ -2539,7 +2539,7 @@ impl TryFrom<CreateDownloadGroupCommandResp> for LpcCommand {
     fn try_from(value: CreateDownloadGroupCommandResp) -> BuckyResult<Self> {
         let seq = value.seq;
         match value.result {
-            Ok((session)) => {
+            Ok(session) => {
                 let json = serde_json::json!({
                     "name": "create-download-group-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
@@ -2585,7 +2585,7 @@ impl TryFrom<LpcCommand> for CreateUploadGroupCommandReq {
 }
 pub struct CreateUploadGroupCommandResp {
     pub seq: u32,
-    pub result: BuckyResult<(String)>,
+    pub result: BuckyResult<String>,
 }
 
 impl TryFrom<CreateUploadGroupCommandResp> for LpcCommand {
@@ -2593,7 +2593,7 @@ impl TryFrom<CreateUploadGroupCommandResp> for LpcCommand {
     fn try_from(value: CreateUploadGroupCommandResp) -> BuckyResult<Self> {
         let seq = value.seq;
         match value.result {
-            Ok((session)) => {
+            Ok(session) => {
                 let json = serde_json::json!({
                     "name": "create-upload-group-resp",
                     "result": BuckyErrorCode::Ok.as_u16(),
@@ -2656,7 +2656,7 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                     //DownloadTaskState::Finished(speed) => format!("Finished({})",speed),
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
+                    DownloadTaskState::Error(error_code) => format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -2734,8 +2734,8 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
         match json.get("ranges"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for fileInfo in infos {
-                        let begin =match fileInfo.get("begin"){
+                    for file_info in infos {
+                        let begin =match file_info.get("begin"){
                             Some(v) => match v {
                                 serde_json::Value::Number(n) => {
                                     match n.as_u64() {
@@ -2757,7 +2757,7 @@ impl TryFrom<LpcCommand> for StartDownloadFileQWithRangesCommandReq {
                             },
                             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
                         }?;
-                        let end =match fileInfo.get("end"){
+                        let end = match file_info.get("end") {
                             Some(v) => match v {
                                 serde_json::Value::Number(n) => {
                                     match n.as_u64() {
@@ -3020,8 +3020,8 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
         match json.get("dir_map"){
             Some(v) => match v {
                 serde_json::Value::Array(infos) =>{
-                    for fileInfo in infos {
-                        let name =match fileInfo.get("name"){
+                    for file_info in infos {
+                        let name = match file_info.get("name"){
                             Some(v) => match v {
                                 serde_json::Value::String(s) =>  Ok(s.clone()),
                                 _ => Err(BuckyError::new(
@@ -3031,7 +3031,7 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
                             },
                             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
                         }?;
-                        let file_id =match fileInfo.get("file_id"){
+                        let file_id = match file_info.get("file_id"){
                             Some(v) => match v {
                                 serde_json::Value::String(s) => Ok(s.clone()),
                                 _ => Err(BuckyError::new(
@@ -3042,8 +3042,8 @@ impl TryFrom<LpcCommand> for StartDownloadDirCommandReq {
                             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "path lost")),
                         }?;
                         dir_map.push(FileInfo{
-                            name:name,
-                            file_id :file_id
+                            name,
+                            file_id
                         });
                         
                     }
@@ -3197,7 +3197,7 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                     //DownloadTaskState::Finished(speed) => format!("Finished({})", speed),
                     DownloadTaskState::Finished => format!("Finished"),
                     DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(errorCode)=>format!("Err({})", errorCode),
+                    DownloadTaskState::Error(error_code) => format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -3372,7 +3372,7 @@ pub struct SendDatagramLpcCommandReq {
     pub send_time : Option<u64>, // local time now +  send_time
     pub author_id : Option<cyfs_base::DeviceId>,
     pub plaintext : bool, // 是否加密 1加密 0不加密
-    pub reservedVPort : u64, // Channel = 1, Dht = 2, Debug = 3 。默认Debug
+    pub reserved_vport : u64, // Channel = 1, Dht = 2, Debug = 3 。默认Debug
 
 }
 impl TryFrom<LpcCommand> for SendDatagramLpcCommandReq {
@@ -3444,7 +3444,7 @@ impl TryFrom<LpcCommand> for SendDatagramLpcCommandReq {
             },
             _ => false,
         };
-        let reservedVPort = match json.get("reservedVPort") {
+        let reserved_vport = match json.get("reservedVPort") {
             Some(v) => match v {
                 serde_json::Value::Number(s) => s.as_u64().unwrap(),
                 _ => 3,
@@ -3460,7 +3460,7 @@ impl TryFrom<LpcCommand> for SendDatagramLpcCommandReq {
             send_time,
             author_id,
             plaintext,
-            reservedVPort
+            reserved_vport
         })
     }
 }

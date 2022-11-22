@@ -61,7 +61,7 @@ pub struct Headers {
 #[derive(Serialize, Deserialize)]
 pub struct BDTTestSystemInfo {
     pub name : String,
-    pub testcaseId : String,
+    pub test_case_id : String,
     pub cpu_usage: f32,
     pub total_memory: u64,
     pub used_memory: u64,
@@ -122,7 +122,7 @@ mod tests {
         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
         let sysInfo = BDTTestSystemInfo {
             name : "test".to_string(),
-            testcaseId : "ABC".to_string(),
+            test_case_id : "ABC".to_string(),
             cpu_usage: ret.cpu_usage,
             total_memory: ret.total_memory,
             used_memory: ret.used_memory,

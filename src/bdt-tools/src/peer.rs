@@ -24,22 +24,7 @@ use cyfs_util::cache::{
     NamedDataCache, 
     TrackerCache
 };
-//use cyfs_base::{self, *};
-use cyfs_bdt::{
-    Stack, 
-    StackGuard, 
-    StreamListenerGuard, 
-    BuildTunnelParams, 
-    TempSeqGenerator, 
-    StreamGuard,
-    DownloadTask, 
-    DownloadTaskState, 
-    StackOpenParams, 
-    local_chunk_store::LocalChunkListWriter,
-    mem_tracker::MemTracker,
-    mem_chunk_store::MemChunkStore,
-    ChunkListDesc
-};
+
 use crate::lib::{LpcCommand, Lpc};
 use crate::{
     command::{*}, 
@@ -51,7 +36,7 @@ use crate::{
 use cyfs_util::SYSTEM_INFO_MANAGER;
 
 use walkdir::WalkDir;
-use hyper::{body::Buf};
+// use hyper::{body::Buf};
 use hyper::{Body};
 
 
@@ -181,7 +166,8 @@ pub fn task_id_gen(s: String) -> String {
 //
 struct LazyComponents {
     acceptor: StreamListenerGuard,
-    stack: StackGuard,
+    stack: StackGuard, 
+    chunk_store: TrackedChunkStore
 }
 
 
@@ -193,8 +179,8 @@ struct PeerImpl {
     temp_dir: PathBuf,
     tasks: Arc<Mutex<TaskMap>>,
     // dir_tasks: Arc<Mutex<DirTaskMap>>,
-    fristQA_answer : Mutex<u64>,
-    fristQA_question : Mutex<u64>
+    frist_answer : Mutex<u64>,
+    frist_question : Mutex<u64>
 }
 #[derive(Clone)]
 pub struct Peer(Arc<PeerImpl>);
@@ -211,8 +197,8 @@ impl Peer {
             temp_dir: PathBuf::from_str(temp_dir.as_str()).unwrap(),
             tasks: Arc::new(Mutex::new(task_map)),
             // dir_tasks : Arc::new(Mutex::new(dir_task_map)),
-            fristQA_answer :Mutex::new(0),
-            fristQA_question :Mutex::new(0),
+            frist_answer: Mutex::new(0),
+            frist_question: Mutex::new(0),
         }))
     }
 
@@ -389,39 +375,35 @@ impl Peer {
                     // 构造FastQA 请求数据
                     // FastQA 最大answer为 25KB
                     let begin_set = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut calculate_time = 0;
                     let mut answer = [0;25*1024];
                     let mut question = Vec::new();
-                    if(c.question){
+                    if c.question {
                         let question_size = peer.get_question() as usize;
                         question.resize(question_size, 0u8);
                         Self::random_data(question[0..question_size].as_mut());
                     }
                     let send_hash = hash_data(&question);
-                    calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set;
+                    let mut calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set;
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                     //(3)发起连接
                     match stack.stream_manager().connect(0, question, param).await {
                         Ok(mut stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                            let mut len = 0;
+                            // let mut len = 0;
                             // 接收answer
                             let mut recv_hash = HashValue::default();
                             
                             // 读取answer 数据
                             if c.accept_answer {
-                                len = match stream.read(&mut answer).await{
+                                match stream.read(&mut answer).await{
                                     Ok(len) => {
                                         let begin_read = system_time_to_bucky_time(&std::time::SystemTime::now());
                                         recv_hash = hash_data(&answer[..len]);
                                         calculate_time = calculate_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_read;
                                         log::info!("Read answer success,len={} content={:?}",len,recv_hash.clone());
-                                        len
                                     },
                                     Err(_) => {
                                         log::error!("Read answer faild");
-                                        let len : usize = 0;
-                                        len
                                     }
                                 };
                             }
@@ -778,11 +760,9 @@ impl Peer {
                     };
                     //(3) 发起连接
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut calculate_time = 0;
                     match stack.stream_manager().connect(0, Vec::new(), param).await {
-                        Ok(mut stream) => {
+                        Ok(stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                            let mut len = 0;
                             // 加入Stream连接池
                             let conn = peer.add_stream(stream);
                             // (4) 发送request 请求给RN 
@@ -790,10 +770,10 @@ impl Peer {
                             match conn.clone().send_file(c.question_size).await{
                                 Ok((send_hash,send_time))=>{
                                     log::info!("send stream data success send_hash = {},send_time = {}",send_hash.clone(),send_time.clone());
-                                    calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send - send_time;
+                                    let mut calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send - send_time;
                                     let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
                                     match conn.clone().recv_file().await {
-                                        Ok((file_size,recv_time,recv_hash))=>{
+                                        Ok((_file_size, recv_time, recv_hash))=>{
                                             calculate_time = calculate_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv - recv_time;
                                             let total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) -begin_time;
                                             log::info!("recv stream data success recv_hash={},recv_time = {}",recv_hash.clone(),recv_time.clone());
@@ -884,7 +864,7 @@ impl Peer {
         let seq = c.seq();
         let peer_name = c.get_unique_id();
         let peer = self.clone();
-        let mut lpc = lpc.clone();
+        let lpc = lpc.clone();
         let resp = match ListenerStreamLpcCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to ListenerStreamLpcCommandReq failed, e={}", &e);
@@ -933,7 +913,7 @@ impl Peer {
                                                     log::info!("confirm succ, name={}，confirm_time = {}", conn.get_name(),confirm_time);
                                                     let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
                                                     match conn.clone().recv_file().await{
-                                                        Ok((file_size,recv_time,recv_hash))=>{
+                                                        Ok((_file_size, recv_time, recv_hash))=>{
                                                             log::info!("recv stream succ, name={}，recv_time = {},recv_hash = {}", conn.get_name(),recv_time,recv_hash);
                                                             let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
                                                             let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
@@ -1330,10 +1310,10 @@ impl Peer {
                         },
                         Some(conn) => {
                             let mut conn = conn;
-                            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                            let connState = format!("{}", conn.get_stream().state());
-                            log::info!("check StreamState = {}", connState);
-                            if connState == "# StreamState::Closing" || connState == "StreamState::Closed" {
+                            // let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                            let conn_state = format!("{}", conn.get_stream().state());
+                            log::info!("check StreamState = {}", conn_state);
+                            if conn_state == "# StreamState::Closing" || conn_state == "StreamState::Closed" {
                                 SendLpcCommandResp {
                                     seq, 
                                     result: 1,
@@ -1425,7 +1405,7 @@ impl Peer {
                                         hash: HashValue::default()
                                     }
                                 },
-                                Ok((file_size,recv_time,hash)) => {
+                                Ok((file_size, _recv_time, hash)) => {
                                     log::info!("recv succ, name={}", &c.stream_name);
                                     RecvLpcCommandResp {
                                         seq, 
@@ -1623,7 +1603,7 @@ impl Peer {
                     let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
                     let create_time = c.create_time;
                     let send_time = c.send_time;
-                    let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reservedVPort as u16){
+                    let resp = match datagram.send_to(&c.content, &mut options, &c.remote_id, c.reserved_vport as u16){
                         Ok(_) =>{
                             log::info!("Send Datagram succcess ");
                             SendDatagramLpcCommandResp {
@@ -1681,10 +1661,10 @@ impl Peer {
                         let datagram = stack.datagram_manager().bind(0).map_err(|err| format!("deamon bind datagram tunnel failed for {}\r\n", err)).unwrap();
                         loop {
                             let datagrams  = datagram.recv_v().await.unwrap();
-                            for datagramData in datagrams {
-                                let sequence = datagramData.options.sequence.unwrap().value() as u64;
-                                let remote_id = Some(datagramData.source.remote);
-                                let content = datagramData.data;
+                            for datagram_data in datagrams {
+                                let sequence = datagram_data.options.sequence.unwrap().value() as u64;
+                                let remote_id = Some(datagram_data.source.remote);
+                                let content = datagram_data.data;
                                 let hash = hash_data(&content);
                                 let notify = RecvDatagramLpcCommandResp {
                                     seq, 
@@ -1726,9 +1706,9 @@ impl Peer {
     pub fn on_calculate_chunk(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on calculate-chunk, c={:?}", &c);
         let seq = c.seq();
-        let peer = self.clone();
+        // let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CalculateChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CalculateChunkLpcCommandReq failed, e={}", &e);
@@ -1749,7 +1729,7 @@ impl Peer {
                         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                         let result =  match ChunkId::calculate(&buf).await {
                             Ok(chunk_id) => {
-                                let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
+                                // let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                                 // let path = dir.join(chunk_id.to_string().as_str());
                                 log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 CalculateChunkLpcCommandResp {
@@ -1797,6 +1777,8 @@ impl Peer {
         let peer = self.clone();
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match SetChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetChunkLpcCommandReq failed, e={}", &e);
@@ -1819,18 +1801,12 @@ impl Peer {
                     let path = dir.join(c.chunk_id.clone().to_string().as_str());
                     log::info!("track_chunk_in_path, path={}", path.display());
                     let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    match cyfs_bdt::download::local_chunk_writer(&*stack, &c.chunk_id, path).await {
+                    match chunk_store.chunk_writer(&c.chunk_id, path).await {
                         Ok(writer) => {
                             match writer.write(async_std::io::Cursor::new(buf)).await {
                                 Ok(_) => {
                                     let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
-                                    let request = cyfs_util::UpdateChunkStateRequest {
-                                        chunk_id: c.chunk_id.clone(),
-                                        current_state : None,
-                                        state: ChunkState::Ready,
-        
-                                    };
-                                    let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                                   
                                     let chunk_exists = stack.ndn().chunk_manager().store().exists( &c.chunk_id).await;
                                     log::info!("chunk is exists {}",chunk_exists);
                                     
@@ -1905,6 +1881,8 @@ impl Peer {
         let peer = self.clone();
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match TrackChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to TrackChunkLpcCommandReq failed, e={}", &e);
@@ -1931,18 +1909,12 @@ impl Peer {
                                 log::info!("calculate chunk ,len = {}",chunk_id.len());
                                 let calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time) ) as u32;
                                 let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                match cyfs_bdt::download::local_chunk_writer(&*stack, &chunk_id, path).await {
+                                match chunk_store.chunk_writer(&chunk_id, path).await {
                                     Ok(writer) => {
                                         match writer.write(async_std::io::Cursor::new(buf)).await {
                                             Ok(_) => {
                                                 let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
-                                                let request = cyfs_util::UpdateChunkStateRequest {
-                                                    chunk_id: chunk_id.clone(),
-                                                    current_state : None,
-                                                    state: ChunkState::Ready,
-                    
-                                                };
-                                                let _ =  stack.ndn().chunk_manager().ndc().update_chunk_state(&request);
+                                               
                                                 let chunk_exists = stack.ndn().chunk_manager().store().exists( &chunk_id).await;
                                                 log::info!("chunk is exists {}",chunk_exists);
                                                 TrackChunkLpcCommandResp {
@@ -2022,6 +1994,8 @@ impl Peer {
         let peer = self.clone();
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match InterestChunkLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -2038,14 +2012,14 @@ impl Peer {
                     let dir = cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str());
                     let path = dir.join(c.chunk_id.to_string().as_str());
 
-                    match cyfs_bdt::download::download_chunk(
+                    match download_chunk(
                         &stack, 
                         c.chunk_id.clone(), 
                         None,
-                        cyfs_bdt::download::SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()]), 
+                        SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()]), 
                     ).await {
-                        Ok((task,reader)) => {
-                            match cyfs_bdt::download::local_chunk_writer(&*stack, &c.chunk_id, path).await {
+                        Ok((_, reader)) => {
+                            match chunk_store.chunk_writer(&c.chunk_id, path).await {
                                 Ok(writer) => {
                                     match writer.write(reader).await {
                                         Ok(_) => {
@@ -2098,6 +2072,8 @@ impl Peer {
         let peer = self.clone();
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+            
             let resp = match InterestChunkListLpcCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to InterestChunkListLpcCommandReq failed, e={}", &e);
@@ -2118,19 +2094,17 @@ impl Peer {
                   
                    
                     
-                    let (task,reader) = cyfs_bdt::download::download_chunk_list(&stack, 
+                    let (task,reader) = download_chunk_list(&stack, 
                         c.task_name.clone(),
                         &c.chunk_list.clone(),
                         None, 
-                        cyfs_bdt::download::SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()])
+                        SingleDownloadContext::desc_streams("".to_string(), vec![c.remote.desc().clone()])
                     ).await.unwrap();
 
                     {
-                        let writer = LocalChunkListWriter::new(
-                            dir.clone(), 
-                            &ChunkListDesc::from_chunks(&c.chunk_list.clone()), 
-                            stack.ndn().chunk_manager().ndc(), 
-                            stack.ndn().chunk_manager().tracker());
+                        let writer = chunk_store.chunk_list_writer(
+                            &ChunkListDesc::from_chunks(&c.chunk_list), 
+                            dir.clone()).await.unwrap();
                         //let reader = task.reader(0);
                         async_std::task::spawn(async move {
                             let _ = writer.write(reader).await;
@@ -2291,6 +2265,8 @@ impl Peer {
 
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match CreateFileSessionCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CreateFileSessionCommandReq failed, e={}", &e);
@@ -2330,21 +2306,21 @@ impl Peer {
                             hash,
                             ChunkList::ChunkInList(chunkids)
                         ).no_create_time().build();
-                        cyfs_bdt::download::track_file_in_path(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                        chunk_store.track_file_in_path(file.clone(), c.path.clone()).await.unwrap();
                         let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                         log::info!("sender: task_id {}", &task_id);
                         Ok((task_id, file))
                     } else {
                         if let Some(file) = c.file.as_ref() {
-                            let (task,reader) = cyfs_bdt::download::download_file(&stack, 
+                            let (task,reader) = download_file(&stack, 
                                 file.clone(),
                                 None, 
-                                cyfs_bdt::download::SingleDownloadContext::id_streams(&*stack, "".to_string(), vec![c.default_hub]).await.unwrap(), 
+                                SingleDownloadContext::id_streams(&*stack, "".to_string(), vec![c.default_hub]).await.unwrap(), 
                             ).await.unwrap();
 
 
                             {
-                                let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                                let writer = chunk_store.file_writer(file, c.path.clone()).await.unwrap();
                                 //let reader = task.reader();
                                 async_std::task::spawn(async move {
                                     let _ = writer.write(reader).await.unwrap();
@@ -2455,12 +2431,13 @@ impl Peer {
     pub fn is_lazy_component_exists(&self, file_name: &str) -> bool {
         self.0.lazy_components.lock().unwrap().contains_key(file_name)
     }
-    pub fn add_lazy_component(&mut self, peer_name: &String, stack:StackGuard ,acceptor:StreamListenerGuard) -> BuckyResult<()> {
+    pub fn add_lazy_component(&mut self, peer_name: &String, stack: StackGuard, acceptor:StreamListenerGuard, chunk_store: TrackedChunkStore) -> BuckyResult<()> {
         match self.0.lazy_components.lock().unwrap().entry(peer_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
                 let info = LazyComponents { 
-                    stack: stack,
-                    acceptor : acceptor
+                    stack,
+                    acceptor, 
+                    chunk_store
                 };
                 v.insert(info);
                 Ok(())
@@ -2491,10 +2468,13 @@ impl Peer {
     // fn get_lazy_component(&self,peer_name:&String) -> Option<LazyComponents>{
     //     Some(self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().clone())
     // }
-    fn get_stack(&self,peer_name : &String) -> Option<StackGuard>{
-       Some(self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().stack.clone())
+    fn get_stack(&self, peer_name: &String) -> Option<StackGuard>{
+       self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.stack.clone())
     }
 
+    fn get_chunk_store(&self, peer_name: &String) -> Option<TrackedChunkStore> {
+        self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.chunk_store.clone())
+    }
     
     pub fn random_data(buffer: &mut [u8]) {
         let len = buffer.len();
@@ -2512,18 +2492,18 @@ impl Peer {
         }
     }
     fn set_answer(&self,answer_size: u64){
-        let mut answer_self = self.0.fristQA_answer.lock().unwrap();
+        let mut answer_self = self.0.frist_answer.lock().unwrap();
         *answer_self = answer_size;
     }
     fn get_answer(&self)-> u64{
-        self.0.fristQA_answer.lock().unwrap().clone()
+        self.0.frist_answer.lock().unwrap().clone()
     }
     fn set_question(&self,question_size:u64){
-        let mut question_self = self.0.fristQA_question.lock().unwrap();
+        let mut question_self = self.0.frist_question.lock().unwrap();
         *question_self = question_size;
     }
     fn get_question(&self)-> u64{
-        self.0.fristQA_question.lock().unwrap().clone()
+        self.0.frist_question.lock().unwrap().clone()
     }
     fn get_acceptor(&self ,peer_name: &String) -> StreamListenerGuard {
         self.0.lazy_components.lock().unwrap().get(peer_name).map(|v| v.clone()).unwrap().acceptor.clone()
@@ -2793,19 +2773,19 @@ impl Peer {
         };
 
         let mut params = StackOpenParams::new(local.desc().device_id().to_string().as_str());
-        match c.chunk_cache.as_str() {
+        let chunk_store = match c.chunk_cache.as_str() {
             "file" => {
                 // use default
+                let tracker = MemTracker::new();
+                TrackedChunkStore::new(NamedDataCache::clone(&tracker), TrackerCache::clone(&tracker))
             },
             "mem" => {
                 let tracker = MemTracker::new();
-                let store = MemChunkStore::new(NamedDataCache::clone(&tracker).as_ref());
-                params.chunk_store = Some(store.clone_as_reader());
-                params.ndc = Some(NamedDataCache::clone(&tracker));
-                params.tracker = Some(TrackerCache::clone(&tracker));
+                TrackedChunkStore::new(NamedDataCache::clone(&tracker), TrackerCache::clone(&tracker))
             }, 
             _ => unreachable!()
-        }
+        };
+        params.chunk_store = Some(chunk_store.clone_as_reader());
         params.known_device = Some(c.known_peers);
         params.known_sn = Some(sns);
         params.active_pn = Some(active_pn);
@@ -2848,7 +2828,8 @@ impl Peer {
             hash_map::Entry::Vacant(v) => {
                 let info = LazyComponents { 
                     stack: stack,
-                    acceptor : acceptor
+                    acceptor : acceptor, 
+                    chunk_store
                 };
                 v.insert(info);
                 Ok(())
@@ -2868,7 +2849,7 @@ impl Peer {
     pub fn on_calculate_file(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on calculate_file, c={:?}", &c);
         let seq = c.seq();
-        let peer = self.clone();
+        // let peer = self.clone();
 
         async_std::task::spawn(async move {
             // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
@@ -2944,7 +2925,9 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match SetFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to SetFileCommandReq failed, e={}", &e);
@@ -2959,7 +2942,7 @@ impl Peer {
                     let ret = if c.path.as_path().exists() {
                         let file = c.file.unwrap();
                         let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                        cyfs_bdt::download::track_file_in_path(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                        chunk_store.track_file_in_path(file.clone(), c.path.clone()).await.unwrap();
                         set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
                         //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                         let file_id = file.clone().desc().calculate_id();
@@ -2989,7 +2972,9 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match StartSendFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendFileCommandReq failed, e={}", &e);
@@ -3037,7 +3022,7 @@ impl Peer {
                         ).no_create_time().build();
                         calculate_time = ((system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate_time) ) as u32;
                         let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                        cyfs_bdt::download::track_file_in_path(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                        chunk_store.track_file_in_path(file.clone(), c.path.clone()).await.unwrap();
                         set_time = (system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_set_time) as u32;
                         //let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                         let file_id = file.clone().desc().calculate_id();
@@ -3085,13 +3070,13 @@ impl Peer {
                         //     },
                         //     None => None
                         // };          
-                        let task = cyfs_bdt::download::create_download_group(&stack, c.path.clone()).unwrap();
+                        let task = stack.ndn().root_task().download().create_sub_group(c.path.clone()).unwrap();
                         let task_id = task_id_gen(c.path);
                         log::info!("recver: task_id {}", &task_id);
                         let mut tasks = peer.0.tasks.lock().unwrap();
                         match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
                             Ok(_) => {
-                                Ok((task_id))
+                                Ok(task_id)
                             },
                             Err(e) => {
                                 Err(e)
@@ -3113,9 +3098,9 @@ impl Peer {
     pub fn on_create_upload_group(&self, c: LpcCommand, lpc: Lpc){
         log::info!("on create_download_group, c={:?}", &c);
         let seq = c.seq();
-        let peer = self.clone();
+        // let peer = self.clone();
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match CreateUploadGroupCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to CreateDownloadGroupCommandReq failed, e={}", &e);
@@ -3127,10 +3112,10 @@ impl Peer {
                 Ok(c) => {
                     let ret = {         
               
-                        let task = cyfs_bdt::download::create_upload_group(&stack, c.path.clone()).unwrap();
+                        // let task = stack.ndn().root_task().upload().create_sub_group(c.path.clone()).unwrap();
                         let task_id = task_id_gen(c.path);
                         log::info!("recver: task_id {}", &task_id);
-                        let mut tasks = peer.0.tasks.lock().unwrap();
+                        // let mut tasks = peer.0.tasks.lock().unwrap();
                         Ok(task_id)
                         // match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
                         //     Ok(_) => {
@@ -3160,6 +3145,8 @@ impl Peer {
 
         async_std::task::spawn(async move {
             let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match StartDownloadFileCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartDownloadFileCommandReq failed, e={}", &e);
@@ -3172,14 +3159,14 @@ impl Peer {
                     // 缓存对端设置Device
                     let ret = {                   
                         if let Some(file) = c.file.as_ref() {
-                            let (task,reader) = cyfs_bdt::download::download_file(&stack, 
+                            let (task,reader) = download_file(&stack, 
                                 file.clone(),
                                 c.group, 
-                                cyfs_bdt::download::SingleDownloadContext::id_streams(&stack, "".to_string(), c.remotes).await.unwrap() , 
+                                SingleDownloadContext::id_streams(&stack, "".to_string(), c.remotes).await.unwrap() , 
                             ).await.unwrap();
                             
                             {
-                                let writer = cyfs_bdt::download::local_file_writer(&*stack, file.clone(), c.path.clone()).await.unwrap();
+                                let writer = chunk_store.file_writer(file, c.path.clone()).await.unwrap();
                                 //let reader = task.reader();
                                 async_std::task::spawn(async move {
                                     let _ = writer.write(reader).await.unwrap();
@@ -3350,7 +3337,9 @@ impl Peer {
         let peer = self.clone();
 
         async_std::task::spawn(async move {
-            let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
+            let chunk_store = peer.get_chunk_store(&c.get_unique_id()).unwrap();
+
             let resp = match StartSendDirCommandReq::try_from(c) {
                 Err(e) => {
                     log::error!("convert command to StartSendDirCommandReq failed, e={}", &e);
@@ -3427,7 +3416,7 @@ impl Peer {
                                             name : file_path.file_name().unwrap().to_str().unwrap().to_string(),
                                             file_id : file_id.clone().to_string()
                                         });
-                                        let _ = cyfs_bdt::download::track_file_in_path(&*stack, file.clone(),file_path.clone()).await.unwrap();
+                                        let _ = chunk_store.track_file_in_path(file.clone(),file_path.clone()).await.unwrap();
                                         let task_id = task_id_gen(file_path.clone().to_str().unwrap().to_string());
                                         log::info!("sender: task_id {}", &task_id);
                                     }
@@ -3643,7 +3632,7 @@ impl Peer {
     pub fn on_get_system_info(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on get_system_info, c={:?}", &c);
         let seq = c.seq();
-        let peer = self.clone();
+        // let peer = self.clone();
         async_std::task::spawn(async move {
             // let stack = peer.get_stack(&c.get_unique_id()).unwrap();
             let resp = match GetSystemInfoLpcCommandReq::try_from(c) {
@@ -3688,8 +3677,8 @@ impl Peer {
     pub fn on_upload_system_info(&self, c: LpcCommand, lpc: Lpc) {
         log::info!("on get_system_info, c={:?}", &c);
         let seq = c.seq();
-        let peer = self.clone();
-        let peer_name = c.get_unique_id();
+        // let peer = self.clone();
+        // let peer_name = c.get_unique_id();
         let resp = match UploadSystemInfoLpcCommandReq::try_from(c) {
             Err(e) => {
                 log::error!("convert command to InterestChunkLpcCommandReq failed, e={}", &e);
@@ -3704,9 +3693,9 @@ impl Peer {
                     let url = "http://192.168.200.175:5000/api/base/system_info/report";
                     loop {
                         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
-                        let sysInfo = BDTTestSystemInfo {
+                        let sys_info = BDTTestSystemInfo {
                             name : c.agent_name.clone(),
-                            testcaseId : c.testcaseId.clone(),
+                            test_case_id : c.test_case_id.clone(),
                             cpu_usage: ret.cpu_usage,
                             total_memory: ret.total_memory,
                             used_memory: ret.used_memory,
@@ -3717,7 +3706,7 @@ impl Peer {
                             hdd_disk_total: ret.hdd_disk_total,
                             hdd_disk_avail: ret.hdd_disk_avail,
                         };
-                        let json_body = serde_json::to_vec(&sysInfo).unwrap();
+                        let json_body = serde_json::to_vec(&sys_info).unwrap();
                         //log::info!("start upload_system_info to server {:#?} ",json_body.clone());
                         let get_json = request_json_post(url.clone(),Body::from(json_body)).await.unwrap();
                         log::info!("report bdt agent perf result = {:#?}", get_json);

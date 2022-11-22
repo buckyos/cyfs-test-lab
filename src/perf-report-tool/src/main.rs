@@ -56,7 +56,7 @@ async fn main() {
 
     let matches = app.get_matches();
     let name = matches.value_of("name").map(str::to_string).unwrap();
-    let testcaseId = matches.value_of("testcaseId").map(str::to_string).unwrap();
+    let test_case_id = matches.value_of("testcaseId").map(str::to_string).unwrap();
     let interval = matches.value_of("interval").unwrap().parse::<u64>().unwrap();
 
     let url = "http://192.168.100.205:5000/api/base/system_info/report";
@@ -64,7 +64,7 @@ async fn main() {
         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
         let sysInfo = BDTTestSystemInfo {
             name : name.clone(),
-            testcaseId : testcaseId.clone(),
+            test_case_id : test_case_id.clone(),
             cpu_usage: ret.cpu_usage,
             total_memory: ret.total_memory,
             used_memory: ret.used_memory,
