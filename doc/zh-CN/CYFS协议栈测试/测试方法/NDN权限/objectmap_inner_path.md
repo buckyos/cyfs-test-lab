@@ -1,13 +1,10 @@
 
-## NDN测试用例设计
+## NDN ACL测试用例设计
 
 ### 相关接口
 * SharedCyfsStack::NDNRequestor::put_data
-* SharedCyfsStack::NDNRequestor::prepare_download_data
-* SharedCyfsStack::NDNRequestor::get_data
-* SharedCyfsStack::NDNRequestor::delete_data
-* SharedCyfsStack::NDNRequestor::encode_query_file_request
-* SharedCyfsStack::NDNRequestor::query_file
+* SharedCyfsStack::TransRequestor::publish_file
+* SharedCyfsStack::UtilRequestor::build_dir_from_object_map
 
 ### 测试点
 #### 环境类型
@@ -229,4 +226,4 @@
 
 * PublishFile,common无dec_id，配置req_path与rmeta后，验证当前设备dec_id权限
 * PublishDir,common无dec_id，配置req_path与rmeta后，验证当前设备dec_id权限
-* util. build_dir_from_object_map,配置req_path与rmeta后，验证当前设备dec_id权限
+* build_dir_from_object_map,配置req_path与rmeta后，验证当前设备dec_id权限
