@@ -882,116 +882,121 @@ impl Peer {
                         // 获取连接请求
                         let mut incoming = acceptor.incoming();
                         loop {
-                            //let pre_stream = incoming.next().await.unwrap().unwrap();
+                            let answer_size = c.answer_size;
+                            let peer = peer.clone();
+                            let mut lpc = lpc.clone();
                             let _ = match incoming.next().await{
                                 Some(stream)=>{
-                                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                    let resp = match stream{
-                                        Ok(pre_stream)=>{
-                                            let question = pre_stream.question;
-                                            log::debug!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
-                                            match pre_stream.stream.confirm(&Vec::new()).await{
-                                                Err(e)=>{
-                                                    log::error!("confirm err, err={}",e);
-                                                    ListenerStreamEventLpcCommandResp {
-                                                        seq,
-                                                        result: e.code().as_u16(),
-                                                        msg : e.msg().to_string(),
-                                                        stream_name: String::new(),
-                                                        confirm_time: 0,
-                                                        send_time : 0,
-                                                        recv_time : 0,
-                                                        send_total_time : 0,
-                                                        recv_total_time : 0,
-                                                        send_hash : HashValue::default(),
-                                                        recv_hash : HashValue::default(),
-                                                    }
-                                                },
-                                                Ok(_)=>{
-                                                    let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                                                    let conn = peer.add_stream(pre_stream.stream);
-                                                    log::info!("confirm succ, name={}，confirm_time = {}", conn.get_name(),confirm_time);
-                                                    let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                                    match conn.clone().recv_file().await{
-                                                        Ok((_file_size, recv_time, recv_hash))=>{
-                                                            log::info!("recv stream succ, name={}，recv_time = {},recv_hash = {}", conn.get_name(),recv_time,recv_hash);
-                                                            let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
-                                                            let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                                            match conn.clone().send_file(c.answer_size).await {
-                                                                Ok((send_hash,send_time))=>{
-                                                                    log::info!("send stream succ, name={},send_time = {},send_hash = {}", conn.get_name(),send_time,send_hash);
-                                                                    let send_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
-                                                                    ListenerStreamEventLpcCommandResp {
-                                                                        seq,
-                                                                        result: 0,
-                                                                        msg : "success".to_string(),
-                                                                        stream_name:conn.get_name().clone(),
-                                                                        confirm_time,
-                                                                        send_time,
-                                                                        recv_time,
-                                                                        send_total_time,
-                                                                        recv_total_time,
-                                                                        send_hash,
-                                                                        recv_hash,
-                                                                    }
-                                                                },
-                                                                Err(e)=>{
-                                                                    log::error!("send stream err ={} name={}" ,e,conn.get_name());
-                                                                    ListenerStreamEventLpcCommandResp {
-                                                                        seq,
-                                                                        result: e.code().as_u16(),
-                                                                        msg : e.msg().to_string(),
-                                                                        stream_name: conn.get_name().clone(),
-                                                                        confirm_time: 0,
-                                                                        send_time : 0,
-                                                                        recv_time,
-                                                                        send_total_time : 0,
-                                                                        recv_total_time,
-                                                                        send_hash : HashValue::default(),
-                                                                        recv_hash,
+                                    task::spawn(async move {
+                                        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                        let resp = match stream{
+                                            Ok(pre_stream)=>{
+                                                let question = pre_stream.question;
+                                                log::debug!("accept question succ, name={}",String::from_utf8(question.clone()).unwrap());
+                                                match pre_stream.stream.confirm(&Vec::new()).await{
+                                                    Err(e)=>{
+                                                        log::error!("confirm err, err={}",e);
+                                                        ListenerStreamEventLpcCommandResp {
+                                                            seq,
+                                                            result: e.code().as_u16(),
+                                                            msg : e.msg().to_string(),
+                                                            stream_name: String::new(),
+                                                            confirm_time: 0,
+                                                            send_time : 0,
+                                                            recv_time : 0,
+                                                            send_total_time : 0,
+                                                            recv_total_time : 0,
+                                                            send_hash : HashValue::default(),
+                                                            recv_hash : HashValue::default(),
+                                                        }
+                                                    },
+                                                    Ok(_)=>{
+                                                        let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                                                        let conn = peer.add_stream(pre_stream.stream);
+                                                        log::info!("confirm succ, name={}，confirm_time = {}", conn.get_name(),confirm_time);
+                                                        let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                                        match conn.clone().recv_file().await{
+                                                            Ok((_file_size, recv_time, recv_hash))=>{
+                                                                log::info!("recv stream succ, name={}，recv_time = {},recv_hash = {}", conn.get_name(),recv_time,recv_hash);
+                                                                let recv_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                                                                let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                                                match conn.clone().send_file(answer_size).await {
+                                                                    Ok((send_hash,send_time))=>{
+                                                                        log::info!("send stream succ, name={},send_time = {},send_hash = {}", conn.get_name(),send_time,send_hash);
+                                                                        let send_total_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+                                                                        ListenerStreamEventLpcCommandResp {
+                                                                            seq,
+                                                                            result: 0,
+                                                                            msg : "success".to_string(),
+                                                                            stream_name:conn.get_name().clone(),
+                                                                            confirm_time,
+                                                                            send_time,
+                                                                            recv_time,
+                                                                            send_total_time,
+                                                                            recv_total_time,
+                                                                            send_hash,
+                                                                            recv_hash,
+                                                                        }
+                                                                    },
+                                                                    Err(e)=>{
+                                                                        log::error!("send stream err ={} name={}" ,e,conn.get_name());
+                                                                        ListenerStreamEventLpcCommandResp {
+                                                                            seq,
+                                                                            result: e.code().as_u16(),
+                                                                            msg : e.msg().to_string(),
+                                                                            stream_name: conn.get_name().clone(),
+                                                                            confirm_time: 0,
+                                                                            send_time : 0,
+                                                                            recv_time,
+                                                                            send_total_time : 0,
+                                                                            recv_total_time,
+                                                                            send_hash : HashValue::default(),
+                                                                            recv_hash,
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
-                                                        },
-                                                        Err(e)=>{
-                                                            log::error!("recv stream err ={}  name={}" ,e,conn.get_name());
-                                                            ListenerStreamEventLpcCommandResp {
-                                                                seq,
-                                                                result: e.code().as_u16(),
-                                                                msg : e.msg().to_string(),
-                                                                stream_name: conn.get_name().clone(),
-                                                                confirm_time,
-                                                                send_time : 0,
-                                                                recv_time : 0,
-                                                                send_total_time : 0,
-                                                                recv_total_time : 0,
-                                                                send_hash : HashValue::default(),
-                                                                recv_hash : HashValue::default(),
+                                                            },
+                                                            Err(e)=>{
+                                                                log::error!("recv stream err ={}  name={}" ,e,conn.get_name());
+                                                                ListenerStreamEventLpcCommandResp {
+                                                                    seq,
+                                                                    result: e.code().as_u16(),
+                                                                    msg : e.msg().to_string(),
+                                                                    stream_name: conn.get_name().clone(),
+                                                                    confirm_time,
+                                                                    send_time : 0,
+                                                                    recv_time : 0,
+                                                                    send_total_time : 0,
+                                                                    recv_total_time : 0,
+                                                                    send_hash : HashValue::default(),
+                                                                    recv_hash : HashValue::default(),
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
+                                                
+                                            },
+                                            Err(err) =>{
+                                                log::error!("accept stream err ={}" ,err);
+                                                ListenerStreamEventLpcCommandResp {
+                                                    seq,
+                                                    result: 1,
+                                                    msg : "accept match stream error".to_string(),
+                                                    stream_name: String::new(),
+                                                    confirm_time: 0,
+                                                    send_time : 0,
+                                                    recv_time : 0,
+                                                    send_total_time : 0,
+                                                    recv_total_time : 0,
+                                                    send_hash : HashValue::default(),
+                                                    recv_hash : HashValue::default(),
+                                                }
                                             }
-                                            
-                                        },
-                                        Err(err) =>{
-                                            log::error!("accept stream err ={}" ,err);
-                                            ListenerStreamEventLpcCommandResp {
-                                                seq,
-                                                result: 1,
-                                                msg : "accept match stream error".to_string(),
-                                                stream_name: String::new(),
-                                                confirm_time: 0,
-                                                send_time : 0,
-                                                recv_time : 0,
-                                                send_total_time : 0,
-                                                recv_total_time : 0,
-                                                send_hash : HashValue::default(),
-                                                recv_hash : HashValue::default(),
-                                            }
-                                        }
-                                    };
-                                    let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;                                
+                                        };
+                                        let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;   
+                                    });
+                                                                 
                                 },
                                 _ =>{
                                     log::error!("bdt incoming.next() is None");
