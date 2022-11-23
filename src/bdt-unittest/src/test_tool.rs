@@ -109,7 +109,7 @@ pub async fn load_sn(snList:Vec<PathBuf>)->Vec<Device>{
         let desc_info = device.desc().object_id().info();
         if let ObjectIdInfo::Standard(obj) = desc_info {
             let tmp_area = obj.area.unwrap();
-            log::info!("sn area = {}",tmp_area)
+            log::info!("sn area = {}",tmp_area);
         } 
         sns.push(device);
     }
