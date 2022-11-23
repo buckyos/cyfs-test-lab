@@ -406,7 +406,150 @@ impl StackManager{
             async_std::task::sleep(Duration::from_millis(1000)).await;
         };
     }
+    pub async fn create_device(
+        &mut self,
+        name:String,
+        endpoints:Vec<String>,
+        sns:Vec<Device>,
+        pns:Vec<Device>,
+        save_path:Option<PathBuf>,
+        area:Area,
+        private_key:PrivateKey
+    )->(Device,PrivateKey){
+        let mut eps = Vec::new();
+        for addr in endpoints.iter() {
+            let ep = {
+                let s = format!("{}",addr);
+                Endpoint::from_str(s.as_str()).map_err(|e| {
+                    log::error!("parse ep failed, s={}, e={}",s, &e);
+                    e
+                }).unwrap()
+            };
+            log::info!("create device add ep: {}", &ep);
+            eps.push(ep);
+        }
+        let mut sn_list = Vec::new();
+        for sn in sns.iter() {
+            sn_list.push(sn.desc().device_id());
+        }
+        let mut pn_list = Vec::new();
+        for pn in pns.iter() {
+            pn_list.push(pn.desc().device_id());
+        }
+        //let private_key = PrivateKey::generate_rsa(1024).unwrap();
+        let public_key = private_key.public();
+        let mut device = Device::new(
+            None,
+            UniqueId::default(),
+            eps,
+            sn_list,
+            pn_list,
+            public_key,
+            area,
+            DeviceCategory::OOD
+        ).build();
+        let id = device.desc().device_id();
+        let desc_path = format!("{}.desc",name.clone());  
+        let _ = match save_path.clone(){
+            Some(my_path) =>{
+                let file_obj_path = my_path.join(desc_path);
+                let _ = match device.encode_to_file(file_obj_path.clone().as_path(),true){
+                    Ok(_) => {
+                        log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+                    },
+                    Err(e) => {
+                        log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+                    },
+                };
+                let sec_path = format!("{}.sec",name.clone());  
+                let file_obj_path = my_path.join(sec_path);
+                let _ = match private_key.encode_to_file(file_obj_path.clone().as_path(),true){
+                    Ok(_) => {
+                        log::info!("encode device sec to file succ ,path ={}", file_obj_path.display());
+                    },
+                    Err(e) => {
+                        log::error!("encode device sec to file failed,path = {},err {}",file_obj_path.display(), e);
+                    },
+                };
+            },
+            None => {},
+        };
+        
+        (device, private_key)
+    }
+    
+    pub async  fn create_stack(&mut self,peer_name:&str,endpoints: Vec<String>,area:Area,SN_list:Option<Vec<PathBuf>>,PN_list:Option<Vec<PathBuf>>)->(Device,PrivateKey){
 
+        // 加载配置中的SN中的配置
+        let sn_list = match SN_list{
+            Some(sns) =>{
+                load_sn(sns).await
+            },
+            None =>{
+                log::warn!("set sn list empty");
+                Vec::new()
+            }
+        };
+        let pn_list = match PN_list {
+            Some(pns) =>{
+                load_pn(pns).await
+            },
+            None =>{
+                log::warn!("set pn list empty");
+                Vec::new()
+            } 
+        };
+        let save_path =  PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\tests\\config").unwrap();
+        let private_key = PrivateKey::generate_rsa(1024).unwrap();
+        let (device,key) = self.create_device(peer_name.to_string(),endpoints,sn_list.clone(),pn_list.clone(),None,area,private_key).await;
+        let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+        // 已知Device 列表
+        params.known_device = None; //
+        params.known_sn = Some(sn_list.clone());
+        params.active_pn = Some(pn_list.clone());
+        params.passive_pn = Some(pn_list.clone());
+        params.config.interface.udp.sn_only = false;
+        params.tcp_port_mapping = None;
+        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+        let stack = Stack::open(
+            device.clone(), 
+            key.clone(), 
+            params).await;
+        if let Err(e) = stack.clone(){
+            log::error!("init bdt stack error: {}", e);
+        }
+        let  stack = stack.unwrap();   
+        let  acceptor = stack.stream_manager().listen(0).unwrap();
+        let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            Err(err) => {
+                log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
+                1000
+            },
+            Ok(_) => {
+                log::info!("sn online success {}", device.desc().device_id());
+                0
+            }
+        };
+        let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+        log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+        let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
+            hash_map::Entry::Vacant(v) => {
+                let info = BDTClient::new(stack, acceptor, self.temp_dir.clone());
+                v.insert(info);
+                Ok(())
+            }
+            hash_map::Entry::Occupied(_) => {
+                let msg = format!(
+                    "bdt stack already exists: {}",
+                    peer_name,
+                );
+
+                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+            }
+        };
+        (device,key)
+    }
+    
     pub async fn destory_all(& mut self){
         for client in self.BDTClient_map.values_mut(){
             client.0.stack.lock().unwrap().close();
