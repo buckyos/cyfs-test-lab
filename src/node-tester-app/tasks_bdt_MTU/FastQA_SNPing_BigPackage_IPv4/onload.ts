@@ -53,7 +53,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
             LN : `${labAgent[i].tags[0]}$1`,
             RN : `${labAgent[i].tags[0]}$1`,
             config:{
-                timeout : 30*1000,
+                timeout : 60*1000,
             },
             expect : {err:0},    
         }))

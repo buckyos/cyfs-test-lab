@@ -27,7 +27,7 @@ export class CreateBDTStackAction extends BaseAction implements ActionAbstract {
             return { err: BDTERROR.success, log: `${this.action.LN} CreateBDTStack failed`}
         }
         
-        this.action.set_time = info.sn_online_time;
+        this.action.set_time = info.online_time;
         return { err: BDTERROR.success, log: `${this.action.LN}CreateBDTStackAction run success` }
     }
 }

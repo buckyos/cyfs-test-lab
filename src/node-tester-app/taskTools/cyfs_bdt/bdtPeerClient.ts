@@ -22,7 +22,8 @@ export class BdtPeerClient extends EventEmitter {
     private m_acceptCookie?: number;
     public cache_peer_info: Peer;
     public sn_resp_eps?: string;
-    public sn_online_time?: number;
+    public online_time?: number;
+    public online_sn?: String;
     public tags: string;
     public util_client?: UtilClient;
     public state: number; // 0 : 实例化 ，1：客户端启动 2：BDT协议栈启动 -1：暂时退出 -2：执行完成销毁   -9999 异常导致退出
@@ -114,6 +115,7 @@ export class BdtPeerClient extends EventEmitter {
                 passive_pn_files: this.cache_peer_info!.passive_pn_files,
                 known_peer_files: this.cache_peer_info!.known_peer_files,
                 local: local,
+                area : this.cache_peer_info!.area,
                 device_tag,
                 chunk_cache: this.cache_peer_info!.chunk_cache,
                 ep_type: this.cache_peer_info!.ep_type,
@@ -131,7 +133,8 @@ export class BdtPeerClient extends EventEmitter {
             this.logger.info(`${this.tags} start bdt client success peerName = ${start_tool.value.peerName},resp = ${JSON.stringify(start_stack.value)}`);
             this.device_object = start_stack.bytes;
             this.stack_list.set(this.peerName!, this.device_object!);
-            this.sn_online_time = start_stack.value.online_time;
+            this.online_time = start_stack.value.online_time;
+            this.online_sn = start_stack.value.online_sn;
             this.sn_resp_eps = start_stack.value.ep_resp;
             this.peerid = start_stack.value.id
             //this.cache_peer_info!.local = path.join(this.util_client!.cachePath!.logPath!, start_stack.value.id)  ;
@@ -153,7 +156,7 @@ export class BdtPeerClient extends EventEmitter {
         })
 
     }
-    async create_new_stack(local: string, device_tag: string, bdt_port: number): Promise<{ err: number, log?: string, sn_online_time?: number, sn_resp_eps?: string, peerid?: string }> {
+    async create_new_stack(local: string, device_tag: string, bdt_port: number): Promise<{ err: number, log?: string, online_time?: number, sn_resp_eps?: string, peerid?: string }> {
         // let local = path.join(this.util_client!.)
         // let device_tag =  "Device_"+RandomGenerator.string(10) 
         this.logger.info(`${this.tags} start run create_new_stack , local = ${local}  `)
@@ -182,11 +185,11 @@ export class BdtPeerClient extends EventEmitter {
         if (start_stack.err) {
             return { err: start_stack.err }
         }
-        let sn_online_time = start_stack.value.online_time;
+        let online_time = start_stack.value.online_time;
         let sn_resp_eps = JSON.stringify({ ep: start_stack.value.ep_resp });
         let peerid = start_stack.value.id
         this.stack_list.set(unique_id, start_stack.bytes!);
-        return { err: BDTERROR.success, log: `create bdt stack success`, sn_online_time, sn_resp_eps, peerid }
+        return { err: BDTERROR.success, log: `create bdt stack success`, online_time, sn_resp_eps, peerid }
     }
     async reportAgent(testcaseId: string): Promise<{ err: ErrorCode, log: string }> {
         let run_action = await request("POST", "api/bdt/client/add", {
@@ -196,7 +199,8 @@ export class BdtPeerClient extends EventEmitter {
             peerid: this.peerid,
             peerInfo: JSON.stringify(this.cache_peer_info),
             sn_resp_eps: JSON.stringify(this.sn_resp_eps),
-            online_time: this.sn_online_time,
+            online_time: this.online_time,
+            online_sn: this.online_sn,
         }, ContentType.json)
         this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
         return { err: BDTERROR.success, log: `reportAgent to server success` }
@@ -209,7 +213,7 @@ export class BdtPeerClient extends EventEmitter {
             peerid: this.peerid,
             peerInfo: JSON.stringify(this.cache_peer_info),
             sn_resp_eps: JSON.stringify(this.sn_resp_eps),
-            online_time: this.sn_online_time,
+            online_time: this.online_time,
             status: `${this.state}`,
         }
     }
@@ -859,10 +863,12 @@ export class BdtPeerClient extends EventEmitter {
             return {resp:info.value};
         }
         this.logger.info(`${this.tags} connect success ,stream name = ${info.value.stream_name}`)
-        let result : api.ConnectLpcCommandResp = info.value;
+        let result : api.ConnectSendStreamResp  = info.value;
         let fastQAInfo: FastQAInfo = {
             connect_time: result.connect_time,
             calculate_time: result.calculate_time,
+            send_time : result.send_time,
+            recv_time : result.recv_time,
             total_time : result.total_time,
             send_hash: result.send_hash,
             recv_hash: result.recv_hash,

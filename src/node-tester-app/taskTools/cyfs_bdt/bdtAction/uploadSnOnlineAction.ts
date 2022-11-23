@@ -12,7 +12,7 @@ export class UploadSnOnlineAction extends BaseAction implements ActionAbstract {
         if(resp.err){
             return { err: resp.err, log: `${this.action.LN} not exist`}
         }
-        this.action.connect_time = LN.bdtClient?.sn_online_time!;
+        this.action.connect_time = LN.bdtClient?.online_time!;
         return { err: BDTERROR.success, log: `${this.action.LN} UploadSnOnlineAction run success` }
     }
 }

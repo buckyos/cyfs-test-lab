@@ -205,7 +205,7 @@ export class AgentClient {
         this.agentMult = this.agentMult + 1;
         this.logger.info(`${this.tags} add a new bdt client, agentMult = ${this.agentMult}`)
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
-        return {err:result.err,log:result.log,bdtClient,online_time:bdtClient.sn_online_time}
+        return {err:result.err,log:result.log,bdtClient,online_time:bdtClient.online_time}
     }
 
     async getBdtPeerClient(index:string):Promise<{err:ErrorCode,log?:string,bdtClient?:BdtPeerClient}>{

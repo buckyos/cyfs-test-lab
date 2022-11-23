@@ -65,7 +65,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     firstQA_question : 100,
                     accept_answer : 1,
                     known_eps : 1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},    
             }))
@@ -79,7 +79,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     firstQA_question : 1000,
                     accept_answer : 1,
                     known_eps : 1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},    
             }))
@@ -93,7 +93,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     firstQA_question : 5000,
                     accept_answer : 1,
                     known_eps : 1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},    
             }))
@@ -107,7 +107,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     firstQA_question :25*1024,
                     accept_answer : 1,
                     known_eps : 1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:0},    
             }))
@@ -122,7 +122,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     firstQA_question : 100,
                     accept_answer : 1,
                     known_eps : 1,
-                    timeout : 30*1000,
+                    timeout : 60*1000,
                 },
                 expect : {err:6},    
             }))

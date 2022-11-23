@@ -61,7 +61,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         firstQA_answer : 100,
                         firstQA_question : 25*1024,
                         accept_answer : 1,
-                        timeout : 30*1000,
+                        timeout : 60*1000,
                     },
                     expect : {err:0},    
                 }))
@@ -76,7 +76,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                         firstQA_answer : 100,
                         firstQA_question : 25*1024+1,
                         accept_answer : 1,
-                        timeout : 30*1000,
+                        timeout : 60*1000,
                     },
                     expect : {err:1},    
                 }))

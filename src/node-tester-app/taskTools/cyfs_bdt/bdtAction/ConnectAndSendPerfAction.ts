@@ -41,7 +41,7 @@ export class ConnectAndSendPerfAction extends BaseAction implements ActionAbstra
         if (check.conn!.TempSeq != check.conn!.TempSeq) {
             return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , ${check.conn!.TempSeq} != ${connect_info.conn!.TempSeq}` }
         }
-        this.action.set_time = check.conn?.fastQAInfo?.calculate_time;
+        
         // 检查FirstQA question 
         // 检查fristQA answer 
         if (connect_info.conn?.fastQAInfo!.recv_hash) {
@@ -64,7 +64,11 @@ export class ConnectAndSendPerfAction extends BaseAction implements ActionAbstra
         } else {
             this.action.info.conn = [];
         }
+        this.action.set_time = check.conn?.fastQAInfo?.comfirm_time;
+        this.action.calculate_time = check.conn?.fastQAInfo?.calculate_time! + connect_info.conn?.fastQAInfo!.calculate_time!;
         this.action.connect_time = connect_info.conn?.fastQAInfo!.connect_time
+        this.action.fileSize = this.action.config.firstQA_question! + this.action.config.firstQA_answer!;
+        this.action.send_time =  connect_info.conn?.fastQAInfo!.total_time!;
         this.action.info!.conn_name = connect_info.conn?.stream_name
         this.action.info.LN_Resp = connect_info.conn?.fastQAInfo;
         this.action.info.RN_Resp = check.conn?.fastQAInfo;

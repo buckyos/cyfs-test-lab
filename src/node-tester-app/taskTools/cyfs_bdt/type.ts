@@ -97,7 +97,8 @@ export const enum  ActionType {
 
 export type Agent = {
     tags : Array<string>, 
-    OS :string
+    OS :string,
+    area : string,
     NAT : number,
     ipv4 : Array<string>,
     ipv6 : Array<string>,
@@ -107,6 +108,7 @@ export type Agent = {
 
 export type Peer ={
     agent : Agent,
+    area:string,
     addrInfo: string[], 
     bdt_port? : number,
     local?: string, 

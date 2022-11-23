@@ -11,23 +11,27 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "FastQA_Perf_UDP"
+    let testcaseName = "FastQA_Perf_Stream_TCP_500_500_Post"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `测试性能`,
+        remark: `测试性能:
+        (1) LN RN 建立连接
+        (2) LN->RN 使用Stream发送 500 Bytes 请求数据
+        (3) RN->LN 使用Stream回复 500 Bytes请求数据`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
-            eps:{
-                ipv4:{
-                    udp:true,
-                }
-            },
-            logType:"info",
-            udp_sn_only : 0,
+        eps:{
+            ipv4:{
+                udp:true,
+                tcp:true,
+            }
+        },
+        logType:"info",
+        udp_sn_only : 1,
             SN :LabSnList,
             resp_ep_type:Resp_ep_type.All,
             listern_type :  Listern_type.auto_response_stream
@@ -39,7 +43,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let [i,j] of randShuffle(labAgent.length)){
         
-        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5 ){
+        if(i != j &&  labAgent[j].NAT * labAgent[i].NAT == 0 && i>j ){
             let info = await testRunner.createPrevTask({
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
@@ -55,10 +59,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
-                        firstQA_answer : 100,
-                        firstQA_question : 100,
+                        firstQA_answer : 500,
+                        firstQA_question : 500,
                         accept_answer : 1,
-                        timeout : 30*1000,
+                        timeout : 60*1000,
                     },
                     expect : {err:0},    
                 }))

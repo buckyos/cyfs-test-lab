@@ -19,24 +19,22 @@ export class FastQAPerfAction extends BaseAction implements ActionAbstract {
         let FirstQ = 0
         if (this.action.config!.firstQA_question && this.action.config!.firstQA_question != LN.bdtClient?.question_size) {
             FirstQ = 1 ;
-            this.action.fileSize = this.action.config!.firstQA_question;
             this.logger?.info(`Set FirstQ question size ${this.action.fileSize}`)
             let err = await LN.bdtClient!.set_question(this.action.config!.firstQA_question);
             if (err) {
                 return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_question info failed ` }
             }
-        }else{
-            this.action.fileSize = 0;
         }
         // 判断RN是否要进行FristQA,answer 数据设置
         if (this.action.config!.firstQA_answer && this.action.config!.firstQA_answer != RN.bdtClient?.answer_size) {
             this.logger?.info(`Set FirstQ answer size ${this.action.config!.firstQA_answer!}`)
-            this.action.fileSize = this.action.fileSize + this.action.config!.firstQA_answer!
+            
             let err = await RN.bdtClient!.set_answer(this.action.config!.firstQA_answer);
             if (err) {
                 return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_answer info failed ` }
             }
         }
+        this.action.fileSize = LN.bdtClient?.question_size! + RN.bdtClient?.answer_size!;
         // 判断是否要发起直连，默认不直连
         if (!this.action.config!.known_eps) {
             this.action.config!.known_eps = 0
@@ -70,7 +68,7 @@ export class FastQAPerfAction extends BaseAction implements ActionAbstract {
         if (info.recv_hash) {
             this.logger!.info(`recv answer hash = ${info.recv_hash}`)
             if (info.recv_hash != check.conn?.fastQAInfo?.send_hash) {
-                this.logger!.error(`send answer = ${info.recv_hash} ,recv answer = ${check.conn?.fastQAInfo?.send_hash}`);
+                this.logger!.error(`LN ${this.action.LN} recv answer = ${info.recv_hash} ,RN ${this.action.RN} send answer = ${check.conn?.fastQAInfo?.send_hash}`);
                 return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , FristQA answer is error` }
             }
         }
@@ -88,8 +86,11 @@ export class FastQAPerfAction extends BaseAction implements ActionAbstract {
             this.action.info.conn = [];
         }
         this.action.connect_time = info.connect_time
+        this.action.send_time = info.total_time
         this.action.info!.conn_name = result.conn!.stream_name
         this.action.info.LN_Resp = info;
+        this.action.set_time = check.conn?.fastQAInfo?.comfirm_time;
+        this.action.calculate_time = info.calculate_time + check.conn?.fastQAInfo?.calculate_time!;
         this.action.info.RN_Resp = check.conn?.fastQAInfo;
         return { err: BDTERROR.success, log: "ConnectAction run success" }
     }

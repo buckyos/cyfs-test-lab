@@ -11,11 +11,13 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "FastQA_Perf_Stream_UDP"
+    let testcaseName = "FastQA_Perf_UDP_20KB_500_Put"
     let testcase:Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `测试性能`,
+        remark: `测试性能:
+        (1)LN -> RN 发起连接请求 Question 带有20KB请求数据 
+        (2)RN 监听连接请求，收到连接请求后，解析Question,confrim 时回复500 Bytes响应数据`,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -38,7 +40,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let [i,j] of randShuffle(labAgent.length)){
         
-        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5 ){
+        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5 && i>j ){
             let info = await testRunner.createPrevTask({
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
@@ -54,10 +56,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
-                        firstQA_answer : 100,
-                        firstQA_question : 100,
+                        firstQA_answer : 20*1024,
+                        firstQA_question : 500,
                         accept_answer : 1,
-                        timeout : 30*1000,
+                        timeout : 60*1000,
                     },
                     expect : {err:0},    
                 }))

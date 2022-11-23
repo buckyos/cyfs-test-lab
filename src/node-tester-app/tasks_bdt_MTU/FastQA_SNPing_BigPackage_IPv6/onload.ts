@@ -54,7 +54,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
             LN : `${agent_ipv6[i].tags[0]}$1`,
             RN : `${agent_ipv6[i].tags[0]}$1`,
             config:{
-                timeout : 30*1000,
+                timeout : 60*1000,
             },
             expect : {err:0},    
         }))
