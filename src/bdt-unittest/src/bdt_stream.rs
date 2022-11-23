@@ -3,7 +3,6 @@ use cyfs_base::*;
 use bytes::Bytes;
 use cyfs_util::cache::*;
 use cyfs_bdt::*;
-use cyfs_bdt::download::*;
 use std::{
     str::FromStr, 
     path::{Path, PathBuf}, 
