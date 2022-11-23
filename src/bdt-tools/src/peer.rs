@@ -225,6 +225,7 @@ impl Peer {
                         ep_info: BTreeSet::new(),
                         ep_resp:Vec::new(),
                         online_time : 0,
+                        online_sn:Vec::new(),
                     }
                 },
                 Ok(_) => {
@@ -298,6 +299,12 @@ impl Peer {
                         }
                     };
                     let ep_resp =  local.mut_connect_info().mut_endpoints().clone();
+                    let mut online_sn = Vec::new();
+                    for sn in peer.get_stack(&peer_name).unwrap().sn_client().sn_list(){
+                        log::info!("lcoal sn list:{}",sn.object_id().to_string());
+                        online_sn.push(sn.object_id().to_string());
+                    }
+                    
                     CreateLpcCommandResp {
                         seq, 
                         result: result as u16,
@@ -306,6 +313,7 @@ impl Peer {
                         ep_info : ep_list,
                         ep_resp,
                         online_time : online_time as u32,
+                        online_sn,
                     }
                     
                 }
@@ -389,21 +397,24 @@ impl Peer {
                     match stack.stream_manager().connect(0, question, param).await {
                         Ok(mut stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                            let name =  format!("{}", stream.clone());
+                            log::info!("connect remote success, time = {},name = {}" ,connect_time,name);
                             // let mut len = 0;
                             // 接收answer
                             let mut recv_hash = HashValue::default();
                             
-                            // 读取answer 数据
+                            // 读取answer 数据 超时 20s
                             if c.accept_answer {
-                                match stream.read(&mut answer).await{
-                                    Ok(len) => {
+                                let _ =  match future::timeout(Duration::from_secs(20),stream.read(&mut answer)).await {
+                                    Ok(result) => {
+                                        let len = result.unwrap();
                                         let begin_read = system_time_to_bucky_time(&std::time::SystemTime::now());
                                         recv_hash = hash_data(&answer[..len]);
                                         calculate_time = calculate_time + system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_read;
                                         log::info!("Read answer success,len={} content={:?}",len,recv_hash.clone());
                                     },
-                                    Err(_) => {
-                                        log::error!("Read answer faild");
+                                    Err(err) => {
+                                        log::error!("Read answer faild,timeout 20s");
                                     }
                                 };
                             }
@@ -592,85 +603,79 @@ impl Peer {
                         let mut incoming = acceptor.incoming();
                         let _ = peer.set_answer(c.answer_size);
                         loop {
-                            //let pre_stream = incoming.next().await.unwrap().unwrap();
-                            let resp = match incoming.next().await{
+                            let peer = peer.clone();
+                            let mut lpc = lpc.clone();
+                            let _ = match incoming.next().await{
                                 Some(stream)=>{
-                                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                    match stream{
-                                        Ok(pre_stream)=>{
-                                            let question = pre_stream.question;
-                                            let begin_calculate = system_time_to_bucky_time(&std::time::SystemTime::now());
-                                            let recv_hash = hash_data(&question);
-                                            log::info!("accept question succ,  hash = {}",recv_hash.clone());
-                                            let answer_size = peer.get_answer() as usize;
-                                            let mut answer = Vec::new();
-                                            answer.resize(answer_size, 0u8);
-                                            Self::random_data(answer[0..answer_size].as_mut());
-                                            let send_hash = hash_data(&answer);
-                                            let calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate;
-                                            match pre_stream.stream.confirm(&answer).await{
-                                                Err(e)=>{
-                                                    log::error!("confirm err, err={}",e);
-                                                    
-                                                    ConfirmStreamLpcCommandResp {
-                                                        seq,
-                                                        result: e.code().as_u16(),
-                                                        msg : e.msg().to_string(),
-                                                        send_hash,
-                                                        recv_hash,
-                                                        calculate_time,
-                                                        stream_name:"".to_string(),
-                                                        confirm_time : 0,
-                                                    }
-                                                },
-                                                Ok(_)=>{
-                                                    let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                                                    let conn = peer.add_stream(pre_stream.stream);
-                                                    log::info!("confirm succ, name={}", conn.get_name());
-                                                    ConfirmStreamLpcCommandResp {
-                                                        seq, 
-                                                        result: 0 as u16,
-                                                        msg : "success".to_string(),
-                                                        send_hash,
-                                                        recv_hash,
-                                                        calculate_time,
-                                                        stream_name:conn.get_name().clone(),
-                                                        confirm_time,
+                                    task::spawn(async move {
+                                        let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                        let answer_size = peer.get_answer() as usize;
+                                        let resp = match stream{
+                                            Ok(pre_stream)=>{
+                                                let question = pre_stream.question;
+                                                let begin_calculate = system_time_to_bucky_time(&std::time::SystemTime::now());
+                                                let recv_hash = hash_data(&question);
+                                                log::info!("accept question succ,  hash = {}",recv_hash.clone());
+                                                log::error!("create answer data , answer_size = {}",answer_size);
+                                                let mut answer = Vec::new();
+                                                answer.resize(answer_size, 0u8);
+                                                Self::random_data(answer[0..answer_size].as_mut());
+                                                let send_hash = hash_data(&answer);
+                                                let calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate;
+                                                match pre_stream.stream.confirm(&answer).await{
+                                                    Err(e)=>{
+                                                        log::error!("confirm err, err={}",e);
+                                                        ConfirmStreamLpcCommandResp {
+                                                            seq,
+                                                            result: e.code().as_u16(),
+                                                            msg : e.msg().to_string(),
+                                                            send_hash,
+                                                            recv_hash,
+                                                            calculate_time,
+                                                            stream_name:"".to_string(),
+                                                            confirm_time : 0,
+                                                        }
+                                                    },
+                                                    Ok(_)=>{
+                                                        let confirm_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                                                        let conn = peer.add_stream(pre_stream.stream);
+                                                        log::info!("confirm succ, name={},answer hash = {}", conn.get_name(),send_hash.clone());
+                                                        ConfirmStreamLpcCommandResp {
+                                                            seq, 
+                                                            result: 0 as u16,
+                                                            msg : "success".to_string(),
+                                                            send_hash,
+                                                            recv_hash,
+                                                            calculate_time,
+                                                            stream_name:conn.get_name().clone(),
+                                                            confirm_time,
+                                                        }
                                                     }
                                                 }
+                                                
+                                            },
+                                            Err(err) =>{
+                                                log::error!("accept question err ={}" ,err);
+                                                ConfirmStreamLpcCommandResp {
+                                                    seq,
+                                                    result: 1,
+                                                    msg:"match stream error".to_string(),
+                                                    send_hash:HashValue::default(),
+                                                    recv_hash:HashValue::default(),
+                                                    calculate_time:0,
+                                                    stream_name: "".to_string(),
+                                                    confirm_time : 0,
+                                                }
                                             }
-                                            
-                                        },
-                                        Err(err) =>{
-                                            log::error!("accept question err ={}" ,err);
-                                            ConfirmStreamLpcCommandResp {
-                                                seq,
-                                                result: 1,
-                                                msg:"match stream error".to_string(),
-                                                send_hash:HashValue::default(),
-                                                recv_hash:HashValue::default(),
-                                                calculate_time:0,
-                                                stream_name: "".to_string(),
-                                                confirm_time : 0,
-                                            }
-                                        }
-                                    }                                
+                                        };                                
+                                        let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+                                    });
                                 },
                                 _ =>{
                                     log::error!("bdt incoming.next() is None");
-                                    ConfirmStreamLpcCommandResp {
-                                        seq,
-                                        result: 1,
-                                        msg:"bdt incoming.next() is None".to_string(),
-                                        send_hash:HashValue::default(),
-                                        recv_hash:HashValue::default(),
-                                        calculate_time:0,
-                                        stream_name: "".to_string(),
-                                        confirm_time : 0,
-                                    }
                                 }
                             };
-                            let _ = lpc.send_command(LpcCommand::try_from(resp).unwrap()).await;
+                            
                             
                         }
                     });
@@ -2672,7 +2677,8 @@ impl Peer {
 
                         let private_key = PrivateKey::generate_rsa(1024).unwrap();
                         let public_key = private_key.public();
-
+                        log::info!("local area = {}",c.area.clone());
+                        let area = Area::from_str( c.area.as_str()).unwrap();
                         let mut device = Device::new(
                             None,
                             UniqueId::default(),
@@ -2680,7 +2686,7 @@ impl Peer {
                             sn_list,
                             vec![],
                             public_key,
-                            Area::default(),
+                            area,
                             DeviceCategory::OOD
                         ).build();
                         for pn in passive_pn.clone() {
@@ -2732,7 +2738,8 @@ impl Peer {
 
                 let private_key = PrivateKey::generate_rsa(1024).unwrap();
                 let public_key = private_key.public();
-                
+                log::info!("local area = {}",c.area.clone());
+                let area = Area::from_str( c.area.as_str()).unwrap();
                 let mut device = Device::new(
                     None,
                     UniqueId::default(),
@@ -2740,7 +2747,7 @@ impl Peer {
                     sn_list,
                     vec![],
                     public_key,
-                    Area::default(),
+                    area,
                     DeviceCategory::OOD
                 ).build();
                 for pn in passive_pn.clone() {

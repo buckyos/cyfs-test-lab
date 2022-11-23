@@ -39,6 +39,7 @@ pub struct CreateLpcCommandReq {
     pub ndn_event : Option<String>,
     pub ndn_event_target : Option<DeviceId>,
     pub sn_only : bool,
+    pub area : String,
     pub tcp_port_mapping : Option<Vec<(cyfs_base::Endpoint, u16)>>,
     
 }
@@ -60,6 +61,19 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
                 _ => None,
             },
             _ => None,
+        };
+        let area = match json.get("area") {
+            Some(v) => match v {
+                serde_json::Value::String(s) => {
+                    if s.len() > 0 {
+                        s.clone()
+                    } else {
+                        "0:0:0:0".to_string()
+                    }
+                }
+                _ => "0:0:0:0".to_string(),
+            },
+            _ => "0:0:0:0".to_string(),
         };
         let ndn_event = match json.get("ndn_event") {
             Some(v) => match v {
@@ -319,7 +333,8 @@ impl TryFrom<LpcCommand> for CreateLpcCommandReq {
             ndn_event,
             ndn_event_target,
             sn_only,
-            tcp_port_mapping
+            tcp_port_mapping,
+            area,
         })
     }
 }
@@ -332,6 +347,7 @@ pub struct CreateLpcCommandResp {
     pub ep_info : BTreeSet<cyfs_base::Endpoint>,
     pub ep_resp : Vec<cyfs_base::Endpoint>,
     pub online_time : u32,
+    pub online_sn : Vec<String>,
 }
 
 impl TryFrom<CreateLpcCommandResp> for LpcCommand {
@@ -363,6 +379,7 @@ impl TryFrom<CreateLpcCommandResp> for LpcCommand {
             "ep_info" : ep_info,
             "ep_resp" : ep_resp,
             "online_time" : value.online_time,
+            "online_sn" : value.online_sn,
         });
 
         log::debug!(
