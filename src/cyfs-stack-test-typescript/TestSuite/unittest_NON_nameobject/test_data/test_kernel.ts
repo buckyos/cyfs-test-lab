@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from "../../../cyfs_node"
 import * as path from 'path'
 
 

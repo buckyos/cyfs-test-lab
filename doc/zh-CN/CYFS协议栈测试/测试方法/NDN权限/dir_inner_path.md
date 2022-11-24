@@ -66,12 +66,6 @@
 * getData chunk目标对象 关联file reqPath 无该path权限&相应chunck 获取失败
 * getData chunk目标对象 关联file reqPath 有该path权限&非相应chunck 获取失败
 
-* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
-* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
-* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
-* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
-* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
-* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
 
 * getData chunk目标对象 关联dir+innerPath —— 有dir对象权限&相应chunck 获取成功
 * getData chunk目标对象 关联dir+innerPath —— 有dir对象权限&非相应chunck 获取失败
@@ -192,4 +186,62 @@
 同zone跨dec：
 * query_file —— —— —— 请求成功
 
+### trans.publishfile增加跨dec跨zone场景
 
+### Dir chunk 模式
+Dir的chunk模式，存在desc chunk和body chunk两种模式，具体的构造可以看cyfs-base/dir.rs的dir() 测试用例，在NDN测试过程中，可以考虑增加对此种模式的Dir的支持
+desc chunk
+同zone同dec
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
+同zone跨dec
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
+跨zone跨dec
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败 
+body chunk
+同zone同dec
+* desc的chunk插入到body.objectlistmap
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
+同zone跨dec
+* desc的chunk插入到body.objectlistmap
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
+跨zone跨dec
+* desc的chunk插入到body.objectlistmap
+* getData chunk目标对象 关联dir —— 有dir对象权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir —— 有dir对象权限&非相应chunck 获取失败
+* getData chunk目标对象 关联dir —— 无dir对象权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功
+* getData chunk目标对象 关联dir reqPath 无该path权限&相应chunck 获取失败
+* getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败
+### NON新增
+新增了基于set类型的contains模式，也就是如果req_path对应的节点如果是一个ObjectMap/Set格式，那么会执行校验get_object_by_path(req_path).contains(object_id) 如果返回true那么也校验通过
+* reqpath对应objectmap对象覆盖四元组同zone跨zone原case流程
+### NON操作 inner_path增加随机非英文字符的覆盖
+* 中文文件名
+* 含特殊符号
+* 特殊符号+中文名
+### 

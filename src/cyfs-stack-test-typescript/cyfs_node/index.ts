@@ -1,1 +1,1 @@
-export * from 'cyfs-sdk-nightly';
+export * from '../cyfs_node/cyfs_node';

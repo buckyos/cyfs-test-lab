@@ -7,10 +7,6 @@ import * as crypto from 'crypto';
 
 
 import { ZoneSimulator } from "./simulator"
-import { ObjectId } from 'mongoose';
-import { type } from 'os';
-import { None } from 'ts-results';
-import { access } from 'fs';
 
 export class NDNTestManager {
 
@@ -482,7 +478,7 @@ export class NDNTestManager {
                 Chunk: (chunk_id: cyfs.ChunkId) => {
                     console.error(`obj_list in chunk not support yet! ${chunk_id}`);
                 },
-                ObjList: async (obj_list:any) => {
+                ObjList: async (obj_list: any) => {
                     for (const [inner_path, info] of obj_list.object_map().entries()) {
                         let filePath = savePath;
                         const segs = inner_path.value().split('/');
@@ -1007,26 +1003,6 @@ export class NDNTestManager {
         let file_id: cyfs.FileId = cyfs.FileId.try_from_object_id(respf.object.object_id).unwrap()
         console.info(`————————————————————————————————————>file ${file_id} >dir ${dir_id} >innerpath ${inner_path} >chunkidList ${chunkIdList}`)
 
-        //获取chunk对象
-        let respc: cyfs.NDNGetDataOutputResponse
-        {
-            let rep2: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: target.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [],
-                    flags: 1,
-                },
-                object_id: chunkIdList![0].calculate_id()
-            }
-            //调用接口
-            let resp = await source.ndn_service().get_data(rep2);
-            assert(!resp.err, `get_data 传输chunk失败`)
-            respc = resp.unwrap()
-        }
 
         let req_path: string = "no need"
         if (mount) {
@@ -1050,6 +1026,23 @@ export class NDNTestManager {
             let type: cyfs.NONObjectInfo
             switch (control_object) {
                 case "chunk":
+                    //获取chunk对象
+                    let rep2: cyfs.NDNGetDataOutputRequest = {
+                        common: {
+                            // api级别
+                            level: cyfs.NDNAPILevel.Router,
+                            // targrt设备参数
+                            target: target.local_device_id().object_id,
+                            // 需要处理数据的关联对象，主要用以chunk/file等
+                            referer_object: [],
+                            flags: 1,
+                        },
+                        object_id: chunkIdList![0].calculate_id()
+                    }
+                    //调用接口
+                    let resp = await source.ndn_service().get_data(rep2);
+                    assert(!resp.err, `get_data 传输chunk失败`)
+                    let respc = resp.unwrap()
                     type = new cyfs.NONObjectInfo(respc.object_id, respc.data)
                 case "file":
                     type = respf.object;
@@ -1069,60 +1062,60 @@ export class NDNTestManager {
                 access: access
             })
         }
-        if (putdata) {
-            // let type: cyfs.FileId | cyfs.DirId
-            // if (putdata == "file") { type = file_id } else if (putdata == "dir") { type = dir_id } else { console.error("input error type parmas must be file|dir") }
-            // let task = await source.trans().create_task({
-            //     common: {
-            //         req_path: req_path,
-            //         dec_id: source.dec_id,
-            //         level: cyfs.NDNAPILevel.Router,
-            //         target: target.local_device_id().object_id,
-            //         referer_object: [],
-            //         flags: 1,
-            //     },
-            //     object_id: pub_resp.file_id,
-            //     local_path: local_path,
-            //     device_list: [source.local_device_id()],
-            //     auto_start: true,
-            // })
-            // await source.trans().start_task( {
-            //     common:  {
-            //         req_path: req_path,
-            //         dec_id: source.dec_id,
-            //         level: cyfs.NDNAPILevel.Router,
-            //         target : target.local_device_id().object_id,
-            //         referer_object: [],
-            //         flags: 1,
-            //     },
-            //     task_id : task.unwrap().task_id
-            // })
-            // console.info(JSON.stringify(task));
-            // assert.ok(!task.err,"start_task 失败");
+        // if (putdata) {
+        //     // let type: cyfs.FileId | cyfs.DirId
+        //     // if (putdata == "file") { type = file_id } else if (putdata == "dir") { type = dir_id } else { console.error("input error type parmas must be file|dir") }
+        //     // let task = await source.trans().create_task({
+        //     //     common: {
+        //     //         req_path: req_path,
+        //     //         dec_id: source.dec_id,
+        //     //         level: cyfs.NDNAPILevel.Router,
+        //     //         target: target.local_device_id().object_id,
+        //     //         referer_object: [],
+        //     //         flags: 1,
+        //     //     },
+        //     //     object_id: pub_resp.file_id,
+        //     //     local_path: local_path,
+        //     //     device_list: [source.local_device_id()],
+        //     //     auto_start: true,
+        //     // })
+        //     // await source.trans().start_task( {
+        //     //     common:  {
+        //     //         req_path: req_path,
+        //     //         dec_id: source.dec_id,
+        //     //         level: cyfs.NDNAPILevel.Router,
+        //     //         target : target.local_device_id().object_id,
+        //     //         referer_object: [],
+        //     //         flags: 1,
+        //     //     },
+        //     //     task_id : task.unwrap().task_id
+        //     // })
+        //     // console.info(JSON.stringify(task));
+        //     // assert.ok(!task.err,"start_task 失败");
 
-            let rep: cyfs.NDNPutDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: req_path,
-                    // 来源DEC
-                    dec_id: undefined,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数目前无用
-                    target: target.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [],
-                    flags: 1,
-                },
-                object_id: chunkIdList![0].calculate_id(),
-                length: respc.data.length,
-                data: respc.data,
-            }
-            //调用接口
-            let resp = await source.ndn_service().put_data(rep);
-            console.info(`${resp}`)
-            assert(!resp.err, `put_data 传输对象失败`)
-        }
+        //     let rep: cyfs.NDNPutDataOutputRequest = {
+        //         common: {
+        //             // 请求路径，可为空
+        //             req_path: req_path,
+        //             // 来源DEC
+        //             dec_id: undefined,
+        //             // api级别
+        //             level: cyfs.NDNAPILevel.Router,
+        //             // targrt设备参数目前无用
+        //             target: target.local_device_id().object_id,
+        //             // 需要处理数据的关联对象，主要用以chunk/file等
+        //             referer_object: [],
+        //             flags: 1,
+        //         },
+        //         object_id: chunkIdList![0].calculate_id(),
+        //         length: respc.data.length,
+        //         data: respc.data,
+        //     }
+        //     //调用接口
+        //     let resp = await source.ndn_service().put_data(rep);
+        //     console.info(`${resp}`)
+        //     assert(!resp.err, `put_data 传输对象失败`)
+        // }
         return { file_id, dir_id, inner_path, chunkIdList, req_path }
     }
 

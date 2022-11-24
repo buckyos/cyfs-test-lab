@@ -6,7 +6,7 @@ import * as upload_report from './script/upload_task';
 var date = require("silly-datetime");
 
 async function main() {
-    let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/test_beta_non.js")
+    let TestSuite = path.join(__dirname,"./TestSuite/unittest_stack_interface/test_NDN_dir.ts")
     //let TestSuite = ".\\TestSuite\\TestSuiteTool\\unittest-with_real_stack_xxx\\test_xxx.ts"
     //let report_path = path.join(__dirname,"./mochawesome-report")
     let report_path = path.join(__dirname,"../../opt/testcase/cyfs_stack/mochawesome-report")
@@ -26,8 +26,8 @@ async function main() {
     let version =  date.format(new Date(),'YYYY_MM_DD_HH_mm_ss');
     console.log(currenttime)
 
-    console.info(`###### 运行: npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
-    let run = ChildProcess.exec(`npx mocha ${TestSuite} --reporter mochawesome --require ts-node/register `)
+    console.info(`###### 运行: npx nyc mocha ${TestSuite} --reporter mochawesome --require ts-node/register --exit`)
+    let run = ChildProcess.exec(`npx nyc mocha ${TestSuite} --reporter mochawesome --require ts-node/register --exit`)
 
     run.on('exit', async (code: number, signal: string) => {
         console.info(`######运行结束`)
@@ -39,12 +39,14 @@ async function main() {
         while(true){
             if(fs.pathExistsSync(report_path)){
                 await cyfs.sleep(5*1000)
+                fs.copySync("output/coverage",report_path)
                 fs.copySync(report_path,`${reportpath}/report_${currenttime}`)
                 run.emit("exit")
                 await upload_report.uplaodTestcase(`${reportpath}/report_${currenttime}`,version)
                 await fs.removeSync(`${reportpath}/report_${currenttime}/mochawesome-report.zip`);
                 await cyfs.sleep(5*1000)
                 await fs.removeSync(report_path)
+                await fs.removeSync("output/coverage")
                 break;
             }
             await cyfs.sleep(5*1000)
