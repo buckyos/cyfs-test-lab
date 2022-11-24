@@ -398,7 +398,7 @@ impl Peer {
                         Ok(mut stream) => {
                             let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                             let name =  format!("{}", stream.clone());
-                            log::info!("connect remote success, time = {},name = {}" ,connect_time,name);
+                            log::info!("connect remote success, time = {},name = {}" ,connect_time,name.clone());
                             // let mut len = 0;
                             // 接收answer
                             let mut recv_hash = HashValue::default();
@@ -414,7 +414,7 @@ impl Peer {
                                         log::info!("Read answer success,len={} content={:?}",len,recv_hash.clone());
                                     },
                                     Err(err) => {
-                                        log::error!("Read answer faild,timeout 20s");
+                                        log::error!("Read answer faild,timeout 20s stream = {}",name);
                                     }
                                 };
                             }
@@ -616,10 +616,13 @@ impl Peer {
                                                 let begin_calculate = system_time_to_bucky_time(&std::time::SystemTime::now());
                                                 let recv_hash = hash_data(&question);
                                                 log::info!("accept question succ,  hash = {}",recv_hash.clone());
-                                                log::error!("create answer data , answer_size = {}",answer_size);
+                                                log::info!("pre ready answer data , answer_size = {}",answer_size);
                                                 let mut answer = Vec::new();
-                                                answer.resize(answer_size, 0u8);
-                                                Self::random_data(answer[0..answer_size].as_mut());
+                                                if(answer_size>0){
+                                                    log::info!("create random answer data");
+                                                    answer.resize(answer_size, 0u8);
+                                                    Self::random_data(answer[0..answer_size].as_mut());
+                                                }
                                                 let send_hash = hash_data(&answer);
                                                 let calculate_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_calculate;
                                                 match pre_stream.stream.confirm(&answer).await{
