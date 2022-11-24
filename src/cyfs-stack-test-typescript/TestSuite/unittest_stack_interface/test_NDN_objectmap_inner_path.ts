@@ -1,7 +1,7 @@
 import * as fs from "fs-extra";
 import assert = require('assert');
 import * as cyfs from '../../cyfs_node/cyfs_node'
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo } from "../../common";
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo, stack } from "../../common";
 import * as path from 'path';
 import * as gen_Dir from "../../common/utils/generator"
 import * as events from 'events'
@@ -15,6 +15,8 @@ let zone1device2 : cyfs.SharedCyfsStack;
 let zone2ood : cyfs.SharedCyfsStack;
 let zone2device1 : cyfs.SharedCyfsStack;
 let zone2device2 : cyfs.SharedCyfsStack;
+let source : cyfs.SharedCyfsStack;
+let target : cyfs.SharedCyfsStack;
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -170,16 +172,10 @@ async function buildDirTree(root: TreeNode, inner_path: cyfs.BuckyString, info: 
 
 }
 
-//acl权限过程
 
-let acc = new cyfs.AccessString(0)
-acc.set_group_permissions(cyfs.AccessGroup.OthersZone,cyfs.AccessPermissions.None)
-acc.set_group_permissions(cyfs.AccessGroup.OthersDec,cyfs.AccessPermissions.None)
-acc.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.None)
-acc.set_group_permissions(cyfs.AccessGroup.CurrentZone,cyfs.AccessPermissions.None)
 /*common handler----------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
+class GetObjectHandlerDefault implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
     private chain: string
@@ -188,12 +184,15 @@ class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
         this.handlerId = handlerId;
         this.chain = chain;
     }
-    async call(param: cyfs.RouterHandlerPutDataRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerPutDataResult>> {
-        Emitter.emit('handlerRunning', this.device, 'PutDataHandlerDefault', this.handlerId, this.chain)
-        const codec = new cyfs.NDNPutDataOutputRequestJsonCodec();
+    async call(param: cyfs.RouterHandlerGetObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerGetObjectResult>> {
+        Emitter.emit('handlerRunning', this.device, 'GetObjectHandlerDefault', this.handlerId, this.chain)
+        const codec = new cyfs.NONGetObjectOutputRequestJsonCodec();
         console.info(codec.encode_object(param.request));
-        //console.info(`get_object: id=${param.object_id}`);
-        const result: cyfs.RouterHandlerPutDataResult = {
+
+        console.info(`get_object: id=${param.request.object_id}`);
+        const result: cyfs.RouterHandlerGetObjectResult = {
+            // 直接终止路由并以resp作为应答
+            // 如果需要同时保存，那么替换为ResponseAndSave即可
             action: cyfs.RouterHandlerAction.Default
         };
         return cyfs.Ok(result)
@@ -201,6 +200,44 @@ class PutDataHandlerDefault implements cyfs.RouterHandlerPutDataRoutine {
 }
 
 /*common function----------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+async function r_meta_acc(type:string,acc_num:number=0o777):Promise<cyfs.AccessString|undefined>{
+    let acc:cyfs.AccessString
+    let per:cyfs.AccessPermissions
+    switch(type){
+        case"num":{
+            //acc_num 0o777
+            acc= (new cyfs.AccessString(acc_num))}
+            return acc
+        case"method":{
+            acc= cyfs.AccessString.full()}
+            return acc
+        case"set":{
+            acc = new cyfs.AccessString(0)
+            per = cyfs.AccessPermissions.Full
+            acc.set_group_permissions(cyfs.AccessGroup.OthersZone,per)
+            acc.set_group_permissions(cyfs.AccessGroup.OthersDec,per)
+            acc.set_group_permissions(cyfs.AccessGroup.CurrentDevice,per)
+            acc.set_group_permissions(cyfs.AccessGroup.CurrentZone,per)
+            acc.set_group_permissions(cyfs.AccessGroup.OwnerDec,per)
+            acc.set_group_permissions(cyfs.AccessGroup.FriendZone,per)
+            return  acc
+        }
+    }
+}
+
+async function stacks(type:string):Promise<cyfs.SharedCyfsStack[] | undefined>{
+    switch(type){
+        case "sam_dev_sam_dec":
+            return [zone1ood.fork_with_new_dec(DecId.DecIdA),zone1ood.fork_with_new_dec(DecId.DecIdA)]
+        case "sam_dev_dif_dec":
+            return [zone1ood.fork_with_new_dec(DecId.DecIdA),zone1ood.fork_with_new_dec(DecId.DecIdB)]   
+        case "dif_dev_sam_dec":
+            return [zone1ood.fork_with_new_dec(DecId.DecIdA),zone2ood.fork_with_new_dec(DecId.DecIdA)]
+        case "dif_dev_dif_dec":
+            return [zone1ood.fork_with_new_dec(DecId.DecIdA),zone2ood.fork_with_new_dec(DecId.DecIdB)]
+        }
+}
 
 async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: string,inner_path:string, chunkSize: number, level:any[]):Promise<any>{
     console.info('开始chunk')
@@ -352,7 +389,86 @@ async function trans_file_for_task(stack:cyfs.SharedCyfsStack[], filePath: strin
     return [file_id,chunkIdList]
 }
 
-//async function download_object(){}
+async function get_data(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId){
+    
+    let req: cyfs.NDNGetDataOutputRequest = {
+
+        common: {                                   
+            level: cyfs.NDNAPILevel.NDN,// api级别
+            dec_id: stack[0].dec_id, //这里可以模拟当前dec_id
+            target: stack[1].local_device_id().object_id,
+            // 需要处理数据的关联对象，主要用以chunk/file等+-
+            referer_object: referer,
+            flags: 0,
+            req_path: path_handler//如果没有DecId，那么就当当前decid处理
+        },
+        // 目前只支持ChunkId/FileId/DirId
+        object_id: object_id
+        
+    }
+    let resp = await stack[2].ndn_service().get_data(req)
+    return resp
+}
+
+async function tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number){
+
+        let create_task = (await stack[0].trans().create_task({
+            common: {
+                level: level[0],
+                flags: 0,
+                dec_id: stack[1].dec_id,
+                target: stack[2].local_device_id().object_id,
+                //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
+                referer_object: referer,
+                req_path:path_handler
+            },
+            //不支持DirId,支持ChunkId/FileId
+            object_id: object_id,
+            local_path: path,
+            device_list: [stack[3].local_device_id()],
+            auto_start: true
+        })).unwrap()
+        console.log("create_task_id",JSON.stringify(create_task.task_id))
+        let sleepTime = 50;
+        console.log("create_task_id",JSON.stringify(create_task.task_id))
+    
+        //target 设备 get_task_state 检查下载状态
+        let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
+            setTimeout(() => {
+                console.info(`下载文件超时`)
+                v({ err: true, log: `下载文件超时：${object_id}` })
+            }, timeout)
+            while (true) {
+                console.log(`savePath: ${path}`);
+                const resp = (await stack[4].trans().get_task_state({
+                    common: {
+                        level: cyfs.NDNAPILevel.NDC,
+                        flags: 0,
+                        dec_id: stack[5].dec_id,
+                        target: stack[6].local_device_id().object_id,
+                        req_path: "",
+                        referer_object: []
+
+                    },
+                    task_id: create_task.task_id
+                })).unwrap();
+                console.log("get task status", JSON.stringify(resp.state));
+                if (resp.state === cyfs.TransTaskState.Finished) {
+                    console.log("download task finished")
+                    break;
+                }
+                if (sleepTime > 2000) {
+                    await cyfs.sleep(2000);
+                } else {
+                    await cyfs.sleep(sleepTime);
+                    sleepTime = sleepTime * 2;
+                }
+
+            }
+            v({ err: false, log: `下载文件成功：${object_id}` })
+        })
+        return create_task   
+}
 
 async function clean_test_data(source:cyfs.SharedCyfsStack,target:cyfs.SharedCyfsStack,obj_id:cyfs.ObjectId,root_state_path:string,test_file_path:string){
     //clear test object 
@@ -422,32 +538,42 @@ async function clean_test_data(source:cyfs.SharedCyfsStack,target:cyfs.SharedCyf
     fs.removeSync(test_file_path)
 
 }
+
 async function insert_object_map(type:string,path:string,key:any,GlobalState:cyfs.GlobalStateStub,acc:cyfs.RootStateOpEnvAccess){
     let PathOpEnv = (await GlobalState.create_path_op_env_with_access(acc)).unwrap()
     //将对象id挂在objet_map上
+    let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+    let obj_id = obj.desc().object_id();
     switch(type){
         case "Map":   
             console.info(`#create_new_with_path_map ${JSON.stringify(await PathOpEnv.create_new_with_path(path,cyfs.ObjectMapSimpleContentType.Map))}`)
             console.info(`#remove_with_path  ${JSON.stringify(await PathOpEnv.remove_with_path(path))}`)
             console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, key))}`)
-            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
-            let obj_id1 = obj1.desc().object_id();
+
+            console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, obj_id))}`)
             console.info(`#before update_result",${JSON.stringify(await PathOpEnv.update())}`)
-            console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, obj_id1))}`)
-            let before_path_map = await PathOpEnv.update()
-            let before_root = before_path_map.unwrap().root
-            let before_dec_root = before_path_map.unwrap().dec_root
+            let before_path_map_1 = await PathOpEnv.update()
+            let before_root_1 = before_path_map_1.unwrap().root
+            let before_dec_root_1 = before_path_map_1.unwrap().dec_root
             console.info(`#set_with_path_result:${JSON.stringify(await PathOpEnv.set_with_path(path, key))}`)
-            let after_path_map = await PathOpEnv.update()
-            let after_root = after_path_map.unwrap().root
-            let after_dec_root = after_path_map.unwrap().dec_root
-            return [before_root,before_dec_root,after_root,after_dec_root]
+            let after_path_map_1 = await PathOpEnv.update()
+            let after_root_1 = after_path_map_1.unwrap().root
+            let after_dec_root_1 = after_path_map_1.unwrap().dec_root
+            return [before_root_1,before_dec_root_1,after_root_1,after_dec_root_1]
         case "Set":
-            console.info(`#create_new_with_path_map ${JSON.stringify(await PathOpEnv.create_new_with_path(path,cyfs.ObjectMapSimpleContentType.Set))}`)
+            console.info(`#create_new_with_path_map ${JSON.stringify(await PathOpEnv.create_new_with_path(path,cyfs.ObjectMapSimpleContentType.Map))}`)
             console.info(`#remove_with_path  ${JSON.stringify(await PathOpEnv.remove_with_path(path))}`)
-            console.info(`# insert_with_path_result1:${JSON.stringify(await PathOpEnv.set_with_path(path, key))}`)
-            console.info(`#update_result2",${JSON.stringify(await PathOpEnv.update())}`)
-            break;
+            console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, key))}`)
+            console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, obj_id))}`)
+            console.info(`#before update_result",${JSON.stringify(await PathOpEnv.update())}`)
+            let before_path_map_2 = await PathOpEnv.update()
+            let before_root_2  = before_path_map_2.unwrap().root
+            let before_dec_root_2  = before_path_map_2 .unwrap().dec_root
+            console.info(`#set_with_path_result:${JSON.stringify(await PathOpEnv.set_with_path(path, key))}`)
+            let after_path_map_2 = await PathOpEnv.update()
+            let after_root_2 = after_path_map_2.unwrap().root
+            let after_dec_root_2 = after_path_map_2.unwrap().dec_root
+            return [before_root_2,before_dec_root_2,after_root_2,after_dec_root_2]
     }
     
 }
@@ -473,7627 +599,950 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
         ZoneSimulator.stopZoneSimulator();
         process.exit(0)
     })
-    describe("#NDN权限测试,objectmap_inner_path 同设备",function(){
-        describe("#NDN权限测试,objectmap_inner_path,同zone",async()=>{
-            describe("#NDN权限测试,objectmap_inner_path,同zone同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    //this.beforeEach(function(){});
-                    //this.afterEach(function(){});
-                    it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
+    describe("#NDN权限测试,objectmap_inner_path",async()=>{
+        describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{                 
+            it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
+                    
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
 
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        //let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        //let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
+                        //调用NDN get_data接口
+                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id())
 
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {                     
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-                            
-                            //将chunkid对象id挂在objet_map上
-                            insert_object_map("Map",acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        if (resp.err) {
+                            v({ err: true, log: `ndn_service get_data failed` })
+                        }
+                        assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
                         }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                            let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                          //stack
-                          let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                          let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-  
-                          //test conf
-                          let fileName = RandomGenerator.string(10);
-                          let filePath = path.join(__dirname, "./chunk_trans/source/")
-                          console.log("filePath",filePath)
-                          let chunkSize = 4 * 1024 * 1024
-                          let chunkNumber = 10
-                          let timeout: number = 600 * 1000                
-                          let acl_path = "/test/api/test/"
-                          let decid = target.dec_id
-  
-                          //create test file
-                          await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-  
-                          //acl
-                          await source.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                          await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-  
-                          //rmeta
-                          let stub_source = source.root_state_stub(undefined,undefined)
-                          let stub_target = target.root_state_stub(undefined,undefined)
-  
-                          let env_acc:cyfs.RootStateOpEnvAccess = {
-                          path:acl_path,
-                          access:cyfs.AccessPermissions.Full 
-                          }
-      
-                          //vaildate
-                          let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-  
-                          let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                          let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                          
-                          //初始化数据
-                          let stack = [source,source,source,source,source,source,source,source,source,source]
-                          let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                           let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                           let chunkIdList = res[3]
-                           //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                           
-  
-                          //从target设备get 对象数据
-                          console.log("chunkIdList",chunkIdList)
-                          let chunkRecvPromise: Array<any> = []
-                          for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                              console.log("chunkIdList_i_ ", i)
-                              chunkRecvPromise.push(new Promise(async (v) => {
-  
-                              setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                              let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                              console.info(`开始传输chunk:${chunkId},${buff}`)
-  
-                              //将chunkid对象id挂在objet_map上
-                              console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                              let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                              console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                              assert.ok(!result1.err)
-  
-                              let update_result2 = await op_env_stub_source.update()
-                              console.info("update_result2",update_result2)
-                              assert.ok(!update_result2.err)
-  
-                              let list_result1 = await op_env_stub_source.list(acl_path)
-                              console.info("list_result1",list_result1)
-  
-  
-  
-                              //await op_env_stub_source.commit()
-                              //调用get_data接口
-                              let req: cyfs.NDNGetDataOutputRequest = {
-                                  common: {                                   
-                                      level: cyfs.NDNAPILevel.NDN,// api级别
-                                      dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                      target: target.local_device_id().object_id,
-                                      // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                      referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                      flags: 0,
-                                      req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                  },
-                                  // 目前只支持ChunkId/FileId/DirId
-                                  object_id: chunkId.calculate_id()
-                                  
-                              }
-  
-                              let resp = await source.ndn_service().get_data(req)
-                              console.info(`${chunkId} 下载结果：${resp}`)
-                              if (resp.err) {
-                                  v({ err: true, log: `ndn_service get_data failed` })
-                              }
-                              //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                              console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                              v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                          }))
-                          }
-                          let download = []
-                          for (let i in chunkRecvPromise) {
-                          let result = await chunkRecvPromise[i]
-                          if (result.err) {
-                              return { err: result.err, log: result.log }
-                          }
-                          download.push(result)                        
-                          }
-                          //清理数据
-                          await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                          
-                          return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    //需要增加chunkid与dir的关联
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                         //stack
-                         let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         //test conf
-                         let fileName = RandomGenerator.string(10);
-                         let filePath = path.join(__dirname, "./chunk_trans/source/")
-                         console.log("filePath",filePath)
-                         let chunkSize = 4 * 1024 * 1024
-                         let chunkNumber = 10
-                         let timeout: number = 600 * 1000                
-                         let acl_path = "/test/api/test/"
-                         let decid = target.dec_id
- 
-                         //create test file
-                         await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
- 
-                         //acl
-                         await source.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                         await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
- 
-                         //rmeta
-                         let stub_source = source.root_state_stub(undefined,undefined)
-                         let stub_target = target.root_state_stub(undefined,undefined)
- 
-                         let env_acc:cyfs.RootStateOpEnvAccess = {
-                         path:acl_path,
-                         access:cyfs.AccessPermissions.Full 
-                         }
-     
-                         //vaildate
-                         let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
- 
-                         let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                         let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                         
-                         //初始化数据
-                         let stack = [source,source,source,source,source,source,source,source,source,source]
-                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                          let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                          let chunkIdList = res[3]
-                          //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                          
- 
-                         //从target设备get 对象数据
-                         console.log("chunkIdList",chunkIdList)
-                         let chunkRecvPromise: Array<any> = []
-                         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                             console.log("chunkIdList_i_ ", i)
-                             chunkRecvPromise.push(new Promise(async (v) => {
- 
-                             setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                             let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                             console.info(`开始传输chunk:${chunkId},${buff}`)
- 
-                             //将chunkid对象id挂在objet_map上
-                             console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                             let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                             console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                             assert.ok(!result1.err)
- 
-                             let update_result2 = await op_env_stub_source.update()
-                             console.info("update_result2",update_result2)
-                             assert.ok(!update_result2.err)
- 
-                             let list_result1 = await op_env_stub_source.list(acl_path)
-                             console.info("list_result1",list_result1)
- 
- 
- 
-                             //await op_env_stub_source.commit()
-                             //调用get_data接口
-                             let req: cyfs.NDNGetDataOutputRequest = {
-                                 common: {                                   
-                                     level: cyfs.NDNAPILevel.NDN,// api级别
-                                     dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                     target: target.local_device_id().object_id,
-                                     // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                     referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                     flags: 0,
-                                     req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                 },
-                                 // 目前只支持ChunkId/FileId/DirId
-                                 object_id: chunkId.calculate_id()
-                                 
-                             }
- 
-                             let resp = await source.ndn_service().get_data(req)
-                             console.info(`${chunkId} 下载结果：${resp}`)
-                             if (resp.err) {
-                                 v({ err: true, log: `ndn_service get_data failed` })
-                             }
-                             //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                             console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                             v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                         }))
-                         }
-                         let download = []
-                         for (let i in chunkRecvPromise) {
-                            let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                         }
-                         download.push(result)                        
-                         }
-                         //清理数据
-                         await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                         
-                         return { err: false, log: `chunk 下载成功`, download };
-
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
                         let result = await chunkRecvPromise[i]
                         if (result.err) {
                             return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                      
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            inner_path: "/" + fileName,
-                            object_id: res[0].object_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
                     
-                    })
-                })
-                describe("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                })
-
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
             })
-            describe("#NDN权限测试,objectmap_inner_path,同zone不同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    //this.beforeEach(function(){});
-                    //this.afterEach(function(){});
-                    it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, chunkId.calculate_id())
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                          //stack
-                          let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                          let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-  
-                          //test conf
-                          let fileName = RandomGenerator.string(10);
-                          let filePath = path.join(__dirname, "./chunk_trans/source/")
-                          console.log("filePath",filePath)
-                          let chunkSize = 4 * 1024 * 1024
-                          let chunkNumber = 10
-                          let timeout: number = 600 * 1000                
-                          let acl_path = "/test/api/test/"
-                          let decid = target.dec_id
-  
-                          //create test file
-                          await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-  
-                          //acl
-                          await source.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                          await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-  
-                          //rmeta
-                          let stub_source = source.root_state_stub(undefined,undefined)
-                          let stub_target = target.root_state_stub(undefined,undefined)
-  
-                          let env_acc:cyfs.RootStateOpEnvAccess = {
-                          path:acl_path,
-                          access:cyfs.AccessPermissions.Full 
-                          }
-      
-                          //vaildate
-                          let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-  
-                          let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                          let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                          
-                          //初始化数据
-                          let stack = [source,source,source,source,source,source,source,source,source,source]
-                          let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                           let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                           let chunkIdList = res[3]
-                           
-  
-                          //从target设备get 对象数据
-                          console.log("chunkIdList",chunkIdList)
-                          let chunkRecvPromise: Array<any> = []
-                          for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                              console.log("chunkIdList_i_ ", i)
-                              chunkRecvPromise.push(new Promise(async (v) => {
-  
-                              setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                              let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                              console.info(`开始传输chunk:${chunkId},${buff}`)
-  
-                              //将chunkid对象id挂在objet_map上
-                              console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                              let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                              console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                              assert.ok(!result1.err)
-  
-                              let update_result2 = await op_env_stub_source.update()
-                              console.info("update_result2",update_result2)
-                              assert.ok(!update_result2.err)
-  
-                              let list_result1 = await op_env_stub_source.list(acl_path)
-                              console.info("list_result1",list_result1)
-  
-  
-  
-                              //await op_env_stub_source.commit()
-                              //调用get_data接口
-                              let req: cyfs.NDNGetDataOutputRequest = {
-                                  common: {                                   
-                                      level: cyfs.NDNAPILevel.NDN,// api级别
-                                      dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                      target: target.local_device_id().object_id,
-                                      // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                      referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                      flags: 0,
-                                      req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                  },
-                                  // 目前只支持ChunkId/FileId/DirId
-                                  object_id: chunkId.calculate_id()
-                                  
-                              }
-  
-                              let resp = await source.ndn_service().get_data(req)
-                              console.info(`${chunkId} 下载结果：${resp}`)
-                              if (resp.err) {
-                                  v({ err: true, log: `ndn_service get_data failed` })
-                              }
-                              //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                              console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                              v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                          }))
-                          }
-                          let download = []
-                          for (let i in chunkRecvPromise) {
-                          let result = await chunkRecvPromise[i]
-                          if (result.err) {
-                              return { err: result.err, log: result.log }
-                          }
-                          download.push(result)                        
-                          }
-                          //清理数据
-                          await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                          
-                          return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    //需要增加chunkid与dir的关联
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                         //stack
-                         let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
- 
-                         //test conf
-                         let fileName = RandomGenerator.string(10);
-                         let filePath = path.join(__dirname, "./chunk_trans/source/")
-                         console.log("filePath",filePath)
-                         let chunkSize = 4 * 1024 * 1024
-                         let chunkNumber = 10
-                         let timeout: number = 600 * 1000                
-                         let acl_path = "/test/api/test/"
-                         let decid = target.dec_id
- 
-                         //create test file
-                         await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
- 
-                         //acl
-                         await source.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                         await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
- 
-                         //rmeta
-                         let stub_source = source.root_state_stub(undefined,undefined)
-                         let stub_target = target.root_state_stub(undefined,undefined)
- 
-                         let env_acc:cyfs.RootStateOpEnvAccess = {
-                         path:acl_path,
-                         access:cyfs.AccessPermissions.Full 
-                         }
-     
-                         //vaildate
-                         let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
- 
-                         let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                         let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                         
-                         //初始化数据
-                         let stack = [source,source,source,source,source,source,source,source,source,source]
-                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                          let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                          let chunkIdList = res[3]
-                          
- 
-                         //从target设备get 对象数据
-                         console.log("chunkIdList",chunkIdList)
-                         let chunkRecvPromise: Array<any> = []
-                         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                             console.log("chunkIdList_i_ ", i)
-                             chunkRecvPromise.push(new Promise(async (v) => {
- 
-                             setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                             let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                             console.info(`开始传输chunk:${chunkId},${buff}`)
- 
-                             //将chunkid对象id挂在objet_map上
-                             console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                             let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                             console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                             assert.ok(!result1.err)
- 
-                             let update_result2 = await op_env_stub_source.update()
-                             console.info("update_result2",update_result2)
-                             assert.ok(!update_result2.err)
- 
-                             let list_result1 = await op_env_stub_source.list(acl_path)
-                             console.info("list_result1",list_result1)
- 
- 
- 
-                             //await op_env_stub_source.commit()
-                             //调用get_data接口
-                             let req: cyfs.NDNGetDataOutputRequest = {
-                                 common: {                                   
-                                     level: cyfs.NDNAPILevel.NDN,// api级别
-                                     dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                     target: target.local_device_id().object_id,
-                                     // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                     referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                     flags: 0,
-                                     req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                 },
-                                 // 目前只支持ChunkId/FileId/DirId
-                                 object_id: chunkId.calculate_id()
-                                 
-                             }
- 
-                             let resp = await source.ndn_service().get_data(req)
-                             console.info(`${chunkId} 下载结果：${resp}`)
-                             if (resp.err) {
-                                 v({ err: true, log: `ndn_service get_data failed` })
-                             }
-                             //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                             console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                             v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                         }))
-                         }
-                         let download = []
-                         for (let i in chunkRecvPromise) {
-                         let result = await chunkRecvPromise[i]
-                         if (result.err) {
-                             return { err: result.err, log: result.log }
-                         }
-                         download.push(result)                        
-                         }
-                         //清理数据
-                         await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                         
-                         return { err: false, log: `chunk 下载成功`, download };
-
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                        let chunkIdList = res[3]
-                      
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                        let chunkIdList = res[3]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"/" + fileName,chunkSize,level))
-                        let chunkIdList = res[3]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[1].object_id
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            inner_path: "/" + fileName,
-                            object_id: res[0].object_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
+            it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
                     
-                    })
-                })
-                describe.only("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it.only("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
 
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
 
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+ 
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                        
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
+                        //调用get_data接口
+                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id())
 
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        if (resp.err) {
+                            v({ err: true, log: `ndn_service get_data failed` })
                         }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
+                        assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
+                                    
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
 
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+ 
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
+
+                        //调用get_data接口
+                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id())
+
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        if (resp.err) {
+                            v({ err: true, log: `ndn_service get_data failed` })
+                        }
+                        assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
+                                   
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+ 
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
+                        //调用get_data接口
+                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id())
 
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        if (resp.err) {
+                            v({ err: true, log: `ndn_service get_data failed` })
+                        }
+                        assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
+                                    
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
 
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+ 
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)                    
-                        })
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
+
+                        //调用get_data接口
+                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id())
+
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        if (resp.err) {
+                            v({ err: true, log: `ndn_service get_data failed` })
+                        }
+                        assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
             
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
+            })
+        })
+        describe("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
     
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
+                                  
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
 
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //初始化数据
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
+
+                        //调用NDN get_data接口
                         let stack = [source,source,source,source,source,source,source,source,source,source]
                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
+
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
+                        //调用NDN get_data接口
                         let stack = [source,source,source,source,source,source,source,source,source,source]
                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
+
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
+                        //调用NDN get_data接口
                         let stack = [source,source,source,source,source,source,source,source,source,source]
                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
+
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
+                        //调用NDN get_data接口
                         let stack = [source,source,source,source,source,source,source,source,source,source]
                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
+
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
+                        //调用NDN get_data接口
                         let stack = [source,source,source,source,source,source,source,source,source,source]
                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
+
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
+            })
+            it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
+                let para = {
+                    "devices": ["sam_dev_sam_dec","sam_dev_dif_dec","dif_dev_sam_dec","dif_dev_dif_dec"],
+                    "decid":target.dec_id,
+                    "acl_path":"/test/api/test/",
+                    "path":{"fileName":RandomGenerator.string(10),"filepath":path.join(__dirname, "./chunk_trans/source/"),"savepath":path.join(__dirname, "./chunk_trans/target/")},
+                    "chunkSize" : 4 * 1024 * 1024,
+                    "timeout": 600 * 1000,
+                    "root_path":"/123/test/",
+                    "chunkNumber":10
+                }
+                let type:string
+                //遍历四种情况
+                for( type in para.devices){
+                    //初始化stack
+                    let stack_res : cyfs.SharedCyfsStack[]|undefined = await stacks(type)
+                    source = stack_res![0]
+                    target = stack_res![1]
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.filepath, para.path.fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(para.decid, para.acl_path).toString()
+
+                    //acl权限
+                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
+                    
+                    //rmeta
+                    let env_acc:cyfs.RootStateOpEnvAccess = {
+                    path:para.acl_path,
+                    access:cyfs.AccessPermissions.Full 
+                    }
+                    let stub_source = source.root_state_stub(undefined,undefined)
+                    let stub_target = target.root_state_stub(undefined,undefined)
+                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
+                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
+                    
+                    //初始化数据
+                    let stack = [source,source,source,source,source,source,source,source,source,source]
+                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                    let res= (await trans_chunk_for_getdata(stack,para.path.filepath,"\\" + para.path.fileName,para.chunkSize,level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    //从target设备get 对象数据
+                    console.log("chunkIdList",chunkIdList)
+                    let chunkRecvPromise: Array<any> = []
+                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                        console.log("chunkIdList_i_ ", i)
+                        chunkRecvPromise.push(new Promise(async (v) => {                     
+                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                        console.info(`开始传输chunk:${chunkId},${buff}`)
                         
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
+                        //将chunkid对象id挂在objet_map上
+                        let obeject_map_res = insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
 
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
+                        //调用NDN get_data接口
+                        let stack = [source,source,source,source,source,source,source,source,source,source]
+                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+                        let resp = tarns_task(stack,[],path_handler,level,chunkId.calculate_id(),para.path.savepath,para.timeout)
+                        //tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number)
 
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                })
+                        console.info(`${chunkId.calculate_id().to_base_58()} 下载结果：${resp}`)
+                        v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                    }))
+                    }
+                    let download = []
+                    for (let i in chunkRecvPromise) {
+                        let result = await chunkRecvPromise[i]
+                        if (result.err) {
+                            return { err: result.err, log: result.log }
+                    }
+                    download.push(result)                        
+                    }
+                    //清理数据
+                    await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    
+                    return { err: false, log: `chunk 下载成功`, download };
+                }
             })
         })
     })
 
-    describe("#NDN权限测试,objectmap_inner_path 跨设备",function(){
-        describe("#NDN权限测试,objectmap_inner_path,同zone",async()=>{
-            describe("#NDN权限测试,objectmap_inner_path,同zone同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    //this.beforeEach(function(){});
-                    //this.afterEach(function(){});
-                    it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, chunkId.calculate_id())
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                            let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                          //stack
-                          let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                          let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-  
-                          //test conf
-                          let fileName = RandomGenerator.string(10);
-                          let filePath = path.join(__dirname, "./chunk_trans/source/")
-                          console.log("filePath",filePath)
-                          let chunkSize = 4 * 1024 * 1024
-                          let chunkNumber = 10
-                          let timeout: number = 600 * 1000                
-                          let acl_path = "/test/api/test/"
-                          let decid = target.dec_id
-  
-                          //create test file
-                          await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-  
-                          //acl
-                          await source.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                          await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-  
-                          //rmeta
-                          let stub_source = source.root_state_stub(undefined,undefined)
-                          let stub_target = target.root_state_stub(undefined,undefined)
-  
-                          let env_acc:cyfs.RootStateOpEnvAccess = {
-                          path:acl_path,
-                          access:cyfs.AccessPermissions.Full 
-                          }
-      
-                          //vaildate
-                          let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-  
-                          let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                          let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                          
-                          //初始化数据
-                          let stack = [source,source,source,source,source,source,source,source,source,source]
-                          let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                           let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                           let chunkIdList = res[3]
-                           //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                           
-  
-                          //从target设备get 对象数据
-                          console.log("chunkIdList",chunkIdList)
-                          let chunkRecvPromise: Array<any> = []
-                          for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                              console.log("chunkIdList_i_ ", i)
-                              chunkRecvPromise.push(new Promise(async (v) => {
-  
-                              setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                              let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                              console.info(`开始传输chunk:${chunkId},${buff}`)
-  
-                              //将chunkid对象id挂在objet_map上
-                              console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                              let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                              console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                              assert.ok(!result1.err)
-  
-                              let update_result2 = await op_env_stub_source.update()
-                              console.info("update_result2",update_result2)
-                              assert.ok(!update_result2.err)
-  
-                              let list_result1 = await op_env_stub_source.list(acl_path)
-                              console.info("list_result1",list_result1)
-  
-  
-  
-                              //await op_env_stub_source.commit()
-                              //调用get_data接口
-                              let req: cyfs.NDNGetDataOutputRequest = {
-                                  common: {                                   
-                                      level: cyfs.NDNAPILevel.NDN,// api级别
-                                      dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                      target: target.local_device_id().object_id,
-                                      // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                      referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                      flags: 0,
-                                      req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                  },
-                                  // 目前只支持ChunkId/FileId/DirId
-                                  object_id: chunkId.calculate_id()
-                                  
-                              }
-  
-                              let resp = await source.ndn_service().get_data(req)
-                              console.info(`${chunkId} 下载结果：${resp}`)
-                              if (resp.err) {
-                                  v({ err: true, log: `ndn_service get_data failed` })
-                              }
-                              //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                              console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                              v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                          }))
-                          }
-                          let download = []
-                          for (let i in chunkRecvPromise) {
-                          let result = await chunkRecvPromise[i]
-                          if (result.err) {
-                              return { err: result.err, log: result.log }
-                          }
-                          download.push(result)                        
-                          }
-                          //清理数据
-                          await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                          
-                          return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    //需要增加chunkid与dir的关联
-                    it.skip("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                         //stack
-                         let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-                         //test conf
-                         let fileName = RandomGenerator.string(10);
-                         let filePath = path.join(__dirname, "./chunk_trans/source/")
-                         console.log("filePath",filePath)
-                         let chunkSize = 4 * 1024 * 1024
-                         let chunkNumber = 10
-                         let timeout: number = 600 * 1000                
-                         let acl_path = "/test/api/test/"
-                         let decid = target.dec_id
- 
-                         //create test file
-                         await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
- 
-                         //acl
-                         await source.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                         await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
- 
-                         //rmeta
-                         let stub_source = source.root_state_stub(undefined,undefined)
-                         let stub_target = target.root_state_stub(undefined,undefined)
- 
-                         let env_acc:cyfs.RootStateOpEnvAccess = {
-                         path:acl_path,
-                         access:cyfs.AccessPermissions.Full 
-                         }
-     
-                         //vaildate
-                         let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
- 
-                         let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                         let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                         
-                         //初始化数据
-                         let stack = [source,source,source,source,source,source,source,source,source,source]
-                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                          let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                          let chunkIdList = res[3]
-                          //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                          
- 
-                         //从target设备get 对象数据
-                         console.log("chunkIdList",chunkIdList)
-                         let chunkRecvPromise: Array<any> = []
-                         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                             console.log("chunkIdList_i_ ", i)
-                             chunkRecvPromise.push(new Promise(async (v) => {
- 
-                             setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                             let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                             console.info(`开始传输chunk:${chunkId},${buff}`)
- 
-                             //将chunkid对象id挂在objet_map上
-                             console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                             let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                             console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                             assert.ok(!result1.err)
- 
-                             let update_result2 = await op_env_stub_source.update()
-                             console.info("update_result2",update_result2)
-                             assert.ok(!update_result2.err)
- 
-                             let list_result1 = await op_env_stub_source.list(acl_path)
-                             console.info("list_result1",list_result1)
- 
- 
- 
-                             //await op_env_stub_source.commit()
-                             //调用get_data接口
-                             let req: cyfs.NDNGetDataOutputRequest = {
-                                 common: {                                   
-                                     level: cyfs.NDNAPILevel.NDN,// api级别
-                                     dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                     target: target.local_device_id().object_id,
-                                     // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                     referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                     flags: 0,
-                                     req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                 },
-                                 // 目前只支持ChunkId/FileId/DirId
-                                 object_id: chunkId.calculate_id()
-                                 
-                             }
- 
-                             let resp = await source.ndn_service().get_data(req)
-                             console.info(`${chunkId} 下载结果：${resp}`)
-                             if (resp.err) {
-                                 v({ err: true, log: `ndn_service get_data failed` })
-                             }
-                             //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                             console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                             v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                         }))
-                         }
-                         let download = []
-                         for (let i in chunkRecvPromise) {
-                         let result = await chunkRecvPromise[i]
-                         if (result.err) {
-                             return { err: result.err, log: result.log }
-                         }
-                         download.push(result)                        
-                         }
-                         //清理数据
-                         await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                         
-                         return { err: false, log: `chunk 下载成功`, download };
-
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                      
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            inner_path: "/" + fileName,
-                            object_id: res[0].object_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    
-                    })
-                })
-                describe.skip("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                })
-
-            })
-            describe("#NDN权限测试,objectmap_inner_path,同zone不同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    //this.beforeEach(function(){});
-                    //this.afterEach(function(){});
-                    it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, chunkId.calculate_id())
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                          //stack
-                          let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                          let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-  
-                          //test conf
-                          let fileName = RandomGenerator.string(10);
-                          let filePath = path.join(__dirname, "./chunk_trans/source/")
-                          console.log("filePath",filePath)
-                          let chunkSize = 4 * 1024 * 1024
-                          let chunkNumber = 10
-                          let timeout: number = 600 * 1000                
-                          let acl_path = "/test/api/test/"
-                          let decid = target.dec_id
-  
-                          //create test file
-                          await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-  
-                          //acl
-                          await source.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                          await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-  
-                          //rmeta
-                          let stub_source = source.root_state_stub(undefined,undefined)
-                          let stub_target = target.root_state_stub(undefined,undefined)
-  
-                          let env_acc:cyfs.RootStateOpEnvAccess = {
-                          path:acl_path,
-                          access:cyfs.AccessPermissions.Full 
-                          }
-      
-                          //vaildate
-                          let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-  
-                          let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                          let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                          
-                          //初始化数据
-                          let stack = [source,source,source,source,source,source,source,source,source,source]
-                          let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                           let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                           let chunkIdList = res[3]
-                           //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                           
-  
-                          //从target设备get 对象数据
-                          console.log("chunkIdList",chunkIdList)
-                          let chunkRecvPromise: Array<any> = []
-                          for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                              console.log("chunkIdList_i_ ", i)
-                              chunkRecvPromise.push(new Promise(async (v) => {
-  
-                              setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                              let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                              console.info(`开始传输chunk:${chunkId},${buff}`)
-  
-                              //将chunkid对象id挂在objet_map上
-                              console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                              let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                              console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                              assert.ok(!result1.err)
-  
-                              let update_result2 = await op_env_stub_source.update()
-                              console.info("update_result2",update_result2)
-                              assert.ok(!update_result2.err)
-  
-                              let list_result1 = await op_env_stub_source.list(acl_path)
-                              console.info("list_result1",list_result1)
-  
-  
-  
-                              //await op_env_stub_source.commit()
-                              //调用get_data接口
-                              let req: cyfs.NDNGetDataOutputRequest = {
-                                  common: {                                   
-                                      level: cyfs.NDNAPILevel.NDN,// api级别
-                                      dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                      target: target.local_device_id().object_id,
-                                      // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                      referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                      flags: 0,
-                                      req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                  },
-                                  // 目前只支持ChunkId/FileId/DirId
-                                  object_id: chunkId.calculate_id()
-                                  
-                              }
-  
-                              let resp = await source.ndn_service().get_data(req)
-                              console.info(`${chunkId} 下载结果：${resp}`)
-                              if (resp.err) {
-                                  v({ err: true, log: `ndn_service get_data failed` })
-                              }
-                              //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                              console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                              v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                          }))
-                          }
-                          let download = []
-                          for (let i in chunkRecvPromise) {
-                          let result = await chunkRecvPromise[i]
-                          if (result.err) {
-                              return { err: result.err, log: result.log }
-                          }
-                          download.push(result)                        
-                          }
-                          //清理数据
-                          await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                          
-                          return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    //需要增加chunkid与dir的关联
-                    it.skip("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                         //stack
-                         let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-                         //test conf
-                         let fileName = RandomGenerator.string(10);
-                         let filePath = path.join(__dirname, "./chunk_trans/source/")
-                         console.log("filePath",filePath)
-                         let chunkSize = 4 * 1024 * 1024
-                         let chunkNumber = 10
-                         let timeout: number = 600 * 1000                
-                         let acl_path = "/test/api/test/"
-                         let decid = target.dec_id
- 
-                         //create test file
-                         await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
- 
-                         //acl
-                         await source.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                         await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
- 
-                         //rmeta
-                         let stub_source = source.root_state_stub(undefined,undefined)
-                         let stub_target = target.root_state_stub(undefined,undefined)
- 
-                         let env_acc:cyfs.RootStateOpEnvAccess = {
-                         path:acl_path,
-                         access:cyfs.AccessPermissions.Full 
-                         }
-     
-                         //vaildate
-                         let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
- 
-                         let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                         let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                         
-                         //初始化数据
-                         let stack = [source,source,source,source,source,source,source,source,source,source]
-                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                          let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                          let chunkIdList = res[3]
-                          //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                          
- 
-                         //从target设备get 对象数据
-                         console.log("chunkIdList",chunkIdList)
-                         let chunkRecvPromise: Array<any> = []
-                         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                             console.log("chunkIdList_i_ ", i)
-                             chunkRecvPromise.push(new Promise(async (v) => {
- 
-                             setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                             let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                             console.info(`开始传输chunk:${chunkId},${buff}`)
- 
-                             //将chunkid对象id挂在objet_map上
-                             console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                             let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                             console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                             assert.ok(!result1.err)
- 
-                             let update_result2 = await op_env_stub_source.update()
-                             console.info("update_result2",update_result2)
-                             assert.ok(!update_result2.err)
- 
-                             let list_result1 = await op_env_stub_source.list(acl_path)
-                             console.info("list_result1",list_result1)
- 
- 
- 
-                             //await op_env_stub_source.commit()
-                             //调用get_data接口
-                             let req: cyfs.NDNGetDataOutputRequest = {
-                                 common: {                                   
-                                     level: cyfs.NDNAPILevel.NDN,// api级别
-                                     dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                     target: target.local_device_id().object_id,
-                                     // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                     referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                     flags: 0,
-                                     req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                 },
-                                 // 目前只支持ChunkId/FileId/DirId
-                                 object_id: chunkId.calculate_id()
-                                 
-                             }
- 
-                             let resp = await source.ndn_service().get_data(req)
-                             console.info(`${chunkId} 下载结果：${resp}`)
-                             if (resp.err) {
-                                 v({ err: true, log: `ndn_service get_data failed` })
-                             }
-                             //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                             console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                             v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                         }))
-                         }
-                         let download = []
-                         for (let i in chunkRecvPromise) {
-                         let result = await chunkRecvPromise[i]
-                         if (result.err) {
-                             return { err: result.err, log: result.log }
-                         }
-                         download.push(result)                        
-                         }
-                         //清理数据
-                         await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                         
-                         return { err: false, log: `chunk 下载成功`, download };
-
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                      
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1device1.fork_with_new_dec(DecId.DecIdB)
-                        
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            inner_path: "/" + fileName,
-                            object_id: res[0].object_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    
-                    })
-                })
-                describe.skip("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                    })
-                })
-            })
-        })
-        describe("#NDN权限测试,objectmap_inner_path,不同zone",async()=>{
-            describe("#NDN权限测试,objectmap_inner_path,不同zone同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    //this.beforeEach(function(){});
-                    //this.afterEach(function(){});
-                    it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, chunkId.calculate_id())
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                          //stack
-                          let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                          let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-  
-                          //test conf
-                          let fileName = RandomGenerator.string(10);
-                          let filePath = path.join(__dirname, "./chunk_trans/source/")
-                          console.log("filePath",filePath)
-                          let chunkSize = 4 * 1024 * 1024
-                          let chunkNumber = 10
-                          let timeout: number = 600 * 1000                
-                          let acl_path = "/test/api/test/"
-                          let decid = target.dec_id
-  
-                          //create test file
-                          await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-  
-                          //acl
-                          await source.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).clear_access()
-                          await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                          await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-  
-                          //rmeta
-                          let stub_source = source.root_state_stub(undefined,undefined)
-                          let stub_target = target.root_state_stub(undefined,undefined)
-  
-                          let env_acc:cyfs.RootStateOpEnvAccess = {
-                          path:acl_path,
-                          access:cyfs.AccessPermissions.Full 
-                          }
-      
-                          //vaildate
-                          let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-  
-                          let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                          let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                          
-                          //初始化数据
-                          let stack = [source,source,source,source,source,source,source,source,source,source]
-                          let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                           let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                           let chunkIdList = res[3]
-                           //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                           
-  
-                          //从target设备get 对象数据
-                          console.log("chunkIdList",chunkIdList)
-                          let chunkRecvPromise: Array<any> = []
-                          for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                              console.log("chunkIdList_i_ ", i)
-                              chunkRecvPromise.push(new Promise(async (v) => {
-  
-                              setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                              let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                              console.info(`开始传输chunk:${chunkId},${buff}`)
-  
-                              //将chunkid对象id挂在objet_map上
-                              console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                              let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                              console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                              assert.ok(!result1.err)
-  
-                              let update_result2 = await op_env_stub_source.update()
-                              console.info("update_result2",update_result2)
-                              assert.ok(!update_result2.err)
-  
-                              let list_result1 = await op_env_stub_source.list(acl_path)
-                              console.info("list_result1",list_result1)
-  
-  
-  
-                              //await op_env_stub_source.commit()
-                              //调用get_data接口
-                              let req: cyfs.NDNGetDataOutputRequest = {
-                                  common: {                                   
-                                      level: cyfs.NDNAPILevel.NDN,// api级别
-                                      dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                      target: target.local_device_id().object_id,
-                                      // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                      referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                      flags: 0,
-                                      req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                  },
-                                  // 目前只支持ChunkId/FileId/DirId
-                                  object_id: chunkId.calculate_id()
-                                  
-                              }
-  
-                              let resp = await source.ndn_service().get_data(req)
-                              console.info(`${chunkId} 下载结果：${resp}`)
-                              if (resp.err) {
-                                  v({ err: true, log: `ndn_service get_data failed` })
-                              }
-                              //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                              console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                              v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                          }))
-                          }
-                          let download = []
-                          for (let i in chunkRecvPromise) {
-                          let result = await chunkRecvPromise[i]
-                          if (result.err) {
-                              return { err: result.err, log: result.log }
-                          }
-                          download.push(result)                        
-                          }
-                          //清理数据
-                          await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                          
-                          return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    //需要增加chunkid与dir的关联
-                    it.skip("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                         //stack
-                         let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                         let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-                         //test conf
-                         let fileName = RandomGenerator.string(10);
-                         let filePath = path.join(__dirname, "./chunk_trans/source/")
-                         console.log("filePath",filePath)
-                         let chunkSize = 4 * 1024 * 1024
-                         let chunkNumber = 10
-                         let timeout: number = 600 * 1000                
-                         let acl_path = "/test/api/test/"
-                         let decid = target.dec_id
- 
-                         //create test file
-                         await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
- 
-                         //acl
-                         await source.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).clear_access()
-                         await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                         await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
- 
-                         //rmeta
-                         let stub_source = source.root_state_stub(undefined,undefined)
-                         let stub_target = target.root_state_stub(undefined,undefined)
- 
-                         let env_acc:cyfs.RootStateOpEnvAccess = {
-                         path:acl_path,
-                         access:cyfs.AccessPermissions.Full 
-                         }
-     
-                         //vaildate
-                         let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
- 
-                         let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                         let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                         
-                         //初始化数据
-                         let stack = [source,source,source,source,source,source,source,source,source,source]
-                         let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                          let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                          let chunkIdList = res[3]
-                          //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                          
- 
-                         //从target设备get 对象数据
-                         console.log("chunkIdList",chunkIdList)
-                         let chunkRecvPromise: Array<any> = []
-                         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                             console.log("chunkIdList_i_ ", i)
-                             chunkRecvPromise.push(new Promise(async (v) => {
- 
-                             setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                             let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                             console.info(`开始传输chunk:${chunkId},${buff}`)
- 
-                             //将chunkid对象id挂在objet_map上
-                             console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                             let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                             console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                             assert.ok(!result1.err)
- 
-                             let update_result2 = await op_env_stub_source.update()
-                             console.info("update_result2",update_result2)
-                             assert.ok(!update_result2.err)
- 
-                             let list_result1 = await op_env_stub_source.list(acl_path)
-                             console.info("list_result1",list_result1)
- 
- 
- 
-                             //await op_env_stub_source.commit()
-                             //调用get_data接口
-                             let req: cyfs.NDNGetDataOutputRequest = {
-                                 common: {                                   
-                                     level: cyfs.NDNAPILevel.NDN,// api级别
-                                     dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                     target: target.local_device_id().object_id,
-                                     // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                     referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                     flags: 0,
-                                     req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                 },
-                                 // 目前只支持ChunkId/FileId/DirId
-                                 object_id: chunkId.calculate_id()
-                                 
-                             }
- 
-                             let resp = await source.ndn_service().get_data(req)
-                             console.info(`${chunkId} 下载结果：${resp}`)
-                             if (resp.err) {
-                                 v({ err: true, log: `ndn_service get_data failed` })
-                             }
-                             //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                             console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                             v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                         }))
-                         }
-                         let download = []
-                         for (let i in chunkRecvPromise) {
-                         let result = await chunkRecvPromise[i]
-                         if (result.err) {
-                             return { err: result.err, log: result.log }
-                         }
-                         download.push(result)                        
-                         }
-                         //清理数据
-                         await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                         
-                         return { err: false, log: `chunk 下载成功`, download };
-
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                         let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                         let chunkIdList = res[3]
-                         //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                         
-
-                        //从target设备get 对象数据
-                        console.log("chunkIdList",chunkIdList)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-
-                            setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                            console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                            //将chunkid对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-
-
-
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: chunkId.calculate_id()
-                                
-                            }
-
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${chunkId} 下载结果：${resp}`)
-                            if (resp.err) {
-                                v({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                            v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }))
-                        }
-                        let download = []
-                        for (let i in chunkRecvPromise) {
-                        let result = await chunkRecvPromise[i]
-                        if (result.err) {
-                            return { err: result.err, log: result.log }
-                        }
-                        download.push(result)                        
-                        }
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `chunk 下载成功`, download };
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                      
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            object_id: file_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                        //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone2ood.fork_with_new_dec(DecId.DecIdA)
-                        
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let file_id = res[1].object_id
-                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                        
-                        //将file对象id挂在objet_map上
-                        console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                        let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                        console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                        assert.ok(!result1.err)
-
-                        let update_result2 = await op_env_stub_source.update()
-                        console.info("update_result2",update_result2)
-                        assert.ok(!update_result2.err)
-
-                        let list_result1 = await op_env_stub_source.list(acl_path)
-                        console.info("list_result1",list_result1)
-
-                        //await op_env_stub_source.commit()
-                        //调用get_data接口
-                        let req: cyfs.NDNGetDataOutputRequest = {
-                            common: {                                   
-                                level: cyfs.NDNAPILevel.NDN,// api级别
-                                dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                target: target.local_device_id().object_id,
-                                // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                referer_object: [],
-                                flags: 0,
-                                req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                            },
-                            // 目前只支持ChunkId/FileId/DirId
-                            inner_path: "/" + fileName,
-                            object_id: res[0].object_id
-                            
-                        }
-
-                        let resp = await source.ndn_service().get_data(req)
-                        console.info(`${file_id} 下载结果：${resp}`)
-                        if (resp.err) {
-                            console.info({ err: true, log: `ndn_service get_data failed` })
-                        }
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-
-                        //清理数据
-                        await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                        
-                        return { err: false, log: `file 下载成功`};
-                    
-                    })
-                describe.skip("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                    })
-                })
-            })
-            describe("#NDN权限测试,objectmap_inner_path,不同zone不同dec",async()=>{
-                describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                    describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{
-                        //this.beforeEach(function(){});
-                        //this.afterEach(function(){});
-                        it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{
-                            //stack
-                            let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                            let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-    
-                            //test conf
-                            let fileName = RandomGenerator.string(10);
-                            let filePath = path.join(__dirname, "./chunk_trans/source/")
-                            console.log("filePath",filePath)
-                            let chunkSize = 4 * 1024 * 1024
-                            let chunkNumber = 10
-                            let timeout: number = 600 * 1000                
-                            let acl_path = "/test/api/test/"
-                            let root_path = "/123/test/"
-                            let decid = target.dec_id
-    
-                            //create test file
-                            await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-    
-                            //acl
-                            await source.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-    
-                            //rmeta
-                            let stub_source = source.root_state_stub(undefined,undefined)
-                            let stub_target = target.root_state_stub(undefined,undefined)
-    
-                            let env_acc:cyfs.RootStateOpEnvAccess = {
-                            path:acl_path,
-                            access:cyfs.AccessPermissions.Full 
-                            }
-        
-                            //vaildate
-                            let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-    
-                            let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                            let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                            
-                            //初始化数据
-                            let stack = [source,source,source,source,source,source,source,source,source,source]
-                            let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                             let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                             let chunkIdList = res[3]
-                             
-    
-                            //从target设备get 对象数据
-                            console.log("chunkIdList",chunkIdList)
-                            let chunkRecvPromise: Array<any> = []
-                            for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                                console.log("chunkIdList_i_ ", i)
-                                chunkRecvPromise.push(new Promise(async (v) => {
-    
-                                setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-    
-                                //将chunkid对象id挂在objet_map上
-                                console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                                let result1 = await op_env_stub_target.insert_with_path(acl_path, chunkId.calculate_id())
-                                console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                                assert.ok(!result1.err)
-    
-                                let update_result2 = await op_env_stub_source.update()
-                                console.info("update_result2",update_result2)
-                                assert.ok(!update_result2.err)
-    
-                                let list_result1 = await op_env_stub_source.list(acl_path)
-                                console.info("list_result1",list_result1)
-    
-    
-    
-                                //await op_env_stub_source.commit()
-                                //调用get_data接口
-                                let req: cyfs.NDNGetDataOutputRequest = {
-                                    common: {                                   
-                                        level: cyfs.NDNAPILevel.NDN,// api级别
-                                        dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                        target: target.local_device_id().object_id,
-                                        // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                        referer_object: [],
-                                        flags: 0,
-                                        req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                    },
-                                    // 目前只支持ChunkId/FileId/DirId
-                                    object_id: chunkId.calculate_id()
-                                    
-                                }
-    
-                                let resp = await source.ndn_service().get_data(req)
-                                console.info(`${chunkId} 下载结果：${resp}`)
-                                if (resp.err) {
-                                    v({ err: true, log: `ndn_service get_data failed` })
-                                }
-                                //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                                console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                                v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                            }))
-                            }
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                            let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                            //清理数据
-                            await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                            
-                            return { err: false, log: `chunk 下载成功`, download };
-                        })
-                        it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
-                              //stack
-                              let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                              let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-      
-                              //test conf
-                              let fileName = RandomGenerator.string(10);
-                              let filePath = path.join(__dirname, "./chunk_trans/source/")
-                              console.log("filePath",filePath)
-                              let chunkSize = 4 * 1024 * 1024
-                              let chunkNumber = 10
-                              let timeout: number = 600 * 1000                
-                              let acl_path = "/test/api/test/"
-                              let decid = target.dec_id
-      
-                              //create test file
-                              await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-      
-                              //acl
-                              await source.root_state_meta_stub(undefined,undefined).clear_access()
-                              await target.root_state_meta_stub(undefined,undefined).clear_access()
-                              await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                              await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-      
-                              //rmeta
-                              let stub_source = source.root_state_stub(undefined,undefined)
-                              let stub_target = target.root_state_stub(undefined,undefined)
-      
-                              let env_acc:cyfs.RootStateOpEnvAccess = {
-                              path:acl_path,
-                              access:cyfs.AccessPermissions.Full 
-                              }
-          
-                              //vaildate
-                              let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-      
-                              let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                              let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                              
-                              //初始化数据
-                              let stack = [source,source,source,source,source,source,source,source,source,source]
-                              let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                               let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                               let chunkIdList = res[3]
-                               //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                               
-      
-                              //从target设备get 对象数据
-                              console.log("chunkIdList",chunkIdList)
-                              let chunkRecvPromise: Array<any> = []
-                              for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                                  console.log("chunkIdList_i_ ", i)
-                                  chunkRecvPromise.push(new Promise(async (v) => {
-      
-                                  setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                                  let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                  console.info(`开始传输chunk:${chunkId},${buff}`)
-      
-                                  //将chunkid对象id挂在objet_map上
-                                  console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                                  let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                                  console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                                  assert.ok(!result1.err)
-      
-                                  let update_result2 = await op_env_stub_source.update()
-                                  console.info("update_result2",update_result2)
-                                  assert.ok(!update_result2.err)
-      
-                                  let list_result1 = await op_env_stub_source.list(acl_path)
-                                  console.info("list_result1",list_result1)
-      
-      
-      
-                                  //await op_env_stub_source.commit()
-                                  //调用get_data接口
-                                  let req: cyfs.NDNGetDataOutputRequest = {
-                                      common: {                                   
-                                          level: cyfs.NDNAPILevel.NDN,// api级别
-                                          dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                          target: target.local_device_id().object_id,
-                                          // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                          referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                          flags: 0,
-                                          req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                      },
-                                      // 目前只支持ChunkId/FileId/DirId
-                                      object_id: chunkId.calculate_id()
-                                      
-                                  }
-      
-                                  let resp = await source.ndn_service().get_data(req)
-                                  console.info(`${chunkId} 下载结果：${resp}`)
-                                  if (resp.err) {
-                                      v({ err: true, log: `ndn_service get_data failed` })
-                                  }
-                                  //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                                  console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                                  v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                              }))
-                              }
-                              let download = []
-                              for (let i in chunkRecvPromise) {
-                              let result = await chunkRecvPromise[i]
-                              if (result.err) {
-                                  return { err: result.err, log: result.log }
-                              }
-                              download.push(result)                        
-                              }
-                              //清理数据
-                              await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                              
-                              return { err: false, log: `chunk 下载成功`, download };
-                        })
-                        //需要增加chunkid与dir的关联
-                        it.skip("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
-                             //stack
-                             let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                             let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-
-                             let fileName = RandomGenerator.string(10);
-                             let filePath = path.join(__dirname, "./chunk_trans/source/")
-                             console.log("filePath",filePath)
-                             let chunkSize = 4 * 1024 * 1024
-                             let chunkNumber = 10
-                             let timeout: number = 600 * 1000                
-                             let acl_path = "/test/api/test/"
-                             let decid = target.dec_id
-     
-                             //create test file
-                             await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-     
-                             //acl
-                             await source.root_state_meta_stub(undefined,undefined).clear_access()
-                             await target.root_state_meta_stub(undefined,undefined).clear_access()
-                             await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                             await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-     
-                             //rmeta
-                             let stub_source = source.root_state_stub(undefined,undefined)
-                             let stub_target = target.root_state_stub(undefined,undefined)
-     
-                             let env_acc:cyfs.RootStateOpEnvAccess = {
-                             path:acl_path,
-                             access:cyfs.AccessPermissions.Full 
-                             }
-         
-                             //vaildate
-                             let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-     
-                             let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                             let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                             
-                             //初始化数据
-                             let stack = [source,source,source,source,source,source,source,source,source,source]
-                             let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                              let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                              let chunkIdList = res[3]
-                              //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                              
-     
-                             //从target设备get 对象数据
-                             console.log("chunkIdList",chunkIdList)
-                             let chunkRecvPromise: Array<any> = []
-                             for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                                 console.log("chunkIdList_i_ ", i)
-                                 chunkRecvPromise.push(new Promise(async (v) => {
-     
-                                 setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                                 let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                 console.info(`开始传输chunk:${chunkId},${buff}`)
-     
-                                 //将chunkid对象id挂在objet_map上
-                                 console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                                 let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                                 console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                                 assert.ok(!result1.err)
-     
-                                 let update_result2 = await op_env_stub_source.update()
-                                 console.info("update_result2",update_result2)
-                                 assert.ok(!update_result2.err)
-     
-                                 let list_result1 = await op_env_stub_source.list(acl_path)
-                                 console.info("list_result1",list_result1)
-     
-     
-     
-                                 //await op_env_stub_source.commit()
-                                 //调用get_data接口
-                                 let req: cyfs.NDNGetDataOutputRequest = {
-                                     common: {                                   
-                                         level: cyfs.NDNAPILevel.NDN,// api级别
-                                         dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                         target: target.local_device_id().object_id,
-                                         // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                         referer_object: [new cyfs.NDNDataRefererObject(undefined,res[1].object_id)],
-                                         flags: 0,
-                                         req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                     },
-                                     // 目前只支持ChunkId/FileId/DirId
-                                     object_id: chunkId.calculate_id()
-                                     
-                                 }
-     
-                                 let resp = await source.ndn_service().get_data(req)
-                                 console.info(`${chunkId} 下载结果：${resp}`)
-                                 if (resp.err) {
-                                     v({ err: true, log: `ndn_service get_data failed` })
-                                 }
-                                 //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                                 console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                                 v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                             }))
-                             }
-                             let download = []
-                             for (let i in chunkRecvPromise) {
-                             let result = await chunkRecvPromise[i]
-                             if (result.err) {
-                                 return { err: result.err, log: result.log }
-                             }
-                             download.push(result)                        
-                             }
-                             //清理数据
-                             await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                             
-                             return { err: false, log: `chunk 下载成功`, download };
-    
-                        })
-                        it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                            //stack
-                            let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                            let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-    
-                            //test conf
-                            let fileName = RandomGenerator.string(10);
-                            let filePath = path.join(__dirname, "./chunk_trans/source/")
-                            console.log("filePath",filePath)
-                            let chunkSize = 4 * 1024 * 1024
-                            let chunkNumber = 10
-                            let timeout: number = 600 * 1000                
-                            let acl_path = "/test/api/test/"
-                            let decid = target.dec_id
-    
-                            //create test file
-                            await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-    
-                            //acl
-                            await source.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-    
-                            //rmeta
-                            let stub_source = source.root_state_stub(undefined,undefined)
-                            let stub_target = target.root_state_stub(undefined,undefined)
-    
-                            let env_acc:cyfs.RootStateOpEnvAccess = {
-                            path:acl_path,
-                            access:cyfs.AccessPermissions.Full 
-                            }
-        
-                            //vaildate
-                            let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-    
-                            let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                            let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                            
-                            //初始化数据
-                            let stack = [source,source,source,source,source,source,source,source,source,source]
-                            let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                             let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                             let chunkIdList = res[3]
-                             //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                             
-    
-                            //从target设备get 对象数据
-                            console.log("chunkIdList",chunkIdList)
-                            let chunkRecvPromise: Array<any> = []
-                            for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                                console.log("chunkIdList_i_ ", i)
-                                chunkRecvPromise.push(new Promise(async (v) => {
-    
-                                setTimeout(() => {v({ err: true, log: `ndn_service get_data timeout` })}, timeout)                       
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-    
-                                //将chunkid对象id挂在objet_map上
-                                console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                                let result1 = await op_env_stub_target.insert_with_path(acl_path, res[1].object_id)
-                                console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                                assert.ok(!result1.err)
-    
-                                let update_result2 = await op_env_stub_source.update()
-                                console.info("update_result2",update_result2)
-                                assert.ok(!update_result2.err)
-    
-                                let list_result1 = await op_env_stub_source.list(acl_path)
-                                console.info("list_result1",list_result1)
-    
-    
-    
-                                //await op_env_stub_source.commit()
-                                //调用get_data接口
-                                let req: cyfs.NDNGetDataOutputRequest = {
-                                    common: {                                   
-                                        level: cyfs.NDNAPILevel.NDN,// api级别
-                                        dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                        target: target.local_device_id().object_id,
-                                        // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                        referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                        flags: 0,
-                                        req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                    },
-                                    // 目前只支持ChunkId/FileId/DirId
-                                    object_id: chunkId.calculate_id()
-                                    
-                                }
-    
-                                let resp = await source.ndn_service().get_data(req)
-                                console.info(`${chunkId} 下载结果：${resp}`)
-                                if (resp.err) {
-                                    v({ err: true, log: `ndn_service get_data failed` })
-                                }
-                                //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                                console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                                v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                            }))
-                            }
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                            let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                            //清理数据
-                            await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                            
-                            return { err: false, log: `chunk 下载成功`, download };
-                        })
-                        it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
-                            //stack
-                            let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                            let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-    
-                            //test conf
-                            let fileName = RandomGenerator.string(10);
-                            let filePath = path.join(__dirname, "./chunk_trans/source/")
-                            console.log("filePath",filePath)
-                            let chunkSize = 4 * 1024 * 1024
-                            let chunkNumber = 10
-                            let timeout: number = 600 * 1000                
-                            let acl_path = "/test/api/test/"
-                            let decid = target.dec_id
-    
-                            //create test file
-                            await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-    
-                            //acl
-                            await source.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-    
-                            //rmeta
-                            let stub_source = source.root_state_stub(undefined,undefined)
-                            let stub_target = target.root_state_stub(undefined,undefined)
-    
-                            let env_acc:cyfs.RootStateOpEnvAccess = {
-                            path:acl_path,
-                            access:cyfs.AccessPermissions.Full 
-                            }
-        
-                            //vaildate
-                            let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-    
-                            let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                            let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                            
-                            //初始化数据
-                            let stack = [source,source,source,source,source,source,source,source,source,source]
-                            let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                            let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                            let file_id = res[1].object_id
-                            //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                          
-                            //将file对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-    
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-    
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-    
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: file_id
-                                
-                            }
-    
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${file_id} 下载结果：${resp}`)
-                            if (resp.err) {
-                                console.info({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-    
-                            //清理数据
-                            await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                            
-                            return { err: false, log: `file 下载成功`};
-                        })
-                        it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
-                            //stack
-                            let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                            let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-    
-                            //test conf
-                            let fileName = RandomGenerator.string(10);
-                            let filePath = path.join(__dirname, "./chunk_trans/source/")
-                            console.log("filePath",filePath)
-                            let chunkSize = 4 * 1024 * 1024
-                            let chunkNumber = 10
-                            let timeout: number = 600 * 1000                
-                            let acl_path = "/test/api/test/"
-                            let decid = target.dec_id
-    
-                            //create test file
-                            await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-    
-                            //acl
-                            await source.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-    
-                            //rmeta
-                            let stub_source = source.root_state_stub(undefined,undefined)
-                            let stub_target = target.root_state_stub(undefined,undefined)
-    
-                            let env_acc:cyfs.RootStateOpEnvAccess = {
-                            path:acl_path,
-                            access:cyfs.AccessPermissions.Full 
-                            }
-        
-                            //vaildate
-                            let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-    
-                            let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                            let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                            
-                            //初始化数据
-                            let stack = [source,source,source,source,source,source,source,source,source,source]
-                            let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                            let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                            let file_id = res[1].object_id
-                            //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                            
-                            //将file对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-    
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-    
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-    
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [new cyfs.NDNDataRefererObject(undefined,res[0].object_id,"/" + fileName)],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                object_id: file_id
-                                
-                            }
-    
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${file_id} 下载结果：${resp}`)
-                            if (resp.err) {
-                                console.info({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-    
-                            //清理数据
-                            await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                            
-                            return { err: false, log: `file 下载成功`};
-                        })
-                        it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
-                            //stack
-                            let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                            let target = zone2ood.fork_with_new_dec(DecId.DecIdB)
-                            
-                            //test conf
-                            let fileName = RandomGenerator.string(10);
-                            let filePath = path.join(__dirname, "./chunk_trans/source/")
-                            console.log("filePath",filePath)
-                            let chunkSize = 4 * 1024 * 1024
-                            let chunkNumber = 10
-                            let timeout: number = 600 * 1000                
-                            let acl_path = "/test/api/test/"
-                            let decid = target.dec_id
-    
-                            //create test file
-                            await RandomGenerator.createRandomFile(filePath, fileName, 1 * 1024 * 1024);
-    
-                            //acl
-                            await source.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).clear_access()
-                            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-    
-                            //rmeta
-                            let stub_source = source.root_state_stub(undefined,undefined)
-                            let stub_target = target.root_state_stub(undefined,undefined)
-    
-                            let env_acc:cyfs.RootStateOpEnvAccess = {
-                            path:acl_path,
-                            access:cyfs.AccessPermissions.Full 
-                            }
-        
-                            //vaildate
-                            let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-    
-                            let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                            let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                            
-                            //初始化数据
-                            let stack = [source,source,source,source,source,source,source,source,source,source]
-                            let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                            let res= (await trans_chunk_for_getdata(stack,filePath,"\\" + fileName,chunkSize,level))
-                            let file_id = res[1].object_id
-                            //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
-                            
-                            //将file对象id挂在objet_map上
-                            console.info("remove_with_path", await op_env_stub_target.remove_with_path(acl_path))
-                            let result1 = await op_env_stub_target.insert_with_path(acl_path, file_id)
-                            console.info(`# insert_with_path_result1:${JSON.stringify(result1)}}`)
-                            assert.ok(!result1.err)
-    
-                            let update_result2 = await op_env_stub_source.update()
-                            console.info("update_result2",update_result2)
-                            assert.ok(!update_result2.err)
-    
-                            let list_result1 = await op_env_stub_source.list(acl_path)
-                            console.info("list_result1",list_result1)
-    
-                            //await op_env_stub_source.commit()
-                            //调用get_data接口
-                            let req: cyfs.NDNGetDataOutputRequest = {
-                                common: {                                   
-                                    level: cyfs.NDNAPILevel.NDN,// api级别
-                                    dec_id: source.dec_id, //这里可以模拟当前dec_id
-                                    target: target.local_device_id().object_id,
-                                    // 需要处理数据的关联对象，主要用以chunk/file等+-
-                                    referer_object: [],
-                                    flags: 0,
-                                    req_path: path_handler//如果没有DecId，那么就当当前decid处理
-                                },
-                                // 目前只支持ChunkId/FileId/DirId
-                                inner_path: "/" + fileName,
-                                object_id: res[0].object_id
-                                
-                            }
-    
-                            let resp = await source.ndn_service().get_data(req)
-                            console.info(`${file_id} 下载结果：${resp}`)
-                            if (resp.err) {
-                                console.info({ err: true, log: `ndn_service get_data failed` })
-                            }
-                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                            console.info(`下载file 成功： ${JSON.stringify(resp)}`)
-    
-                            //清理数据
-                            await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)
-                            
-                            return { err: false, log: `file 下载成功`};
-                        
-                        })
-                })
-                describe.skip("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                    it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
-                                               //stack
-                        let source = zone1ood.fork_with_new_dec(DecId.DecIdA)
-                        let target = zone1ood.fork_with_new_dec(DecId.DecIdB)
-
-                        //test conf
-                        let fileName = RandomGenerator.string(10);
-                        let filePath = path.join(__dirname, "./chunk_trans/source/")
-                        let savePath = path.join(__dirname, "./chunk_trans/target/")
-                        console.log("filePath",filePath)
-                        let chunkSize = 4 * 1024 * 1024
-                        let chunkNumber = 10
-                        let timeout: number = 600 * 1000                
-                        let acl_path = "/test/api/test/"
-                        let root_path = "/123/test/"
-                        let decid = target.dec_id
-
-                        //create test file
-                        await RandomGenerator.createRandomFile(filePath, fileName, 10 * 1024 * 1024);
-
-                        //acl
-                        await source.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).clear_access()
-                        await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-                        await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(acl_path,acc))
-
-                        //rmeta
-                        let stub_source = source.root_state_stub(undefined,undefined)
-                        let stub_target = target.root_state_stub(undefined,undefined)
-
-                        let env_acc:cyfs.RootStateOpEnvAccess = {
-                        path:acl_path,
-                        access:cyfs.AccessPermissions.Full 
-                        }
-    
-                        //vaildate
-                        let path_handler = new cyfs.RequestGlobalStatePath(decid, acl_path).toString()
-
-                        let op_env_stub_source =  (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
-                        let op_env_stub_target = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
-                        
-                        //初始化数据
-                        let stack = [source,source,source,source,source,source,source,source,source,source]
-                        let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                        let res= (await trans_file_for_task(stack,filePath,"\\" + fileName,chunkSize,level))
-                        let chunkIdList = res[1]
-                        
-                        //将file对象id挂在objet_map上
-                        let file_id = res[0]
-                        console.info("res_file_id",file_id)
-                         
-                        //从target设备get 对象数据
-                        console.log("chunkIdList_length",chunkIdList!.length)
-                        let chunkRecvPromise: Array<any> = []
-                        for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
-                            console.log("chunkIdList_i_ ", i)
-                            chunkRecvPromise.push(new Promise(async (v) => {
-                     
-                                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                                console.info(`开始传输chunk:${chunkId},${buff}`)
-
-                                //将chunkid对象id挂在objet_map上
-                                //4. target 设备 start_task 开始下载文件
-                                
-                                let create_task = (await source.trans().create_task({
-                                    common: {
-                                        level: cyfs.NDNAPILevel.NDN,
-                                        flags: 0,
-                                        dec_id: source.dec_id,
-                                        target: target.local_device_id().object_id,
-                                        //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
-                                        referer_object: []
-                                    },
-                                    //不支持DirId,支持ChunkId/FileId
-                                    object_id: chunkId.calculate_id(),
-                                    local_path: savePath +"\\" + fileName,
-                                    device_list: [target.local_device_id()],
-                                    auto_start: true
-                                })).unwrap()
-                                let sleepTime = 50;
-                                console.log("create_task_id",JSON.stringify(create_task.task_id))
-                            
-                                //5. target 设备 get_task_state 检查下载状态
-                                let check: Promise<{ err: boolean, log: string, fileId?: string}> = new Promise(async (v) => {
-                                    setTimeout(() => {
-                                        console.info(`下载文件超时`)
-                                        v({ err: true, log: `下载文件超时：${chunkId.calculate_id()}` })
-                                    }, timeout)
-                                    while (true) {
-                                        console.log(`${savePath}`);
-                                        const resp = (await source.trans().get_task_state({
-                                            common: {
-                                                level: cyfs.NDNAPILevel.NDC,
-                                                flags: 0,
-                                                dec_id: source.dec_id,
-                                                target: source.local_device_id().object_id,
-                                                req_path: "",
-                                                referer_object: []
-
-                                            },
-                                            task_id: create_task.task_id
-                                        })).unwrap();
-                                        console.log("get task status", JSON.stringify(resp.state));
-                                        if (resp.state === cyfs.TransTaskState.Finished) {
-                                            console.log("download task finished")
-                                            break;
-                                        }
-                                        if (sleepTime > 2000) {
-                                            await cyfs.sleep(2000);
-                                        } else {
-                                            await cyfs.sleep(sleepTime);
-                                            sleepTime = sleepTime * 2;
-                                        }
-
-                                    }
-                                
-                                
-                                    v({ err: false, log: `下载文件成功：${chunkId.calculate_id()}` })
-                                })       
-                                //let result = await check;
-                                //return result
-                            }))}
-                            let download = []
-                            for (let i in chunkRecvPromise) {
-                                let result = await chunkRecvPromise[i]
-                            if (result.err) {
-                                return { err: result.err, log: result.log }
-                            }
-                            download.push(result)                        
-                            }
-                        
-                        //清理数据
-                        //await clean_test_data(source,target,res[1],acl_path,filePath+ "/" + fileName)   
-                    })
-                })
-            })
-           })
-        })
-        })
-    })
 })
-
