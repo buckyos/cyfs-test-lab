@@ -28,19 +28,21 @@ router.post('/reportHtml',
         await compressing.zip.uncompress(zip_path,zip_dir);
         let zip_url = req.body.zip_url;
         let testcase_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/mochawesome.html`;
-        
+        let coverage_url = `http://cyfs-test-lab/testcaseReport/${req.body.version}/coverage/index.html`;
         let now =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
         let mod =  new CyfsReport(); 
         let data:CyfsReportModel = {
             version : req.body.version!,
             zip_url,
             testcase_url,
+            coverage_url,
             date : now
         }
         let save =await mod.add(data);
         let result = {
             result : save,
             zip_url,
+            coverage_url,
             testcase_url
         }
         return res.json(result)

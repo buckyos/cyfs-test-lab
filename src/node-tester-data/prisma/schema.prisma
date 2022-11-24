@@ -327,4 +327,5 @@ model cyfs_report {
   zip_url      String? @db.VarChar(255)
   testcase_url String? @db.VarChar(255)
   date         String? @db.VarChar(255)
+  coverage_url String? @db.VarChar(255)
 }

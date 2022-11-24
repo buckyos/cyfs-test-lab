@@ -1,13 +1,10 @@
 
-## NDN测试用例设计
+## NDN ACL测试用例设计
 
 ### 相关接口
 * SharedCyfsStack::NDNRequestor::put_data
-* SharedCyfsStack::NDNRequestor::prepare_download_data
-* SharedCyfsStack::NDNRequestor::get_data
-* SharedCyfsStack::NDNRequestor::delete_data
-* SharedCyfsStack::NDNRequestor::encode_query_file_request
-* SharedCyfsStack::NDNRequestor::query_file
+* SharedCyfsStack::TransRequestor::publish_file
+* SharedCyfsStack::UtilRequestor::build_dir_from_object_map
 
 ### 测试点
 #### 环境类型
@@ -70,55 +67,163 @@
 * 2 MB
 * 8 MB
 * 128 MB
+  
+#### 协议栈类型
+* 同协议栈
+* 跨协议栈
     
 #### 测试点
-* get_data,chunk对象,同zone同dec,权限验证
-* get_data,chunk对象,同zone不同dec,权限验证
-* get_data,chunk对象,不同zone同dec,权限验证
-* get_data,chunk对象,不同zone不同dec,权限验证
-* get_data,chunk对象,同zone同dec,无req_path,权限验证
-* get_data,chunk对象,同zone不同dec,无req_path,权限验证
-* get_data,chunk对象,不同zone同dec,无req_path,权限验证
-* get_data,chunk对象,不同zone不同dec,无req_path,权限验证
-* get_data,chunk对象,同zone同dec,chunk,访问来源file,权限验证
-* get_data,chunk对象,同zone不同dec,访问来源file,权限验证
-* get_data,chunk对象,不同zone同dec,访问来源file,权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源file,权限验证
-* get_data,chunk对象,同zone同dec,chunk,访问来源file,无req_path,传输权限验证
-* get_data,chunk对象,同zone不同dec,访问来源file,无req_path,传输权限验证
-* get_data,chunk对象,不同zone同dec,访问来源file,无req_path,传输权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源file,无req_path,传输权限验证
-* get_data,chunk对象,同zone同dec,访问来源dir,权限验证
-* get_data,chunk对象,同zone不同dec,访问来源dir,权限验证
-* get_data,chunk对象,不同zone同dec,访问来源dir,权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源dir,权限验证
-* get_data,chunk对象,同zone同dec,访问来源dir,无req_path,权限验证
-* get_data,chunk对象,同zone不同dec,访问来源dir,无req_path,权限验证
-* get_data,chunk对象,不同zone同dec,访问来源dir,无req_path,权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源dir,无req_path,权限验证
-* get_data,chunk对象,同zone同dec,访问来源objectmap+inner_path,权限验证
-* get_data,chunk对象,同zone不同dec,访问来源objectmap+inner_path,权限验证
-* get_data,chunk对象,不同zone同dec,访问来源objectmap+inner_path,权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源objectmap+inner_path,权限验证
-* get_data,chunk对象,同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
-* get_data,chunk对象,同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
-* get_data,chunk对象,不同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
-* get_data,chunk对象,不同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
-* get_data,file对象,同zone同dec,权限验证
-* get_data,file对象,同zone不同dec,权限验证
-* get_data,file对象,不同zone同dec,权限验证
-* get_data,file对象,不同zone不同dec,权限验证
-* get_data,file对象,同zone同dec,无req_path,权限验证
-* get_data,file对象,同zone不同dec,无req_path,权限验证
-* get_data,file对象,不同zone同dec,无req_path,权限验证
-* get_data,file对象,不同zone不同dec,无req_path,权限验证
-* get_data,同zone同dec,objectmap+inner_path,取出file，传输权限验证
-* get_data,同zone不同dec,objectmap+inner_path,取出file，传输权限验证
-* get_data,不同zone同dec,objectmap+inner_path,取出file，传输权限验证
-* get_data,不同zone不同dec,objectmap+inner_path,取出file，传输权限验证
-* get_data,不同zone不同dec,objectmap+inner_path,取出file，无req_path,传输权限验证
-* get_data,同zone同dec,objectmap+inner_path,取出dir，传输权限验证
-* get_data,同zone不同dec,objectmap+inner_path,取出dir，传输权限验证
-* get_data,不同zone同dec,objectmap+inner_path,取出dir，传输权限验证
-* get_data,不同zone不同dec,objectmap+inner_path,取出dir，传输权限验证
-* get_data,不同zone不同dec,objectmap+inner_path,取出dir，无req_path,传输权限验证
+* get_data,chunk目标对象,同zone同dec,权限验证
+* get_data,chunk目标对象,同zone不同dec,权限验证
+* get_data,chunk目标对象,不同zone同dec,权限验证
+* get_data,chunk目标对象,不同zone不同dec,权限验证
+* get_data,chunk目标对象，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* get_data,chunk目标对象,同zone同dec,无req_path,权限验证
+* get_data,chunk目标对象,同zone不同dec,无req_path,权限验证
+* get_data,chunk目标对象,不同zone同dec,无req_path,权限验证
+* get_data,chunk目标对象,不同zone不同dec,无req_path,权限验证
+
+* get_data,chunk目标对象,同zone同dec,chunk,访问来源file,权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源file,权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源file,权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源file,权限验证
+* get_data,chunk目标对象，访问来源file，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* get_data,chunk目标对象,同zone同dec,chunk,访问来源file,无req_path,传输权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源file,无req_path,传输权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源file,无req_path,传输权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源file,无req_path,传输权限验证
+
+* get_data,chunk目标对象,同zone同dec,访问来源dir,权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源dir,权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源dir,权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源dir,权限验证
+* get_data,chunk目标对象，访问来源dir，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* get_data,chunk目标对象,同zone同dec,访问来源dir,无req_path,权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源dir,无req_path,权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源dir,无req_path,权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源dir,无req_path,权限验证
+
+* get_data,chunk目标对象,同zone同dec,访问来源objectmap+inner_path,权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源objectmap+inner_path,权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源objectmap+inner_path,权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源objectmap+inner_path,权限验证
+* get_data,chunk目标对象，访问来源objectmap+inner_path，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* get_data,chunk目标对象,同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* get_data,chunk目标对象,同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* get_data,chunk目标对象,不同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* get_data,chunk目标对象,不同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+
+* get_data,file目标对象,同zone同dec,权限验证
+* get_data,file目标对象,同zone不同dec,权限验证
+* get_data,file目标对象不同zone同dec,权限验证
+* get_data,file目标对象,不同zone不同dec,权限验证
+
+* get_data,file目标对象,同zone同dec,无req_path,权限验证
+* get_data,file目标对象,同zone不同dec,无req_path,权限验证
+* get_data,file目标对象,不同zone同dec,无req_path,权限验证
+* get_data,file目标对象,不同zone不同dec,无req_path,权限验证
+
+* get_data,file目标对象,同zone同dec,访问来源objectmap+inner_path,权限验证
+* get_data,file目标对象,同zone不同dec,访问来源objectmap+inner_path,权限验证
+* get_data,file目标对象,不同zone同dec,访问来源objectmap+inner_path,权限验证
+* get_data,file目标对象,不同zone不同dec,访问来源objectmap+inner_path,权限验证
+
+* get_data,file目标对象,同zone同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* get_data,file目标对象,同zone不同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* get_data,file目标对象,不同zone同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* get_data,file目标对象,不同zone不同dec,访问来源objectmap+inner_path,无req_path,权限验证
+
+* get_data,同zone同dec,objectmap+inner_path目标对象,传输权限验证
+* get_data,同zone不同dec,objectmap+inner_path目标对象,传输权限验证
+* get_data,不同zone同dec,objectmap+inner_path目标对象,传输权限验证
+* get_data,不同zone不同dec,objectmap+inner_path目标对象,传输权限验证
+
+* get_data,同zone同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* get_data,同zone不同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* get_data,不同zone同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* get_data,不同zone不同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+
+* trans,chunk目标对象,同zone同dec,权限验证
+* trans,chunk目标对象,同zone不同dec,权限验证
+* trans,chunk目标对象,不同zone同dec,权限验证
+* trans,chunk目标对象,不同zone不同dec,权限验证
+* trans,chunk目标对象，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* trans,chunk目标对象,同zone同dec,无req_path,权限验证
+* trans,chunk目标对象,同zone不同dec,无req_path,权限验证
+* trans,chunk目标对象,不同zone同dec,无req_path,权限验证
+* trans,chunk目标对象,不同zone不同dec,无req_path,权限验证
+
+* trans,chunk目标对象,同zone同dec,chunk,访问来源file,权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源file,权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源file,权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源file,权限验证
+* trans,chunk目标对象，访问来源file，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* trans,chunk目标对象,同zone同dec,chunk,访问来源file,无req_path,传输权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源file,无req_path,传输权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源file,无req_path,传输权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源file,无req_path,传输权限验证
+
+* trans,chunk目标对象,同zone同dec,访问来源dir,权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源dir,权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源dir,权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源dir,权限验证
+* trans,chunk目标对象，访问来源dir，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* trans,chunk目标对象,同zone同dec,访问来源dir,无req_path,权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源dir,无req_path,权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源dir,无req_path,权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源dir,无req_path,权限验证
+
+* trans,chunk目标对象,同zone同dec,访问来源objectmap+inner_path,权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源objectmap+inner_path,权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源objectmap+inner_path,权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源objectmap+inner_path,权限验证
+* trans,chunk目标对象，访问来源objectmap+inner_path，CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL开启，chunk_list权限验证
+
+* trans,chunk目标对象,同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* trans,chunk目标对象,同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* trans,chunk目标对象,不同zone同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+* trans,chunk目标对象,不同zone不同dec,访问来源objectmap+inner_path,无req_path,传输权限验证
+
+* trans,file目标对象,同zone同dec,权限验证
+* trans,file目标对象,同zone不同dec,权限验证
+* trans,file目标对象不同zone同dec,权限验证
+* trans,file目标对象,不同zone不同dec,权限验证
+
+* trans,file目标对象,同zone同dec,无req_path,权限验证
+* trans,file目标对象,同zone不同dec,无req_path,权限验证
+* trans,file目标对象,不同zone同dec,无req_path,权限验证
+* trans,file目标对象,不同zone不同dec,无req_path,权限验证
+
+* trans,file目标对象,同zone同dec,访问来源objectmap+inner_path,权限验证
+* trans,file目标对象,同zone不同dec,访问来源objectmap+inner_path,权限验证
+* trans,file目标对象,不同zone同dec,访问来源objectmap+inner_path,权限验证
+* trans,file目标对象,不同zone不同dec,访问来源objectmap+inner_path,权限验证
+
+* trans,file目标对象,同zone同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* trans,file目标对象,同zone不同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* trans,file目标对象,不同zone同dec,访问来源objectmap+inner_path,无req_path,权限验证
+* trans,file目标对象,不同zone不同dec,访问来源objectmap+inner_path,无req_path,权限验证
+
+* trans,同zone同dec,objectmap+inner_path目标对象,传输权限验证
+* trans,同zone不同dec,objectmap+inner_path目标对象,传输权限验证
+* trans,不同zone同dec,objectmap+inner_path目标对象,传输权限验证
+* trans,不同zone不同dec,objectmap+inner_path目标对象,传输权限验证
+
+* trans,同zone同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* trans,同zone不同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* trans,不同zone同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+* trans,不同zone不同dec,objectmap+inner_path目标对象,无req_path,传输权限验证
+
+* get_data，inner_path及referrer_object inner_path 增加非英文字符路径
+* trans，inner_path及referrer_object inner_path 增加非英文字符路径
+
+* PublishFile,common无dec_id，配置req_path与rmeta后，验证当前设备dec_id权限
+* PublishDir,common无dec_id，配置req_path与rmeta后，验证当前设备dec_id权限
+* build_dir_from_object_map,配置req_path与rmeta后，验证当前设备dec_id权限
