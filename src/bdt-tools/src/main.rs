@@ -1,21 +1,18 @@
-mod connection;
-mod peer;
 mod command;
+mod connection;
 mod http;
 mod lib;
+mod peer;
 use peer::Peer;
 
-
-use lib::*;
 use async_std::net::Ipv4Addr;
 use cyfs_base::*;
+use lib::*;
 
 use std;
 
-
-
 #[async_std::main]
-async fn main()->Result<(), BuckyError> {
+async fn main() -> Result<(), BuckyError> {
     let args: Vec<String> = std::env::args().collect();
     let port: u16 = args[1].parse::<u16>().unwrap();
     let peer_name = args[2].clone();
@@ -40,7 +37,12 @@ async fn main()->Result<(), BuckyError> {
         .build()
         .start();
 
-    let mut lpc = Lpc::start(SocketAddr::new( IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port), peer_name).await.map_err(|e| {
+    let mut lpc = Lpc::start(
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port),
+        peer_name,
+    )
+    .await
+    .map_err(|e| {
         log::error!("start lpc to 127.0.0.1:{} failed, e={}", port, &e);
         e
     })?;
@@ -52,7 +54,9 @@ async fn main()->Result<(), BuckyError> {
     async_std::task::spawn(async move {
         loop {
             async_std::task::sleep(std::time::Duration::new(10, 0)).await;
-            if bucky_time_now() - last_clone.load(std::sync::atomic::Ordering::SeqCst) > 60 * 1000_000 {
+            if bucky_time_now() - last_clone.load(std::sync::atomic::Ordering::SeqCst)
+                > 60 * 1000_000
+            {
                 std::process::exit(2);
             }
         }
@@ -69,7 +73,7 @@ async fn main()->Result<(), BuckyError> {
             peer.on_create(c, lpc.clone());
         } else if name == String::from("connect") {
             peer.on_connect(c, lpc.clone());
-        }else if name == String::from("connect_list") {
+        } else if name == String::from("connect_list") {
             peer.on_connect_list(c, lpc.clone());
         } else if name == String::from("auto_accept") {
             peer.on_auto_accept(c, lpc.clone());
@@ -89,9 +93,9 @@ async fn main()->Result<(), BuckyError> {
             peer.on_send(c, lpc.clone());
         } else if name == String::from("recv") {
             peer.on_recv(c, lpc.clone());
-        }else if name == String::from("connect_send_stream") {
+        } else if name == String::from("connect_send_stream") {
             peer.on_connect_send_stream(c, lpc.clone());
-        }else if name == String::from("auto_response_stream") {
+        } else if name == String::from("auto_response_stream") {
             peer.on_auto_response_stream(c, lpc.clone());
         } else if name == String::from("send_object") {
             peer.on_send_object(c, lpc.clone());
@@ -101,9 +105,9 @@ async fn main()->Result<(), BuckyError> {
             last_recv_ping.store(bucky_time_now(), std::sync::atomic::Ordering::SeqCst);
         } else if name == String::from("calculate-chunk") {
             peer.on_calculate_chunk(c, lpc.clone());
-        }else if name == String::from("set-chunk") {
+        } else if name == String::from("set-chunk") {
             peer.on_set_chunk(c, lpc.clone());
-        }else if name == String::from("track-chunk") {
+        } else if name == String::from("track-chunk") {
             peer.on_track_chunk(c, lpc.clone());
         } else if name == String::from("interest-chunk") {
             peer.on_interest_chunk(c, lpc.clone());
@@ -123,13 +127,13 @@ async fn main()->Result<(), BuckyError> {
             peer.on_get_trans_session_state(c, lpc.clone());
         } else if name == String::from("start-send-file") {
             peer.on_start_send_file(c, lpc.clone());
-        }else if name == String::from("calculate-file") {
+        } else if name == String::from("calculate-file") {
             peer.on_calculate_file(c, lpc.clone());
-        }else if name == String::from("set-file") {
+        } else if name == String::from("set-file") {
             peer.on_set_file(c, lpc.clone());
         } else if name == String::from("start-download-file") {
             peer.on_start_download_file(c, lpc.clone());
-        }else if name == String::from("start-download-file-range") {
+        } else if name == String::from("start-download-file-range") {
             peer.on_start_download_file_range(c, lpc.clone());
         } else if name == String::from("download-file-state") {
             peer.on_download_file_state(c, lpc.clone());
@@ -139,21 +143,21 @@ async fn main()->Result<(), BuckyError> {
             peer.on_start_download_dir(c, lpc.clone());
         } else if name == String::from("download-dir-state") {
             peer.on_download_dir_state(c, lpc.clone());
-        }else if name == String::from("get_system_info") {
+        } else if name == String::from("get_system_info") {
             peer.on_get_system_info(c, lpc.clone());
-        }else if name == String::from("upload_system_info") {
+        } else if name == String::from("upload_system_info") {
             peer.on_upload_system_info(c, lpc.clone());
-        }else if name == String::from("send-datagram") {
+        } else if name == String::from("send-datagram") {
             peer.on_send_datagram(c, lpc.clone());
-        }else if name == String::from("recv-datagram") {
+        } else if name == String::from("recv-datagram") {
             peer.on_recv_datagram(c, lpc.clone());
-        }else if name == String::from("create-download-group") {
+        } else if name == String::from("create-download-group") {
             peer.on_create_download_group(c, lpc.clone());
-        }else if name == String::from("create_upload_group") {
+        } else if name == String::from("create_upload_group") {
             peer.on_create_upload_group(c, lpc.clone());
-        }else if name == String::from("exit") {
+        } else if name == String::from("exit") {
             break;
-        }else {
+        } else {
             log::warn!("unknown command, name={}", &name);
         }
     }
@@ -162,12 +166,10 @@ async fn main()->Result<(), BuckyError> {
     Ok(())
 }
 
-
-
 // #[test]
 // fn test_bdt_exe() {
 //     let c = LpcCommand {
-//         seq: 0, 
+//         seq: 0,
 //         buffer: vec![1,2,3],
 //         json_value: serde_json::json!({ "city": "London", "street": "10 Downing Street" }),
 //     };

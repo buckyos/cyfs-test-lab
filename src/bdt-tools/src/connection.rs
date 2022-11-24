@@ -28,7 +28,7 @@ impl TestConnection {
         self.stream.clone()
     }
     pub async fn send_file(&mut self, size: u64) -> Result<(HashValue, u64), BuckyError> {
-        if(size<8){
+        if (size < 8) {
             return Err(BuckyError::new(
                 BuckyErrorCode::InvalidData,
                 "stream data size must more than 8",
@@ -38,7 +38,7 @@ impl TestConnection {
         let mut send_buffer = Vec::new();
         send_buffer.resize(PIECE_SIZE, 0u8);
         let mut gen_count = PIECE_SIZE;
-        let mut size_need_to_send = size ;
+        let mut size_need_to_send = size;
         if gen_count as u64 > size_need_to_send {
             gen_count = size_need_to_send as usize;
         }
@@ -49,10 +49,10 @@ impl TestConnection {
         Self::random_data(send_buffer[8..].as_mut());
         let hash = hash_data(&send_buffer[0..gen_count]);
         hashs.push(hash);
-        log::info!("########## hash {}",hash);
+        log::info!("########## hash {}", hash);
         let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
         loop {
-            log::info!("bdt tool send data piece szie = {}",gen_count);
+            log::info!("bdt tool send data piece szie = {}", gen_count);
             let result_err = self
                 .stream
                 .write_all(&send_buffer[0..gen_count])
@@ -77,10 +77,10 @@ impl TestConnection {
                 gen_count = size_need_to_send as usize;
                 let hash_end = hash_data(&send_buffer[0..gen_count as usize]);
                 hashs.push(hash_end);
-                log::info!("########## hash {}",hash_end);
-            }else{
+                log::info!("########## hash {}", hash_end);
+            } else {
                 hashs.push(hash.clone());
-                log::info!("########## hash {}",hash);
+                log::info!("########## hash {}", hash);
             }
         }
         let send_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
@@ -97,7 +97,7 @@ impl TestConnection {
         }
         let hash = hash_data(total_hash.as_slice());
 
-        log::info!("send file finish, size ={} ,hash={:?}",size,&hash);
+        log::info!("send file finish, size ={} ,hash={:?}", size, &hash);
 
         Ok((hash, send_time))
     }
@@ -119,7 +119,7 @@ impl TestConnection {
                     log::error!("recv failed, e={}", &e);
                     e
                 })?;
-            log::info!("bdt tool recv data piece szie = {}",len);
+            log::info!("bdt tool recv data piece szie = {}", len);
             if len == 0 {
                 log::error!("remote close");
                 return Err(BuckyError::new(
@@ -156,7 +156,8 @@ impl TestConnection {
 
                 if total_recv == file_size {
                     log::info!("=====================================recv finish");
-                    let recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                    let recv_time =
+                        system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
                     break recv_time;
                 }
             }
@@ -170,10 +171,10 @@ impl TestConnection {
             total_hash.extend_from_slice(h.as_slice());
         }
         let hash = hash_data(total_hash.as_slice());
-        log::info!("recv file finish,szie = {} hash={:?}",file_size, &hash);
+        log::info!("recv file finish,szie = {} hash={:?}", file_size, &hash);
         Ok((file_size, recv_time, hash))
     }
-    
+
     pub async fn send_object(
         &mut self,
         obj_type: u64,
