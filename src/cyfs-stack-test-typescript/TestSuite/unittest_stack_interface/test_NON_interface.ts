@@ -953,12 +953,11 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!del1_res.err, `delete1 object failed ,err : ${JSON.stringify(del1_res)}`)
             assert(!del2_res.err, `delete2 object failed ,err : ${JSON.stringify(del2_res)}`)
 
-
             //注册req_path
             let path = "/test_non/reqpath"
             let stub = zone1device1.root_state_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id);
             let op_env = (await stub.create_path_op_env()).unwrap()
-            await op_env.set_with_path(path, info.saveObjectId, undefined, true)
+            await op_env.set_with_path(path, info.saveObjectId, undefined, true) 
             let o = (await op_env.commit()).unwrap()
 
             let req_path = new cyfs.RequestGlobalStatePath(zone1device1_dec_id, path).toString()

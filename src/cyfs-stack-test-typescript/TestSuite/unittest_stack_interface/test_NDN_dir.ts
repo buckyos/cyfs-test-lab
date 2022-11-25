@@ -1,6 +1,6 @@
 import assert = require('assert');
 import * as cyfs from "../../cyfs_node"
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, all_stacks, getStack, Ready, getDecId, all_dec_id } from "../../common";
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, all_stacks, getStack, Ready, getDecId, all_dec_id, chunk_mode } from "../../common";
 import * as path from 'path';
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -125,7 +125,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
 
 
         })
-        it("getData chunk目标对象 —— reqPath 获取成功", async () => {
+        it.only("getData chunk目标对象 —— reqPath 获取成功", async () => {
             let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router).then()
             let chunkId = chunkIdList![0]
 
@@ -340,202 +340,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
 
         })
 
-        it("getData chunk目标对象 关联dir  有该dir权限&相应chunck 获取成功", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, undefined, "dir", cyfs.AccessString.default()).then()
-
-            let chunkId = chunkIdList![0]
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: undefined,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(!resp.err, `get_data 传输chunk失败`)
-
-        })
-        it("getData chunk目标对象 关联dir  有该dir权限&非相应chunck 获取失败", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir").then()
-
-            let { chunkId } = await putData(10, zone1device1, undefined, undefined)
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: undefined,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(resp.err, `get_data 传输chunk失败`)
-
-        })
-        it("getData chunk目标对象 关联dir  无该dir权限&相应chunck 获取失败", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-file").then()
-
-            let chunkId = chunkIdList![0]
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: undefined,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(resp.err, `get_data 传输chunk失败`)
-
-        })
-
-
-        it("getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
-
-            let chunkId = chunkIdList![0]
-            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
-            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: req_path,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(!resp.err, `get_data 传输chunk失败`)
-
-        })
-        it("getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
-
-            let { chunkId } = await putData(10, zone1device1, undefined, undefined)
-            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
-            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: req_path,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(resp.err, `get_data 传输chunk失败`)
-
-        })
-        it("getData chunk目标对象 关联dir reqPath 无该dir权限&相应chunck 获取失败", async () => {
-
-            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-dir").then()
-
-            let chunkId = chunkIdList![0]
-            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
-            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
-
-            let rep: cyfs.NDNGetDataOutputRequest = {
-                common: {
-                    // 请求路径，可为空
-                    req_path: req_path,
-                    // 来源DEC
-                    dec_id: zone1device1_dec_id,
-                    // api级别
-                    level: cyfs.NDNAPILevel.Router,
-                    // targrt设备参数
-                    target: zone1device1.local_device_id().object_id,
-                    // 需要处理数据的关联对象，主要用以chunk/file等
-                    referer_object: [new cyfs.NDNDataRefererObject(
-                        zone1device1.local_device_id().object_id,
-                        dir_id.object_id),]
-                    ,
-                    flags: 1,
-                },
-                object_id: chunkId.calculate_id(),
-                inner_path: undefined,
-            }
-            //调用接口
-            let resp = await zone1device1.ndn_service().get_data(rep);
-            console.info(`${resp}`)
-            assert(resp.err, `get_data 传输chunk失败`)
-
-        })
-
+     
         it("getData chunk目标对象 关联dir+innerPath  有该dir权限&相应chunck 获取成功", async () => {
 
             let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router).then()
@@ -6330,47 +6135,201 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
     })
 
     describe("Dir chunk 模式", function () {
-        it("", async () => {
-            let inner_node: cyfs.InnerNodeInfo = new cyfs.InnerNodeInfo(new cyfs.Attributes(0), new cyfs.InnerNode({ object_id: cyfs.ObjectId.default() }))
-            let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> = new cyfs.BuckyHashMap()
-            object_map.set(new cyfs.BuckyString("path1"), inner_node)
-            let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(new cyfs.NoneOption(), object_map)
-            let attr: cyfs.Attributes = new cyfs.Attributes(0xFFFF)
-            let builder = new cyfs.DirBuilder(new cyfs.DirDescContent(attr, new cyfs.NDNObjectInfo({ obj_list: list })), new cyfs.DirBodyContent({ obj_list: new cyfs.BuckyHashMap() }));
-            let dir: cyfs.NamedObject<cyfs.DirDescContent, cyfs.DirBodyContent> = builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).build(cyfs.Dir)
-            let dir_id: cyfs.ObjectId = dir.desc().calculate_id()
-            console.log(`-----------> dir id = ${dir_id}`)
-            let buf: Uint8Array = dir.to_vec().unwrap()
-            let hash: cyfs.HashValue = cyfs.HashValue.hash_data(buf)
-            console.log(`-----------> dir hash = ${hash}`)
+       
+        it("同zone同dec getData chunk目标对象 关联dir  有该dir权限&相应chunck 获取成功", async () => {
 
-            // 第二种情况，对于超大内容的dir，使用chunk模式，但和上面一种模式是对等的
-            const size = list.raw_measure().unwrap();
-            const databuf = new Uint8Array(size);
-            let data: Uint8Array = list.raw_encode(databuf).unwrap()
-            let chunck_id: cyfs.ChunkId = cyfs.ChunkId.calculate(data).unwrap()
+            let {body_chunk_id,dir_id}=await Ready.chunkMode(chunk_mode.bodyChunk,zone1device1,zone1device1,undefined,cyfs.AccessString.default())
 
-            // chunk可以放到body缓存里面，方便查找；也可以独立存放，但dir在解析时候需要再次查找该chunk可能会耗时久，以及查找失败等情况
-            {
-                let obj_map: cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer> = new cyfs.BuckyHashMap()
-                obj_map.set(chunck_id.calculate_id(), new cyfs.BuckyBuffer(data))
-                let builder2 = new cyfs.DirBuilder(new cyfs.DirDescContent(attr, new cyfs.NDNObjectInfo({ chunk_id: chunck_id })), new cyfs.DirBodyContent({ obj_list: obj_map }));
-                let dir2: cyfs.NamedObject<cyfs.DirDescContent, cyfs.DirBodyContent> = builder2.no_create_time().update_time(cyfs.JSBI.BigInt(0)).build(cyfs.Dir)
-                let dir_id2: cyfs.ObjectId = dir.desc().calculate_id()
-                console.log(`-----------> dir_id2 = ${dir_id2}`)
-                let buf2: Uint8Array = dir2.to_vec().unwrap()
-                let hash2: cyfs.HashValue = cyfs.HashValue.hash_data(buf2)
-                console.log(`-----------> dir2 hash = ${hash2}`)
-                //let _dir3= cyfs.AnyNamedObject
-                assert(dir_id == dir_id2, "生成的dirid不相等")
-
-                  // body也可以放到chunk,由于只是影响body的结构，所以不影响dir的object_id
-                  let body_data: Uint8Array =obj_map
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: undefined,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: body_chunk_id!.calculate_id(),
+                inner_path: undefined,
             }
-            
-              
-        
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(!resp.err, `get_data 传输chunk失败`)
 
         })
+        it("同zone同Dec getData chunk目标对象 关联dir  有该dir权限&非相应chunck 获取失败", async () => {
+
+            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir").then()
+
+            let { chunkId } = await putData(10, zone1device1, undefined, undefined)
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: undefined,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id.object_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: chunkId.calculate_id(),
+                inner_path: undefined,
+            }
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(resp.err, `get_data 传输chunk失败`)
+
+        })
+        it("同zone同Dec getData chunk目标对象 关联dir  无该dir权限&相应chunck 获取失败", async () => {
+
+            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-file").then()
+
+            let chunkId = chunkIdList![0]
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: undefined,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id.object_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: chunkId.calculate_id(),
+                inner_path: undefined,
+            }
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(resp.err, `get_data 传输chunk失败`)
+
+        })
+
+
+        it("同zone同Dec getData chunk目标对象 关联dir reqPath 有该path权限&相应chunck 获取成功", async () => {
+
+            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
+
+            let chunkId = chunkIdList![0]
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: req_path,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id.object_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: chunkId.calculate_id(),
+                inner_path: undefined,
+            }
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(!resp.err, `get_data 传输chunk失败`)
+
+        })
+        it("同zone同Dec getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败", async () => {
+
+            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
+
+            let { chunkId } = await putData(10, zone1device1, undefined, undefined)
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: req_path,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id.object_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: chunkId.calculate_id(),
+                inner_path: undefined,
+            }
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(resp.err, `get_data 传输chunk失败`)
+
+        })
+        it("同zone同Dec getData chunk目标对象 关联dir reqPath 无该dir权限&相应chunck 获取失败", async () => {
+
+            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router, "mount-dir").then()
+
+            let chunkId = chunkIdList![0]
+            let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
+            await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).add_access(item)
+
+            let rep: cyfs.NDNGetDataOutputRequest = {
+                common: {
+                    // 请求路径，可为空
+                    req_path: req_path,
+                    // 来源DEC
+                    dec_id: zone1device1_dec_id,
+                    // api级别
+                    level: cyfs.NDNAPILevel.Router,
+                    // targrt设备参数
+                    target: zone1device1.local_device_id().object_id,
+                    // 需要处理数据的关联对象，主要用以chunk/file等
+                    referer_object: [new cyfs.NDNDataRefererObject(
+                        zone1device1.local_device_id().object_id,
+                        dir_id.object_id),]
+                    ,
+                    flags: 1,
+                },
+                object_id: chunkId.calculate_id(),
+                inner_path: undefined,
+            }
+            //调用接口
+            let resp = await zone1device1.ndn_service().get_data(rep);
+            console.info(`${resp}`)
+            assert(resp.err, `get_data 传输chunk失败`)
+
+        })
+
     })
 })
