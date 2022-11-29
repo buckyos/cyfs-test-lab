@@ -544,12 +544,11 @@ mod tests {
             sns.push(sn1);
             sns.push(sn2);
             sns.push(sn3);
-            let sn_list = load_sn(sns).await;
             // PN 提供代理服务功能，如果你的网络是Symmetric 或者没有IPv6网络，你的网络可能不支持P2P 网络NAT穿透,需要公用的PN务或私有化部署的PN服务进行网络传输
             let mut pns = Vec::new();
             let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\pn-miner.desc").unwrap();
             pns.push(pn);
-            let pn_list = load_pn(pns).await;
+   
             // (1)初始化测试的BDT 协议栈
             let mut stack_manager = StackManager::new(PathBuf::from_str(Work_Space).unwrap());
             let mut eps1 = Vec::new();
@@ -559,7 +558,7 @@ mod tests {
             let area1 = Area::from_str(str_area1.as_str()).unwrap();
             log::info!("local device area : {}",str_area1.clone());
             let private_key = PrivateKey::generate_rsa(1024).unwrap();
-            let (device1,key1) = stack_manager.create_stack("device1", eps1, area1, SN_list, PN_list);
+            let (device1,key1) = stack_manager.create_stack("device1", eps1, area1,  Some(sns.clone()), Some(pns.clone())).await;
 
             let mut eps2 = Vec::new();
             let ep = format!("L4udp192.168.100.74:{}",40000);
@@ -568,7 +567,7 @@ mod tests {
             let area2 = Area::from_str(str_area2.as_str()).unwrap();
             log::info!("local device area : {}",str_area2.clone());
             let private_key = PrivateKey::generate_rsa(1024).unwrap();
-            let (device2,key2) = stack_manager.create_stack("device2", eps2, area2, Some(SN_list), Some(PN_list));
+            let (device2,key2) = stack_manager.create_stack("device2", eps2, area2, Some(sns), Some(pns)).await;
             // (2) 启动监听
             let client1 = stack_manager.get_client("device1".clone());
             log::info!("client1 info : {}",client1.get_stack().local_device_id());
@@ -576,6 +575,8 @@ mod tests {
             let client2 = stack_manager.get_client("device2".clone());
             log::info!("client2 info : {}",client2.get_stack().local_device_id());
             let confirm2 =client2.auto_accept();
+            let mut stream_id :u32 = 0;
+            let mut LN_Stream = "".to_string();
             // (3.1) client1 连接 client2 首次连接
             {   
                 // 构建 BuildTunnelParams
@@ -604,7 +605,10 @@ mod tests {
                         let mut len = 0;
                         // 接收answer
                         let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                        log::info!("connect success time = {}",connect_time);
+                        stream_id =  stream.sequence().value();
+                        log::info!("connect success time = {},sequence = {}",connect_time,stream_id.to_string());
+                        LN_Stream = format!("{}{}",device2.desc().object_id().to_string(),stream_id.to_string());
+                        client1.cache_stream(LN_Stream.as_str(), stream.clone());
                     },
                     Err(e) => {
                         log::error!("connect failed, e={}", &e);
@@ -613,7 +617,28 @@ mod tests {
                 };
             }
             
-            
+            {   
+                
+                let mut con1 = client1.get_stream(LN_Stream.as_str());
+                let RN_Stream = format!("{}{}",device1.desc().object_id().to_string(),stream_id.clone());
+                let mut con2 = client2.get_stream(RN_Stream.as_str());
+                log::info!("connect1: {}",con1.get_stream());
+                log::info!("connect2: {}",con2.get_stream());
+                //RN 一个线程收数据
+                let task1 = task::spawn(async move {
+                    let recv = con2.recv_file().await;
+                });
+                //stack_manager.sleep(1).await;
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                //LN 一个线程发数据
+                let task2 = task::spawn(async move {
+                    let send = con1.send_file(10*1024*1024).await;
+                    let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("send stream success time = {},sequence = {}",connect_time,stream_id.to_string());
+                });
+                task1.await;
+                task2.await;
+            }
         }).await
         
     }

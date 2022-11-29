@@ -2,6 +2,7 @@ use cyfs_base::*;
 use bytes::Bytes;
 use cyfs_util::cache::*;
 use cyfs_bdt::*;
+use rand::Rng;
 use std::{
     str::FromStr, 
     path::{Path, PathBuf}, 
@@ -376,6 +377,10 @@ pub async fn random_file(file_path : &str ,file_name : &str ,len : usize) -> Str
     file_path
 }
 
+pub fn random_int(min:usize,max:usize)->usize{
+    rand::thread_rng().gen_range(min, max) as usize
+    
+}
 
 pub async fn auto_accept(acceptor:StreamListenerGuard, answer :Vec<u8>){
     task::spawn(async move {

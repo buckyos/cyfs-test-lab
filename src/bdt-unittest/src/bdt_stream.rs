@@ -388,5 +388,151 @@ impl BDTConnection {
         Ok((file_size, hash,object_id))
     }
 
+    pub async fn send_file(&mut self, size: u64) -> Result<(HashValue, u64), BuckyError> {
+        if(size<8){
+            return Err(BuckyError::new(
+                BuckyErrorCode::InvalidData,
+                "stream data size must more than 8",
+            ));
+        }
+        let mut hashs = Vec::<HashValue>::new();
+        let mut send_buffer = Vec::new();
+        send_buffer.resize(PIECE_SIZE, 0u8);
+        let mut gen_count = PIECE_SIZE;
+        let mut size_need_to_send = size ;
+        if gen_count as u64 > size_need_to_send {
+            gen_count = size_need_to_send as usize;
+        }
+        // 构造请求头部协议，设置发送数据长度
+        send_buffer[0..8].copy_from_slice(&size_need_to_send.to_be_bytes());
 
+        // 生成测试数据 计算hash
+        Self::random_data(send_buffer[8..].as_mut());
+        let hash = hash_data(&send_buffer[0..gen_count]);
+        hashs.push(hash);
+        log::info!("########## hash {}",hash);
+        let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
+        loop {
+            log::info!("bdt tool send data piece szie = {}",gen_count);
+            let result_err = self
+                .stream
+                .write_all(&send_buffer[0..gen_count])
+                .await
+                .map_err(|e| {
+                    log::error!("send file failed, e={}", &e);
+                    e
+                });
+
+            let _ = match result_err {
+                Err(_) => break,
+                Ok(_) => {}
+            };
+            //size_need_to_send减去发送的数据
+            size_need_to_send -= gen_count as u64;
+            //size_need_to_send 为 0 退出循环
+            if size_need_to_send == 0 {
+                break;
+            }
+            gen_count = PIECE_SIZE;
+            if gen_count as u64 > size_need_to_send {
+                gen_count = size_need_to_send as usize;
+                let hash_end = hash_data(&send_buffer[0..gen_count as usize]);
+                hashs.push(hash_end);
+                log::info!("########## hash {}",hash_end);
+            }else{
+                hashs.push(hash.clone());
+                log::info!("########## hash {}",hash);
+            }
+        }
+        let send_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_send;
+
+        if size_need_to_send > 0 {
+            return Err(BuckyError::new(
+                BuckyErrorCode::ConnectionReset,
+                "remote close",
+            ));
+        }
+        let mut total_hash = Vec::new();
+        for h in hashs.iter() {
+            total_hash.extend_from_slice(h.as_slice());
+        }
+        let hash = hash_data(total_hash.as_slice());
+
+        log::info!("send file finish, size ={} ,hash={:?}",size,&hash);
+
+        Ok((hash, send_time))
+    }
+    pub async fn recv_file(&mut self) -> Result<(u64, u64, HashValue), BuckyError> {
+        let mut hashs = Vec::<HashValue>::new();
+        let mut recv_buffer = Vec::new();
+        recv_buffer.resize(PIECE_SIZE, 0u8);
+        let mut piece_recv: usize = 0;
+        let mut file_size: u64 = 0;
+        let mut total_recv: u64 = 0;
+        // let mut recv_time = 0;
+        let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
+        let recv_time = loop {
+            let len = self
+                .stream
+                .read(recv_buffer[piece_recv..].as_mut())
+                .await
+                .map_err(|e| {
+                    log::error!("recv failed, e={}", &e);
+                    e
+                })?;
+            log::info!("bdt tool recv data piece szie = {}",len);
+            if len == 0 {
+                log::error!("remote close");
+                return Err(BuckyError::new(
+                    BuckyErrorCode::ConnectionReset,
+                    "remote close",
+                ));
+            }
+            piece_recv += len;
+            total_recv += len as u64;
+
+            if file_size == 0 {
+                if piece_recv < FILE_SIZE_LEN {
+                    continue;
+                }
+                let mut b = [0u8; FILE_SIZE_LEN];
+                b.copy_from_slice(&recv_buffer[0..FILE_SIZE_LEN]);
+                file_size = u64::from_be_bytes(b);
+                log::info!(
+                    "=====================================pre recv stream,file_size={}",
+                    file_size
+                );
+                if file_size > 100 * 1024 * 1024 * 1024 {
+                    return Err(BuckyError::new(
+                        BuckyErrorCode::ConnectionReset,
+                        "error file_size",
+                    ));
+                }
+            }
+            if file_size > 0 {
+                if total_recv == file_size || piece_recv == PIECE_SIZE {
+                    let recv_hash = hash_data(&recv_buffer[0..piece_recv].as_ref());
+                    hashs.push(recv_hash);
+                }
+
+                if total_recv == file_size {
+                    log::info!("=====================================recv finish");
+                    let recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                    break recv_time;
+                }
+            }
+            if piece_recv == PIECE_SIZE {
+                piece_recv = 0;
+            }
+        };
+
+        let mut total_hash = Vec::new();
+        for h in hashs.iter() {
+            total_hash.extend_from_slice(h.as_slice());
+        }
+        let hash = hash_data(total_hash.as_slice());
+        log::info!("recv file finish,szie = {} hash={:?}",file_size, &hash);
+        Ok((file_size, recv_time, hash))
+    }
+    
 }

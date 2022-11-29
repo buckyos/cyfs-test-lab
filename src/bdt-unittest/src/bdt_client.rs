@@ -486,7 +486,7 @@ impl StackManager{
                 load_sn(sns).await
             },
             None =>{
-                log::warn!("set sn list empty");
+                log::warn!("{} set sn list empty",&peer_name);
                 Vec::new()
             }
         };
@@ -495,7 +495,7 @@ impl StackManager{
                 load_pn(pns).await
             },
             None =>{
-                log::warn!("set pn list empty");
+                log::warn!("{} set pn list empty",&peer_name);
                 Vec::new()
             } 
         };
@@ -516,22 +516,25 @@ impl StackManager{
             key.clone(), 
             params).await;
         if let Err(e) = stack.clone(){
-            log::error!("init bdt stack error: {}", e);
+            log::error!("{}init bdt stack error: {}",&peer_name, e);
         }
         let  stack = stack.unwrap();   
         let  acceptor = stack.stream_manager().listen(0).unwrap();
         let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
             Err(err) => {
-                log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
+                log::error!("{} sn online timeout {}.err= {}",&peer_name, device.desc().device_id(),err);
                 1000
             },
             Ok(_) => {
-                log::info!("sn online success {}", device.desc().device_id());
+                log::info!("{} sn online success {}",&peer_name, device.desc().device_id());
+                let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
                 0
             }
         };
-        let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-        log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+        for sn in stack.sn_client().sn_list(){
+            log::info!("{} sn list:{}",&peer_name,sn.object_id().to_string());
+        }
         let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
                 let info = BDTClient::new(stack, acceptor, self.temp_dir.clone());
