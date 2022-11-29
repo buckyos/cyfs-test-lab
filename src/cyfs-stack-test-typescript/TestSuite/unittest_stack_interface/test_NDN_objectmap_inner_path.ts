@@ -7,6 +7,12 @@ import * as gen_Dir from "../../common/utils/generator"
 import * as events from 'events'
 export const Emitter = new events.EventEmitter();
 
+
+type level_ty =  cyfs.NDNAPILevel | cyfs.NONAPILevel 
+type stack_va_ty = cyfs.SharedCyfsStack[] | level_ty[] |  boolean[]
+type stack_ty = {[x: string]:stack_va_ty} 
+
+
 let stack_runtime: cyfs.SharedCyfsStack;
 let stack_ood: cyfs.SharedCyfsStack;
 let zone1ood : cyfs.SharedCyfsStack;
@@ -35,6 +41,29 @@ const DecId = {
     DecIdAny: cyfs.get_anonymous_dec_app(),
     DecIdSys: cyfs.get_system_dec_app()
 }
+
+let devices = 
+[
+"sam_dev_sam_zone_sam_dec",
+"sam_dev_sam_zone_dif_dec",
+"dif_dev_sam_zone_sam_dec",
+"dif_dev_dif_zone_sam_dec",
+"dif_dev_sam_zone_dif_dec",
+"dif_dev_dif_zone_dif_dec"
+]
+
+let AccPermissions : cyfs.AccessPermissions [] = [
+    cyfs.AccessPermissions.None,
+    cyfs.AccessPermissions.CallOnly,
+    cyfs.AccessPermissions.WriteOnly,
+    cyfs.AccessPermissions.WirteAndCall,
+    cyfs.AccessPermissions.ReadOnly,
+    cyfs.AccessPermissions.ReadAndCall,
+    cyfs.AccessPermissions.ReadAndWrite,
+    cyfs.AccessPermissions.Full
+]
+
+
 interface FileTransTask {
     fileName: string,
     savePath: string,
@@ -56,72 +85,75 @@ subs?: Map<string, TreeNode>,
 object_id?: cyfs.ObjectId,
 }
 
+
+/*common handler----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 //重建dir的目录树结构
 async function build_dir(stack: cyfs.SharedCyfsStack, dir_id: cyfs.DirId) {
-const req = {
-    common: {
-        level: cyfs.NONAPILevel.Router,
-        flags: 0,
-    },
-    object_id: dir_id.object_id,
-};
-
-const resp = await stack.non_service().get_object(req);
-if (resp.err) {
-    console.error(`get dir object from router error!`, resp);
-    return;
-}
-
-const ret = resp.unwrap();
-const [dir, _] = new cyfs.DirDecoder().raw_decode(ret.object.object_raw).unwrap();
-
-let root: TreeNode = {
-    type: 'dir',
-    subs: new Map(
-
-    ),
-};
-console.info(root)
-
-dir.desc().content().obj_list().match({
-    Chunk: (chunk_id: cyfs.ChunkId) => {
-        console.error(`obj_list in chunk not support yet! ${chunk_id}`);
-    },
-    ObjList: (obj_list) => {
-        for (const [inner_path, info] of obj_list.object_map().entries()) {
-            const segs = inner_path.value().split('/');
-            console.assert(segs.length > 0);
-            console.info(`###节点信息：${inner_path},${info.node().object_id()}`)
-            // 一个叶子节点就是一个object_id，可能是FileObj，也可能是DirObj
-            const leaf_node: TreeNode = {
-                name: segs.pop(),
-                type: 'object',
-                object_id: info.node().object_id()!,
-            };
-
-            let cur = root.subs!;
-            for (const seg of segs) {
-                if (!cur.get(seg)) {
-                    const sub_node: TreeNode = {
-                        name: seg,
-                        type: 'dir',
-                        subs: new Map(),
-                    };
-                    console.info(`添加叶子节点dir：${seg} ${sub_node}`)
-                    cur!.set(seg, sub_node);
-                }
-                cur = cur.get(seg)!.subs!;
-            }
-
-            cur.set(leaf_node.name!, leaf_node);
-            console.info(`添加叶子节点object：${leaf_node.name!} ${leaf_node}`)
-        }
-    }
-});
-return root;
-
-}
+    const req = {
+        common: {
+            level: cyfs.NONAPILevel.Router,
+            flags: 0,
+        },
+        object_id: dir_id.object_id,
+    };
     
+    const resp = await stack.non_service().get_object(req);
+    if (resp.err) {
+        console.error(`get dir object from router error!`, resp);
+        return;
+    }
+    
+    const ret = resp.unwrap();
+    const [dir, _] = new cyfs.DirDecoder().raw_decode(ret.object.object_raw).unwrap();
+    
+    let root: TreeNode = {
+        type: 'dir',
+        subs: new Map(
+    
+        ),
+    };
+    console.info(root)
+    
+    dir.desc().content().obj_list().match({
+        Chunk: (chunk_id: cyfs.ChunkId) => {
+            console.error(`obj_list in chunk not support yet! ${chunk_id}`);
+        },
+        ObjList: (obj_list) => {
+            for (const [inner_path, info] of obj_list.object_map().entries()) {
+                const segs = inner_path.value().split('/');
+                console.assert(segs.length > 0);
+                console.info(`###节点信息：${inner_path},${info.node().object_id()}`)
+                // 一个叶子节点就是一个object_id，可能是FileObj，也可能是DirObj
+                const leaf_node: TreeNode = {
+                    name: segs.pop(),
+                    type: 'object',
+                    object_id: info.node().object_id()!,
+                };
+    
+                let cur = root.subs!;
+                for (const seg of segs) {
+                    if (!cur.get(seg)) {
+                        const sub_node: TreeNode = {
+                            name: seg,
+                            type: 'dir',
+                            subs: new Map(),
+                        };
+                        console.info(`添加叶子节点dir：${seg} ${sub_node}`)
+                        cur!.set(seg, sub_node);
+                    }
+                    cur = cur.get(seg)!.subs!;
+                }
+    
+                cur.set(leaf_node.name!, leaf_node);
+                console.info(`添加叶子节点object：${leaf_node.name!} ${leaf_node}`)
+            }
+        }
+    });
+    return root;
+    
+    }
+        
 async function buildDirTree(root: TreeNode, inner_path: cyfs.BuckyString, info: cyfs.InnerNodeInfo) {
     
     const segs = inner_path.value().split('/');
@@ -170,9 +202,6 @@ async function buildDirTree(root: TreeNode, inner_path: cyfs.BuckyString, info: 
 
 }
 
-
-/*common handler----------------------------------------------------------------------------------------------------------------------------------------------------------*/
-
 class GetObjectHandlerDefault implements cyfs.RouterHandlerGetObjectRoutine {
     private device: string;
     private handlerId: string;
@@ -197,14 +226,14 @@ class GetObjectHandlerDefault implements cyfs.RouterHandlerGetObjectRoutine {
     }
 }
 
-/*common function----------------------------------------------------------------------------------------------------------------------------------------------------*/
-
-async function r_meta_acc(type:string,acc_num:number=0o777,per:cyfs.AccessPermissions=cyfs.AccessPermissions.Full):Promise<cyfs.AccessString|undefined>{
+/*common functions----------------------------------------------------------------------------------------------------------------------------------------------------*/
+//acl参数生成
+async function gen_acl(type:string,per:cyfs.AccessPermissions = cyfs.AccessPermissions.Full,acc_num?:number):Promise<cyfs.AccessString|undefined>{
     let acc:cyfs.AccessString
     switch(type){
         case"num":{
             //acc_num 0o777
-            acc= (new cyfs.AccessString(acc_num))}
+            acc= (new cyfs.AccessString(acc_num!))}
             return acc
         case"method":{
             acc= cyfs.AccessString.full()}
@@ -222,80 +251,155 @@ async function r_meta_acc(type:string,acc_num:number=0o777,per:cyfs.AccessPermis
     }
 }
 //[zone1ood,zone1device1,zone2ood,zone2device1]
-type level_ty =  cyfs.NDNAPILevel | cyfs.NONAPILevel 
-type stack_va_ty = cyfs.SharedCyfsStack[] | level_ty[]
-type stack_ty = {[x: string]:stack_va_ty}
+
+//本测试使用的的acl生成
+async function r_meta_acc_acl(source:cyfs.SharedCyfsStack,target:cyfs.SharedCyfsStack,path:string,per:cyfs.AccessPermissions):Promise<cyfs.PathOpEnvStub[]|undefined>{
+            
+            let acc:cyfs.AccessString
+            acc = new cyfs.AccessString(0)
+            acc.set_group_permissions(cyfs.AccessGroup.OthersZone,per)
+            acc.set_group_permissions(cyfs.AccessGroup.OthersDec,per)
+            acc.set_group_permissions(cyfs.AccessGroup.CurrentDevice,per)
+            acc.set_group_permissions(cyfs.AccessGroup.CurrentZone,per)
+            acc.set_group_permissions(cyfs.AccessGroup.OwnerDec,per)
+            acc.set_group_permissions(cyfs.AccessGroup.FriendZone,per)
+            
+            //rmeta acl
+            await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(path,acc))
+            await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(path,acc))
+            
+            //root_state acl
+            let env_acc:cyfs.RootStateOpEnvAccess = {
+            path:path,
+            access:cyfs.AccessPermissions.Full 
+            }
+            let stub_source = source.root_state_stub(undefined,undefined)
+            let stub_target = target.root_state_stub(undefined,undefined)
+
+            let source_opEnv = (await stub_source.create_path_op_env_with_access(env_acc)).unwrap()
+            let target_opEnv = (await stub_target.create_path_op_env_with_access(env_acc)).unwrap()
+            console.info("root_state_acc_source: ",(source_opEnv))
+            console.info("root_state_acc_target: ",(target_opEnv))
+            
+
+            return [source_opEnv,target_opEnv]
+
+}
+//协议栈连接生成
 async function stacks(type:string,stack:cyfs.SharedCyfsStack[]):Promise <stack_ty|undefined>{
     switch(type){
         case "sam_dev_sam_zone_sam_dec":
             let stacks_1 = [stack[0].fork_with_new_dec(DecId.DecIdA),stack[0].fork_with_new_dec(DecId.DecIdA)]
-            let getdate_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0]]
-            let tans_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0]]
-            let test_getdate_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0]]
-            let test_trans_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0]]
-            let getdate_level_1 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_1  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]       
             
-            return  {"getdate_stacks":getdate_stacks_1,"tans_stacks":tans_stacks_1,"getdate_level":getdate_level_1,"tans_level":tans_level_1,
-                    "stacks":stacks_1, "test_getdate_stacks":test_getdate_stacks_1,"test_trans_stacks":test_trans_stacks_1} 
+            let getdate_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0]]
+            let test_getdate_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0]]
+            let getdate_level_1 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_1 = [true,true,true,true,true,true]
+
+            let trans_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0],stacks_1[0]]
+            let test_trans_stacks_1 = [stacks_1[0],stacks_1[0],stacks_1[0]]
+            let trans_level_1  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN] 
+            let trans_assert_1 = [true,true,true,true,true,true]
+
+        return {
+                "stacks":stacks_1,
+                "getdate_stacks": getdate_stacks_1, "test_getdate_stacks": test_getdate_stacks_1,"getdate_level" : getdate_level_1, "getdate_assert":getdate_assert_1,
+                "trans_stacks" :  trans_stacks_1 , " test_trans_stacks" :  test_trans_stacks_1 , "trans_level" : trans_level_1 , "trans_assert" : trans_assert_1
+            }
+
         case "sam_dev_sam_zone_dif_dec":
             let stacks_2 = [stack[0].fork_with_new_dec(DecId.DecIdB),stack[0].fork_with_new_dec(DecId.DecIdC)]
             let getdate_stacks_2 = [stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[1],stacks_2[1]]
-            let tans_stacks_2 = [stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[1],stacks_2[1]]
             let test_getdate_stacks_2 = [stacks_2[1],stacks_2[1],stacks_2[0]]
-            let test_trans_stacks_2 = [stacks_2[1],stacks_2[1],stacks_2[0]]
-            let getdate_level_2 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_2  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+            let getdate_level_2 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_2 = [true,true,true,true,true,true]
             
-            return {"getdate_stacks":getdate_stacks_2,"tans_stacks":tans_stacks_2,"getdate_level":getdate_level_2,"tans_level":tans_level_2,
-                    "stacks":stacks_2,"test_getdate_stacks":test_getdate_stacks_2,"test_trans_stacks":test_trans_stacks_2}    
+            let trans_stacks_2 = [stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[0],stacks_2[1],stacks_2[1]]
+            let test_trans_stacks_2 = [stacks_2[1],stacks_2[1],stacks_2[0]]
+            let trans_level_2  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let trans_assert_2 = [true,true,true,true,true,true]
+
+            return {
+                "stacks":stacks_2,
+                "getdate_stacks": getdate_stacks_2, "test_getdate_stacks": test_getdate_stacks_2,"getdate_level" : getdate_level_2, "getdate_assert":getdate_assert_2,
+                "trans_stacks" :  trans_stacks_2 , " test_trans_stacks" :  test_trans_stacks_2 , "trans_level" : trans_level_2 , "trans_assert" : trans_assert_2
+            }
+               
         case "dif_dev_sam_zone_sam_dec":
             let stacks_3 = [stack[0].fork_with_new_dec(DecId.DecIdD),stack[1].fork_with_new_dec(DecId.DecIdD)]
             let getdate_stacks_3 = [stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[1],stacks_3[1]]
-            let tans_stacks_3 =[stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[1],stacks_3[1]]
             let test_getdate_stacks_3 =[stacks_3[1],stacks_3[1],stacks_3[0]]
+            let getdate_level_3 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_3 = [true,true,true,true,true,true]
+
+            let trans_stacks_3 =[stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[0],stacks_3[1],stacks_3[1]]
             let test_trans_stacks_3 =[stacks_3[1],stacks_3[1],stacks_3[0]]
-            let getdate_level_3 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_3  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+            let trans_level_3  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let trans_assert_3 = [true,true,true,true,true,true]
             
-            return {"getdate_stacks":getdate_stacks_3,"tans_stacks":tans_stacks_3,"getdate_level":getdate_level_3,"tans_level":tans_level_3,
-                    "stacks":stacks_3,"test_getdate_stacks":test_getdate_stacks_3,"test_trans_stacks":test_trans_stacks_3}    
+            return {
+                "stacks":stacks_3,
+                "getdate_stacks": getdate_stacks_3, "test_getdate_stacks": test_getdate_stacks_3,"getdate_level" : getdate_level_3, "getdate_assert":getdate_assert_3,
+                "trans_stacks" :  trans_stacks_3 , " test_trans_stacks" :  test_trans_stacks_3 , "trans_level" : trans_level_3 , "trans_assert" : trans_assert_3
+                }
+
         case "dif_dev_dif_zone_sam_dec":
             let stacks_4 = [stack[0].fork_with_new_dec(DecId.DecIdE),stack[2].fork_with_new_dec(DecId.DecIdE)]
             let getdate_stacks_4 = [stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[1],stacks_4[1]]
-            let tans_stacks_4 =  [stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[1],stacks_4[1]]
             let test_getdate_stacks_4 =[stacks_4[1],stacks_4[1],stacks_4[0]]
-            let test_trans_stacks_4 =[stacks_4[1],stacks_4[1],stacks_4[0]]
-            let getdate_level_4 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_4  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+            let getdate_level_4 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_4 = [true,true,true,true,true,true]
             
-            return {"getdate_stacks":getdate_stacks_4,"tans_stacks":tans_stacks_4,"getdate_level":getdate_level_4,"tans_level":tans_level_4,
-                    "stacks":stacks_4,"test_getdate_stacks":test_getdate_stacks_4,"test_trans_stacks":test_trans_stacks_4}    
+            let trans_stacks_4 =  [stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[0],stacks_4[1],stacks_4[1]]
+            let test_trans_stacks_4 =[stacks_4[1],stacks_4[1],stacks_4[0]]
+            let trans_level_4  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let trans_assert_4 = [true,true,true,true,true,true]
+          
+            return {
+                "stacks":stacks_4,
+                "getdate_stacks": getdate_stacks_4, "test_getdate_stacks": test_getdate_stacks_4,"getdate_level" : getdate_level_4, "getdate_assert":getdate_assert_4,
+                "trans_stacks" :  trans_stacks_4 , " test_trans_stacks" :  test_trans_stacks_4 , "trans_level" : trans_level_4 , "trans_assert" : trans_assert_4
+                }
+
         case "dif_dev_sam_zone_dif_dec":
             let stacks_5 = [stack[2].fork_with_new_dec(DecId.DecIdF),stack[3].fork_with_new_dec(DecId.DecIdF)]
             let getdate_stacks_5 = [stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[1],stacks_5[1]]
-            let tans_stacks_5 = [stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[1],stacks_5[1]]
             let test_getdate_stacks_5 =[stacks_5[1],stacks_5[1],stacks_5[0]]
+            let getdate_level_5 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_5 = [true,true,true,true,true,true]
+
+            let trans_stacks_5 = [stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[0],stacks_5[1],stacks_5[1]]
             let test_trans_stacks_5 =[stacks_5[1],stacks_5[1],stacks_5[0]]
-            let getdate_level_5 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_5  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            
-            return {"getdate_stacks":getdate_stacks_5,"tans_stacks":tans_stacks_5,"getdate_level":getdate_level_5,"tans_level":tans_level_5,
-                    "stacks":stacks_5,"test_getdate_stacks":test_getdate_stacks_5,"test_trans_stacks":test_trans_stacks_5}    
+            let trans_level_5  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let trans_assert_5 = [true,true,true,true,true,true]
+
+            return {
+                "stacks":stacks_5,
+                "getdate_stacks": getdate_stacks_5, "test_getdate_stacks": test_getdate_stacks_5,"getdate_level" : getdate_level_5, "getdate_assert":getdate_assert_5,
+                "trans_stacks" :  trans_stacks_5 , " test_trans_stacks" :  test_trans_stacks_5 , "trans_level" : trans_level_5 , "trans_assert" : trans_assert_5
+                }
+
+                
         case "dif_dev_dif_zone_dif_dec":
             let stacks_6 = [stack[1].fork_with_new_dec(DecId.DecIdE),stack[3].fork_with_new_dec(DecId.DecIdF)]
             let getdate_stacks_6 = [stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[1],stacks_6[1]]
-            let tans_stacks_6 = [stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[1],stacks_6[1]]
             let test_getdate_stacks_6 = [stacks_6[1],stacks_6[1],stacks_6[0]]
+            let getdate_level_6 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let getdate_assert_6 = [true,true,true,true,true,true]
+            
+            let trans_stacks_6 = [stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[0],stacks_6[1],stacks_6[1]]
             let test_trans_stacks_6 = [stacks_6[1],stacks_6[1],stacks_6[0]]
-            let getdate_level_6 = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-            let tans_level_6  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
+            let trans_level_6  = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON,cyfs.NDNAPILevel.NDN]
+            let trans_assert_6 = [true,true,true,true,true,true]
 
-            return {"getdate_stacks":getdate_stacks_6,"tans_stacks":tans_stacks_6,"getdate_level":getdate_level_6,"tans_level":tans_level_6,
-                    "stacks":stacks_6,"test_getdate_stacks":test_getdate_stacks_6,"test_trans_stacks":test_trans_stacks_6}    
+            return {
+                "stacks":stacks_6,
+                "getdate_stacks": getdate_stacks_6, "test_getdate_stacks": test_getdate_stacks_6,"getdate_level" : getdate_level_6, "getdate_assert":getdate_assert_6,
+                "trans_stacks" :  trans_stacks_6 , " test_trans_stacks" :  test_trans_stacks_6 , "trans_level" : trans_level_6 , "trans_assert" : trans_assert_6
+                }   
     }
 }
-
+//
 async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: string,inner_path:string, chunkSize: number, level:any[]):Promise<any>{
     console.info('开始chunk')
     console.info("filePath",filePath)
@@ -344,6 +448,7 @@ async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: s
     
     let file_id_from_objectmap = cyfs.FileId.try_from_object_id(file_obj_resp_0.unwrap().object.object_id).unwrap()
     console.info("file_id_from_objectmap: ",file_id_from_objectmap)
+    
 
     //3.从dir map 获取dir 对象
     let dir_from = await stack[6].util().build_dir_from_object_map({
@@ -356,8 +461,23 @@ async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: s
     console.info("dir_id: ",dir_id)
 
 
-    //4. source 设备 将文件对象put 到 targrt 设备
     const file_obj_resp: cyfs.NONGetObjectOutputResponse = file_obj_resp_0.unwrap();
+
+    const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
+
+    let chunkIdList = file.body_expect().content().chunk_list.chunk_in_list!
+    console.info("chunkIdList", chunkIdList)
+
+    //CYFS_REQUEST_FLAG_CHUNK_LEVEL_ACL
+    /*let bundle = new cyfs.ChunkBundle(chunkIdList,cyfs.ChunkBundleHashMethod.Serial)
+    let hash = bundle.calc_hash_value()
+    let chunks = cyfs.ChunkList.ChunkInBundle(bundle)
+    cyfs.File.create(file_obj_resp_0.unwrap().object.object_id,file.,hash,chunks)*/
+
+
+
+    //4. source 设备 将文件对象put 到 targrt 设备
+    
     let put_file_object = (await stack[7].non_service().put_object({
         common: {
             level: level[2],
@@ -370,10 +490,7 @@ async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: s
         if (put_file_object.err) {
         console.info("put_file_object",put_file_object)
         }
-        const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
 
-    let chunkIdList = file.body_expect().content().chunk_list.chunk_in_list!
-    console.info("chunkIdList", chunkIdList)
 
     return [object_map_id,file_id_from_objectmap,dir_id,chunkIdList]
 }
@@ -446,7 +563,8 @@ async function trans_file_for_task(stack:cyfs.SharedCyfsStack[], filePath: strin
     return [file_id,chunkIdList]
 }
 
-async function get_data(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,flags:number){
+async function get_data(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],
+                        path_handler:string,level:any,object_id:cyfs.ObjectId,flags:number=0,inner_path?:string){
     
     let req: cyfs.NDNGetDataOutputRequest = {
 
@@ -456,23 +574,26 @@ async function get_data(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataReferer
             target: stack[1].local_device_id().object_id,
             // 需要处理数据的关联对象，主要用以chunk/file等+-
             referer_object: referer,
+            //new cyfs.NDNDataRefererObject(target,object_id,innerpath), 
             flags: flags,
             req_path: path_handler//如果没有DecId，那么就当当前decid处理
         },
         // 目前只支持ChunkId/FileId/DirId
-        object_id: object_id
+        object_id: object_id,
+        inner_path:inner_path,
+        //range:range
         
     }
     let resp = await stack[2].ndn_service().get_data(req)
     return resp
 }
 
-async function tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,timeout:number){
+async function tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefererObject[],path_handler:string,level:any,object_id:cyfs.ObjectId,path:string,flags:number,timeout:number){
 
         let create_task = (await stack[0].trans().create_task({
             common: {
                 level: level[0],
-                flags: 0,
+                flags: flags,
                 dec_id: stack[1].dec_id,
                 target: stack[2].local_device_id().object_id,
                 //referer_object: [new cyfs.NDNDataRefererObject(undefined,file_resp.file_id)]
@@ -596,9 +717,8 @@ async function clean_test_data(source:cyfs.SharedCyfsStack,target:cyfs.SharedCyf
 
 }
 
-async function insert_object_map(type:string,path:string,key:any,GlobalState:cyfs.GlobalStateStub,acc:cyfs.RootStateOpEnvAccess){
-    let PathOpEnv = (await GlobalState.create_path_op_env_with_access(acc)).unwrap()
-    //将对象id挂在objet_map上
+async function insert_object_map(type:string,path:string,key:any,PathOpEnv:cyfs.PathOpEnvStub){
+    //将对象id挂在objet_map上 &&
     let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
     let obj_id = obj.desc().object_id();
     switch(type){
@@ -618,7 +738,7 @@ async function insert_object_map(type:string,path:string,key:any,GlobalState:cyf
             let after_dec_root_1 = after_path_map_1.unwrap().dec_root
             return [before_root_1,before_dec_root_1,after_root_1,after_dec_root_1]
         case "Set":
-            console.info(`#create_new_with_path_Set ${JSON.stringify(await PathOpEnv.create_new_with_path(path,cyfs.ObjectMapSimpleContentType.Map))}`)
+            console.info(`#create_new_with_path_Set ${JSON.stringify(await PathOpEnv.create_new_with_path(path,cyfs.ObjectMapSimpleContentType.Set))}`)
             console.info(`#remove_with_path  ${JSON.stringify(await PathOpEnv.remove_with_path(path))}`)
             console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, key))}`)
             console.info(`#insert_with_path_result:${JSON.stringify(await PathOpEnv.insert_with_path(path, obj_id))}`)
@@ -640,8 +760,8 @@ async function insert_object_map(type:string,path:string,key:any,GlobalState:cyf
 describe("#NDN权限测试,objectmap_inner_path ",function(){
     this.timeout(0);
     this.beforeAll(async function () {
-        await ZoneSimulator.init(false,false,' Console',"http");
-        //await ZoneSimulator.init(false,false,' RDP-Tcp',"http");
+        //await ZoneSimulator.init(false,false,' Console',"http");
+        await ZoneSimulator.init(false,false,' RDP-Tcp',"http");
         zone1ood = ZoneSimulator.zone1_ood_stack
         zone1device1 =ZoneSimulator.zone1_device1_stack
         zone1device2 = ZoneSimulator.zone1_device2_stack
@@ -656,21 +776,13 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
         ZoneSimulator.stopZoneSimulator();
         process.exit(0)
     })
-    let devices = 
-    [
-    "sam_dev_sam_zone_sam_dec",
-    "sam_dev_sam_zone_dif_dec",
-    "dif_dev_sam_zone_sam_dec",
-    "dif_dev_dif_zone_sam_dec",
-    "dif_dev_sam_zone_dif_dec",
-    "dif_dev_dif_zone_dif_dec"
-    ]
+
     describe("#NDN权限测试,objectmap_inner_path",async()=>{
         describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{                 
             it.only("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{ 
                 
                 console.info("start")
-                //遍历六种情况
+                //遍历六种stack连接情况
                 for(let n=0; n < devices.length; n++){
                     let para = 
                     {
@@ -679,7 +791,7 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -691,85 +803,86 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                     console.info("devices_type: ",devices[n])
                     
                     let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
+                    
+                    let source = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                    let target = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                    console.info("stacks-------")
+                    let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                    let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
+                    //let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
+                   // let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    //let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                    //cyfs.sleep(10)
+                    
                     //生成测试文件
                     await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
                     //生成path_handler 
                     let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
+                   
                     //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
+                    let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
                     //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
                     let object_map_id = res[0]
                     let file_id_from_objectmap = res[1]
                     let dir_id = res[2]
                     let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+ 
+
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                test_getdate_stacks,
+                                [],
+                                path_handler,
+                                getdata_level[3],
+                                chunkId.calculate_id(),
+                                0
+                                )
+                            
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+
+                            //六种ACL情况下的断言
+                            assert(!resp.err == getdate_assert[m],`${chunkId.calculate_id()} get_data 失败`)
+                            
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
-                })
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
+                    }
+                        }
+            })
 
             it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象file",async()=>{
                 
@@ -798,10 +911,10 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
 
                     let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
                     let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                    let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
                     cyfs.sleep(10)
                    
                     //生成测试文件
@@ -809,71 +922,256 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                     //生成path_handler 
                     let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
 
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
+                                        
                     //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
+                    let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
                     //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
                     let object_map_id = res[0]
                     let file_id_from_objectmap = res[1]
                     let dir_id = res[2]
                     let chunkIdList = res[3]
                     
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                      
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                test_getdate_stacks,
+                                [new cyfs.NDNDataRefererObject(undefined,file_id_from_objectmap.object_id,"/" + para.path.cn_fileName)],
+                                path_handler,
+                                cyfs.NDNAPILevel.NDN,
+                                chunkId.calculate_id(),
+                                0)
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
+                        }
+                    }
                 })
+            it.skip("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象dir",async()=>{
+                
+                    console.info("start")
+                    //遍历六种情况
+                    for(let n=0; n < devices.length; n++){
+                        let para = 
+                        {
+                            "acl_path":"/test/api/test/",
+                            "path":{
+                            "en_fileName":RandomGenerator.string(10),
+                            "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
+                            "cn_fileName":RandomGenerator.string(0,10,0), 
+                            "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                            "chunkSize" : 4 * 1024 * 1024,
+                            "timeout" : 600 * 1000,
+                            "root_path" : "/123/test/",
+                            "chunkNumber" : 10,
+                            "flags":0 
+                        }
+                        console.info("n++", n)
+                        //初始化stack
+                        console.info("devices_type: ",devices[n])
+                        
+                        let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+                        let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                        let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                        let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]                       
+                        let test_getdata_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                        let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                        let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
+                        cyfs.sleep(10)
+                       
+                        //生成测试文件
+                        await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                        //生成path_handler 
+                        let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                        //初始化数据
+                        let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
+                        //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                        let object_map_id = res[0]
+                        let file_id_from_objectmap = res[1]
+                        let dir_id = res[2]
+                        let chunkIdList = res[3]
+ 
+
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            
+    
+                            //调用NDN get_data接口
+                            let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),0)
+    
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                           // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                            console.info("start download")
+                            let download = []
+                            //for (let i in chunkRecvPromise) {
+                                //let result = await chunkRecvPromise[i]
+                                //if (result.err) {
+                                //    return { err: result.err, log: result.log }}
+                                //download.push(result)                        
+                            //}
+                            //清理数据
+                            //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+        
+                            //return { err: false, log: `chunk 下载成功` };
+                            
+                        }    //return { err: false, log: `chunk 下载成功`, download };
+                    }
+                })
+            it("#NDN权限测试,objectmap_inner_path,get_data,chunk目标对象,来源对象objectmap_inner_path",async()=>{
+            
+                console.info("start")
+                //遍历六种情况
+                for(let n=0; n < devices.length; n++){
+                    let para = 
+                    {
+                        "acl_path":"/test/api/test/",
+                        "path":{
+                        "en_fileName":RandomGenerator.string(10),
+                        "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
+                        "cn_fileName":RandomGenerator.string(0,10,0), 
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "chunkSize" : 4 * 1024 * 1024,
+                        "timeout" : 600 * 1000,
+                        "root_path" : "/123/test/",
+                        "chunkNumber" : 10,
+                        "flags":0 
+                    }
+                    console.info("n++", n)
+                    //初始化stack
+                    console.info("devices_type: ",devices[n])
+                    
+                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+
+
+                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                    let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                    let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
+                    cyfs.sleep(10)
+                    
+                    //生成测试文件
+                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                    //生成path_handler 
+                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+
+                    //初始化数据
+                    let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
+                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                    let object_map_id = res[0]
+                    let file_id_from_objectmap = res[1]
+                    let dir_id = res[2]
+                    let chunkIdList = res[3]
+                    
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                [source,source,source],
+                                [new cyfs.NDNDataRefererObject(undefined,object_map_id.object_id,"/" + para.path.cn_fileName)],
+                                path_handler,
+                                cyfs.NDNAPILevel.NDN,
+                                chunkId.calculate_id(),
+                                0,
+                                path_handler)
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                            // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        }
+                        
+                            console.info("start download")
+                            let download = []
+                            //for (let i in chunkRecvPromise) {
+                                //let result = await chunkRecvPromise[i]
+                                //if (result.err) {
+                                //    return { err: result.err, log: result.log }}
+                                //download.push(result)                        
+                            //}
+                            //清理数据
+                            //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+
+                            //return { err: false, log: `chunk 下载成功` };
+                            
+                            //return { err: false, log: `chunk 下载成功`, download };
+                    }
+                }
+            })
             it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象",async()=>{
                                     
                 console.info("start")
@@ -899,82 +1197,76 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                     
                     let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
 
+
                     let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
                     let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                    let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
                     cyfs.sleep(10)
-                   
+                    
                     //生成测试文件
                     await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
                     //生成path_handler 
                     let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
 
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
                     //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
+                    let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
                     //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
                     let object_map_id = res[0]
                     let file_id_from_objectmap = res[1]
                     let dir_id = res[2]
                     let chunkIdList = res[3]
                     
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                [source,source,source],
+                                [],
+                                path_handler,
+                                cyfs.NDNAPILevel.NDN,
+                                file_id_from_objectmap.objcet_id,
+                                0)
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                    }    //return { err: false, log: `chunk 下载成功`, download };
                 }
                 })
             it("#NDN权限测试,objectmap_inner_path,get_data,File目标对象,来源对象objectmap_inner_path",async()=>{
@@ -996,89 +1288,85 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "chunkNumber" : 10,
                         "flags":0 
                     }
-                    console.info("n++", n)
                     //初始化stack
                     console.info("devices_type: ",devices[n])
                     
                     let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
 
+
                     let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
                     let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                    let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                    let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
                     cyfs.sleep(10)
-                   
+                    
                     //生成测试文件
                     await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
                     //生成path_handler 
                     let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
 
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
                     //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
+                    let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
                     //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
                     let object_map_id = res[0]
                     let file_id_from_objectmap = res[1]
                     let dir_id = res[2]
                     let chunkIdList = res[3]
                     
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                    for(let m = 0; m<= AccPermissions.length; m++){
+                        //遍历rmeta ACL权限
+                        let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                        let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                        //从target设备get 对象数据
+                        console.log("chunkIdList",chunkIdList)
+                        let chunkRecvPromise: Array<any> = []
+                        for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                            console.log("chunkIdList_i_ ", i)
+                            //chunkRecvPromise.push(new Promise(async (v) => {                     
+                            let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                            console.info(`开始传输chunk:${chunkId},${buff}`)
+                            
+                            //将chunkid对象id挂在objet_map上
+                            let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                [source,source,source],
+                                [],
+                                path_handler,
+                                cyfs.NDNAPILevel.NDN,
+                                file_id_from_objectmap.objcet_id,
+                                0,
+                                path_handler)
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
+                
+                    }
+                }    
                 })
             it("#NDN权限测试,objectmap_inner_path,get_data,objectmap_inner_path目标对象",async()=>{
                                     
@@ -1100,89 +1388,85 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                     
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
 
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
+
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let getdata_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
+                   let getdata_level: level_ty[] = stack_res!["getdate_level"] as level_ty[]
+                   let getdate_assert: boolean[] = stack_res!["getdate_assert"] as boolean[]
+                   cyfs.sleep(10)
                    
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
 
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(getdata_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,getdata_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+
+                            //调用NDN get_data接口
+                            let resp = await get_data(
+                                [source,source,source],
+                                [],
+                                path_handler,
+                                cyfs.NDNAPILevel.NDN,
+                                object_map_id.object_id,
+                                0,
+                                path_handler)
+
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                        }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
+                    }
                 }
-                })
+            })
         })
         describe("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
@@ -1196,7 +1480,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                     "en_fileName":RandomGenerator.string(10),
                     "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                     "cn_fileName":RandomGenerator.string(0,10,0), 
-                    "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                    "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                    "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                     "chunkSize" : 4 * 1024 * 1024,
                     "timeout" : 600 * 1000,
                     "root_path" : "/123/test/",
@@ -1204,88 +1489,77 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                     "flags":0 
                 }
                 console.info("n++", n)
-                //初始化stack
-                console.info("devices_type: ",devices[n])
-                
-                let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                cyfs.sleep(10)
-               
-                //生成测试文件
-                await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                //生成path_handler 
-                let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                //acl权限
-                await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                
-                //rmeta
-                let env_acc:cyfs.RootStateOpEnvAccess = {
-                path:para.acl_path,
-                access:cyfs.AccessPermissions.Full 
-                }
-                let stub_source = source.root_state_stub(undefined,undefined)
-                let stub_target = target.root_state_stub(undefined,undefined)
-                console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                
-                //初始化数据
-                
-                let stack = [source,source,source,source,source,source,source,source,source,source]
-                let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                let object_map_id = res[0]
-                let file_id_from_objectmap = res[1]
-                let dir_id = res[2]
-                let chunkIdList = res[3]
-                
-                //从target设备get 对象数据
-                console.log("chunkIdList",chunkIdList)
-                let chunkRecvPromise: Array<any> = []
-                for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                    console.log("chunkIdList_i_ ", i)
-                    //chunkRecvPromise.push(new Promise(async (v) => {                     
-                    let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                    console.info(`开始传输chunk:${chunkId},${buff}`)
+               //初始化stack
+               console.info("devices_type: ",devices[n])
                     
-                    //将chunkid对象id挂在objet_map上
-                    let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
+               let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
 
-                    //调用NDN get_data接口
-                    let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
 
-                    console.info(`${chunkId} 下载结果：${resp}`)
-                    //if (resp.err) {
-                    //    v({ err: true, log: `ndn_service get_data failed` })
+               let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+               let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+               let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+               let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+               let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+               let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+               cyfs.sleep(10)
+
+               
+               //生成测试文件
+               await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+               //生成path_handler 
+               let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+
+               //初始化数据
+               let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+               //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+               let object_map_id = res[0]
+               let file_id_from_objectmap = res[1]
+               let dir_id = res[2]
+               let chunkIdList = res[3]
+               
+               for(let m = 0; m<= AccPermissions.length; m++){
+                   //遍历rmeta ACL权限
+                   let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                   let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                   //从target设备get 对象数据
+                   console.log("chunkIdList",chunkIdList)
+                   let chunkRecvPromise: Array<any> = []
+                   for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                       console.log("chunkIdList_i_ ", i)
+                       //chunkRecvPromise.push(new Promise(async (v) => {                     
+                       let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                       console.info(`开始传输chunk:${chunkId},${buff}`)
+                       
+                       //将chunkid对象id挂在objet_map上
+                       let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                        //调用NDN get_data接口
+                        let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+
+                        console.info(`${chunkId} 下载结果：${resp}`)
+                        //if (resp.err) {
+                        //    v({ err: true, log: `ndn_service get_data failed` })
+                        //}
+                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                    // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        }
+                    
+                    console.info("start download")
+                    let download = []
+                    //for (let i in chunkRecvPromise) {
+                        //let result = await chunkRecvPromise[i]
+                        //if (result.err) {
+                        //    return { err: result.err, log: result.log }}
+                        //download.push(result)                        
                     //}
-                    //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                    //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                   // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
-                    }
-                
-                console.info("start download")
-                let download = []
-                //for (let i in chunkRecvPromise) {
-                    //let result = await chunkRecvPromise[i]
-                    //if (result.err) {
-                    //    return { err: result.err, log: result.log }}
-                    //download.push(result)                        
-                //}
-                //清理数据
-                //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+                    //清理数据
+                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
 
-                //return { err: false, log: `chunk 下载成功` };
-                
-                //return { err: false, log: `chunk 下载成功`, download };
-            }
+                    //return { err: false, log: `chunk 下载成功` };
+                    
+                    //return { err: false, log: `chunk 下载成功`, download };
+                    }
+                }
             })
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象file",async()=>{
                 console.info("start")
@@ -1298,7 +1572,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                        "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -1306,88 +1581,76 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
-                    
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+    
+    
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+                   let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+                   cyfs.sleep(10)
+    
+                   
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            //调用NDN get_data接口
+                            let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+    
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
                         }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
-
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                    }
                 })
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象dir",async()=>{
                 console.info("start")
@@ -1400,7 +1663,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                        "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -1408,88 +1672,77 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
-                    
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+    
+    
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+                   let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+                   cyfs.sleep(10)
+    
+                   
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            //调用NDN get_data接口
+                            let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+    
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+    
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
                         }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
-
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                    }
                 })
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象,来源对象objectmap+inner_path",async()=>{
                 console.info("start")
@@ -1502,7 +1755,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                        "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -1510,88 +1764,77 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
-                    
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+    
+    
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+                   let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+                   cyfs.sleep(10)
+    
+                   
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            //调用NDN get_data接口
+                            let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+    
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+    
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
                         }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
-
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                    }
                 })
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象",async()=>{
                 console.info("start")
@@ -1604,7 +1847,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                        "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -1612,88 +1856,77 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
-                    
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+    
+    
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+                   let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+                   cyfs.sleep(10)
+    
+                   
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            //调用NDN get_data接口
+                            let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+    
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+    
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
                         }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
-
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
+                    }
                 })
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,File目标对象,来源对象objectmap_inner_path",async()=>{
                 console.info("start")
@@ -1706,7 +1939,8 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "en_fileName":RandomGenerator.string(10),
                         "en_filePath":path.join(__dirname, "./chunk_trans/source/"),
                         "cn_fileName":RandomGenerator.string(0,10,0), 
-                        "cn_filePath":path.join(__dirname, `./chunk_trans/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
+                        "cn_filePath":path.join(__dirname, `./chunk_trans/source/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`),
+                        "cn_localPath":path.join(__dirname, `./chunk_trans/target/${RandomGenerator.string(0,10,0)}/${RandomGenerator.string(0,10,0)}/`)},
                         "chunkSize" : 4 * 1024 * 1024,
                         "timeout" : 600 * 1000,
                         "root_path" : "/123/test/",
@@ -1714,89 +1948,78 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                         "flags":0 
                     }
                     console.info("n++", n)
-                    //初始化stack
-                    console.info("devices_type: ",devices[n])
-                    
-                    let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
-
-                    let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
-                    let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
-                    let getdate_stacks : cyfs.SharedCyfsStack[] = stack_res!["getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let tans_stacks : cyfs.SharedCyfsStack[] = stack_res!["tans_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_getdate_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_getdate_stacks"] as cyfs.SharedCyfsStack[]
-                    let test_trans_stacks: cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
-                    cyfs.sleep(10)
-                   
-                    //生成测试文件
-                    await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
-                    //生成path_handler 
-                    let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
-
-                    //acl权限
-                    await target.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    await source.root_state_meta_stub(undefined,undefined).add_access(cyfs.GlobalStatePathAccessItem.new(para.acl_path,(await r_meta_acc("set"))!))
-                    
-                    //rmeta
-                    let env_acc:cyfs.RootStateOpEnvAccess = {
-                    path:para.acl_path,
-                    access:cyfs.AccessPermissions.Full 
-                    }
-                    let stub_source = source.root_state_stub(undefined,undefined)
-                    let stub_target = target.root_state_stub(undefined,undefined)
-                    console.info("root_state_acc_source: ",(await stub_source.create_path_op_env_with_access(env_acc)).unwrap())
-                    console.info("root_state_acc_target: ",(await stub_target.create_path_op_env_with_access(env_acc)).unwrap())
-                    
-                    //初始化数据
-                    
-                    let stack = [source,source,source,source,source,source,source,source,source,source]
-                    let level = [cyfs.NDNAPILevel.NDC,cyfs.NONAPILevel.NOC,cyfs.NONAPILevel.NON]
-                    let res= (await trans_chunk_for_getdata(stack,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,level))
-                    //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
-                    let object_map_id = res[0]
-                    let file_id_from_objectmap = res[1]
-                    let dir_id = res[2]
-                    let chunkIdList = res[3]
-                    
-                    //从target设备get 对象数据
-                    console.log("chunkIdList",chunkIdList)
-                    let chunkRecvPromise: Array<any> = []
-                    for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
-                        console.log("chunkIdList_i_ ", i)
-                        //chunkRecvPromise.push(new Promise(async (v) => {                     
-                        let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
-                        console.info(`开始传输chunk:${chunkId},${buff}`)
+                   //初始化stack
+                   console.info("devices_type: ",devices[n])
                         
-                        //将chunkid对象id挂在objet_map上
-                        let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source,env_acc)
-
-                        //调用NDN get_data接口
-                        let resp = await get_data([source,source,source],[],path_handler,cyfs.NDNAPILevel.NDN,chunkId.calculate_id(),flags:number)
-
-                        console.info(`${chunkId} 下载结果：${resp}`)
-                        //if (resp.err) {
-                        //    v({ err: true, log: `ndn_service get_data failed` })
+                   let stack_res : stack_ty|undefined = await stacks(devices[n],[zone1ood,zone1device1,zone2ood,zone2device1])
+    
+    
+                   let source : cyfs.SharedCyfsStack = stack_res!["stacks"][0] as cyfs.SharedCyfsStack
+                   let target : cyfs.SharedCyfsStack = stack_res!["stacks"][1] as cyfs.SharedCyfsStack
+                   let trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let test_trans_stacks : cyfs.SharedCyfsStack[] = stack_res!["test_trans_stacks"] as cyfs.SharedCyfsStack[]
+                   let trans_level : level_ty[] = stack_res!["trans_level"] as level_ty[]
+                   let trans_assert : boolean[] = stack_res!["trans_assert"] as boolean[]
+                   cyfs.sleep(10)
+    
+                   
+                   //生成测试文件
+                   await RandomGenerator.createRandomFile(para.path.cn_filePath, para.path.cn_fileName, 1 * 1024 * 1024);
+                   //生成path_handler 
+                   let path_handler = new cyfs.RequestGlobalStatePath(target.dec_id, para.acl_path).toString()
+    
+                   //初始化数据
+                   let res= (await trans_chunk_for_getdata(trans_stacks,para.path.cn_filePath,"/" + para.path.cn_fileName,para.chunkSize,trans_level))
+                   //[object_map_id,file_id_from_objectmap,dir_id,chunkIdList]               
+                   let object_map_id = res[0]
+                   let file_id_from_objectmap = res[1]
+                   let dir_id = res[2]
+                   let chunkIdList = res[3]
+                   
+                   for(let m = 0; m<= AccPermissions.length; m++){
+                       //遍历rmeta ACL权限
+                       let acl_res: cyfs.PathOpEnvStub[]= (await r_meta_acc_acl(source,target,para.acl_path,AccPermissions[m]))!
+                       let stub_source:cyfs.PathOpEnvStub= acl_res[0]  
+                       //从target设备get 对象数据
+                       console.log("chunkIdList",chunkIdList)
+                       let chunkRecvPromise: Array<any> = []
+                       for (let i = 0; i < chunkIdList!.length && i < para.chunkNumber; i++) {
+                           console.log("chunkIdList_i_ ", i)
+                           //chunkRecvPromise.push(new Promise(async (v) => {                     
+                           let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList[i].encode_to_buf().unwrap()).unwrap();
+                           console.info(`开始传输chunk:${chunkId},${buff}`)
+                           
+                           //将chunkid对象id挂在objet_map上
+                           let obeject_map_res = await insert_object_map("Map",para.acl_path,chunkId.calculate_id(),stub_source)
+                            //调用NDN get_data接口
+                            let resp = await tarns_task(test_trans_stacks,[],path_handler,trans_level[3],chunkId.calculate_id(),para.path.cn_localPath,0,para.timeout)
+    
+                            console.info(`${chunkId} 下载结果：${resp}`)
+                            //if (resp.err) {
+                            //    v({ err: true, log: `ndn_service get_data failed` })
+                            //}
+                            //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
+                            //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
+                        // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                            }
+                        
+                        console.info("start download")
+                        let download = []
+                        //for (let i in chunkRecvPromise) {
+                            //let result = await chunkRecvPromise[i]
+                            //if (result.err) {
+                            //    return { err: result.err, log: result.log }}
+                            //download.push(result)                        
                         //}
-                        //assert(!resp.err,`${chunkId.calculate_id()} get_data 失败`)
-                        //console.info(`下载chunk 成功： ${JSON.stringify(resp)}`)
-                       // v({ err: false, chunkId: chunkId.calculate_id().to_base_58() })
+                        //清理数据
+                        //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
+    
+                        //return { err: false, log: `chunk 下载成功` };
+                        
+                        //return { err: false, log: `chunk 下载成功`, download };
                         }
-                    
-                    console.info("start download")
-                    let download = []
-                    //for (let i in chunkRecvPromise) {
-                        //let result = await chunkRecvPromise[i]
-                        //if (result.err) {
-                        //    return { err: result.err, log: result.log }}
-                        //download.push(result)                        
-                    //}
-                    //清理数据
-                    //await clean_test_data(source,target,res[1],para.acl_path,para.path.filepath + "/" +para.path.fileName)
-
-                    //return { err: false, log: `chunk 下载成功` };
-                    
-                    //return { err: false, log: `chunk 下载成功`, download };
-                }
-            })
+                    }
+                })
         })
-    })        
+    })
 })
