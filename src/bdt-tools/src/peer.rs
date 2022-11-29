@@ -8,7 +8,7 @@ use sha2::Digest;
 use std::{
     collections::{hash_map, BTreeSet, HashMap},
     convert::TryFrom,
-    io::{Read, Write},
+    io::{Read, Seek, Write},
     path::{Path, PathBuf},
     str::FromStr,
     sync::Mutex,
@@ -958,7 +958,6 @@ impl Peer {
                         // 获取连接请求
                         let mut incoming = acceptor.incoming();
                         loop {
-                            let answer_size = c.answer_size;
                             let peer = peer.clone();
                             let mut lpc = lpc.clone();
                             let _ = match incoming.next().await {
@@ -1019,6 +1018,7 @@ impl Peer {
                                                                         &std::time::SystemTime::now(
                                                                         ),
                                                                     );
+                                                                let answer_size = peer.get_answer();
                                                                 match conn
                                                                     .clone()
                                                                     .send_file(answer_size)
@@ -1176,7 +1176,7 @@ impl Peer {
         });
     }
     pub fn on_set_question(&self, c: LpcCommand, lpc: Lpc) {
-        log::info!("on set_answer, c={:?}", &c);
+        log::info!("on set_question, c={:?}", &c);
         let seq = c.seq();
         let peer = self.clone();
         let resp = match SetQuestionLpcCommandReq::try_from(c) {
@@ -2257,7 +2257,7 @@ impl Peer {
                         let _ = std::fs::create_dir_all(dir.clone());
                     }
 
-                    let (task, reader) = download_chunk_list(
+                    let (task_name, reader) = download_chunk_list(
                         &stack,
                         c.task_name.clone(),
                         &c.chunk_list.clone(),
@@ -2284,10 +2284,10 @@ impl Peer {
                         });
                     }
 
-                    let mut tasks = peer.0.tasks.lock().unwrap();
-                    let _ = tasks
-                        .add_task(c.task_name.clone().as_str(), task.clone_as_task())
-                        .unwrap();
+                    // let mut tasks = peer.0.tasks.lock().unwrap();
+                    // let _ = tasks
+                    //     .add_task(c.task_name.clone().as_str(), task_reader.task.clone_as_task())
+                    //     .unwrap();
                     InterestChunkListCommandResp {
                         seq,
                         result: Ok(c.task_name.clone()),
@@ -2525,10 +2525,10 @@ impl Peer {
 
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
                             log::info!("recver: task_id {}", &task_id);
-                            let mut tasks = peer.0.tasks.lock().unwrap();
-                            tasks
-                                .add_task(&task_id.as_str(), task.clone_as_task())
-                                .unwrap();
+                            // let mut tasks = peer.0.tasks.lock().unwrap();
+                            // let _ = tasks
+                            //     .add_task(&task_id.as_str(), task.clone_as_task())
+                            //     .unwrap();
 
                             Ok((task_id, file.clone()))
                         } else {
@@ -3475,7 +3475,7 @@ impl Peer {
                             .ndn()
                             .root_task()
                             .download()
-                            .create_sub_group(c.path.clone())
+                            .sub_task(c.path.as_str())
                             .unwrap();
                         let task_id = task_id_gen(c.path);
                         log::info!("recver: task_id {}", &task_id);
@@ -3585,12 +3585,13 @@ impl Peer {
                             }
 
                             let task_id = task_id_gen(c.path.to_str().unwrap().to_string());
-                            log::info!("recver: task_id {}", &task_id);
-                            let mut tasks = peer.0.tasks.lock().unwrap();
-                            match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
-                                Ok(_) => Ok((task_id, file.clone())),
-                                Err(e) => Err(e),
-                            }
+                            // log::info!("recver: task_id {}", &task_id);
+                            // let mut tasks = peer.0.tasks.lock().unwrap();
+                            // match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
+                            //     Ok(_) => Ok((task_id, file.clone())),
+                            //     Err(e) => Err(e),
+                            // }
+                            Ok((task_id, file.clone()))
                         } else {
                             let e = BuckyError::new(
                                 BuckyErrorCode::InvalidParam,

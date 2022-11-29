@@ -29,10 +29,7 @@ impl TestConnection {
     }
     pub async fn send_file(&mut self, size: u64) -> Result<(HashValue, u64), BuckyError> {
         if (size < 8) {
-            return Err(BuckyError::new(
-                BuckyErrorCode::InvalidData,
-                "stream data size must more than 8",
-            ));
+            log::warn!("bdt tool send data piece szie = {},must be more than 8 bytes", size);
         }
         let mut hashs = Vec::<HashValue>::new();
         let mut send_buffer = Vec::new();
