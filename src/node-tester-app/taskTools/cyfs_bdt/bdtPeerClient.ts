@@ -145,7 +145,7 @@ export class BdtPeerClient extends EventEmitter {
             }, this.m_agentid, this.m_timeout);
             this.m_unliveCookie = info.cookie;
             // 4. bdt client start autoAccept
-            this.answer_size = this.cache_peer_info.answer_size;
+            //this.answer_size = this.cache_peer_info.answer_size;
             if(this.cache_peer_info.listern_type == "auto_accept"){
                 await this.autoAccept(this.cache_peer_info.answer_size);
             }else if (this.cache_peer_info.listern_type == "auto_response_stream"){

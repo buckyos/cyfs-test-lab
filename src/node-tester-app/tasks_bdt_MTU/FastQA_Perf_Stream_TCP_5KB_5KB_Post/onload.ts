@@ -34,7 +34,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
             udp_sn_only : 1,
             SN :LabSnList,
             resp_ep_type:Resp_ep_type.All,
-            listern_type :  Listern_type.auto_response_stream
+            listern_type :  Listern_type.auto_response_stream,
+            answer_size:5*1024,
     }
     // 每台机器运行一个bdt 客户端
     await agentManager.allAgentStartBdtPeer(config)
@@ -43,7 +44,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let [i,j] of randShuffle(labAgent.length)){
         
-        if(i != j && labAgent[j].NAT * labAgent[i].NAT == 0 && i>j ){
+        if(i != j && labAgent[j].NAT * labAgent[i].NAT == 0  ){
             let info = await testRunner.createPrevTask({
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,

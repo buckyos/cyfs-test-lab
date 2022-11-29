@@ -42,7 +42,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
     for(let [i,j] of randShuffle(labAgent.length)){
         
-        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5 && i>j ){
+        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5  ){
             let info = await testRunner.createPrevTask({
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
@@ -58,8 +58,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     RN : `${labAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
-                        firstQA_answer : 500,
-                        firstQA_question : 20*1024,
+                        firstQA_answer : 20*1024,
+                        firstQA_question : 500,
                         accept_answer : 1,
                         timeout : 60*1000,
                     },

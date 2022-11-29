@@ -68,20 +68,24 @@ export class ConnectAction extends BaseAction implements ActionAbstract {
         this.action.set_time = check.conn?.fastQAInfo?.calculate_time;
          // 检查FirstQA question 
          // 检查fristQA answer 
-        if (info.recv_hash) {
-            this.logger!.info(`recv answer hash = ${info.recv_hash}`)
-            if (info.recv_hash != check.conn?.fastQAInfo?.send_hash) {
-                this.logger!.error(`send answer = ${info.recv_hash} ,recv answer = ${check.conn?.fastQAInfo?.send_hash}`);
-                return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , FristQA answer is error` }
+        // hash 为 空和default不校验 
+        if(info.recv_hash && info.recv_hash != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" && info.recv_hash != "0000000000000000000000000000000000000000000000000000000000000000"){
+            if (info.recv_hash) {
+                this.logger!.info(`recv answer hash = ${info.recv_hash}`)
+                if (info.recv_hash != check.conn?.fastQAInfo?.send_hash) {
+                    this.logger!.error(`send answer = ${info.recv_hash} ,recv answer = ${check.conn?.fastQAInfo?.send_hash}`);
+                    return { err: BDTERROR.connnetFailed, log: `${this.action.LN!} conenct ${this.action.RN!} , FristQA answer is error` }
+                }
             }
-        }
-        if (check.conn?.fastQAInfo?.recv_hash) {
-            this.logger!.info(`recv question hash = ${check.conn?.fastQAInfo?.recv_hash}`)
-            if (check.conn?.fastQAInfo?.recv_hash != info.send_hash) {
-                this.logger!.error(`send question = ${info.send_hash} ,recv question = ${check.conn?.fastQAInfo?.recv_hash }`);
-                return {err:BDTERROR.connnetFailed,log:`${this.action.LN} conenct ${this.action.RN} , FristQA question is error`}
+            if (check.conn?.fastQAInfo?.recv_hash) {
+                this.logger!.info(`recv question hash = ${check.conn?.fastQAInfo?.recv_hash}`)
+                if (check.conn?.fastQAInfo?.recv_hash != info.send_hash) {
+                    this.logger!.error(`send question = ${info.send_hash} ,recv question = ${check.conn?.fastQAInfo?.recv_hash }`);
+                    return {err:BDTERROR.connnetFailed,log:`${this.action.LN} conenct ${this.action.RN} , FristQA question is error`}
+                }
             }
-        }
+        } 
+        
         // (5) 保存测试数据
         if (!this.action.info) {
             this.action.info = { conn: [] };

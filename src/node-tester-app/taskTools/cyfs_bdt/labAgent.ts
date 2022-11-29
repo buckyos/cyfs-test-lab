@@ -1,7 +1,9 @@
 
 import {NAT_Type,Agent,Peer} from "./type"
 
-export let LabSnList = ['sn-miner.desc',];
+export let LabSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
+
+export let LabMutSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
 export let PNType = {
     active: {
         activePnFiles: ["pn-miner.desc"],
@@ -27,7 +29,7 @@ export let PNType = {
 export let labAgentData = [
     {
         tags: ["PC_0005"],
-        area : "0:0:0:0",
+        area : "0:0:0:1",
         OS: "CentOS8.5",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.161'],
@@ -44,7 +46,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0007"],
-        area : "2:0:0:1",
+        area : "0:0:0:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['10.1.2.189'],
@@ -52,7 +54,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0008"],
-        area : "1:0:20:1",
+        area : "6:0:20:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.199'],
@@ -76,7 +78,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0011"],
-        area : "1:1:20:1",
+        area : "9:1:20:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
@@ -85,7 +87,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0012"],
-        area : "1:9:20:1",
+        area : "12:9:20:1",
         OS: "Debian11",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.133'],
@@ -94,7 +96,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0013"],
-        area : "1:5:20:1",
+        area : "67:5:20:1",
         OS: "CentOS8.5",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.171','192.168.1.182'], // 
@@ -103,7 +105,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0014"],
-        area : "86:12:20:1",
+        area : "89:12:20:1",
         OS: "Windows10",
         NAT: NAT_Type.Symmetric,
         ipv4: ['192.168.1.139'],
@@ -111,7 +113,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0015"],
-        area : "1:10:20:1",
+        area : "128:10:20:1",
         OS: "Windows7",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.145'],
@@ -119,7 +121,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0016"],
-        area : "1:4:20:1",
+        area : "196:4:20:1",
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
@@ -136,7 +138,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0018"],
-        area : "1:4:20:1",
+        area : "86:4:20:1",
         OS: "Ubuntu 22.04",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.151'],

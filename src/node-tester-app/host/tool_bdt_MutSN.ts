@@ -1,10 +1,11 @@
 import * as path from 'path';
 import {AccountStatusProfile} from '../script/account_profile';
 import * as ChildProcess from 'child_process';
-import { Reporter, DirHelper, FileUploader, GlobalConfig, RandomGenerator, LocalStorageJson, Logger, } from '../base';
+import { Reporter, DirHelper, FileUploader, GlobalConfig, RandomGenerator, LocalStorageJson, Logger, sleep } from '../base';
 import * as readline from 'readline';
 import * as os from 'os';
-
+import { fsOpenFiles } from 'systeminformation';
+import * as fs from "fs-extra"
 type RunnerOptions = {
     account: AccountStatusProfile;
     reporter: Reporter;
@@ -26,6 +27,7 @@ class Runner {
     protected m_updatePort: number;
     protected m_deviceIdSave: LocalStorageJson;
     protected m_platform: string;
+    private state? : string;
     
     constructor(options: RunnerOptions) {
         this.m_account = options.account;
@@ -64,18 +66,38 @@ class Runner {
     async start() {
         await this.m_deviceIdSave.load();
         await this._startLocalMaster();
+        this.TaskRunMonitor()
+        
     }
-
+    async TaskRunMonitor(){
+        let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
+        let check = 0
+        while(check<10){
+            if(fs.existsSync(runConfig)){
+                check = 0;
+            }else{
+                check + check + 1;
+            }
+            await sleep(3000)
+        }
+        process.exit(0);
+    }
+    async check_state(){
+        let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
+        while(fs.existsSync(runConfig)){
+            await sleep(5*1000);
+        }
+    }
     private async _startLocalMaster() {
         if (this.m_process) {
             return ;
         }
-
         let entryfile: string = path.join(path.dirname(process.argv[1]), '../script/master_main.js');
         let deviceID: string = await this.getDeviceID();
-        this.m_process = ChildProcess.fork(entryfile, [DirHelper.getRootDir(),deviceID, this.m_platform, '1'], { silent: true });
-        console.log(`master_main begin run`);
+        this.m_process = ChildProcess.fork(entryfile, [DirHelper.getRootDir(), deviceID, this.m_platform, '1'], { silent: true });
+        this.state = "run"
         this.m_process.on('exit', (code: number, signal: string) => {
+            this.state = "exit"
             if (this.m_sendMsgTimer) {
                 clearInterval(this.m_sendMsgTimer);
                 this.m_sendMsgTimer = undefined;
@@ -90,12 +112,16 @@ class Runner {
         this.m_latestRecvTime = Date.now();
         this.m_sendMsgTimer = setInterval(() => {
             this.m_process!.send('keeplive');
-            if (Date.now() - this.m_latestRecvTime > 10 * 1000) {
+            if (Date.now() - this.m_latestRecvTime > 20 * 1000) {
                 process.exit(0);
             }
         }, 2000);
 
         this.m_process!.stdout!.on('data', (data) => {
+            //console.info(`recv data from client ${String(data)}`)
+            if(String(data)=="exit"){
+                process.exit(0);
+            }
             this.m_latestRecvTime = Date.now();
         });
     }
@@ -120,13 +146,11 @@ async function main() {
     process.chdir(path.dirname(process.argv[1]));
     let dir = path.dirname(path.dirname(process.argv[1]));
     console.log(`${dir}`);
-
     DirHelper.setRootDir(dir);
     let logFolder = DirHelper.getLogDir();
     DirHelper.emptyDir(logFolder);
     DirHelper.emptyDir(DirHelper.getTempDir());
     
-
     FileUploader.getInstance().init(GlobalConfig.fileUploadServer.host, GlobalConfig.fileUploadServer.port);
 
     let account: AccountStatusProfile = new AccountStatusProfile();
@@ -160,25 +184,40 @@ async function main() {
         platform: os.platform(),
     });
     await runner.start();
-
-    let runTask = (serviceid: string, taskid: string,task_type?:string) => {
-        let str = JSON.stringify({serviceid, taskid,task_type});
-        runner.process.send(str);
-    };
-
-    let runCmd = (_cmd: string) => {
-        try {
-            console.info(`#####run cmd :${_cmd}`)
-            eval(_cmd);
-        } catch (e) {
-            console.error('e='+e);
-        }
-    }
+    const serviceid = "4";
     
-    let rl = readline.createInterface(process.stdin, process.stdout);
-    rl.on('line', (_cmd: string) => {
-        runCmd(_cmd);
-    });
+    const taskList = [
+        "Stream_AllEP_TunnelSelect",
+        "Stream_TCP_IPV4",
+        "Stream_UDP_IPV4",
+    ];
+    runner.process.on(`exit`,async()=>{
+        console.info(`runner exit`)
+        process.exit(0);
+    })
+    runner.process.on(`error`,async(error)=>{
+        console.info(`runner error ${error}`)
+        process.exit(0);
+    })
+    let run_time = 10;
+    while(run_time--){
+        console.info(`Restart all task`)
+        for(let i in taskList){
+            console.info(`${taskList[i]} is running`)
+            let runConfig = path.join(DirHelper.getLogDir(),"running.pid")
+            if(!fs.existsSync(runConfig)){
+                fs.createFileSync(runConfig)
+            }
+            let taskid = taskList[i];
+            let str = JSON.stringify({serviceid, taskid});
+            runner.process.send(str);
+            await runner.check_state();
+            console.info(`${taskList[i]} run finished`)
+        }
+        await sleep(30000);
+        console.info(`all task run finished`)
+
+    }
 }
 
 main();

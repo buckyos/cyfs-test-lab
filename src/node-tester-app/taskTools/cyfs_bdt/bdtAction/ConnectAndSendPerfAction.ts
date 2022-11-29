@@ -16,6 +16,25 @@ export class ConnectAndSendPerfAction extends BaseAction implements ActionAbstra
         }
         // (2) ConnectAction 操作的参数设置
         // 判断LN是否要进行FristQA  question数据发送
+        let FirstQ = 0
+        if (this.action.config!.firstQA_question && this.action.config!.firstQA_question != LN.bdtClient!.question_size) {
+            FirstQ = 1 ;
+            this.logger?.info(`Set FirstQ question size ${this.action.fileSize}`)
+            let err = await LN.bdtClient!.set_question(this.action.config!.firstQA_question);
+            if (err) {
+                return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_question info failed ` }
+            }
+        }
+        // 判断RN是否要进行FristQA,answer 数据设置
+        if (this.action.config!.firstQA_answer && this.action.config!.firstQA_answer != RN.bdtClient!.answer_size) {
+            this.logger?.info(`Set FirstQ answer size ${this.action.config!.firstQA_answer!}`)
+            
+            let err = await RN.bdtClient!.set_answer(this.action.config!.firstQA_answer);
+            if (err) {
+                return { err: BDTERROR.connnetFailed, log: `${this.action.RN!} set_answer info failed ` }
+            }
+        }
+        this.action.fileSize = LN.bdtClient?.question_size! + RN.bdtClient?.answer_size!;
         // 判断是否要发起直连，默认不直连
         if (!this.action.config!.known_eps) {
             this.action.config!.known_eps = 0
