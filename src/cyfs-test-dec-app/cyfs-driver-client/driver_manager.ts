@@ -1,10 +1,10 @@
 import { CyfsStackClient, CyfsStackDriver } from "./cyfs_driver";
 import { CyfsStackProxyDriver } from "./proxy/proxy_driver";
 import { CyfsStackSimulatorDriver } from "./simulator/simulator_driver";
-import { DirHelper, LocalStorageJson, Logger, RandomGenerator, LocalMaster, GlobalConfig, ClientExitCode } from "../base";
+import { DirHelper, LocalStorageJson, Logger, RandomGenerator, LocalMaster, GlobalConfig, ClientExitCode, ErrorCode } from "../base";
 import path from "path";
 import * as fs from "fs-extra";
-import * as os from 'os';
+import { DRIVER_TYPE } from "../config/cyfs_driver_config"
 const Base = require('../base/common/base.js');
 
 export enum CyfsDriverType {
@@ -19,7 +19,7 @@ export class CyfsStackDriverManager {
     private root: string;
     private local_master?: LocalMaster;
     private local_storage?: LocalStorageJson;
-    
+
     static createInstance(): CyfsStackDriverManager {
         if (!CyfsStackDriverManager.manager) {
             CyfsStackDriverManager.manager = new CyfsStackDriverManager();
@@ -57,23 +57,33 @@ export class CyfsStackDriverManager {
         this.agentid = info.value!;
         this.local_storage = local_storage;
         this.logger.info(`local agentid = ${this.agentid}`)
-        
+
 
     }
-    
-    async create_driver(type: CyfsDriverType): Promise<CyfsStackDriver> {
-        this.logger!.info(`create cyfs stack test driver,type = ${type}`);
-        if (type == CyfsDriverType.real_machine) {
-            return new CyfsStackProxyDriver(this.local_master,this.logger!, this.local_storage!,{});
-        } else if (type == CyfsDriverType.simulator) {
-            return new CyfsStackSimulatorDriver(this.logger!);
-        } else {
-            //默认使用模拟器
-            return new CyfsStackSimulatorDriver(this.logger!);
+    async load_driver_from_config(): Promise<{ err: ErrorCode, log: string, driver?: CyfsStackDriver }> {
+        this.logger!.info(`load_driver_from_config : ${DRIVER_TYPE}`)
+        if (DRIVER_TYPE == CyfsDriverType.real_machine) {
+            return this.create_driver(CyfsDriverType.real_machine)
+        } else if (DRIVER_TYPE == CyfsDriverType.simulator) {
+            return this.create_driver(CyfsDriverType.simulator)
         }
+        return { err: ErrorCode.notFound, log: "Error yfsDriverType" };
     }
-    async exit_local_master() {
-        this.local_master!.exit(ClientExitCode.killed, 'father exit', 10 * 1000);
+    async create_driver(type: CyfsDriverType): Promise<{ err: ErrorCode, log: string, driver?: CyfsStackDriver }> {
+        this.logger!.info(`create cyfs stack test driver,type = ${type}`);
+        let driver: CyfsStackDriver;
+        if (type == CyfsDriverType.real_machine) {
+            driver = new CyfsStackProxyDriver(this.logger!, this.local_storage!, { agentid: this.agentid!, serviceid: "678", taskid: "1" });
+
+        } else if (type == CyfsDriverType.simulator) {
+            return { err: ErrorCode.notFound, log: "to do" };
+        } else {
+            return { err: ErrorCode.notFound, log: "Error yfsDriverType" };
+        }
+        await driver.init();
+        await driver.start();
+        await driver.load_config();
+        return { err: ErrorCode.succ, log: "success", driver };
     }
     get_logger() {
         return this.logger;

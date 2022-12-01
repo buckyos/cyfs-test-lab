@@ -1,7 +1,0 @@
-[info],[2022-11-28 20:21:03.970],<>,CyfsStackDriverManager init,logger = E:\git_test\cyfs-test-lab\src\cyfs-test-dec-app\blog, driver_manager.ts:56
-[info],[2022-11-28 20:21:03.975],<>,local agentid = ZXBpzBST6S4QhCxEQi3pSKRRc7Tx8HnwDwZEm2jPPHWG322W24SxAPWp56467Nw3, driver_manager.ts:74
-[info],[2022-11-28 20:21:03.976],<>,create cyfs stack test driver,type = real_machine, driver_manager.ts:100
-[info],[2022-11-28 20:21:03.979],<>,begin connect to server ip=192.168.100.205 port=11080, rpc.ts:51
-[debug],[2022-11-28 20:21:03.982],<>,send command, name=sys.heartbeat.req, seq=1,version=2.12,services=[], tasks=[] from={"agentid":"ZXBpzBST6S4QhCxEQi3pSKRRc7Tx8HnwDwZEm2jPPHWG322W24SxAPWp56467Nw3","serviceid":"LocalMasterServiceId"}, to={"agentid":"AgentMaster"}, rpc.ts:69
-[info],[2022-11-28 20:21:03.985],<>,[startup] init server success, driver_manager.ts:97
-[info],[2022-11-28 20:21:03.987],<>,recv command from rpc, name=sys.heartbeat.resp, seq=1, services=[],invalidservices=[], from={"agentid":"AgentMaster"}, to={"agentid":"ZXBpzBST6S4QhCxEQi3pSKRRc7Tx8HnwDwZEm2jPPHWG322W24SxAPWp56467Nw3","serviceid":"LocalMasterServiceId"} namespace={"agentid":"ZXBpzBST6S4QhCxEQi3pSKRRc7Tx8HnwDwZEm2jPPHWG322W24SxAPWp56467Nw3","serviceid":"LocalMasterServiceId"}, channel.ts:58

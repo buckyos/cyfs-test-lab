@@ -32,7 +32,7 @@ pub async fn setup(testcaseName:&str) -> () {
     INIT.call_once(|| {
         
         //函数第一次执行会执行该部分内容
-        let log_dir : String = "E:\\git_test\\cyfs-test-lab\\deploy\\log".to_string();
+        let log_dir : String = "C:\\cyfs\\cyfs-test-lab\\deploy\\log".to_string();
         #[cfg(debug_assertions)]
         //let log_default_level = "info";
         cyfs_debug::CyfsLoggerBuilder::new_app("bdt-unittest")

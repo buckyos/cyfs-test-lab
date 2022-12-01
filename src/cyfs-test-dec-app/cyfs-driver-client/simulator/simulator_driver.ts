@@ -29,8 +29,8 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver{
     get_client(name:string):{err:ErrorCode,log:string,client:CyfsStackSimulatorClient}{
         return {err:ErrorCode.succ , log:"init success",client:this.stack_client_map.get(name)!}
     }
-    add_client(name:string):{err:ErrorCode,log:string,client:CyfsStackSimulatorClient}{
-        return {err:ErrorCode.succ , log:"init success",client:this.stack_client_map.get(name)!}
+    add_client(name:string,client:CyfsStackSimulatorClient):{err:ErrorCode,log:string}{
+        return {err:ErrorCode.succ , log:"init success"}
     }
 }
 

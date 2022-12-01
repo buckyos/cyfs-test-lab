@@ -26,9 +26,9 @@ export abstract  class CyfsStackDriver{
     // 加载配置文件初始化CYFS Stack 测试客户端
     abstract load_config():Promise<{err:ErrorCode,log:string}>;
     // 添加一个 CYFS Stack 测试客户端
-    abstract add_client(name:string):{err:ErrorCode,log:string,client:CyfsStackClient}
+    abstract add_client(name:string,client:CyfsStackClient):{err:ErrorCode,log:string}
     // 获取一个CYFS Stack 测试客户端
-    abstract get_client(name:string):{err:ErrorCode,log:string,client:CyfsStackClient}
+    abstract get_client(name:string):{err:ErrorCode,log:string,client?:CyfsStackClient}
 }
 
 export abstract  class CyfsStackClient{

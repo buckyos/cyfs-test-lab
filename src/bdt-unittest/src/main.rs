@@ -8,7 +8,7 @@ async fn main()->Result<(), BuckyError> {
     #[cfg(not(debug_assertions))]
     let log_default_level = "debug";
 
-    let log_dir : String = "E:\\git_test\\cyfs-test-lab\\deploy\\log".to_string();
+    let log_dir : String = "C:\\git_test\\cyfs-test-lab\\deploy\\log".to_string();
     #[cfg(debug_assertions)]
     //let log_default_level = "info";
     cyfs_debug::CyfsLoggerBuilder::new_app("bdt-unittest")
@@ -23,5 +23,6 @@ async fn main()->Result<(), BuckyError> {
         .exit_on_panic(true)
         .build()
         .start();
+    
     Ok(())
 }
