@@ -17,10 +17,16 @@ export class LocalUtilTool implements UtilTool {
             file_upload: path.join(root, "file_upload"),
             file_download: path.join(root, "file_download"),
         }
+        this.init_dir()
+    }
+    init_dir() {
         fs.mkdirpSync(this.cache_path.file_upload);
         fs.mkdirpSync(this.cache_path.file_download);
     }
-    async init_cache() {
+    async init() {
+        this.init_dir()
+    }
+    async init_cache(){
         if (!this.cache_mb) {
             this.cache_mb = Buffer.from(this.string(1000000));
         }

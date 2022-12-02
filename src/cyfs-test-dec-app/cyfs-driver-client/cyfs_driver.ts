@@ -12,8 +12,6 @@ export type CyfsStackClientConfig = {
 }
 
 
-
-
 export abstract  class CyfsStackDriver{
     // 初始化CYFS Stack测试驱动
     abstract init():Promise<{err:ErrorCode,log:string}>; 

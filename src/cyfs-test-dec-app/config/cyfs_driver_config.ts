@@ -140,13 +140,5 @@ export const SIMULATOR_LIST: Array<CyfsStackClientConfig> = [
         bdt_port: 20012,
         http_port: 21014,
         ws_port: 21015,
-    },
-    {
-        peer_name: "zone2_standby_ood",
-        zone_tag: "zone2",
-        stack_type: "ood",
-        bdt_port: 20013,
-        http_port: 21016,
-        ws_port: 21017,
     }
 ]

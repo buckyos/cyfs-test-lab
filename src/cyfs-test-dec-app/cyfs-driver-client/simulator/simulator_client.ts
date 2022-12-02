@@ -4,7 +4,7 @@ import { ErrorCode, Logger } from "../../base"
 import { LocalUtilTool } from "./local_util_tool"
 import path from "path";
 import * as cyfs from "../../cyfs";
-
+import * as fs from "fs-extra";
 export class CyfsStackSimulatorClient implements CyfsStackClient {
     private peer_name: string; // 测试节点标签
     private stack_type: string;  // 测试节点协议栈类型
@@ -14,21 +14,29 @@ export class CyfsStackSimulatorClient implements CyfsStackClient {
     private http_port: number;
     private bdt_port: number;
     private logger: Logger;
-    private root: string;
-    constructor(options: CyfsStackClientConfig, logger: Logger, root_path: string) {
+    private cache_path: string;
+    constructor(options: CyfsStackClientConfig, logger: Logger, cache_path: string) {
         this.peer_name = options.peer_name;
         this.stack_type = options.stack_type;
-        this.logger = logger;
         this.zone_tag = options.zone_tag;
         this.ws_port = options.ws_port;
         this.http_port = options.http_port;
         this.bdt_port = options.bdt_port;
-        this.root = path.join(root_path, `${this.peer_name}_cache`)
-        this.m_util_tool = new LocalUtilTool(this.logger, this.root)
+        this.cache_path = path.join(cache_path,this.peer_name);
+        this.logger = logger;
+        this.m_util_tool = new LocalUtilTool(this.logger, this.cache_path)
     }
 
     get_util_tool(): LocalUtilTool {
         return this.m_util_tool!
+    }
+    async init(): Promise<{ err: ErrorCode, log: string }> {
+        if(fs.pathExistsSync(this.cache_path)){
+            fs.removeSync(this.cache_path)
+        }
+        fs.mkdirpSync(this.cache_path)
+        this.m_util_tool.init();
+        return {err:ErrorCode.succ,log:"init client remove cache file"}
     }
     async open_stack(): Promise<{ err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack }> {
         return { err: ErrorCode.succ, log: "init success" }

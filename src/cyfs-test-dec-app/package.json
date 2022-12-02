@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "init": "node init.js"
+    "init": "node init.js",
+    "test": "cross-env ts-node"
   },
   "devDependencies": {
     "@types/bs58": "^4.0.1",
@@ -51,7 +52,7 @@
     "node-fetch": "^2.6.7",
     "silly-datetime": "^0.1.2",
     "systeminformation": "^5.11.16",
-    "ts-node": "^10.4.0",
+    "ts-node": "^10.9.1",
     "ts-results": "^3.0.0",
     "tslib": "^2.1.0",
     "tunnel": "^0.0.6",

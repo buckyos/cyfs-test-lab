@@ -66,39 +66,53 @@ export class ProxyManager extends EventEmitter {
         return { err: ErrorCode.succ, log: "start success", cache_name: this.cache_name }
     }
     async build_tunnel(type: string, remote_address: string, remote_port: number) {
+        this.log.info(`#### build_tunnel ${type} ${remote_address} ${remote_port}`)
         let port = this.stack_ws_port!
         if (type == "http") {
             port = this.stack_http_port!
         } else if (type == "ws") {
             port = this.stack_ws_port!
         }
-        try {
-            let client = net.connect(port, "127.0.0.1", () => {
-                this.log.info(`${client.remoteAddress}_${client.remotePort} begin connect tcp 127.0.0.1:${port}`)
-                this.socket_list!.push({
-                    type,
-                    remote_address,
-                    remote_port,
-                    socket: client,
-                    seq: 0,
-                    r_seq: 0,
-                })
-                let r_seq = 0;
-                client.setKeepAlive(true, 2000)
-                client.on('data', async (buf) => {
-                    r_seq = r_seq + 1;
-                    this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
-                    let msg_u8 = buf as Uint8Array;
-                    let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, Uint8Array_to_string(msg_u8))
-                })
-            });
-            if(!client.remoteAddress || !client.remotePort){
-                return { err: ErrorCode.exception,log: `proxy client ${client.remoteAddress}_${client.remotePort}`};
+        return new Promise(async(resolve)=>{
+            try {
+                let client = net.connect(port, "127.0.0.1", () => {
+                    this.log.info(`${client.remoteAddress}_${client.remotePort} begin connect tcp 127.0.0.1:${port}`)
+                    this.socket_list!.push({
+                        type,
+                        remote_address,
+                        remote_port,
+                        socket: client,
+                        seq: 0,
+                        r_seq: 0,
+                    })
+                    let r_seq = 0;
+                    client.setKeepAlive(true, 2000);
+                    
+                    client.on('data', async (buf) => {
+                        r_seq = r_seq + 1;
+                        this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
+                        let msg_u8 = buf as Uint8Array;
+                        let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, Uint8Array_to_string(msg_u8))
+                    })
+                    client.on("error",async(err)=>{
+                        this.log.error(`net connect error ${err}`);
+                        resolve({ err: ErrorCode.fail, log: `${err.message}`}) ;
+                    });
+                    client.on("ready",async()=>{
+                        this.log.info(`net connect success ${client.remoteAddress}_${client.remotePort}`);
+                        resolve({ err: ErrorCode.succ, log: `proxy client ${client.remoteAddress}_${client.remotePort}`}) ;
+                    })
+                    client.on("connect",async()=>{
+                        this.log.info(`net connect success ${client.remoteAddress}_${client.remotePort}`);
+                        resolve({ err: ErrorCode.succ, log: `proxy client ${client.remoteAddress}_${client.remotePort}`}) ;
+                    })
+                });
+                
+            } catch (error) {
+                resolve({ err: ErrorCode.exception, log: `${error}` }) ;
             }
-            return { err: ErrorCode.succ, log: `proxy client ${client.remoteAddress}_${client.remotePort}` };
-        } catch (error) {
-            return { err: ErrorCode.exception, log: `${error}` };
-        }
+        })
+        
     }
     async end_tunnel(type: string, remote_address: string, remote_port: number) {
         for (let i in this.socket_list) {
@@ -109,6 +123,7 @@ export class ProxyManager extends EventEmitter {
         return ErrorCode.notFound
     }
     async proxy_data(type: string, remote_address: string, remote_port: number, seq: number, bytes: Buffer) {
+        this.log.info(`${type} ${remote_address} ${remote_port} recv proxy_data`);
         for (let i in this.socket_list) {
             if (this.socket_list[i].type == type && this.socket_list[i].remote_address == remote_address && this.socket_list[i].remote_port == remote_port) {
                 this.socket_list[i].socket.write(string_to_Uint8Array(bytes.toString()));
