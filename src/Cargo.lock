@@ -3675,6 +3675,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
+name = "stack-tool"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "async-trait",
+ "backtrace",
+ "byteorder",
+ "bytes 0.4.12",
+ "clap",
+ "cyfs-base 0.6.7",
+ "cyfs-debug 0.6.1",
+ "cyfs-util 0.6.3",
+ "futures",
+ "hex",
+ "hyper",
+ "log",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "sha2 0.8.2",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
 name = "standback"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"

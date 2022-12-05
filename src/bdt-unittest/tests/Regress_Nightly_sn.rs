@@ -653,6 +653,124 @@ mod tests {
             }
         }).await
     }
+    
+    #[tokio::test]
+    async fn Regress_Nightly_SN_SNcall_SelectArea_0004() {
+        /**
+        ```
+        测试用例：多SN建立连接
+        测试数据：
+        (1) LN 设置Device 对象Area [226,9,3,3]，设置SN List [SN1,SN2,SN3] LN 启动BDT协议栈
+        (2) RN 设置Device 对象Area [44,9,3,3]，设置SN List [SN1,SN2,SN3] RN 启动BDT协议栈 
+        (3) 
+        预期结果：
+        (1) LN 在SN3 上线
+        ```
+         */
+        run_test_async("Regress_Nightly_SN_SNcall_SelectArea_0004", async{
+            // 
+            // （0）读取实验室配置
+            let mut sns = Vec::new();
+            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_USA.desc").unwrap();
+            let sn2 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_CN.desc").unwrap();
+            sns.push(sn1);
+            sns.push(sn2);
+            // PN 提供代理服务功能，如果你的网络是Symmetric 或者没有IPv6网络，你的网络可能不支持P2P 网络NAT穿透,需要公用的PN务或私有化部署的PN服务进行网络传输
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\pn-miner.desc").unwrap();
+            pns.push(pn);
+   
+            // (1)初始化测试的BDT 协议栈
+            let mut stack_manager = StackManager::new(PathBuf::from_str(Work_Space).unwrap());
+            let mut eps1 = Vec::new();
+            let ep = format!("L4udp192.168.100.74:{}",30000);
+            eps1.push(ep);
+            let str_area1= format!("{}:{}:{}:{}",226,8,20,1); 
+            let area1 = Area::from_str(str_area1.as_str()).unwrap();
+            log::info!("local device area : {}",str_area1.clone());
+            let (device1,key1) = stack_manager.create_stack("device1", eps1, area1,  Some(sns.clone()), Some(pns.clone())).await;
+
+            let mut eps2 = Vec::new();
+            let ep = format!("L4udp192.168.100.74:{}",40000);
+            eps2.push(ep);
+            let str_area2= format!("{}:{}:{}:{}",44,4,20,1); 
+            let area2 = Area::from_str(str_area2.as_str()).unwrap();
+            log::info!("local device area : {}",str_area2.clone());
+            let (device2,key2) = stack_manager.create_stack("device2", eps2, area2, Some(sns), Some(pns)).await;
+            // (2) 启动监听
+            let client1 = stack_manager.get_client("device1".clone());
+            log::info!("client1 info : {}",client1.get_stack().local_device_id());
+            let confirm1= client1.auto_accept();
+            let client2 = stack_manager.get_client("device2".clone());
+            log::info!("client2 info : {}",client2.get_stack().local_device_id());
+            let confirm2 =client2.auto_accept();
+            let mut stream_id :u32 = 0;
+            let mut LN_Stream = "".to_string();
+            // (3.1) client1 连接 client2 首次连接
+            {   
+                // 构建 BuildTunnelParams
+                let mut wan_addr = false;
+                let remote_sn = match device2.body().as_ref() {
+                    None => {
+                        Vec::new()
+                    },
+                    Some(b) => {
+                        b.content().sn_list().clone()
+                    },
+                };
+                let param = BuildTunnelParams {
+                    remote_const: device2.desc().clone(),
+                    remote_sn,
+                    remote_desc: if wan_addr {
+                        Some(device2.clone())
+                    } else {
+                        None
+                    }
+                };
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                // 发起连接
+                let _ = match client1.get_stack().stream_manager().connect(0, Vec::new(),param.clone()).await{
+                    Ok(mut stream) => {
+                        let mut len = 0;
+                        // 接收answer
+                        let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        stream_id =  stream.sequence().value();
+                        log::info!("connect success time = {},sequence = {}",connect_time,stream_id.to_string());
+                        LN_Stream = format!("{}{}",device2.desc().object_id().to_string(),stream_id.to_string());
+                        client1.cache_stream(LN_Stream.as_str(), stream.clone());
+                    },
+                    Err(e) => {
+                        log::error!("connect failed, e={}", &e);
+                        
+                    }
+                };
+            }
+            
+            {   
+                
+                let mut con1 = client1.get_stream(LN_Stream.as_str());
+                let RN_Stream = format!("{}{}",device1.desc().object_id().to_string(),stream_id.clone());
+                let mut con2 = client2.get_stream(RN_Stream.as_str());
+                log::info!("connect1: {}",con1.get_stream());
+                log::info!("connect2: {}",con2.get_stream());
+                //RN 一个线程收数据
+                let task1 = task::spawn(async move {
+                    let recv = con2.recv_file().await;
+                });
+                //stack_manager.sleep(1).await;
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                //LN 一个线程发数据
+                let task2 = task::spawn(async move {
+                    let send = con1.send_file(10*1024*1024).await;
+                    let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("send stream success time = {},sequence = {}",connect_time,stream_id.to_string());
+                });
+                task1.await;
+                task2.await;
+            }
+        }).await
+    }
+    
     #[tokio::test]
     async fn Regress_Nightly_SN_SNcall_By_RemoteSNInfo() {
         /**
@@ -1056,7 +1174,7 @@ mod tests {
     #[tokio::test]
     async fn Decode_Local_Dir_SN_info() {
         run_test_async("Decode_Local_Dir_SN_info", async{
-            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\").unwrap(); //
+            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\").unwrap(); //
             
             let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
             let object_raw = dir.to_vec().unwrap();
@@ -1072,7 +1190,7 @@ mod tests {
                 } 
                 log::info!("got sn item: {}", sn_id.clone());
                 // 重新将Device 写入desc
-                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\{}.desc",sn_id);
+                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\{}.desc",sn_id);
                 let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
                 let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
                     Ok(_) => {
@@ -1180,5 +1298,148 @@ mod tests {
         }).await
     }
 
-   
+
+    #[tokio::test]
+    async fn Reset_bdt_stack_connect() {
+        /**
+        ```
+        测试用例：多SN建立连接
+        测试数据：
+        (1) LN 设置Device 对象Area [0,9,3,3]，设置SN List [SN1,SN2,SN3] LN 启动BDT协议栈
+        (2) RN 设置Device 对象Area [226,9,3,3]，设置SN List [SN1,SN2,SN3] RN 启动BDT协议栈 
+        (3) 
+        预期结果：
+        (1) LN 在SN3 上线
+        ```
+         */
+        run_test_async("Reset_bdt_stack_connect", async{
+            // 
+            // （0）读取实验室配置
+            let mut sns = Vec::new();
+            let mut sns1 = Vec::new();
+            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_USA.desc").unwrap();
+            let sn2 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_CN.desc").unwrap();
+            sns1.push(sn2.clone());
+            sns.push(sn1);
+            sns.push(sn2);
+            // PN 提供代理服务功能，如果你的网络是Symmetric 或者没有IPv6网络，你的网络可能不支持P2P 网络NAT穿透,需要公用的PN务或私有化部署的PN服务进行网络传输
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let sn_list = load_sn(sns.clone()).await;
+            // (1)初始化测试的BDT 协议栈
+            let mut stack_manager = StackManager::new(PathBuf::from_str(Work_Space).unwrap());
+            let mut eps1 = Vec::new();
+            eps1.push(format!("L4udp192.168.100.74:{}",30000));
+            eps1.push(format!("L4tcp192.168.100.74:{}",30001));
+            let str_area1= format!("{}:{}:{}:{}",0,0,0,8); 
+            let area1 = Area::from_str(str_area1.as_str()).unwrap();
+            log::info!("local device area : {}",str_area1.clone());
+            let (device1,key1) = stack_manager.create_stack("device1", eps1, area1, Some(sns1.clone()), Some(pns.clone())).await;
+
+            let mut eps2 = Vec::new();
+            eps2.push(format!("L4udp192.168.100.74:{}",40000));
+            eps2.push(format!("L4tcp192.168.100.74:{}",40001));
+            let str_area2= format!("{}:{}:{}:{}",226,0,3376,0); 
+            let area2 = Area::from_str(str_area2.as_str()).unwrap();
+            log::info!("local device area : {}",str_area2.clone());
+            let (device2,key2) = stack_manager.create_stack("device2", eps2, area2, Some(sns1), Some(pns)).await;
+            // (2) 启动监听
+            let client1 = stack_manager.get_client("device1".clone());
+            log::info!("client1 info : {}",client1.get_stack().local_device_id());
+            let confirm1= client1.auto_accept();
+            let client2 = stack_manager.get_client("device2".clone());
+            log::info!("client2 info : {}",client2.get_stack().local_device_id());
+            let confirm2 =client2.auto_accept();
+            let mut stream_id :u32 = 0;
+            let mut LN_Stream = "".to_string();
+            client1.get_stack().reset_sn_list(sn_list.clone()).await;
+            client2.get_stack().reset_sn_list(sn_list.clone()).await;
+            sleep(30).await;
+            // (3.1) client1 连接 client2 首次连接
+            {   
+                // 构建 BuildTunnelParams
+                let mut sn_id_list = Vec::new();
+                for  sn_device in sn_list{
+                    let device_id = sn_device.desc().device_id();
+                    sn_id_list.push(device_id);
+                }
+                let mut remote = device2.clone();
+                let _ =  remote.mut_connect_info().mut_endpoints().clear();
+                let _ =  remote.mut_connect_info().mut_sn_list().clear();
+                let param = BuildTunnelParams {
+                    remote_const: remote.desc().clone(),
+                    remote_sn:sn_id_list,
+                    remote_desc: None
+                };
+                
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                // 发起连接
+                let _ = match client1.get_stack().stream_manager().connect(0, Vec::new(),param.clone()).await{
+                    Ok(mut stream) => {
+                        let mut len = 0;
+                        // 接收answer
+                        let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        stream_id =  stream.sequence().value();
+                        log::info!("connect success time = {},sequence = {}",connect_time,stream_id.to_string());
+                        LN_Stream = format!("{}{}",device2.desc().object_id().to_string(),stream_id.to_string());
+                        client1.cache_stream(LN_Stream.as_str(), stream.clone());
+                    },
+                    Err(e) => {
+                        log::error!("connect failed, e={}", &e);
+                        
+                    }
+                };
+            }
+            
+            {   
+                
+                let mut con1 = client1.get_stream(LN_Stream.as_str());
+                let RN_Stream = format!("{}{}",device1.desc().object_id().to_string(),stream_id.clone());
+                let mut con2 = client2.get_stream(RN_Stream.as_str());
+                log::info!("connect1: {}",con1.get_stream());
+                log::info!("connect2: {}",con2.get_stream());
+                //RN 一个线程收数据
+                let task1 = task::spawn(async move {
+                    let recv = con2.recv_file().await;
+                });
+                //stack_manager.sleep(1).await;
+                let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                //LN 一个线程发数据
+                let task2 = task::spawn(async move {
+                    let send = con1.send_file(10*1024*1024).await;
+                    let connect_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("send stream success time = {},sequence = {}",connect_time,stream_id.to_string());
+                });
+                task1.await;
+                task2.await;
+            }
+        }).await
+    }
+    
+    #[tokio::test]
+    async fn Read_object_id(){
+        /**
+         ```
+        测试用例：更新SN后重启BDT协议栈
+        ```
+         */
+        run_test_async("Read_object_id", async{
+            // SN 提供P2P 网络NAT穿透功能。可以使用公用的SN服务或私有化部署的SN服务，辅助设备建立连接。 
+            let object_id = ObjectId::from_base58("5hLXAcP3JwSreqrtJj2GvpLn1A2EwQk39TQ3W1Vr1R2A").unwrap();
+            let _  = match object_id.info().area(){
+                Some(area)=>{
+                    log::info!("arae : {}",area.to_string());
+                },
+                None =>{
+                    log::info!("arae : None");
+                }
+            };
+           
+        
+
+            
+        }).await
+    }
+
 }
