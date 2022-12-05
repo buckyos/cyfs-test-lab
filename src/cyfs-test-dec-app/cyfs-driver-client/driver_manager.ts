@@ -30,15 +30,6 @@ export class CyfsStackDriverManager {
         }
     }
 
-    async load_driver_from_config(): Promise<{ err: ErrorCode, log: string, driver?: CyfsStackDriver }> {
-        console!.info(`load_driver_from_config : ${DRIVER_TYPE}`)
-        if (DRIVER_TYPE == CyfsDriverType.real_machine) {
-            return this.create_driver(CyfsDriverType.real_machine)
-        } else if (DRIVER_TYPE == CyfsDriverType.simulator) {
-            return this.create_driver(CyfsDriverType.simulator)
-        }
-        return { err: ErrorCode.notFound, log: "Error yfsDriverType" };
-    }
     async create_driver(type: CyfsDriverType): Promise<{ err: ErrorCode, log: string, driver?: CyfsStackDriver }> {
         console.info(`create cyfs stack test driver,type = ${type}`);
         let driver: CyfsStackDriver;

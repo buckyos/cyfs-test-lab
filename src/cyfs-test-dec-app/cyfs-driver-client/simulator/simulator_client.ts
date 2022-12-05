@@ -38,8 +38,6 @@ export class CyfsStackSimulatorClient implements CyfsStackClient {
         this.m_util_tool.init();
         return {err:ErrorCode.succ,log:"init client remove cache file"}
     }
-    async open_stack(): Promise<{ err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack }> {
-        return { err: ErrorCode.succ, log: "init success" }
-    }
+
 
 }

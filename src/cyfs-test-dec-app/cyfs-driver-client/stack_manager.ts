@@ -105,9 +105,9 @@ export class StackManager {
             let stack = cyfs.SharedCyfsStack.open(stack_param);
             let stack_map = new Map();
             if(dec_id){
-                stack_map.set(dec_id.to_base_58(), stack);
+                stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
             }else{
-                stack_map.set("system", stack);
+                stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
             }
             this.peer_map.set(agent.peer_name, stack_map);
         }
@@ -123,22 +123,22 @@ export class StackManager {
             let stack = cyfs.SharedCyfsStack.open(stack_param);
             let stack_map = new Map();
             if(dec_id){
-                stack_map.set(dec_id.to_base_58(), stack);
+                stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
             }else{
-                stack_map.set("system", stack);
+                stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
             }
             
             this.peer_map.set(agent.peer_name, stack_map);
         }
     }
-    get_cyfs_satck(peer_name:string,dec_id:string="system"): { err: ErrorCode, log: string,stack?:cyfs.SharedCyfsStack} {
+    get_cyfs_satck(peer_name:string,dec_id:string=`system`,type: cyfs.CyfsStackRequestorType = cyfs.CyfsStackRequestorType.Http ): { err: ErrorCode, log: string,stack?:cyfs.SharedCyfsStack} {
         if(!this.peer_map.has(peer_name)){
             return {err:ErrorCode.notFound,log:`error peer name ${peer_name}`}
         }
-        if(!this.peer_map.get(peer_name)!.has(dec_id)){
-            return {err:ErrorCode.notFound,log:`error dec_id dec_id =  ${dec_id}`}
+        if(!this.peer_map.get(peer_name)!.has(`${dec_id}_${type}`)){
+            return {err:ErrorCode.notFound,log:`error dec_id dec_id =  ${dec_id},type = ${type}`}
         }
-        return {err:ErrorCode.succ,log:`get cyfs stack success`,stack:this.peer_map.get(peer_name)!.get(dec_id)!}
+        return {err:ErrorCode.succ,log:`get cyfs stack success`,stack:this.peer_map.get(peer_name)!.get(`${dec_id}_${type}`)!}
     }
 
 }

@@ -30,8 +30,6 @@ export abstract  class CyfsStackDriver{
 }
 
 export abstract  class CyfsStackClient{
-    //实例化一个 TS CYFS Stack 
-    abstract open_stack():Promise<{err:ErrorCode,log:string,stack?:cyfs.SharedCyfsStack}>;
     //获取工具类
     abstract get_util_tool():UtilTool
 }

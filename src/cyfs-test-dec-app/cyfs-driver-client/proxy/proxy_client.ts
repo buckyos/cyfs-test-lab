@@ -77,9 +77,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
     get_util_tool(): ProxyUtilTool {
         return this.m_util_tool!
     }
-    async open_stack(): Promise<{ err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack }> {
-        return { err: ErrorCode.succ, log: "init success" }
-    }
+
     async start_proxy(type: string, port: number): Promise<{ err: ErrorCode, log: string }> {
         return new Promise(async (V) => {
             let tcpServer = net.createServer(async (c) => {
