@@ -110,7 +110,9 @@ export class LocalMaster extends ClientStack {
 
         return ErrorCode.succ;
     }
-
+    getLocalServerPort(){
+        return this.m_localServerPort!
+    }
     async exit(code: ClientExitCode, msg: string, timeout?: number) {
         for (let c of this.m_clients) {
             await await c.stopProcess();
@@ -228,6 +230,22 @@ export class LocalMaster extends ClientStack {
 
         return client;
     }
+    newTaskClient(namespace: Namespace, jobid: string, localTest: boolean): TaskProxy {
+        let client: TaskProxy = new TaskProxy({
+            namespace,
+            logger: this.m_logger,
+            timeout: this.heartbeatTime * 3,
+            channelWithCenterMaster: this.channelWithMaster,
+            jobid,
+            localTest,
+        });
+        this._initClient(client);
+
+        this._listeningCommand(client.dispatcher, client);
+
+        return client;
+    }
+    
 
     private async _startService(command: Command, channel: Channel) {
         let c: CommandSysStartServiceReq = command as CommandSysStartServiceReq;

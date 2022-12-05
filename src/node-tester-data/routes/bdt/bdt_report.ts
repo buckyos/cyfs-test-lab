@@ -165,7 +165,7 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
             let save = await reportDataToFile(action_perf.data, path.join(__dirname, "./report_suite/TotalActionPerf.html"), path.join(config.BDT_Report_Dir, environment,"perf"), `${testcaseId}.html`) 
         }
         // 生成性能监控图表
-        let agent_list = await SystemInfo_mod.getAgentList(testcaseId);
+        let agent_list = await SystemInfo_mod.getAgentList(testcaseId,environment);
         if(agent_list.data){
             console.info(JSON.stringify(agent_list.data))
             testcase_info.perf_info  = `./systemInfo/${testcaseId}.html`;

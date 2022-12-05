@@ -171,7 +171,7 @@ async function main() {
             console.info(`#####run cmd :${_cmd}`)
             eval(_cmd);
         } catch (e) {
-            console.error('e=' + e.message);
+            console.error('e='+e);
         }
     }
     

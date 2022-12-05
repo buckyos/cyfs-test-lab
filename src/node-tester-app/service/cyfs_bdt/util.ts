@@ -16,11 +16,8 @@ export class UtilTool {
     constructor(_interface:ServiceClientInterface,logger:Logger){
         this.m_logger = logger;
         this.m_interface = _interface;
-        this.init();
     }
-    async  init() {
-        this.cacheSomeBuffer = Buffer.from(RandomGenerator.string(1000*1000)) ;
-    }
+    
 
     async utilRequest(command:BdtLpcCommand):Promise<BdtLpcResp>{
         if(!command.json.name){

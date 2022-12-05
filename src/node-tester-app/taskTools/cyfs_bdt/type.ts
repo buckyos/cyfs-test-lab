@@ -45,11 +45,18 @@ export const BDTERROR = {
     RandFileError : 20000,
     GetCachePathError : 20001,
 }
+export const enum  Listern_type{
+    auto_accept = "auto_accept",
+    auto_response_stream = "auto_response_stream",
+}
 
 export const enum  ActionType {
     start = "start",
     restart = "restart",
+    sn_online = "sn_online",
     connect = "connect",
+    FasTQA = "FasTQA" ,
+    FasTStream = "FasTStream" ,
     close_connect = "close-connect",
     destory = "destory",
     connect_second = "connect-second",  
@@ -90,7 +97,8 @@ export const enum  ActionType {
 
 export type Agent = {
     tags : Array<string>, 
-    OS :string
+    OS :string,
+    area : string,
     NAT : number,
     ipv4 : Array<string>,
     ipv6 : Array<string>,
@@ -100,6 +108,7 @@ export type Agent = {
 
 export type Peer ={
     agent : Agent,
+    area:string,
     addrInfo: string[], 
     bdt_port? : number,
     local?: string, 
@@ -112,12 +121,13 @@ export type Peer ={
     passive_pn_files?:Array<string>,
     known_peer_files?:Array<string>,
     chunk_cache?:string,
-    FristQA_answer?:string,
+    answer_size?:number,
     ep_type?:string,
     ndn_event?:string,
     ndn_event_target?:string
     udp_sn_only?:number,
     tcp_port_mapping? : string,
+    listern_type? : string,
 }
  
 export type Action ={
@@ -136,8 +146,8 @@ export type Action ={
        timeout : number, //超时时间
        known_eps?:number,
        range?:Array<{begin:number,end:number}>
-       firstQA_question? :string,
-       firstQA_answer? :string,
+       firstQA_question? :number,
+       firstQA_answer? :number,
        accept_answer?:number, //是否接收FristQA answer 
        conn_tag?: string, //连接标记   
        not_wait_upload_finished?:boolean,
@@ -153,6 +163,8 @@ export type Action ={
     info? : {
        LN_NAT?:string,
        RN_NAT?:string,
+       LN_Resp?:any,
+       RN_Resp?:any,
        Users_NAT?:Array<{name:string,NAT:string}>, 
        fileName?:string, // 文件名称
        conn?:Array<string>,

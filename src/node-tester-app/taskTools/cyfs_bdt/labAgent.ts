@@ -1,7 +1,9 @@
 
 import {NAT_Type,Agent,Peer} from "./type"
 
-export let LabSnList = ['sn-miner.desc',];
+export let LabSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
+
+export let LabMutSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
 export let PNType = {
     active: {
         activePnFiles: ["pn-miner.desc"],
@@ -27,6 +29,7 @@ export let PNType = {
 export let labAgentData = [
     {
         tags: ["PC_0005"],
+        area : "0:0:0:1",
         OS: "CentOS8.5",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.161'],
@@ -35,6 +38,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0006"],
+        area : "1:0:0:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.236'],
@@ -42,6 +46,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0007"],
+        area : "0:0:0:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['10.1.2.189'],
@@ -49,6 +54,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0008"],
+        area : "6:0:20:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.199'],
@@ -56,6 +62,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0009"],
+        area : "86:11:20:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['10.1.1.132', '10.1.2.131'],
@@ -63,6 +70,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0010"],
+        area : "86:12:20:1",
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.137'],
@@ -70,14 +78,16 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0011"],
+        area : "9:1:20:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1",
     },
     {
         tags: ["PC_0012"],
+        area : "12:9:20:1",
         OS: "Debian11",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.133'],
@@ -86,14 +96,16 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0013"],
+        area : "67:5:20:1",
         OS: "CentOS8.5",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.171','192.168.1.182'], // 
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1&Router5",
     },
     {
         tags: ["PC_0014"],
+        area : "89:12:20:1",
         OS: "Windows10",
         NAT: NAT_Type.Symmetric,
         ipv4: ['192.168.1.139'],
@@ -101,6 +113,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0015"],
+        area : "128:10:20:1",
         OS: "Windows7",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.145'],
@@ -108,6 +121,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0016"],
+        area : "196:4:20:1",
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],
@@ -115,14 +129,16 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0017"],
+        area : "1:6:20:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.177'],
-        ipv6: ['[::]'],
+        //ipv6: ['[::]'],
         router: "Router1&Router6",
     },
     {
         tags: ["PC_0018"],
+        area : "86:4:20:1",
         OS: "Ubuntu 22.04",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.151'],
@@ -154,6 +170,7 @@ export function randShuffle(len:number){
 // 将测试节点数据乱序
 export const labAgent : Array<{
     tags: string[];
+    area : string;
     OS: string;
     NAT: NAT_Type;
     ipv4: string[];
@@ -183,7 +200,9 @@ export type BdtPeerClientConfig={
     },
     SN : Array<string>,
     logType? : string,
+    listern_type? : string, 
     firstQA_answer? : string,
+    answer_size ? : number,
     resp_ep_type? : string,
     udp_sn_only? : number,
     chunk_cache? : string,
@@ -233,19 +252,27 @@ export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientCon
     if(config.chunk_cache){
         chunk_cache = config.chunk_cache
     }
+    if(!config.listern_type){
+        config.listern_type = "auto_accept"
+    }
+    if(config.firstQA_answer){
+        config.answer_size =  config.firstQA_answer?.length
+    }
     return {
         agent: agent,
+        area : agent.area,
         addrInfo: epList,
         sn_files: config.SN,
         RUST_LOG: config.logType,
         active_pn_files: config.PN.activePnFiles,
         passive_pn_files: config.PN.passivePnFiles,
         known_peer_files: config.PN.knownPeerFiles,
-        FristQA_answer: config.firstQA_answer,
+        answer_size: config.answer_size,
         ep_type: config.resp_ep_type,
         udp_sn_only:config.udp_sn_only,
         tcp_port_mapping: config.tcp_port_mapping,
-        chunk_cache
+        chunk_cache,
+        listern_type : config.listern_type,
     };
 }
 

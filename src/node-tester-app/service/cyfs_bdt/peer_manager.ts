@@ -86,6 +86,7 @@ export class BdtPeerManager extends EventEmitter{
     protected _initPeer(peer: BdtPeer) {
         peer.on('unlive', () => {
             this.m_logger.error(`===================peer unlive `);
+            this.m_interface.fireEvent(`unlive_${peer.peer_name!}`,ErrorCode.succ)
             this.emit('unlive', peer.peerid);
         });
     }

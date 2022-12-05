@@ -7,13 +7,13 @@ import * as data_request from "./request_data"
 import * as SysProcess from 'process';
 import { Command } from "commander";
 var date = require("silly-datetime");
-async function addTask(serviceid:number,servicename:string,desc:string,version:string,url:string,mds:string,runrule:number,distribute:number){
+async function addTask(name:string,serviceid:number,servicename:string,desc:string,version:string,url:string,mds:string,runrule:number,distribute:number){
     let postData = JSON.stringify(
         {
             "serviceid":serviceid,
             "servicename":servicename,
             "version":version,
-            "desc":desc,
+            "desc":name+desc,
             "url":url,
             "md5":mds,
             "runrule":runrule,
@@ -49,13 +49,14 @@ async function  uplaodTaskZip(name:string){
 async function uploadTasks(config:CaseConfig){
     let  version = String( parseFloat(config.rust_bdt.version) + 0.01);
     config.rust_bdt.version = version;
+    let name = config.rust_bdt.name;
     console.info(`version: ${version}`)
     let local_list = fs.readdirSync(path.join(__dirname,"../tasks"))
     for(let caseIndex in config.rust_bdt.list){
         let taskInfo = config.rust_bdt.list[caseIndex];
         if( taskInfo.taskid ===0 ||taskInfo.taskid === undefined){
             let infoFile = await uplaodTaskZip(taskInfo.desc)
-            let infoTask = await addTask(config.rust_bdt.serviceid,config.rust_bdt.servicename,taskInfo.desc,version!,infoFile.url,infoFile.md5,config.rust_bdt.runrule,config.rust_bdt.distribute)
+            let infoTask = await addTask(name,config.rust_bdt.serviceid,config.rust_bdt.servicename,taskInfo.desc,version!,infoFile.url,infoFile.md5,config.rust_bdt.runrule,config.rust_bdt.distribute)
             config.rust_bdt.list[caseIndex].taskid = infoTask.data.taskid
             console.info(`add task ${taskInfo.desc} : ${JSON.stringify(infoTask)}`)
         }else{

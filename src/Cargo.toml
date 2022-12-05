@@ -8,6 +8,7 @@ members=[
     "cyfs-tools",
     "cyfs-stack-test-rust/unittest_nameobject",
     "cyfs-stack-test-rust/profile",
+    "stack-tool",
 ]
 
 [profile.release]

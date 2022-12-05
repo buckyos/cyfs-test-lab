@@ -1,7 +1,6 @@
-use hyper::{body::Buf};
-use serde::{Deserialize,Serialize};
-use hyper::{Body, Method,Client,  Request};
-
+use hyper::body::Buf;
+use hyper::{Body, Client, Method, Request};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetResult {
@@ -16,8 +15,7 @@ pub struct GetResult {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Args {
-}
+pub struct Args {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Headers {
@@ -53,15 +51,14 @@ pub struct Headers {
     pub x_amzn_trace_id: Option<String>,
 }
 
-
 // fn default_client()->hyper::Client{
 //     Client::builder().pool_idle_timeout(Duration::from_sec(30)).build_http()
 // }
 
 #[derive(Serialize, Deserialize)]
 pub struct BDTTestSystemInfo {
-    pub name : String,
-    pub testcaseId : String,
+    pub name: String,
+    pub test_case_id: String,
     pub cpu_usage: f32,
     pub total_memory: u64,
     pub used_memory: u64,
@@ -88,21 +85,23 @@ pub async fn request_json_get(url: hyper::Uri) -> anyhow::Result<GetResult> {
     let body = hyper::body::aggregate(res).await?;
 
     // try to parse as json with serde_json
-    let get_result:GetResult = serde_json::from_reader(body.reader())?;
+    let get_result: GetResult = serde_json::from_reader(body.reader())?;
 
     Ok(get_result)
 }
 
-pub async fn request_json_post(uri:&str,json_body:Body) -> anyhow::Result<GetResult> {
+pub async fn request_json_post(uri: &str, json_body: Body) -> anyhow::Result<GetResult> {
     let client = Client::new();
-    let req = Request::builder().method(Method::POST).uri(uri)
-    .header("Content-Type", "application/json")
-    .body(json_body)?;
+    let req = Request::builder()
+        .method(Method::POST)
+        .uri(uri)
+        .header("Content-Type", "application/json")
+        .body(json_body)?;
     // Fetch the url...
     let res = client.request(req).await?;
     // asynchronously aggregate the chunks of the body
     let body = hyper::body::aggregate(res).await?;
     // try to parse as json with serde_json
-    let get_result:GetResult = serde_json::from_reader(body.reader())?;
+    let get_result: GetResult = serde_json::from_reader(body.reader())?;
     Ok(get_result)
 }
