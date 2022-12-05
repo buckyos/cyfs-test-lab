@@ -13,15 +13,19 @@ export enum chunk_mode {
 
 export class Ready {
 
-    static async addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, fileSize: number, chunkSize: number, level: cyfs.NDNAPILevel, mount?: string, control_object?: string, access?: cyfs.AccessString, putdata?: string,mixchar?:boolean) {
+    static async addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, fileSize: number, chunkSize: number, level: cyfs.NDNAPILevel, mount?: string, control_object?: string, access?: cyfs.AccessString, putdata?: string, mixchar?: boolean) {
 
-        let saveDir = path.join(__dirname, "../../test_cache_file")
-        let inner_path =`/file-${RandomGenerator.string(3,3,3)}.txt`
+        let saveDir = path.join(__dirname, "../../test_cache_file/file-NDN")
+        let inner_path = `/file-${RandomGenerator.string(3, 3, 3)}.txt`
         //if (mixchar){inner_path=`/file-${RandomGenerator.string(3,3,3)}.txt`}
         let local_path = path.join(saveDir, inner_path)
         console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
-        if (fs.pathExistsSync(local_path)) {
-            await fs.removeSync(local_path)
+        { //清理缓存文件
+            let num = fs.readdirSync(saveDir).length
+            if (num > 5) {
+                await fs.removeSync(saveDir)
+                console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+            }
         }
         //(2)生成测试文件
         //RandomGenerator.createRandomDir(__dirname,1,1,fileSize)
@@ -283,7 +287,7 @@ export class Ready {
                 access: access
             })
         }
-        return {chunk_id, dir_id, req_path }
+        return { chunk_id, dir_id, req_path }
         //assert(dir_id2.to_base_58() == dir_id3.to_base_58(), "生成的dirid不相等")
 
     }
