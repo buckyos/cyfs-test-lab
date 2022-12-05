@@ -125,7 +125,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
 
 
         })
-        it.only("getData chunk目标对象 —— reqPath 获取成功", async () => {
+        it("getData chunk目标对象 —— reqPath 获取成功", async () => {
             let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router).then()
             let chunkId = chunkIdList![0]
 
@@ -340,7 +340,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
 
         })
 
-     
+
         it("getData chunk目标对象 关联dir+innerPath  有该dir权限&相应chunck 获取成功", async () => {
 
             let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router).then()
@@ -6135,10 +6135,69 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
     })
 
     describe("Dir chunk 模式", function () {
-       
+        it("不同模式构造dir_id相同", async () => {
+            let owner = cyfs.ObjectId.default();
+            let inner_node = new cyfs.InnerNodeInfo(new cyfs.Attributes(0), new cyfs.InnerNode({ object_id: cyfs.ObjectId.default() }));
+
+            let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> = new cyfs.BuckyHashMap()
+            object_map.set(new cyfs.BuckyString("path1"), inner_node)
+            let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(new cyfs.NoneOption(), object_map)
+
+            // 第一种情况，构造一个普通大小的dir，内容可以放到desc里面
+            let attr = new cyfs.Attributes(0xFFFF);
+            let dir = cyfs.Dir.create(owner,
+                attr,
+                new cyfs.NDNObjectInfo({ obj_list: list }),
+                { obj_list: new cyfs.BuckyHashMap() },
+                (builder) => {
+                    builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+                }
+            );
+            let dir_id = dir.desc().calculate_id();
+            console.log("dir id=", dir_id);
+            console.assert(dir_id.to_string() === "7jMmeXZpjj4YRfshnxsTqyDbqyo9zDoDA5phG9AXDC7X");
+            let buf = dir.to_vec().unwrap();
+            let hash = cyfs.HashValue.hash_data(buf);
+            console.log("dir hash=", hash.to_base_58());
+            // 第二种情况，对于超大内容的dir，使用chunk模式，但和上面一种模式是对等的
+            let data = cyfs.to_vec(list).unwrap();
+            let chunk_id = cyfs.ChunkId.calculate(data).unwrap();
+
+            // chunk可以放到body缓存里面，方便查找；也可以独立存放，但dir在解析时候需要再次查找该chunk可能会耗时久，以及查找失败等情况
+            let obj_map: cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer> = new cyfs.BuckyHashMap()
+            obj_map.set(chunk_id.calculate_id(), new cyfs.BuckyBuffer(data));
+
+            let dir2 = cyfs.Dir.create(owner, attr, new cyfs.NDNObjectInfo({ chunk_id }), { obj_list: obj_map }, (builder) => {
+                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+            });
+            let dir_id2 = dir2.desc().calculate_id();
+            console.log("dir id2=", dir_id2);
+            let buf2 = dir2.to_vec().unwrap();
+            let hash2 = cyfs.HashValue.hash_data(buf2);
+            console.log("dir2 hash=", hash2.to_base_58());
+
+            let _dir3 = new cyfs.AnyNamedObjectDecoder().from_raw(buf).unwrap();
+
+            // 上述两种模式生成的dir_id应该是相同
+            console.assert(dir_id.to_base_58() === dir_id2.to_base_58());
+
+            // body也可以放到chunk,由于只是影响body的结构，所以不影响dir的object_id
+            let body_data = cyfs.to_vec(obj_map).unwrap();
+            let body_chunk_id = cyfs.ChunkId.calculate(body_data).unwrap();
+            // 注意： body_chunk_id需要额外的保存到本地，put_data(body_chunk, body_chunk_id)
+
+            let dir4 = cyfs.Dir.create(owner, attr, new cyfs.NDNObjectInfo({ chunk_id }), { chunk_id: body_chunk_id }, (builder) => {
+                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+            });
+            let dir_id4 = dir4.desc().calculate_id();
+            console.log('dir id4=', dir_id4)
+            console.assert(dir_id.to_base_58() === dir_id4.to_base_58());
+
+        })
+
         it("同zone同dec getData chunk目标对象 关联dir  有该dir权限&相应chunck 获取成功", async () => {
 
-            let {body_chunk_id,dir_id}=await Ready.chunkMode(chunk_mode.bodyChunk,zone1device1,zone1device1,undefined,cyfs.AccessString.default())
+            let { chunk_id, dir_id } = await Ready.chunkMode(chunk_mode.bodyChunk, zone1device1, zone1device1, undefined, cyfs.AccessString.default())
 
             let rep: cyfs.NDNGetDataOutputRequest = {
                 common: {
@@ -6157,7 +6216,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                     ,
                     flags: 1,
                 },
-                object_id: body_chunk_id!.calculate_id(),
+                object_id: chunk_id!.calculate_id(),
                 inner_path: undefined,
             }
             //调用接口
@@ -6168,7 +6227,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
         })
         it("同zone同Dec getData chunk目标对象 关联dir  有该dir权限&非相应chunck 获取失败", async () => {
 
-            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir").then()
+            let { file_id, dir_id, inner_path, chunkIdList } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024*512, cyfs.NDNAPILevel.Router, "mount-dir").then()
 
             let { chunkId } = await putData(10, zone1device1, undefined, undefined)
             let rep: cyfs.NDNGetDataOutputRequest = {
@@ -6265,7 +6324,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
         })
         it("同zone同Dec getData chunk目标对象 关联dir reqPath 有该path权限&非相应chunck 获取失败", async () => {
 
-            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
+            let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024*512, cyfs.NDNAPILevel.Router, "mount-dir", "dir", cyfs.AccessString.full()).then()
 
             let { chunkId } = await putData(10, zone1device1, undefined, undefined)
             let item: cyfs.GlobalStatePathAccessItem = cyfs.GlobalStatePathAccessItem.new("test_nDn", cyfs.AccessString.default())
