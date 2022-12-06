@@ -24,7 +24,7 @@ router.post('/report',
             ssd_disk_avail: req.body.ssd_disk_avail, 
             hdd_disk_total: req.body.hdd_disk_total, 
             hdd_disk_avail:req.body.hdd_disk_avail, 
-            testcaseId:req.body.testcaseId,
+            testcaseId:req.body.testcase_id,
         }
         let model = new SystemInfo();
         let result =await  model.report(save);
