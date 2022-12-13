@@ -777,9 +777,9 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
         process.exit(0)
     })
 
-    describe("#NDN权限测试,objectmap_inner_path",async()=>{
-        describe("#NDN权限测试,objectmap_inner_path,getdata",async()=>{                 
-            it.only("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{ 
+    describe("#NDN权限测试,objectmap_inner_path",function (){
+        describe("#NDN权限测试,objectmap_inner_path,getdata",function (){                 
+            it("#NDN权限测试,objectmap_inner_path,getdata,chunk目标对象",async()=>{ 
                 
                 console.info("start")
                 //遍历六种stack连接情况
@@ -1468,7 +1468,7 @@ describe("#NDN权限测试,objectmap_inner_path ",function(){
                 }
             })
         })
-        describe("#NDN权限测试,objectmap_inner_path,trans_createtask",async()=>{
+        describe("#NDN权限测试,objectmap_inner_path,trans_createtask",function (){
             it("#NDN权限测试,objectmap_inner_path,trans_createtask,chunk目标对象",async()=>{
             console.info("start")
             //遍历六种情况
