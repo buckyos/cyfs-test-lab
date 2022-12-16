@@ -1125,85 +1125,85 @@ mod tests {
         }).await
     }
     
-    #[tokio::test]
-    async fn Decode_Meta_SN_info() {
-        run_test_async("Decode_SN_info", async{
-            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\nightly_meta_sn_list_dir.desc").unwrap(); //
+    // #[tokio::test]
+    // async fn Decode_Meta_SN_info() {
+    //     run_test_async("Decode_SN_info", async{
+    //         let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\nightly_meta_sn_list_dir.desc").unwrap(); //
             
-            //let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
-            //let object_raw = dir.to_vec().unwrap();
-            //let dir_id = dir.desc().calculate_id();
+    //         //let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
+    //         //let object_raw = dir.to_vec().unwrap();
+    //         //let dir_id = dir.desc().calculate_id();
             
-            let path = format!("{:?}", &sn1);
-            let mut file = std::fs::File::open(sn1.clone()).map_err(|e| {
-                log::error!("open sn desc failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            log::info!("load sn file success,path =  {}",sn1.display());
-            let mut buf = Vec::<u8>::new();
-            let _ = file.read_to_end(&mut buf).map_err(|e| {
-                log::error!("read desc failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            let (object, _) = Dir::raw_decode(buf.as_slice()).map_err(|e| {
-                log::error!("decode sn failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            let id = object.desc().object_id();
-            let object_raw = object.to_vec().unwrap();
-            let list = cyfs_util::SNDirParser::parse(Some(&id), &object_raw.as_ref()).unwrap();
-            for item in list {
-                let sn_id = item.0;
-                let sn_info = item.1;
-                log::info!("got sn item: {}", sn_id.clone());
-                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\{}.desc",sn_id);
-                let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
-                let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
-                    Ok(_) => {
-                        log::info!("encode device to file succ ,path ={}", file_obj_path.display());
-                    },
-                    Err(e) => {
-                        log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
-                    },
-                };
-            }
+    //         let path = format!("{:?}", &sn1);
+    //         let mut file = std::fs::File::open(sn1.clone()).map_err(|e| {
+    //             log::error!("open sn desc failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         log::info!("load sn file success,path =  {}",sn1.display());
+    //         let mut buf = Vec::<u8>::new();
+    //         let _ = file.read_to_end(&mut buf).map_err(|e| {
+    //             log::error!("read desc failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         let (object, _) = Dir::raw_decode(buf.as_slice()).map_err(|e| {
+    //             log::error!("decode sn failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         let id = object.desc().object_id();
+    //         let object_raw = object.to_vec().unwrap();
+    //         let list = cyfs_util::SNDirParser::parse(Some(&id), &object_raw.as_ref()).unwrap();
+    //         for item in list {
+    //             let sn_id = item.0;
+    //             let sn_info = item.1;
+    //             log::info!("got sn item: {}", sn_id.clone());
+    //             let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\{}.desc",sn_id);
+    //             let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
+    //             let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
+    //                 Ok(_) => {
+    //                     log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+    //                 },
+    //                 Err(e) => {
+    //                     log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+    //                 },
+    //             };
+    //         }
 
-        }).await
-    }
+    //     }).await
+    // }
     
-    #[tokio::test]
-    async fn Decode_Local_Dir_SN_info() {
-        run_test_async("Decode_Local_Dir_SN_info", async{
-            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\").unwrap(); //
+    // #[tokio::test]
+    // async fn Decode_Local_Dir_SN_info() {
+    //     run_test_async("Decode_Local_Dir_SN_info", async{
+    //         let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\").unwrap(); //
             
-            let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
-            let object_raw = dir.to_vec().unwrap();
-            let dir_id = dir.desc().calculate_id();
-            let list = cyfs_util::SNDirParser::parse(Some(&dir_id), &object_raw.as_ref()).unwrap();
-            for item in list {
-                let sn_id = item.0;
-                let sn_info = item.1;
-                let desc_info = sn_info.desc().object_id().info();
-                if let ObjectIdInfo::Standard(obj) = desc_info {
-                    let tmp_area = obj.area.unwrap();
-                    log::info!("device id = {} area = {}",sn_id.clone() ,tmp_area);
-                } 
-                log::info!("got sn item: {}", sn_id.clone());
-                // 重新将Device 写入desc
-                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\{}.desc",sn_id);
-                let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
-                let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
-                    Ok(_) => {
-                        log::info!("encode device to file succ ,path ={}", file_obj_path.display());
-                    },
-                    Err(e) => {
-                        log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
-                    },
-                };
-            }
+    //         let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
+    //         let object_raw = dir.to_vec().unwrap();
+    //         let dir_id = dir.desc().calculate_id();
+    //         let list = cyfs_util::SNDirParser::parse(Some(&dir_id), &object_raw.as_ref()).unwrap();
+    //         for item in list {
+    //             let sn_id = item.0;
+    //             let sn_info = item.1;
+    //             let desc_info = sn_info.desc().object_id().info();
+    //             if let ObjectIdInfo::Standard(obj) = desc_info {
+    //                 let tmp_area = obj.area.unwrap();
+    //                 log::info!("device id = {} area = {}",sn_id.clone() ,tmp_area);
+    //             } 
+    //             log::info!("got sn item: {}", sn_id.clone());
+    //             // 重新将Device 写入desc
+    //             let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\{}.desc",sn_id);
+    //             let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
+    //             let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
+    //                 Ok(_) => {
+    //                     log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+    //                 },
+    //                 Err(e) => {
+    //                     log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+    //                 },
+    //             };
+    //         }
 
-        }).await
-    }
+    //     }).await
+    // }
     #[tokio::test]
     async fn Reset_bdt_stack(){
         /**
@@ -1442,4 +1442,99 @@ mod tests {
         }).await
     }
 
+    #[tokio::test]
+    async fn Regress_Nightly_SN_Online_ipv6() {
+        /**
+         ```
+        测试用例：测试配置美国 Area 226 SN 上线
+        测试数据：
+        (1) LN 设置Device 对象Area [0,X,X,X]
+        (2) LN 设置SN List [SN1,SN2,SN3]
+        (3) LN 启动BDT协议栈
+        预期结果：
+        (1) LN 在SN1 上线
+        ```
+         */
+        run_test_async("Regress_Nightly_SN_Online_ipv6", async{
+            // SN 提供P2P 网络NAT穿透功能。可以使用公用的SN服务或私有化部署的SN服务，辅助设备建立连接。 
+            let mut sns = Vec::new();
+            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_USA.desc").unwrap();
+            let sn2 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\sn-miner_CN.desc").unwrap();
+            sns.push(sn1);
+            sns.push(sn2);
+            let sn_list = load_sn(sns).await;
+            // PN 提供代理服务功能，如果你的网络是Symmetric 或者没有IPv6网络，你的网络可能不支持P2P 网络NAT穿透,需要公用的PN务或私有化部署的PN服务进行网络传输
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+
+            let mut carrier = 1;// 0-15 运营商范围测试
+            
+            let mut run_sum = 0;
+            while carrier > 0 {
+                carrier =carrier - 1;
+                let mut city = 1;  // 随机十个城市匹配
+                while city > 0 {
+                    city = city - 1;
+                    run_sum += 1;
+                    let mut eps1 = Vec::new();
+                    let ep1 = format!("L4tcp192.168.100.74:{}",30000+run_sum);
+                    let ep2 = format!("L4udp192.168.100.74:{}",8050);
+                    let ep3 = format!("L6udp[::]:{}",30000+run_sum);
+                    eps1.push(ep1);
+                    eps1.push(ep2);
+                    eps1.push(ep3);
+                    let city_num = random_int(0,200);
+                    let str_area = format!("{}:{}:{}:{}",226,carrier,city_num,1); 
+                    log::info!("local device area : {}",str_area.clone());
+                    let area = Area::from_str(str_area.as_str()).unwrap();
+                    let name = format!("lzh1");
+                    let private_key = PrivateKey::generate_rsa(1024).unwrap();
+                    let (device,key) = create_device_area(name,eps1,sn_list.clone(),pn_list.clone(),None,area,private_key).await;
+                    // 2. 加载BDT Stack 启动配置
+                    let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+                    // 已知Device 列表
+                    params.known_device = None; //
+                    params.known_sn = Some(sn_list.clone());
+                    params.active_pn = Some(pn_list.clone());
+                    params.passive_pn = Some(pn_list.clone());
+                    params.config.interface.udp.sn_only = false;
+                    params.tcp_port_mapping = None;
+                    let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+                    let stack = Stack::open(
+                        device.clone(), 
+                        key, 
+                        params).await;
+                    if let Err(e) = stack.clone(){
+                        log::error!("init bdt stack error: {}", e);
+                    }
+                    let stack = stack.unwrap();   
+                    let acceptor = stack.stream_manager().listen(0).unwrap();
+                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                        Err(err) => {
+                            log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
+                            1000
+                        },
+                        Ok(_) => {
+                            log::info!("sn online success {}", device.desc().device_id());
+                            let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                            log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                            0
+                        }
+                    };
+                    assert_eq!(result,0,"wait sn online timeout");
+                    for sn in stack.sn_client().sn_list(){
+                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.object_id().to_string());
+                        assert_eq!(sn.object_id().to_string(),SN1.to_string(),"select sn online incorrect");
+                    }
+                }
+            }
+
+            
+            
+        }).await
+    }
+
+    
 }

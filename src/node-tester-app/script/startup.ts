@@ -195,7 +195,8 @@ class Runner {
         if (fs.existsSync(filePath)) {
             await this._stopLocalMaster();
 
-            await compressing.zip.uncompress(filePath, DirHelper.getRootDir());
+            let result  = await compressing.zip.uncompress(filePath, DirHelper.getRootDir());
+            Base.blog.info(`compressing zip result = ${result}`);
             process.exit(0);
         }
 

@@ -1187,85 +1187,85 @@ mod tests {
         }).await
     }
     
-    #[tokio::test]
-    async fn Decode_beta_Meta_SN_info() {
-        run_test_async("Decode_SN_info", async{
-            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\nightly_meta_sn_list_dir.desc").unwrap(); //
+    // #[tokio::test]
+    // async fn Decode_beta_Meta_SN_info() {
+    //     run_test_async("Decode_SN_info", async{
+    //         let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\nightly_meta_sn_list_dir.desc").unwrap(); //
             
-            //let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
-            //let object_raw = dir.to_vec().unwrap();
-            //let dir_id = dir.desc().calculate_id();
+    //         //let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
+    //         //let object_raw = dir.to_vec().unwrap();
+    //         //let dir_id = dir.desc().calculate_id();
             
-            let path = format!("{:?}", &sn1);
-            let mut file = std::fs::File::open(sn1.clone()).map_err(|e| {
-                log::error!("open sn desc failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            log::info!("load sn file success,path =  {}",sn1.display());
-            let mut buf = Vec::<u8>::new();
-            let _ = file.read_to_end(&mut buf).map_err(|e| {
-                log::error!("read desc failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            let (object, _) = Dir::raw_decode(buf.as_slice()).map_err(|e| {
-                log::error!("decode sn failed on create, path={:?}, e={}", path.as_str(), &e);
-                e
-            }).unwrap();
-            let id = object.desc().object_id();
-            let object_raw = object.to_vec().unwrap();
-            let list = cyfs_util::SNDirParser::parse(Some(&id), &object_raw.as_ref()).unwrap();
-            for item in list {
-                let sn_id = item.0;
-                let sn_info = item.1;
-                log::info!("got sn item: {}", sn_id.clone());
-                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\{}.desc",sn_id);
-                let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
-                let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
-                    Ok(_) => {
-                        log::info!("encode device to file succ ,path ={}", file_obj_path.display());
-                    },
-                    Err(e) => {
-                        log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
-                    },
-                };
-            }
+    //         let path = format!("{:?}", &sn1);
+    //         let mut file = std::fs::File::open(sn1.clone()).map_err(|e| {
+    //             log::error!("open sn desc failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         log::info!("load sn file success,path =  {}",sn1.display());
+    //         let mut buf = Vec::<u8>::new();
+    //         let _ = file.read_to_end(&mut buf).map_err(|e| {
+    //             log::error!("read desc failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         let (object, _) = Dir::raw_decode(buf.as_slice()).map_err(|e| {
+    //             log::error!("decode sn failed on create, path={:?}, e={}", path.as_str(), &e);
+    //             e
+    //         }).unwrap();
+    //         let id = object.desc().object_id();
+    //         let object_raw = object.to_vec().unwrap();
+    //         let list = cyfs_util::SNDirParser::parse(Some(&id), &object_raw.as_ref()).unwrap();
+    //         for item in list {
+    //             let sn_id = item.0;
+    //             let sn_info = item.1;
+    //             log::info!("got sn item: {}", sn_id.clone());
+    //             let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly\\{}.desc",sn_id);
+    //             let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
+    //             let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
+    //                 Ok(_) => {
+    //                     log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+    //                 },
+    //                 Err(e) => {
+    //                     log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+    //                 },
+    //             };
+    //         }
 
-        }).await
-    }
+    //     }).await
+    // }
+    //  #[tokio::test]
+    // async fn Decode_beta_Local_Dir_SN_info() {
+    //     run_test_async("Decode_Local_Dir_SN_info", async{
+    //         let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\").unwrap(); //
+            
+    //         let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
+    //         let object_raw = dir.to_vec().unwrap();
+    //         let dir_id = dir.desc().calculate_id();
+    //         let list = cyfs_util::SNDirParser::parse(Some(&dir_id), &object_raw.as_ref()).unwrap();
+    //         for item in list {
+    //             let sn_id = item.0;
+    //             let sn_info = item.1;
+    //             let desc_info = sn_info.desc().object_id().info();
+    //             if let ObjectIdInfo::Standard(obj) = desc_info {
+    //                 let tmp_area = obj.area.unwrap();
+    //                 log::info!("device id = {} area = {}",sn_id.clone() ,tmp_area);
+    //             } 
+    //             log::info!("got sn item: {}", sn_id.clone());
+    //             // 重新将Device 写入desc
+    //             let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\{}.desc",sn_id);
+    //             let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
+    //             let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
+    //                 Ok(_) => {
+    //                     log::info!("encode device to file succ ,path ={}", file_obj_path.display());
+    //                 },
+    //                 Err(e) => {
+    //                     log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
+    //                 },
+    //             };
+    //         }
+
+    //     }).await
+    // }
     
-    #[tokio::test]
-    async fn Decode_beta_Local_Dir_SN_info() {
-        run_test_async("Decode_Local_Dir_SN_info", async{
-            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\").unwrap(); //
-            
-            let dir = cyfs_util::SNDirGenerator::gen_from_dir(&None, &sn1).unwrap();
-            let object_raw = dir.to_vec().unwrap();
-            let dir_id = dir.desc().calculate_id();
-            let list = cyfs_util::SNDirParser::parse(Some(&dir_id), &object_raw.as_ref()).unwrap();
-            for item in list {
-                let sn_id = item.0;
-                let sn_info = item.1;
-                let desc_info = sn_info.desc().object_id().info();
-                if let ObjectIdInfo::Standard(obj) = desc_info {
-                    let tmp_area = obj.area.unwrap();
-                    log::info!("device id = {} area = {}",sn_id.clone() ,tmp_area);
-                } 
-                log::info!("got sn item: {}", sn_id.clone());
-                // 重新将Device 写入desc
-                let path_str = format!("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\test\\{}.desc",sn_id);
-                let file_obj_path = PathBuf::from_str(path_str.as_str()).unwrap();
-                let _ = match sn_info.encode_to_file(file_obj_path.clone().as_path(),true){
-                    Ok(_) => {
-                        log::info!("encode device to file succ ,path ={}", file_obj_path.display());
-                    },
-                    Err(e) => {
-                        log::error!("encode device obj to file failed,path = {},err {}",file_obj_path.display(), e);
-                    },
-                };
-            }
-
-        }).await
-    }
     #[tokio::test]
     async fn Reset_beta_bdt_stack_online(){
         /**

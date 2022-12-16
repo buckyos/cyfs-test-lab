@@ -1,6 +1,7 @@
 import { CyfsStackClient, CyfsStackDriver } from "./cyfs_driver";
 import { CyfsStackProxyDriver } from "./proxy/proxy_driver";
 import { CyfsStackSimulatorDriver } from "./simulator/simulator_driver";
+import { BDTDriver } from "./bdt_client/bdt_driver";
 import {  ErrorCode } from "../base";
 import path from "path";
 import { DRIVER_TYPE } from "../config/cyfs_driver_config"
@@ -9,6 +10,7 @@ var date = require("silly-datetime");
 export enum CyfsDriverType {
     real_machine = "real_machine",
     simulator = "Simulator",
+    bdt_client = "bdt_client",
 }
 
 export class CyfsStackDriverManager {
@@ -37,6 +39,8 @@ export class CyfsStackDriverManager {
             driver = new CyfsStackProxyDriver(this.log_path);
         } else if (type == CyfsDriverType.simulator) {
             driver = new CyfsStackSimulatorDriver(this.log_path);
+        }else if (type == CyfsDriverType.bdt_client) {
+            driver = new BDTDriver(this.log_path);
         } else {
             return { err: ErrorCode.notFound, log: "Error yfsDriverType" };
         }

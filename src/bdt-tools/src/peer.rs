@@ -2,7 +2,7 @@ use async_std::{fs::File, future, io::prelude::*, sync::Arc, task};
 use cyfs_base::*;
 use cyfs_bdt::*;
 use cyfs_util::cache::{NamedDataCache, TrackerCache};
-use futures::StreamExt;
+use futures::{StreamExt, AsyncWriteExt};
 use rand::Rng;
 use sha2::Digest;
 use std::{
@@ -4155,7 +4155,7 @@ impl Peer {
                         let ret = SYSTEM_INFO_MANAGER.get_system_info().await;
                         let sys_info = BDTTestSystemInfo {
                             name: c.agent_name.clone(),
-                            test_case_id: c.test_case_id.clone(),
+                            testcase_id: c.testcase_id.clone(),
                             cpu_usage: ret.cpu_usage,
                             total_memory: ret.total_memory,
                             used_memory: ret.used_memory,

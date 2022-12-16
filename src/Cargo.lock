@@ -472,6 +472,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a32fd6af2b5827bce66c29053ba0e7c42b9dcab01835835058558c10851a46b"
 
 [[package]]
+name = "bdt-cli"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "anyhow",
+ "async-std",
+ "async-trait",
+ "backtrace",
+ "bdt-utils",
+ "byteorder",
+ "bytes 1.2.1",
+ "cyfs-base 0.6.6",
+ "cyfs-bdt 0.6.6",
+ "cyfs-debug 0.6.0",
+ "cyfs-util 0.6.2",
+ "futures",
+ "hex",
+ "hyper",
+ "log",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "sha2 0.8.2",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
 name = "bdt-tools"
 version = "0.1.0"
 dependencies = [
@@ -499,6 +527,33 @@ dependencies = [
 
 [[package]]
 name = "bdt-unittest"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "anyhow",
+ "async-std",
+ "async-trait",
+ "backtrace",
+ "byteorder",
+ "bytes 1.2.1",
+ "cyfs-base 0.6.6",
+ "cyfs-bdt 0.6.6",
+ "cyfs-debug 0.6.0",
+ "cyfs-util 0.6.2",
+ "futures",
+ "hex",
+ "hyper",
+ "log",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "sha2 0.8.2",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
+name = "bdt-utils"
 version = "0.1.0"
 dependencies = [
  "actix-rt",

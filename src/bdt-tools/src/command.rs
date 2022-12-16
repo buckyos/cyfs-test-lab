@@ -1730,7 +1730,7 @@ impl TryFrom<GetSystemInfoLpcCommandResp> for LpcCommand {
 pub struct UploadSystemInfoLpcCommandReq {
     pub seq: u32,
     pub agent_name: String,
-    pub test_case_id: String,
+    pub testcase_id: String,
     pub interval: u64,
 }
 impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
@@ -1754,7 +1754,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
             },
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "name lost")),
         }?;
-        let test_case_id = match json.get("testcaseId") {
+        let testcase_id = match json.get("testcaseId") {
             Some(v) => match v {
                 serde_json::Value::String(s) => Ok(s.clone()),
                 _ => Err(BuckyError::new(
@@ -1767,7 +1767,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
         Ok(Self {
             seq: value.seq(),
             agent_name,
-            test_case_id,
+            testcase_id,
             interval,
         })
     }
