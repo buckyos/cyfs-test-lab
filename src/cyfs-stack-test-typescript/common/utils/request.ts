@@ -5,7 +5,7 @@ import {
     DescContent, NamedObject,
     NamedObjectDecoder,
     NONAPILevel, NONGetObjectOutputRequest, NONObjectInfo, NONPostObjectOutputRequest, NONPostObjectOutputResponse,
-    ObjectId, RawDecode, Some,
+    ObjectId, RawDecode,
     // TextObject, TextObjectDecoder,
 } from '../../cyfs_node'
 import * as cyfs from '../../cyfs_node';

@@ -22,7 +22,7 @@ export function getKey(keyType: string, size: number = 1024) {
 export function create_people(): [cyfs.People, cyfs.PrivateKey] {
     let pk = getKey("rsa")
     let public_key = pk.public();
-    let people = cyfs.People.create(cyfs.None, [], public_key, cyfs.Some(cyfs.Area.from_str("00:00:0000:00").unwrap()));
+    let people = cyfs.People.create(undefined, [], public_key, cyfs.Area.from_str("00:00:0000:00").unwrap());
     return [people, pk];
 }
 
@@ -68,7 +68,7 @@ export function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, categor
     console.info(`unique_str: ${unique_id} -> ${unique.as_slice().toHex()}`);
 
     const device = cyfs.Device.create(
-        cyfs.Some(owner),
+        owner,
         unique,
         [],
         [],

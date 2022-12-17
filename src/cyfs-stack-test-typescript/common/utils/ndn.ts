@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from "../../cyfs_node"
 import { RandomGenerator } from "./generator";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -14,7 +14,7 @@ export class NDNTestManager {
         console.info('开始chunk 传输流程 get_data')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const file_resp_0 = (await source.trans().publish_file({
             common: {
@@ -122,7 +122,7 @@ export class NDNTestManager {
         console.info('开始chunk 传输流程 put_data')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -219,7 +219,7 @@ export class NDNTestManager {
         console.info('开始chunk 串行传输流程')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -301,7 +301,7 @@ export class NDNTestManager {
         let totalTime = 0;
         let begin = Date.now();
 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -414,7 +414,7 @@ export class NDNTestManager {
             return { err: true, log: `下载文件夹不存在` }
         }
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const dir_resp_0 = (await source.trans().publish_file({
             common: {
@@ -565,7 +565,7 @@ export class NDNTestManager {
         }
 
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const publish_file_resp = (await source.trans().publish_file({
             common: {

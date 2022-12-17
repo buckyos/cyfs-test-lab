@@ -390,7 +390,7 @@ export class GetObjectHandlerNewObject implements cyfs.RouterHandlerGetObjectRou
         console.info(`get_object: id=${param.request.object_id}`);
 
         // 创建一个新对象并应答
-        const obj = cyfs.TextObject.create(cyfs.None, 'answer', `answer a new object ${Date.now()}`, "hello!");
+        const obj = cyfs.TextObject.create(undefined, 'answer', `answer a new object ${Date.now()}`, "hello!");
         const object_id = obj.desc().calculate_id();
         const object_raw = obj.to_vec().unwrap();
 
@@ -693,6 +693,26 @@ export class PostObjectHandlerReject implements cyfs.RouterHandlerPostObjectRout
     }
 }
 
+export class PostObjectHandlerPass implements cyfs.RouterHandlerPostObjectRoutine {
+    private device: string;
+    private handlerId: string;
+    private chain: string
+    constructor(device: string, handlerId: string, chain: string) {
+        this.device = device;
+        this.handlerId = handlerId;
+        this.chain = chain;
+    }
+    async call(param: cyfs.RouterHandlerPostObjectRequest): Promise<cyfs.BuckyResult<cyfs.RouterHandlerPostObjectResult>> {
+        Emitter.emit('handlerRunning', this.device, 'PostObjectHandlerPass', this.handlerId, this.chain)
+        const codec = new cyfs.NONPostObjectOutputRequestJsonCodec();
+        console.info(codec.encode_object(param.request));
+        //console.info(`get_object: id=${param.object_id}`);
+        const result: cyfs.RouterHandlerPostObjectResult = {
+            action: cyfs.RouterHandlerAction.Pass
+        };
+        return cyfs.Ok(result)
+    }
+}
 
 export class SignObjectHandlerDefault implements cyfs.RouterHandlerSignObjectRoutine {
     private device: string;
@@ -1248,7 +1268,7 @@ export class handlerManager {
         //将添加的handler 数据保存到handlist
 
         this.handlerList.push({ deviceName, stack, chain, type, id, routine })
-        if (routine != cyfs.None) {
+        if (routine != undefined) {
             this.checkList.push({ deviceName, runSum, routineType, id })
         }
         return ret1;

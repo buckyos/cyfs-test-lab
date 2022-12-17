@@ -17,7 +17,6 @@ import {
 } from '../../cyfs_node';
 
 import { Err, Ok, BuckyResult, BuckyError, BuckyErrorCode } from '../../cyfs_node';
-import { Option } from '../../cyfs_node';
 import { ObjectId, ObjectIdDecoder } from '../../cyfs_node';
 
 import { CoreObjectType } from '../../cyfs_node';
@@ -233,7 +232,7 @@ export class TestReporterObjectIdDecoder extends NamedObjectIdDecoder<TestReport
 
 export class TestReporterObject extends NamedObject<TestReporterObjectDescContent, TestReporterObjectBodyContent>{
     
-    static build(owner: Option<ObjectId>,  reporterName: BuckyString,  system: BuckyString,module : BuckyString,create_time:BuckyString,report_path:BuckyString,report_url:BuckyString,resultList?:Array<ObjectId>): TestReporterObjectBuilder {
+    static build(owner: ObjectId|undefined,  reporterName: BuckyString,  system: BuckyString,module : BuckyString,create_time:BuckyString,report_path:BuckyString,report_url:BuckyString,resultList?:Array<ObjectId>): TestReporterObjectBuilder {
         const desc_content = new TestReporterObjectDescContent(reporterName,create_time);
         const body_content = new TestReporterObjectBodyContent(system,module,create_time,report_path,report_url);
         return new TestReporterObjectBuilder(desc_content, body_content);
@@ -249,7 +248,7 @@ export class TestReporterObject extends NamedObject<TestReporterObjectDescConten
      * @param report_url_str 
      * @param resultList 
      */
-    static create(owner: Option<ObjectId>,  reporterName_str: string,  system_str: string,module_str : string,create_time_str:string,report_path_str:string,report_url_str:string,resultList?:Array<ObjectId>): TestReporterObject {
+    static create(owner: ObjectId|undefined,  reporterName_str: string,  system_str: string,module_str : string,create_time_str:string,report_path_str:string,report_url_str:string,resultList?:Array<ObjectId>): TestReporterObject {
         
         let reporterName = new BuckyString(reporterName_str);
         let system= new BuckyString(system_str);
@@ -266,10 +265,10 @@ export class TestReporterObject extends NamedObject<TestReporterObjectDescConten
             objectId : this.desc().calculate_id().to_base_58(),
             reporterName:this.desc().content().reporterName.value(),
             create_time : this.desc().content().create_time.value(),
-            system: this.body().unwrap().content().system.value(),
-            module: this.body().unwrap().content().module.value(),
-            report_path: this.body().unwrap().content().report_path.value(),
-            report_url: this.body().unwrap().content().report_url.value(),
+            system: this.body()?.content().system.value(),
+            module: this.body()?.content().module.value(),
+            report_path: this.body()?.content().report_path.value(),
+            report_url: this.body()?.content().report_url.value(),
         }
     }
 

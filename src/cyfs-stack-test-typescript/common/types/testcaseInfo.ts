@@ -17,7 +17,6 @@ import {
 } from '../../cyfs_node';
 
 import { Err, Ok, BuckyResult, BuckyError, BuckyErrorCode } from '../../cyfs_node';
-import { Option } from '../../cyfs_node';
 import { ObjectId, ObjectIdDecoder } from '../../cyfs_node';
 import * as cyfs from  '../../cyfs_node';
 import { CoreObjectType } from '../../cyfs_node';
@@ -362,13 +361,13 @@ export class TestcaseObject extends NamedObject<TestcaseObjectDescContent, Testc
      * @param expect_result 预期结果
      * @param input_data 输入数据
      */
-    static build(owner: Option<ObjectId>, id: BuckyString, testcaseId: BuckyString, system: BuckyString,module : BuckyString,type: BuckyString,priority: BuckyString,level: BuckyString,author: BuckyString,create_time:BuckyString,update_time:BuckyString,testcase_name: BuckyString,precondition: BuckyString,postcondition: BuckyString,expect_result: BuckyString,input_data: BuckyString): TestcaseObjectBuilder {
+    static build(owner: ObjectId|undefined, id: BuckyString, testcaseId: BuckyString, system: BuckyString,module : BuckyString,type: BuckyString,priority: BuckyString,level: BuckyString,author: BuckyString,create_time:BuckyString,update_time:BuckyString,testcase_name: BuckyString,precondition: BuckyString,postcondition: BuckyString,expect_result: BuckyString,input_data: BuckyString): TestcaseObjectBuilder {
         const desc_content = new TestcaseObjectDescContent(id, testcaseId);
         const body_content = new TestcaseObjectBodyContent(system,module,type,priority,level,author,create_time,update_time,testcase_name,precondition,postcondition,expect_result,input_data);
         return new TestcaseObjectBuilder(desc_content, body_content);
     }
 
-    static create(owner: Option<ObjectId>,  id_str: string, testcaseId_str: string, system_str: string,module_str : string,type_str: string,priority_str: string,level_str: string,author_str: string,create_time_str:Number,update_time_str:Number,testcase_name_str: string,precondition_str: string,postcondition_str: string,expect_result_str: string,input_data_str: string): TestcaseObject {
+    static create(owner: ObjectId|undefined,  id_str: string, testcaseId_str: string, system_str: string,module_str : string,type_str: string,priority_str: string,level_str: string,author_str: string,create_time_str:Number,update_time_str:Number,testcase_name_str: string,precondition_str: string,postcondition_str: string,expect_result_str: string,input_data_str: string): TestcaseObject {
         
         let id = new BuckyString(id_str);
         let testcaseId = new BuckyString(testcaseId_str);
@@ -392,19 +391,19 @@ export class TestcaseObject extends NamedObject<TestcaseObjectDescContent, Testc
         return {
             _id:this.desc().calculate_id().to_base_58(),
             testcaseId : this.desc().content().testcaseId.value(),
-            system: this.body().unwrap().content().system.value(),
-            module: this.body().unwrap().content().module.value(),
-            type: this.body().unwrap().content().type.value(),
-            priority : this.body().unwrap().content().priority.value(),
-            level: this.body().unwrap().content().level.value(),
-            author: this.body().unwrap().content().author.value(),
-            create_time: this.body().unwrap().content().create_time.value(),
-            update_time : this.body().unwrap().content().update_time.value(),
-            testcase_name: this.body().unwrap().content().testcase_name.value(),
-            precondition: this.body().unwrap().content().precondition.value(),
-            postcondition: this.body().unwrap().content().postcondition.value(),
-            expect_result: this.body().unwrap().content().expect_result.value(),
-            input_data: this.body().unwrap().content().input_data.value(),
+            system: this.body()?.content().system.value(),
+            module: this.body()?.content().module.value(),
+            type: this.body()?.content().type.value(),
+            priority : this.body()?.content().priority.value(),
+            level: this.body()?.content().level.value(),
+            author: this.body()?.content().author.value(),
+            create_time: this.body()?.content().create_time.value(),
+            update_time : this.body()?.content().update_time.value(),
+            testcase_name: this.body()?.content().testcase_name.value(),
+            precondition: this.body()?.content().precondition.value(),
+            postcondition: this.body()?.content().postcondition.value(),
+            expect_result: this.body()?.content().expect_result.value(),
+            input_data: this.body()?.content().input_data.value(),
         }
     }
 
