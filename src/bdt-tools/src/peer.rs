@@ -212,7 +212,7 @@ impl Peer {
                 }
                 Ok(_) => {
                     let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
-                    let mut local = peer.get_stack(&peer_name).unwrap().local();
+                    let mut local = peer.get_stack(&peer_name).unwrap().sn_client().ping().default_local();
                     log::info!("on create succ, local: {}", local.desc().device_id());
                     // 如果配置SN 等待sn上线
                     let mut result = 0;
@@ -222,8 +222,8 @@ impl Peer {
                             Duration::from_secs(20),
                             peer.get_stack(&peer_name)
                                 .unwrap()
-                                .net_manager()
-                                .listener()
+                                .sn_client()
+                                .ping()
                                 .wait_online(),
                         )
                         .await
@@ -307,8 +307,8 @@ impl Peer {
                     };
                     let ep_resp = local.mut_connect_info().mut_endpoints().clone();
                     let mut online_sn = Vec::new();
-                    for sn in peer.get_stack(&peer_name).unwrap().sn_client().sn_list() {
-                        log::info!("lcoal sn list:{}", sn.object_id().to_string());
+                    for sn in peer.get_stack(&peer_name).unwrap().device_cache().sn_list() {
+                        log::info!("local sn list:{}", sn.object_id().to_string());
                         online_sn.push(sn.object_id().to_string());
                     }
 
@@ -374,7 +374,7 @@ impl Peer {
                     };
                     let param = BuildTunnelParams {
                         remote_const: c.remote_desc.desc().clone(),
-                        remote_sn,
+                        remote_sn: Some(remote_sn),
                         remote_desc: if wan_addr { Some(c.remote_desc) } else { None },
                     };
                     // 构造FastQA 请求数据
@@ -541,7 +541,7 @@ impl Peer {
                         };
                         let param = BuildTunnelParams {
                             remote_const: remote_desc.desc().clone(),
-                            remote_sn,
+                            remote_sn: Some(remote_sn),
                             remote_desc: if wan_addr {
                                 Some(remote_desc.clone())
                             } else {
@@ -812,7 +812,7 @@ impl Peer {
                     };
                     let param = BuildTunnelParams {
                         remote_const: c.remote.desc().clone(),
-                        remote_sn,
+                        remote_sn: Some(remote_sn),
                         remote_desc: if wan_addr { Some(c.remote) } else { None },
                     };
                     //(3) 发起连接
