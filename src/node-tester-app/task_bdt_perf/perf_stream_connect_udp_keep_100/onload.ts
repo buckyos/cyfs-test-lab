@@ -1,9 +1,9 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator } from '../../base';
-import { TestRunner } from '../../taskTools/cyfs_bdt/testRunner';
-import { Testcase, Task, ActionType, Resp_ep_type } from "../../taskTools/cyfs_bdt/type"
-import { labAgent, BdtPeerClientConfig, LabSnList, AgentList_LAN_WAN } from "../../taskTools/cyfs_bdt/labAgent"
-import * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import { AgentManager } from '../../taskTools/cyfs_bdt/agentManager'
+import { TestRunner } from '../../taskTools/cyfs_bdt_cli/testRunner';
+import { Testcase, Task, ActionType, Resp_ep_type } from "../../taskTools/cyfs_bdt_cli/type"
+import { labAgent, BdtPeerClientConfig, LabSnList, AgentList_LAN_WAN } from "../../taskTools/cyfs_bdt_cli/labAgent"
+import * as BDTAction from "../../taskTools/cyfs_bdt_cli/bdtAction"
+import { AgentManager } from '../../taskTools/cyfs_bdt_cli/agentManager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -52,12 +52,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 20000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 10; i++) {
         let info = await testRunner.createPrevTask({
-            LN: `${LN}$1`,
-            RN: `${RN}$1`,
+            LN: `${LN}$1$0`,
+            RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
         })
@@ -65,8 +65,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                 type: ActionType.connect,
-                LN: `${LN}$1`,
-                RN: `${RN}$1`,
+                LN: `${LN}$1$0`,
+                RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
                     timeout: 20 * 1000,
@@ -76,8 +76,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
             type: ActionType.sleep,
-            LN: `${LN}$1`,
-            RN: `${RN}$1`,
+            LN: `${LN}$1$0`,
+            RN: `${RN}$1$0`,
             config: {
                 timeout: 6 * 60 * 1000,
             },

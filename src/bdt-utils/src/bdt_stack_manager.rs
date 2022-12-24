@@ -83,7 +83,7 @@ impl BDTStackManager {
         let acceptor = stack.stream_manager().listen(0).unwrap();
         match future::timeout(
             Duration::from_secs(20),
-            stack.net_manager().listener().wait_online(),
+            stack.sn_client().ping().wait_online(),
         )
         .await
         {
@@ -168,7 +168,7 @@ impl BDTStackManager {
         let acceptor = stack.stream_manager().listen(0).unwrap();
         match future::timeout(
             Duration::from_secs(20),
-            stack.net_manager().listener().wait_online(),
+            stack.sn_client().ping().wait_online(),
         )
         .await
         {
@@ -230,12 +230,12 @@ impl BDTStackManager {
             let msg = format!("bdt stack already exists: {}", &peer_name,);
             log::error!("{:?}", msg.clone());
             let client = self.BDTClient_map.get(&req.peer_name.clone()).unwrap();
-            let mut local = client.get_stack().local();
-            let online_sn_info = client.get_stack().sn_client().sn_list();
-            let mut endpoints = local.mut_connect_info().mut_endpoints();
-            let online_sn = deviceid_list_to_string(&online_sn_info);
-            let ep_info = endpoint_list_to_string(&endpoints);
-            let ep_resp = endpoint_list_to_string(&endpoints);
+            let mut local = client.get_stack().sn_client().ping().default_local();
+            let online_sn_info = client.get_stack().sn_client().ping().sn_list().clone();
+            let mut endpoints =client.get_stack().net_manager().listener().endpoints();
+            let online_sn = device_list_to_string(&online_sn_info);
+            let ep_info = endpoint_tree_to_string(&endpoints);
+            let ep_resp = endpoint_tree_to_string(&endpoints);
             return Ok((
                 CreateStackResp {
                     result: 0,
@@ -288,8 +288,8 @@ impl BDTStackManager {
         {
             //(3)解析BDT Stack 启动结果
             Ok((stack, online_time)) => {
-                let mut local = stack.local();
-                let online_sn = stack.sn_client().sn_list();
+                let mut local = stack.sn_client().ping().default_local();
+                let online_sn = stack.sn_client().ping().sn_list().clone();
                 let ep_info = local.mut_connect_info().mut_endpoints().clone();
                 let _ = match req.ep_type.clone() {
                     Some(ep_type_str) => {
@@ -329,7 +329,7 @@ impl BDTStackManager {
                     }
                 };
                 let ep_resp = local.mut_connect_info().mut_endpoints();
-                let online_sn = deviceid_list_to_string(&online_sn);
+                let online_sn = device_list_to_string(&online_sn);
                 let ep_info = endpoint_list_to_string(&ep_info);
                 let ep_resp = endpoint_list_to_string(&ep_resp);
                 (

@@ -167,9 +167,10 @@ impl BDTClient {
                                             ) - begin_time;
                                             let conn = bdt_client.add_stream(pre_stream.stream);
                                             log::info!(
-                                                "confirm succ, name={},answer hash = {}",
+                                                "### confirm succ, name={},answer hash = {},confirm_time = &{}&",
                                                 conn.get_name(),
-                                                send_hash.clone()
+                                                send_hash.clone(),
+                                                confirm_time
                                             );
                                             ConfirmStreamEvent {
                                                 peer_name: peer_name.clone(),
@@ -267,7 +268,7 @@ impl BDTClient {
         // （1）解析请求参数
         let param = BuildTunnelParams {
             remote_const: remote_desc.desc().clone(),
-            remote_sn,
+            remote_sn:Some(remote_sn),
             remote_desc: Some(remote_desc),
         };
         // 构造FastQA 请求数据
@@ -294,7 +295,7 @@ impl BDTClient {
                     system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                 let name = format!("{}", stream.clone());
                 log::info!(
-                    "connect remote success, time = {},name = {}",
+                    "### connect remote success, time = &{}&,name = {}",
                     connect_time,
                     name.clone()
                 );

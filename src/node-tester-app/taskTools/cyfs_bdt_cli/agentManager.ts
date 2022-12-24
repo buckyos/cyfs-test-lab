@@ -164,6 +164,7 @@ export class AgentManager {
             let list = []
             for(let agent of this.agentMap.values()){
                 list.push(new Promise(async(V)=>{
+                    //let result = await agent.
                     await agent.stopService();
                 }))  
             }

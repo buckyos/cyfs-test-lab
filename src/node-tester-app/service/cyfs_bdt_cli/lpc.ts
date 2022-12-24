@@ -1,6 +1,7 @@
 import { ErrorCode, Logger } from '../../base';
 import * as net from 'net';
 import { EventEmitter } from 'events';
+import { LpcActionApi } from './action_api';
 
 export type BdtLpcCommand = {
     seq?: number;
@@ -90,7 +91,8 @@ export class BdtLpc extends EventEmitter {
         }
         return await new Promise<{ err: ErrorCode, resp?: BdtLpcCommand }>((v) => {
             let onFunc = (lpc: BdtLpc, resp: BdtLpcCommand) => {
-                if (resp.json.name !== "ping" && resp.seq! === command.seq!) {
+                let json : LpcActionApi = resp.json
+                if (!json.PingResp && resp.seq! === command.seq!) {
                     lpc.removeListener('command', onFunc);
                     v({ err: ErrorCode.succ, resp })
                 }

@@ -307,9 +307,15 @@ impl Peer {
                     };
                     let ep_resp = local.mut_connect_info().mut_endpoints().clone();
                     let mut online_sn = Vec::new();
+<<<<<<< 21c53462ff7e7f7ec33f9d55cdd32897f29ae3ee
                     for sn in peer.get_stack(&peer_name).unwrap().device_cache().sn_list() {
                         log::info!("local sn list:{}", sn.object_id().to_string());
                         online_sn.push(sn.object_id().to_string());
+=======
+                    for sn in peer.get_stack(&peer_name).unwrap().sn_client().ping().sn_list().clone() {
+                        log::info!("lcoal sn list:{}", sn.desc().object_id().to_string());
+                        online_sn.push(sn.desc().object_id().to_string());
+>>>>>>> 35e44e6885154fd4d93c0b738c49ac32f2a6dde3
                     }
 
                     CreateLpcCommandResp {
@@ -374,7 +380,11 @@ impl Peer {
                     };
                     let param = BuildTunnelParams {
                         remote_const: c.remote_desc.desc().clone(),
+<<<<<<< 21c53462ff7e7f7ec33f9d55cdd32897f29ae3ee
                         remote_sn: Some(remote_sn),
+=======
+                        remote_sn:Some(remote_sn),
+>>>>>>> 35e44e6885154fd4d93c0b738c49ac32f2a6dde3
                         remote_desc: if wan_addr { Some(c.remote_desc) } else { None },
                     };
                     // 构造FastQA 请求数据
@@ -541,7 +551,11 @@ impl Peer {
                         };
                         let param = BuildTunnelParams {
                             remote_const: remote_desc.desc().clone(),
+<<<<<<< 21c53462ff7e7f7ec33f9d55cdd32897f29ae3ee
                             remote_sn: Some(remote_sn),
+=======
+                            remote_sn:Some(remote_sn),
+>>>>>>> 35e44e6885154fd4d93c0b738c49ac32f2a6dde3
                             remote_desc: if wan_addr {
                                 Some(remote_desc.clone())
                             } else {
@@ -812,7 +826,11 @@ impl Peer {
                     };
                     let param = BuildTunnelParams {
                         remote_const: c.remote.desc().clone(),
+<<<<<<< 21c53462ff7e7f7ec33f9d55cdd32897f29ae3ee
                         remote_sn: Some(remote_sn),
+=======
+                        remote_sn:Some(remote_sn),
+>>>>>>> 35e44e6885154fd4d93c0b738c49ac32f2a6dde3
                         remote_desc: if wan_addr { Some(c.remote) } else { None },
                     };
                     //(3) 发起连接

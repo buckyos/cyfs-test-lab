@@ -72,7 +72,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -127,7 +127,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -179,7 +179,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -233,7 +233,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -289,7 +289,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -339,7 +339,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -391,7 +391,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -444,7 +444,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -498,7 +498,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                     1000
@@ -559,7 +559,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                             1000
@@ -635,7 +635,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                             1000
@@ -717,7 +717,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                             1000
@@ -798,7 +798,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                             1000
@@ -879,7 +879,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {},err= {}", device.desc().device_id(),err);
                             1000

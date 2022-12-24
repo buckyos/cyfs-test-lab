@@ -82,27 +82,6 @@ export type ConnectResp = {
     total_time: number,
 }
 
-
-export type ConnectMutReq = {
-    peer_name: string,
-    //LpcCommand的json里面
-    question: boolean,
-    //BuildTunnelParams 配置SN
-    remote_sn: Array<string>,
-    //标识链接过程中需要通过sn
-    known_eps: boolean,
-    //是否首次接收数据
-    accept_answer: boolean,
-    //循环连接次数
-    conn_sum: number,
-}
-
-
-export type ConnectMutResp = {
-    peer_name: string,
-    list: Array<ConnectResp>,
-}
-
 export type AutoAcceptReq = {
     peer_name: string,
     answer_size: number,
@@ -213,7 +192,27 @@ export type UploadSystemInfoResp = {
     result: number,
     msg: string,
 }
+export type ConnectMutReq = {
+    peer_name: string,
+    //LpcCommand的json里面
+    question_size: number,
+    //BuildTunnelParams 配置SN
+    remote_sn: Array<string>,
+    //标识链接过程中需要通过sn
+    known_eps: boolean,
+    driect : boolean,
+    //是否首次接收数据
+    accept_answer: boolean,
+    //循环连接次数
+    conn_sum: number,
+}
 
+export type  ConnectMutResp = {
+    peer_name: String,
+    result: number,
+    msg: string,
+    list: Array<number>,
+}
 
 export interface LpcActionApi {
     client_name?:string,

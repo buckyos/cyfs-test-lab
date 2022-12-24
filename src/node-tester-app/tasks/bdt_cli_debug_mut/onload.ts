@@ -20,14 +20,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_udp_keep_5000"
+    let testcaseName = "perf_stream_connect_tcp_keep_100"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用UDP连接 
+        + LN RN 只使用TCP连接 
         ## 操作步骤
-        + (1) LN RN 之间串行建立5000个连接
+        + (1) LN RN 之间串行建立100个连接
         + (2) 维持连接2 min
         ## 性能监控
         + LN/RN 内存、CPU、网络带宽  `,
@@ -40,12 +40,15 @@ export async function TaskMain(_interface: TaskClientInterface) {
         eps: {
             ipv4: {
                 udp: true,
+                tcp: true,
             },
             ipv6: {
                 udp: true,
+                tcp: true,
             }
         },
         logType: "info",
+        udp_sn_only: true,
         SN: LabSnList,
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
     }
@@ -61,23 +64,24 @@ export async function TaskMain(_interface: TaskClientInterface) {
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 500; x++) {
+        for (let x = 0; x < 10; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectMutAction({
                 type: ActionType.connect,
                 LN: `${LN}$1$0`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
-                    timeout: 20 * 1000,
+                    timeout: 1000 * 1000,
                 },
+                fileNum : 100,
                 expect: { err: 0 },
             }))
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
             type: ActionType.sleep,
-            LN: `${LN}$1$0`,
-            RN: `${RN}$1$0`,
+            LN: `${LN}$1`,
+            RN: `${RN}$1`,
             config: {
                 timeout: 6 * 60 * 1000,
             },

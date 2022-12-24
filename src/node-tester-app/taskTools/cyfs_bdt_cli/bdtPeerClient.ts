@@ -67,6 +67,7 @@ export class BdtPeerClient extends EventEmitter {
                 RUST_LOG: this.cache_peer_info!.RUST_LOG!,
                 client_name : this.client_name,
                 port : this.port,
+                kill_server : true,
             }, this.m_agentid!, 10 * 1000);
             this.logger.debug(`callApi startPeerClient BuckyResult result = ${start_tool.value.result},msg = ${start_tool.value.msg}`)
             this.state = 1;
@@ -170,31 +171,26 @@ export class BdtPeerClient extends EventEmitter {
         if (this.state == -2) {
             return ErrorCode.succ;
         }
-        if (this.m_acceptCookie) {
-            await this.m_interface.detachEvent('accept', this.m_acceptCookie!, this.m_timeout);
-            delete this.m_acceptCookie;
-        }
         if (this.m_unliveCookie) {
             await this.m_interface.detachEvent('unlive', this.m_unliveCookie!, this.m_timeout);
             delete this.m_unliveCookie;
         }
-        let param: any = {
-            client_name: this.client_name,
-            unique_id: this.client_name,
-        };
-        // send exit bdt client will destory,not resp
+        for(let bdt_stack of this.stack_list.values()){
+            bdt_stack.destory();
+        }
+     
+        let action : api.LpcActionApi = {
+            Exit :{    
+            }
+        }
         this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
             client_name: this.client_name,
-            unique_id: this.client_name,
-            name: 'exit',
+            action,
         }, this.m_agentid, 0);
         await sleep(2000)
         this.state = state
         return BDTERROR.success;
     }
-
-    
-
     async uploadSystemInfo(testcase_id: string, interval: number): Promise<{ err: ErrorCode }> {
         return new Promise(async (V) => {
             setTimeout(async () => {

@@ -131,6 +131,9 @@ impl BDTCli {
                         LpcActionApi::ConnectReq(req) => {
                             let _ = cli.on_connect(lpc, seq, buffer, req).await;
                         }
+                        LpcActionApi::ConnectMutReq(req) => {
+                            let _ = cli.on_connect_mut(lpc, seq, buffer, req).await;
+                        }
                         LpcActionApi::SendStreamReq(req) => {
                             let _ = cli.on_send_stream(lpc, seq, buffer, req).await;
                         }
@@ -139,6 +142,7 @@ impl BDTCli {
                         }
                         _ => {
                             log::error!("recv unkonwn command");
+                            let _ = cli.on_resp_unknown_command(lpc, seq).await;
                         }
                     };
                 }
@@ -362,13 +366,68 @@ impl BDTCli {
             ))
             .await;
     }
-    pub async fn on_connect_mut(
-        &mut self,
-        lpc: Lpc,
-        seq: u32,
-        buffer: &[u8],
-        req: &CreateStackReq,
-    ) {
+    pub async fn on_connect_mut(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &ConnectMutReq) {
+        log::info!("on_connect_mut, req={:?}", &req);
+        let (remote, _other) = Device::raw_decode(buffer).unwrap();
+        let (remote_desc, _other) = Device::raw_decode(buffer).unwrap();
+        let conn_req: ConnectReq = ConnectReq {
+            peer_name: req.peer_name.clone(),
+            question_size: req.question_size,
+            remote_sn: req.remote_sn.clone(),
+            known_eps: req.known_eps,
+            driect: req.driect,
+            accept_answer: req.accept_answer,
+        };
+        let mut conn_sum = req.conn_sum;
+        let mut cli = self.clone();
+        task::spawn(async move {
+            // 原子引用计数 统计连接时间
+            let mut list: Arc<Mutex<Vec<u64>>> = Arc::new(Mutex::new(Vec::new()));
+            // 创建子线程池
+            let mut handler_list = Vec::new();
+            while conn_sum > 0 {
+                conn_sum = conn_sum - 1;
+                let conn_req = conn_req.clone();
+                let cli = cli.clone();
+                let remote_desc = remote_desc.clone();
+                let mut lpc = lpc.clone();
+                let mut list_now = Arc::clone(&list);
+                // 创建连接子线程
+                handler_list.push(task::spawn(async move {
+                    let conn_req = conn_req;
+                    let peer_name = conn_req.peer_name.clone();
+                    let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+                    let connect_time = match bdt_client.connect(&remote_desc, &conn_req).await {
+                        Ok(resp) => resp.connect_time,
+                        Err(err) => {
+                            // 连接时间为0 的标记为连接失败
+                            log::error!("connect failed err = {}", err);
+                            0
+                        }
+                    };
+                    let mut list_new = list_now.lock().await;
+                    (*list_new).push(connect_time);
+                }));
+            }
+            // 等待子线程全部完成
+            for handler in handler_list {
+                let _ = handler.await;
+            }
+            let resp : ConnectMutResp = ConnectMutResp{
+                peer_name : conn_req.peer_name,
+                result : 0,
+                msg : "connect finished".to_string(),
+                list : list.lock().await.clone()
+            };
+            let mut lpc = lpc;
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::ConnectMutResp(resp),
+                ))
+                .await;
+        });
     }
     pub async fn on_resp_error_actiom(
         &mut self,
@@ -386,6 +445,20 @@ impl BDTCli {
             ))
             .await;
     }
+    pub async fn on_resp_unknown_command(&mut self, lpc: Lpc, seq: u32){
+        let resp = Unkonwn {
+            result: 1,
+            msg: "recv unknown command".to_string(),
+        };
+        let mut lpc = lpc;
+        let _ = lpc
+            .send_command(LpcCommand::new(
+                seq,
+                Vec::new(),
+                LpcActionApi::Unkonwn(resp),
+            ))
+            .await;
+    } 
 }
 
 // pub trait Copy: Clone { }

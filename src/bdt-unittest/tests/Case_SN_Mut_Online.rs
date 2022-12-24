@@ -110,7 +110,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                             1000
@@ -123,9 +123,9 @@ mod tests {
                         }
                     };
                     assert_eq!(result,0,"wait sn online timeout");
-                    for sn in stack.sn_client().sn_list(){
-                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.object_id().to_string());
-                        assert_eq!(sn.object_id().to_string(),SN1.to_string(),"select sn online incorrect");
+                    for sn in stack.sn_client().ping().sn_list(){
+                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.desc().object_id().to_string());
+                        assert_eq!(sn.desc().object_id().to_string(),SN1.to_string(),"select sn online incorrect");
                     }
                 }
             }
@@ -202,7 +202,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                             1000
@@ -215,9 +215,9 @@ mod tests {
                         }
                     };
                     assert_eq!(result,0,"wait sn online timeout");
-                    for sn in stack.sn_client().sn_list(){
-                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.object_id().to_string());
-                        assert_eq!(sn.object_id().to_string(),SN2.to_string(),"select sn online incorrect");
+                    for sn in stack.sn_client().ping().sn_list(){
+                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.desc().object_id().to_string());
+                        assert_eq!(sn.desc().object_id().to_string(),SN2.to_string(),"select sn online incorrect");
                     }
                 }
             }
@@ -294,7 +294,7 @@ mod tests {
                     }
                     let stack = stack.unwrap();   
                     let acceptor = stack.stream_manager().listen(0).unwrap();
-                    let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                    let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                         Err(err) => {
                             log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                             1000
@@ -307,9 +307,9 @@ mod tests {
                         }
                     };
                     assert_eq!(result,0,"wait sn online timeout");
-                    for sn in stack.sn_client().sn_list(){
-                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.object_id().to_string());
-                        assert_eq!(sn.object_id().to_string(),SN3.to_string(),"select sn online incorrect");
+                    for sn in stack.sn_client().ping().sn_list(){
+                        log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.desc().object_id().to_string());
+                        assert_eq!(sn.desc().object_id().to_string(),SN3.to_string(),"select sn online incorrect");
                     }
                 }
             }
@@ -377,7 +377,7 @@ mod tests {
                 }
                 let stack = stack.unwrap();   
                 let acceptor = stack.stream_manager().listen(0).unwrap();
-                let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+                let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                     Err(err) => {
                         log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                         1000
@@ -390,8 +390,8 @@ mod tests {
                     }
                 };
                 assert_eq!(result,0,"wait sn online timeout");
-                for sn in stack.sn_client().sn_list(){
-                    log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.object_id().to_string());
+                for sn in stack.sn_client().ping().sn_list(){
+                    log::info!("index {} lcoal area {} sn list:{}",run_sum,str_area,sn.desc().object_id().to_string());
                     
                 }
                 run_sum = run_sum + 1;
@@ -470,7 +470,7 @@ mod tests {
                 };
                 let param = BuildTunnelParams {
                     remote_const: device2.desc().clone(),
-                    remote_sn,
+                    remote_sn:Some(remote_sn),
                     remote_desc: if wan_addr {
                         Some(device2.clone())
                     } else {

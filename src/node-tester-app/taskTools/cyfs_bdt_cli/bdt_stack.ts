@@ -80,6 +80,18 @@ export class BdtStack extends EventEmitter {
         }
         return { err: BDTERROR.RNCheckConnFailed }
     }
+    async destory(): Promise<ErrorCode> {
+
+        if (this.m_acceptCookie) {
+            await this.m_interface.detachEvent('accept', this.m_acceptCookie!, this.m_timeout);
+            delete this.m_acceptCookie;
+        }
+        if (this.m_unliveCookie) {
+            await this.m_interface.detachEvent('unlive', this.m_unliveCookie!, this.m_timeout);
+            delete this.m_unliveCookie;
+        }
+        return BDTERROR.success;
+    }
     // BDT 相关操作
     async connect(remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectResp,conn?:BdtConnection}> {
         
@@ -127,6 +139,37 @@ export class BdtStack extends EventEmitter {
         });
         this.m_conns.set(result.ConnectResp.stream_name, conn);
         return {resp:result.ConnectResp,conn};
+    }
+
+    async connect_mut(conn_sum:number,remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectMutResp}> {
+        
+        let action :api.LpcActionApi = {
+            ConnectMutReq :{
+                conn_sum,
+                peer_name: this.peer_name,
+                //LpcCommand的json里面
+                question_size,
+                remote_sn: [],
+                //标识链接过程中需要通过sn
+                known_eps: known_eps ? true : false,
+                // 是否直连
+                driect: true,
+                //是否首次接收数据
+                accept_answer: accept_answer ? true : false, 
+            }
+        }
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', remote, {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.debug(`callApi connect BuckyResult result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        if (!result.ConnectMutResp || result.ConnectMutResp.result) {
+            return {resp:info.value};
+        }
+        this.logger.info(`${this.tags} connect success ,stream name = ${JSON.stringify(result.ConnectMutResp)}`)
+    
+        return {resp:result.ConnectMutResp,};
     }
     async autoAccept(answer_size:number): Promise<api.ConfirmStreamEvent> {
         let action : api.LpcActionApi = {

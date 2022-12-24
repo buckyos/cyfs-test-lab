@@ -12,7 +12,7 @@ pub struct Area {
 ```
   1. 就近规则优先级：|local_country - SN_country| > |local_carrier - SN_carrier| > |local_city - SN_city| 优先现在最近的国家，然后选择最近的州/省，然后是城市
 
-+ (2) 客户端Device对象中包含多个SN，只会选择最近的一个SN上线
++ (2) 客户端Device对象中包含多个SN，只会选择最近的一个SN上线,sh
 
 + (3) 客户端 LN 向 客户端RN 发起连接请求，BuildTunnelParams 参数中的SN使用客户端RN Device中的SN
 
@@ -25,9 +25,9 @@ pub struct Area {
 # 多SN用例设计
 
 ## 测试SN设计
-+ (1) SN1中国 : Area[0,0,0,0] 
-+ (2) SN2美国 : Area[1,4,2,2]
-+ (3) SN3美国 ：Area[1,8,5,2]
++ (1) SN1美国  : Area[0,0,0,0] 
++ (2) SN2美国 : Area[226,0,0,1]
++ (3) SN3中国 ：Area[44,0,0,1]
 
 ## SN 上线
 
@@ -35,7 +35,7 @@ pub struct Area {
 
 + SN_Mut_Online_SelectArea_0001
 ```
-测试用例：中国地域选择中国SN上线
+测试用例：默认地区SN上线
 测试数据：
 (1) LN 设置Device 对象Area [0,3,3,3]
 (2) LN 设置SN List [SN1,SN2,SN3]
@@ -48,7 +48,7 @@ pub struct Area {
 ```
 测试用例：美国地域选择美国最近SN上线
 测试数据：
-(1) LN 设置Device 对象Area [1,4,3,3]
+(1) LN 设置Device 对象Area [226,4,3,3]
 (2) LN 设置SN List [SN1,SN2,SN3]
 (3) LN 启动BDT协议栈
 预期结果：
@@ -57,108 +57,15 @@ pub struct Area {
 
 + SN_Mut_Online_SelectArea_0003
 ```
-测试用例：美国地域选择美国最近州SN上线
+测试用例：中国地域选择中国地域SN上线
 测试数据：
-(1) LN 设置Device 对象Area [1,8,3,3]
+(1) LN 设置Device 对象Area [44,8,3,3]
 (2) LN 设置SN List [SN1,SN2,SN3]
 (3) LN 启动BDT协议栈
 预期结果：
 (1) LN 在SN3 上线
 ```
 
-+ SN_Mut_Online_SelectArea_0004
-```
-测试用例：美国地域选择美国最近州SN上线
-测试数据：
-(1) LN 设置Device 对象Area [1,9,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN3 上线
-```
-
-+ SN_Mut_Online_SelectArea_0005
-```
-测试用例：美国地域选择美国最近州SN上线
-测试数据：
-(1) LN 设置Device 对象Area [1,7,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN3 上线
-```
-
-+ SN_Mut_Online_SelectArea_0006
-```
-测试用例：美国地域选择美国最近州SN上线
-测试数据：
-(1) LN 设置Device 对象Area [1,3,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN2 上线
-```
-
-+ SN_Mut_Online_SelectArea_0007
-```
-测试用例：美国地域选择美国最近州SN上线
-测试数据：
-(1) LN 设置Device 对象Area [1,5,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN2 上线
-```
-
-+ SN_Mut_Online_SelectArea_0008
-```
-测试用例：美国地域选择美国最近州SN上线
-测试数据：
-(1) LN 设置Device 对象Area [1,6,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN2/SN3 上线
-```
-
-### SN 上线失败自动切换
-
-+ SN_Mut_Online_check_0001
-```
-测试用例：客户端设置地域距离中国近，连接不上中国SN，自动切换美国SN
-场景: 美国用户错误使用了国内SN
-测试数据：
-(0) SN1 拦截 LN 请求
-(1) LN 设置Device 对象Area [86,3,3,3]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1) LN 在SN2 上线
-```
-
-+ SN_Mut_Online_check_0002
-```
-测试用例：客户端设置地域距离美国SN2近，连接不上SN2，自动切换美国SN3
-场景: 同一国家不同运营商可能UDP丢包，SN不能上线
-测试数据：
-(1) LN 设置Device 对象Area [1,4,2,2]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1)LN 在SN3 上线
-```
-
-+ SN_Mut_Online_check_0002
-```
-测试用例：客户端设置地域距离美国SN2近，连接不上SN2、SN3，自动切换中国SN1
-场景: 中国用户错误设置了美国SN，由于墙UDP不能使用
-测试数据：
-(1) LN 设置Device 对象Area [1,4,2,2]
-(2) LN 设置SN List [SN1,SN2,SN3]
-(3) LN 启动BDT协议栈
-预期结果：
-(1)LN 在SN1 上线
-```
 
 ## SNCall 流程
 

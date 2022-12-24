@@ -6,9 +6,9 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
     _interface.getLogger().info(`=========start service namespace=${JSON.stringify(_interface.getNamespace())}`);
     let manager: BdtClientManager = BdtClientManager.createInstance(_interface);
     await manager.init();
-    _interface.registerApi('startPeerClient', async (from: Namespace, bytes: Buffer, param: {RUST_LOG :string,client_name:string,port:number}): Promise<any> => {
+    _interface.registerApi('startPeerClient', async (from: Namespace, bytes: Buffer, param: {RUST_LOG :string,client_name:string,port:number,kill_server:boolean}): Promise<any> => {
         _interface.getLogger().debug(`remote call startPeer`);
-        let startInfo = await manager.start_peer(param.RUST_LOG,param.client_name,param.port);
+        let startInfo = await manager.start_peer(param.RUST_LOG,param.client_name,param.port,param.kill_server);
         if (startInfo.err) {
             return { err: startInfo.err, bytes: Buffer.from(''), value: {} };
         }

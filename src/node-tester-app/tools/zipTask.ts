@@ -51,7 +51,7 @@ async function copyTools(source: string, target: string) {
 async function startZIP() {
     var currPath = __dirname;//文件的绝对路径 当前当前js所在的绝对路径
     var tasksDir = path.join(currPath, "../../node_tester_app/tasks");
-    var rustbdt2 = path.join(currPath, '../../node_tester_app/taskTools/cyfs_bdt')
+    var rustbdt2 = path.join(currPath, '../../node_tester_app/taskTools/cyfs_bdt_cli')
     var rustbdt2ToolFiles = await fs.readdirSync(rustbdt2)
     var caseList = await fs.readdirSync(tasksDir)
     for (let i = 0; i < caseList.length; i++) {
@@ -150,8 +150,8 @@ async function main() {
     let name = SysProcess.argv[2];
     let part = SysProcess.argv[3];
     await empytTask();
-    await modifyImport(part, name, '../../taskTools/cyfs_bdt', '.');
-    await copyTools('../taskTools/cyfs_bdt', "../tasks"); //复制 taskTools
+    await modifyImport(part, name, '../../taskTools/cyfs_bdt_cli', '.');
+    await copyTools('../taskTools/cyfs_bdt_cli', "../tasks"); //复制 taskTools
     await startZIP(); //生成zip压缩文件
 }
 

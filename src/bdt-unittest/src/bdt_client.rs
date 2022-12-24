@@ -223,7 +223,7 @@ impl StackManager{
         }
         let  stack = stack.unwrap();   
         let  acceptor = stack.stream_manager().listen(0).unwrap();
-        let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+        let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
             Err(err) => {
                 log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                 1000
@@ -298,7 +298,7 @@ impl StackManager{
         }
         let  stack = stack.unwrap();   
         let  acceptor = stack.stream_manager().listen(0).unwrap();
-        let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+        let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
             Err(err) => {
                 log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                 1000
@@ -368,7 +368,7 @@ impl StackManager{
         }
         let  stack = stack.unwrap();   
         let  acceptor = stack.stream_manager().listen(0).unwrap();
-        let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+        let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
             Err(err) => {
                 log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                 1000
@@ -520,7 +520,7 @@ impl StackManager{
         }
         let  stack = stack.unwrap();   
         let  acceptor = stack.stream_manager().listen(0).unwrap();
-        let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+        let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
             Err(err) => {
                 log::error!("{} sn online timeout {}.err= {}",&peer_name, device.desc().device_id(),err);
                 1000
@@ -532,8 +532,8 @@ impl StackManager{
                 0
             }
         };
-        for sn in stack.sn_client().sn_list(){
-            log::info!("{} sn list:{}",&peer_name,sn.object_id().to_string());
+        for sn in stack.sn_client().ping().sn_list(){
+            log::info!("{} sn list:{}",&peer_name,sn.desc().object_id().to_string());
         }
         let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {

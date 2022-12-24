@@ -5,6 +5,7 @@ use std::io::Read;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum LpcActionApi {
+    // test framework
     TestReq(TestReq),
     TestResp(TestResp),
     PingReq(PingReq),
@@ -15,6 +16,8 @@ pub enum LpcActionApi {
     UploadSystemInfoReq(UploadSystemInfoReq),
     UploadSystemInfoResp(UploadSystemInfoResp),
     Exit(Exit),
+    Unkonwn(Unkonwn),
+    // BDT 
     CreateStackReq(CreateStackReq),
     CreateStackResp(CreateStackResp),
     ConnectReq(ConnectReq),
@@ -55,6 +58,11 @@ pub struct Started {
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ErrorParams{
+    pub result: u16,
+    pub msg: String,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Unkonwn{
     pub result: u16,
     pub msg: String,
 }
@@ -126,11 +134,12 @@ pub struct ConnectResp {
 pub struct ConnectMutReq {
     pub peer_name: String,
     //LpcCommand的json里面
-    pub question: bool,
+    pub question_size: u64,
     //BuildTunnelParams 配置SN
     pub remote_sn: Vec<String>,
     //标识链接过程中需要通过sn
     pub known_eps: bool,
+    pub driect : bool,
     //是否首次接收数据
     pub accept_answer: bool,
     //循环连接次数
@@ -140,7 +149,9 @@ pub struct ConnectMutReq {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConnectMutResp {
     pub peer_name: String,
-    pub list: Vec<ConnectResp>,
+    pub result: u16,
+    pub msg: String,
+    pub list: Vec<u64>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AutoAcceptReq {

@@ -9,28 +9,25 @@ export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
     let agentManager = AgentManager.createInstance(_interface);
     // 选指定连个节点进行测试
-    let testAgent = [];
-    const LN = "PC_0006";
-    const RN = "PC_0018";
-    for (let agent of labAgent) {
-        if (agent.tags[0] == LN || agent.tags[0] == RN) {
-            testAgent.push(agent)
-        }
-    }
-    await agentManager.initAgentList(testAgent);
+    await agentManager.initAgentList(labAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_udp_keep_5000"
+    let testcaseName = "Perf_stream_connect_tcp_active_10_100"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
-        remark: `## 测试环境
-        + LN RN 只使用UDP连接 
+        remark: `
+        ## 测试环境
+        + LN RN 只使用TCP连接 
         ## 操作步骤
-        + (1) LN RN 之间串行建立5000个连接
-        + (2) 维持连接2 min
+        + (1) 10个LN和RN 之间并行行建立10*100个连接
+        + (2) 维持连接5 min
         ## 性能监控
-        + LN/RN 内存、CPU、网络带宽  `,
+        + LN/RN 内存、CPU、网络带宽 
+        + RT : connect_time 、 confirm_time
+        + 并发数：10
+        + QPS : 每秒confirm 连接请求次数
+        `,
         environment: "lab",
     };
     await testRunner.initTestcase(testcase);
@@ -40,12 +37,15 @@ export async function TaskMain(_interface: TaskClientInterface) {
         eps: {
             ipv4: {
                 udp: true,
+                tcp: true,
             },
             ipv6: {
                 udp: true,
+                tcp: true,
             }
         },
         logType: "info",
+        udp_sn_only: true,
         SN: LabSnList,
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
     }
@@ -54,38 +54,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.allAgentStartBdtPeer(config)
     await agentManager.uploadSystemInfo(testcase.testcaseId, 20000);
     //(4) 测试用例执行器添加测试任务
-    for (let i = 0; i < 10; i++) {
-        let info = await testRunner.createPrevTask({
-            LN: `${LN}$1$0`,
-            RN: `${RN}$1$0`,
-            timeout: 20 * 60 * 1000,
-            action: []
-        })
-        for (let x = 0; x < 500; x++) {
-            let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                type: ActionType.connect,
-                LN: `${LN}$1$0`,
-                RN: `${RN}$1$0`,
-                config: {
-                    conn_tag: connect_1,
-                    timeout: 20 * 1000,
-                },
-                expect: { err: 0 },
-            }))
-        }
-        await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
-            type: ActionType.sleep,
-            LN: `${LN}$1$0`,
-            RN: `${RN}$1$0`,
-            config: {
-                timeout: 6 * 60 * 1000,
-            },
-            set_time: 2 * 60 * 1000,
-            expect: { err: 0 },
-        }))
-        await testRunner.prevTaskRun();
-    }
+    
     await testRunner.waitFinished()
 
 }

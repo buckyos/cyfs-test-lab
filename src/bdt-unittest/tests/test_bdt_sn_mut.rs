@@ -73,7 +73,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -125,7 +125,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -177,7 +177,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -241,7 +241,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -253,8 +253,8 @@ mod tests {
                     0
                 }
             };
-            for sn in stack.sn_client().sn_list(){
-                log::info!("lcoal sn list:{}",sn.object_id().to_string());
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
             
         }).await
@@ -309,7 +309,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -321,8 +321,8 @@ mod tests {
                     0
                 }
             };
-            for sn in stack.sn_client().sn_list(){
-                log::info!("lcoal sn list:{}",sn.object_id().to_string());
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
             
         }).await
@@ -376,7 +376,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -388,8 +388,8 @@ mod tests {
                     0
                 }
             };
-            for sn in stack.sn_client().sn_list(){
-                log::info!("lcoal sn list:{}",sn.object_id().to_string());
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
             
         }).await
@@ -443,7 +443,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -455,8 +455,8 @@ mod tests {
                     0
                 }
             };
-            for sn in stack.sn_client().sn_list(){
-                log::info!("lcoal sn list:{}",sn.object_id().to_string());
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
             
         }).await
@@ -510,7 +510,7 @@ mod tests {
             }
             let stack = stack.unwrap();   
             let acceptor = stack.stream_manager().listen(0).unwrap();
-            let result = match future::timeout(Duration::from_secs(20), stack.net_manager().listener().wait_online()).await {
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
                 Err(err) => {
                     log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
                     1000
@@ -522,8 +522,8 @@ mod tests {
                     0
                 }
             };
-            for sn in stack.sn_client().sn_list(){
-                log::info!("lcoal sn list:{}",sn.object_id().to_string());
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
             
         }).await
@@ -591,7 +591,7 @@ mod tests {
                 };
                 let param = BuildTunnelParams {
                     remote_const: device2.desc().clone(),
-                    remote_sn,
+                    remote_sn:Some(remote_sn),
                     remote_desc: if wan_addr {
                         Some(device2.clone())
                     } else {
@@ -639,6 +639,75 @@ mod tests {
                 task1.await;
                 task2.await;
             }
+        }).await
+        
+    }
+    
+
+    #[tokio::test]
+    async fn test_sn_mut_v2_online_001() {
+
+        run_test_async("test_sn_mut_v2_online_001", async{
+            // 0. SN 2 上线
+            // SN 提供P2P 网络NAT穿透功能。可以使用公用的SN服务或私有化部署的SN服务，辅助设备建立连接。 
+            let mut sns = Vec::new();
+            let sn1 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\SN1\\sn-miner.desc").unwrap();
+            let sn2 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\SN2\\sn-miner.desc").unwrap();
+            let sn3 = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\SN3\\sn-miner.desc").unwrap();
+            sns.push(sn1);
+            sns.push(sn2);
+            sns.push(sn3);
+            let sn_list = load_sn(sns).await;
+            // PN 提供代理服务功能，如果你的网络是Symmetric 或者没有IPv6网络，你的网络可能不支持P2P 网络NAT穿透,需要公用的PN务或私有化部署的PN服务进行网络传输
+            let mut pns = Vec::new();
+            let pn = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\lab\\pn-miner.desc").unwrap();
+            pns.push(pn);
+            let pn_list = load_pn(pns).await;
+
+            let mut eps1 = Vec::new();
+            let ep = format!("L4udp192.168.100.74:{}",30000);
+            eps1.push(ep);
+            let str_area = format!("{}:{}:{}:{}",2,4,20,1); 
+            let area = Area::from_str(str_area.as_str()).unwrap();
+            log::info!("local device area : {}",str_area.clone());
+            let name = format!("lzh1");
+            let private_key = PrivateKey::generate_rsa(1024).unwrap();
+            let (device,key) = create_device_area(name,eps1,sn_list.clone(),pn_list.clone(),None,area,private_key).await;
+            // 2. 加载BDT Stack 启动配置
+            let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
+            // 已知Device 列表
+            params.known_device = None; //
+            params.known_sn = Some(sn_list.clone());
+            params.active_pn = Some(pn_list.clone());
+            params.passive_pn = Some(pn_list.clone());
+            params.config.interface.udp.sn_only = false;
+            params.tcp_port_mapping = None;
+            let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
+            let stack = Stack::open(
+                device.clone(), 
+                key, 
+                params).await;
+            if let Err(e) = stack.clone(){
+                log::error!("init bdt stack error: {}", e);
+            }
+            let stack = stack.unwrap();   
+            let acceptor = stack.stream_manager().listen(0).unwrap();
+            let result = match future::timeout(Duration::from_secs(20), stack.sn_client().ping().wait_online()).await {
+                Err(err) => {
+                    log::error!("sn online timeout {}.err= {}", device.desc().device_id(),err);
+                    1000
+                },
+                Ok(_) => {
+                    log::info!("sn online success {}", device.desc().device_id());
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    log::info!("device {} sn online success,time = {}",device.desc().device_id(),online_time);
+                    0
+                }
+            };
+            for sn in stack.sn_client().ping().sn_list(){
+                log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
+            }
+            
         }).await
         
     }

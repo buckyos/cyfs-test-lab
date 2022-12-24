@@ -8,6 +8,7 @@ use std::{
     path::PathBuf,
     str::FromStr,
     time::Duration,
+    collections::BTreeSet,
 };
 
 pub async fn load_sn(sn_list: &Vec<PathBuf>) -> Vec<Device> {
@@ -288,7 +289,7 @@ pub async fn load_stack(
     let acceptor = stack.stream_manager().listen(0).unwrap();
     let result = match future::timeout(
         Duration::from_secs(20),
-        stack.net_manager().listener().wait_online(),
+        stack.sn_client().ping().wait_online(),
     )
     .await
     {
@@ -450,7 +451,21 @@ pub fn deviceid_list_to_string(device_list:&Vec<DeviceId>) -> Vec<String>{
     }
     device_str
 }
+pub fn device_list_to_string(device_list:&Vec<Device>) -> Vec<String>{
+    let mut device_str : Vec<String> = Vec::new();
+    for id in device_list{
+        let _ = device_str.push(id.desc().object_id().to_string());
+    }
+    device_str
+}
 pub fn endpoint_list_to_string(device_list:&Vec<Endpoint>) -> Vec<String>{
+    let mut device_str : Vec<String> = Vec::new();
+    for id in device_list{
+        let _ = device_str.push(id.to_string());
+    }
+    device_str
+}
+pub fn endpoint_tree_to_string(device_list:&BTreeSet<Endpoint>) -> Vec<String>{
     let mut device_str : Vec<String> = Vec::new();
     for id in device_list{
         let _ = device_str.push(id.to_string());

@@ -88,8 +88,12 @@ export class AgentClient {
         
     }
     async stopService(){
+        for(let client of this.bdtPeerMap.values()){
+            let stop = await client.destory();
+        }
         await this.m_interface.stopService(this.m_agentid!)
-    } 
+    }
+     
     async uploadLog(testcaseId:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         if(!this.is_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
