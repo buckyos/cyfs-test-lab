@@ -547,6 +547,7 @@ dependencies = [
  "async-std",
  "async-trait",
  "backtrace",
+ "bdt-utils",
  "byteorder",
  "bytes 1.2.1",
  "cyfs-base 0.6.7",

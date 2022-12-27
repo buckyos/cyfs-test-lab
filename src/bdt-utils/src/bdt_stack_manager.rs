@@ -126,7 +126,7 @@ impl BDTStackManager {
         }
     }
 
-    async fn _create_stack(
+    pub async fn _create_stack(
         &mut self,
         peer_name: &str,
         endpoints: &Vec<String>,

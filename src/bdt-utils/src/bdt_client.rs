@@ -63,6 +63,9 @@ impl BDTClient {
     pub fn get_stream(&self, stream_name: &str) -> BDTConnection {
         self.0.stream_tasks.lock().unwrap().get_task(stream_name)
     }
+    pub fn find_stream(&self, stream_id: &str) -> Option<BDTConnection>  {
+        self.0.stream_tasks.lock().unwrap().find_task(stream_id)
+    }
     pub fn add_stream(&self, stream: StreamGuard) -> BDTConnection {
         let stream_name = format!("{}", stream);
         let _ = self

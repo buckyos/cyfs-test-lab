@@ -6,6 +6,8 @@ pub mod action_api;
 pub mod bdt_client;
 pub mod lpc;
 pub mod report_perf;
+pub mod tcp_client;
+
 pub use tool::*;
 pub use bdt_stream::*;
 pub use bdt_stack_manager::*;
@@ -14,3 +16,4 @@ pub use action_api::*;
 pub use bdt_client::*;
 pub use lpc::*;
 pub use report_perf::*; 
+pub use tcp_client::*;

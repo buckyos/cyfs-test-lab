@@ -15,6 +15,7 @@ struct BDTCliImpl {
     pub service_path: PathBuf,
     pub address: String,
     pub upload_system_info: Arc<Mutex<bool>>,
+    pub tcp_server_manager: Arc<Mutex<TcpClientManager>>,
 }
 
 #[derive(Clone)]
@@ -30,12 +31,29 @@ impl BDTCli {
             temp_dir,
             service_path,
             upload_system_info: Arc::new(Mutex::new(false)),
+            tcp_server_manager: Arc::new(Mutex::new(TcpClientManager::new())),
         }))
     }
+
+    pub async fn add_tcp_client(&self, name: String, address: String) {
+        let listener = TcpListener::bind(address.as_str()).await.unwrap();
+        self.0
+            .tcp_server_manager
+            .lock()
+            .await
+            .add_client(name, listener, address);
+    }
+    pub async fn get_tcp_client(&self, name: String) -> TcpClient {
+        self.0
+            .tcp_server_manager
+            .lock()
+            .await
+            .get_client(name.as_str())
+    }
+
     pub async fn get_bdt_client(&self, peer_name: &str) -> BDTClient {
         self.0.bdt_stack_manager.lock().await.get_client(peer_name)
     }
-
     pub async fn create_client(
         &mut self,
         req: &CreateStackReq,
@@ -139,6 +157,19 @@ impl BDTCli {
                         }
                         LpcActionApi::RecvStreamReq(req) => {
                             let _ = cli.on_recv_stream(lpc, seq, buffer, req).await;
+                        }
+                        // TCP 测试客户端
+                        LpcActionApi::CreateTcpServerReq(req) => {
+                            let _ = cli.on_create_tcp_server(lpc, seq, buffer, req).await;
+                        }
+                        LpcActionApi::TcpConnectReq(req) => {
+                            let _ = cli.on_tcp_connect(lpc, seq, buffer, req).await;
+                        }
+                        LpcActionApi::TcpStreamSendReq(req) => {
+                            let _ = cli.on_tcp_send_stream(lpc, seq, buffer, req).await;
+                        }
+                        LpcActionApi::TcpStreamRecvReq(req) => {
+                            let _ = cli.on_tcp_recv_stream(lpc, seq, buffer, req).await;
                         }
                         _ => {
                             log::error!("recv unkonwn command");
@@ -413,11 +444,11 @@ impl BDTCli {
             for handler in handler_list {
                 let _ = handler.await;
             }
-            let resp : ConnectMutResp = ConnectMutResp{
-                peer_name : conn_req.peer_name,
-                result : 0,
-                msg : "connect finished".to_string(),
-                list : list.lock().await.clone()
+            let resp: ConnectMutResp = ConnectMutResp {
+                peer_name: conn_req.peer_name,
+                result: 0,
+                msg: "connect finished".to_string(),
+                list: list.lock().await.clone(),
             };
             let mut lpc = lpc;
             let _ = lpc
@@ -445,7 +476,7 @@ impl BDTCli {
             ))
             .await;
     }
-    pub async fn on_resp_unknown_command(&mut self, lpc: Lpc, seq: u32){
+    pub async fn on_resp_unknown_command(&mut self, lpc: Lpc, seq: u32) {
         let resp = Unkonwn {
             result: 1,
             msg: "recv unknown command".to_string(),
@@ -458,13 +489,148 @@ impl BDTCli {
                 LpcActionApi::Unkonwn(resp),
             ))
             .await;
-    } 
-}
+    }
 
-// pub trait Copy: Clone { }
-// impl Copy for BDTCli { }
-// impl Clone for BDTCli {
-//     fn clone(&self) -> BDTCli {
-//         *self
-//     }
-// }
+    pub async fn on_create_tcp_server(
+        &mut self,
+        lpc: Lpc,
+        seq: u32,
+        buffer: &[u8],
+        req: &CreateTcpServerReq,
+    ) {
+        log::info!("on create bdt stack, req={:?}", &req);
+        let mut cli = self.clone();
+        let mut req = req.clone();
+        let mut lpc = lpc;
+        task::spawn(async move {
+            let mut req = req.clone();
+            let address = format!("0.0.0.0:{}", req.port);
+            let tcp_server_manager = cli.add_tcp_client(req.name.clone(), address).await;
+            let mut client = cli.get_tcp_client(req.name.clone()).await;
+            let mut lpc1 = lpc.clone();
+            task::spawn(async move {
+                client.start_listener(Some(lpc1), Some(seq)).await;
+            });
+            let resp = CreateTcpServerResp {
+                result: 0,
+                msg: "success".to_string(),
+            };
+
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::CreateTcpServerResp(resp),
+                ))
+                .await;
+        });
+    }
+
+    pub async fn on_tcp_connect(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &TcpConnectReq) {
+        log::info!("on create bdt stack, req={:?}", &req);
+        let mut cli = self.clone();
+        let mut req = req.clone();
+        let mut lpc = lpc;
+        task::spawn(async move {
+            let mut client = cli.get_tcp_client(req.name).await;
+            let resp = match client.connect(req.address).await {
+                Ok((stream_name, connect_time)) => TcpConnectResp {
+                    result: 0,
+                    msg: "success".to_string(),
+                    stream_name,
+                    connect_time,
+                },
+                Err(err) => TcpConnectResp {
+                    result: err.code().as_u16(),
+                    msg: err.msg().to_string(),
+                    stream_name: "ERROR".to_string(),
+                    connect_time: 0,
+                },
+            };
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::TcpConnectResp(resp),
+                ))
+                .await;
+        });
+    }
+
+    pub async fn on_tcp_send_stream(
+        &mut self,
+        lpc: Lpc,
+        seq: u32,
+        buffer: &[u8],
+        req: &TcpStreamSendReq,
+    ) {
+        log::info!("on create bdt stack, req={:?}", &req);
+        let mut cli = self.clone();
+        let mut req = req.clone();
+        let mut lpc = lpc;
+        task::spawn(async move {
+            let mut client = cli.get_tcp_client(req.name).await;
+            let resp = match client.send_stream(req.stream_name, req.file_szie).await {
+                Ok((hash, send_time)) => TcpStreamSendResp {
+                    result: 0,
+                    msg: "success".to_string(),
+                    send_time,
+                    hash,
+                },
+                Err(err) => TcpStreamSendResp {
+                    result: err.code().as_u16(),
+                    msg: err.msg().to_string(),
+                    hash: HashValue::default(),
+                    send_time: 0,
+                },
+            };
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::TcpStreamSendResp(resp),
+                ))
+                .await;
+        });
+    }
+
+    pub async fn on_tcp_recv_stream(
+        &mut self,
+        lpc: Lpc,
+        seq: u32,
+        buffer: &[u8],
+        req: &TcpStreamRecvReq,
+    ) {
+        log::info!("on create bdt stack, req={:?}", &req);
+        let mut cli = self.clone();
+        let mut req = req.clone();
+        let mut lpc = lpc;
+        task::spawn(async move {
+            let mut req = req.clone();
+            let mut client = cli.get_tcp_client(req.name).await;
+            let resp = match client.recv_stream(req.stream_name).await {
+                Ok((file_size, recv_time, hash)) => TcpStreamRecvResp {
+                    result: 0,
+                    msg: "success".to_string(),
+                    recv_time,
+                    file_size,
+                    hash,
+                },
+                Err(err) => TcpStreamRecvResp {
+                    result: err.code().as_u16(),
+                    msg: err.msg().to_string(),
+                    recv_time: 0,
+                    file_size: 0,
+                    hash: HashValue::default(),
+                },
+            };
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::TcpStreamRecvResp(resp),
+                ))
+                .await;
+        });
+    }
+}

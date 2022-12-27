@@ -30,6 +30,15 @@ impl StreamMap {
         log::info!("client get stream {}",stream_name.clone());
         self.tasks_map.get(stream_name).map(|v| v).unwrap().clone()
     }
+    pub fn find_task(&self, stream_id: &str) -> Option<BDTConnection> {
+        log::info!("client find stream {}",stream_id.clone());
+        for stream in self.tasks_map.values(){
+            if stream.get_name().contains(stream_id){
+                return Some(stream.clone())
+            }
+        }
+        None
+    }
     pub fn add_task(&mut self, stream_name: &str, stream_task: StreamGuard) -> BuckyResult<()> {
         log::info!("client cache stream {}",stream_name.clone());
         match self.tasks_map.entry(stream_name.to_owned()) {
@@ -70,7 +79,7 @@ impl BDTConnection {
     }
     pub async fn send_stream(&mut self, size: u64) -> Result<(HashValue, u64), BuckyError> {
         if (size < 8) {
-            log::warn!("bdt tool send data piece szie = {},must be more than 8 bytes", size);
+            log::warn!("bdt tool send data piece size = {},must be more than 8 bytes", size);
         }
         let mut hashs = Vec::<HashValue>::new();
         let mut send_buffer = Vec::new();
@@ -90,7 +99,7 @@ impl BDTConnection {
         log::info!("########## hash {}", hash);
         let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
         loop {
-            log::info!("bdt tool send data piece szie = {}", gen_count);
+            log::info!("bdt tool send data piece size = {}", gen_count);
             let result_err = self
                 .stream
                 .write_all(&send_buffer[0..gen_count])
@@ -157,7 +166,7 @@ impl BDTConnection {
                     log::error!("recv failed, e={}", &e);
                     e
                 })?;
-            log::info!("bdt tool recv data piece szie = {}", len);
+            log::info!("bdt tool recv data piece size = {}", len);
             if len == 0 {
                 log::error!("remote close");
                 return Err(BuckyError::new(
@@ -209,7 +218,7 @@ impl BDTConnection {
             total_hash.extend_from_slice(h.as_slice());
         }
         let hash = hash_data(total_hash.as_slice());
-        log::info!("recv file finish,szie = {} hash={:?}", file_size, &hash);
+        log::info!("recv file finish,size = {} hash={:?}", file_size, &hash);
         Ok((file_size, recv_time, hash))
     }
 

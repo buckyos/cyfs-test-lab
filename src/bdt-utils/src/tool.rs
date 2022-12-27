@@ -479,3 +479,11 @@ pub fn string_to_deviceid_list(device_list:&Vec<String>) -> Vec<DeviceId>{
     }
     device_str
 }
+
+pub fn pathBuf_list_to_string(path_list:&Vec<PathBuf>) -> Vec<String>{
+    let mut str_list = Vec::new();
+    for path in path_list{
+        let _ = str_list.push(path.to_str().unwrap().to_string());
+    }
+    str_list
+}

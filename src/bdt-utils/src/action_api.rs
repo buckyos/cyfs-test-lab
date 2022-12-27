@@ -36,6 +36,17 @@ pub enum LpcActionApi {
     ListenerStreamEvent(ListenerStreamEvent),
     ConnectSendStreamReq(ConnectSendStreamReq),
     ConnectSendStreamResp(ConnectSendStreamResp),
+    //TCP
+    CreateTcpServerReq(CreateTcpServerReq),
+    CreateTcpServerResp(CreateTcpServerResp),
+    ListenerTcpConnectEvent(ListenerTcpConnectEvent),
+    TcpConnectReq(TcpConnectReq),
+    TcpConnectResp(TcpConnectResp),
+    TcpStreamSendReq(TcpStreamSendReq),
+    TcpStreamSendResp(TcpStreamSendResp),
+    TcpStreamRecvReq(TcpStreamRecvReq),
+    TcpStreamRecvResp(TcpStreamRecvResp),
+    TcpStreamRecvEvent(TcpStreamRecvEvent)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -263,4 +274,76 @@ pub struct UploadSystemInfoReq {
 pub struct UploadSystemInfoResp {
     pub result: u16,
     pub msg: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CreateTcpServerReq {
+    pub name: String,
+    pub port: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CreateTcpServerResp {
+    pub result: u16,
+    pub msg: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ListenerTcpConnectEvent {
+    pub result: u16,
+    pub msg: String,
+    pub stream_name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpConnectReq {
+    pub name: String,
+    pub address: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpConnectResp {
+    pub stream_name : String,
+    pub result: u16,
+    pub msg: String,
+    pub connect_time : u64
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamSendReq {
+    pub name: String,
+    pub stream_name: String,
+    pub file_szie : u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamSendResp {
+    pub result: u16,
+    pub msg: String,
+    pub send_time : u64,
+    pub hash : HashValue,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamRecvReq {
+    pub name: String,
+    pub stream_name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamRecvResp {
+    pub result: u16,
+    pub msg: String,
+    pub file_size : u64,
+    pub hash : HashValue,
+    pub recv_time : u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamRecvEvent {
+    pub result: u16,
+    pub msg: String,
+    pub stream_name: String,
+    pub file_size : u64,
+    pub hash : HashValue,
 }
