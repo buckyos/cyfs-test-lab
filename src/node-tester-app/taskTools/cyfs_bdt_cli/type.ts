@@ -80,6 +80,9 @@ export const enum  ActionType {
     send_file_object = "send-file-object" ,
     send_dir_object = "send-dir-object" ,
     sleep = "sleep",
+    tcp_create_server = "tcp_create_server",
+    tcp_connect = "tcp_connect",
+    tcp_send_stream = "tcp_send_stream",
     Always_Run_IM = "Always_Run_IM" ,
     Always_Run_Web = "Always_Run_Web" ,
     Always_Run_NFT = "Always_Run_NFT" ,
@@ -134,7 +137,7 @@ export type Peer ={
  
 export type Action ={
     // 输入数据
-    type : ActionType, //操作类型
+    type? : ActionType, //操作类型
     testcaseId? : string, //用例ID
     task_id?:string, //Task ID
     action_id?:string, //action id
@@ -153,6 +156,8 @@ export type Action ={
        accept_answer?:number, //是否接收FristQA answer 
        conn_tag?: string, //连接标记   
        not_wait_upload_finished?:boolean,
+       address?:string,
+       port? : number,
        restart? : {
             ndn_event : string,
             ndn_event_target : string,

@@ -7,6 +7,7 @@ import * as path from "./path";
 import * as config from "./config";
 import * as api from "./action_api"
 import {BdtConnection,BdtStack,FastQAInfo} from "./bdt_stack"
+import {TcpStack,TcpStream} from "./tcp_stack"
 
 export class BdtPeerClient extends EventEmitter {
     public client_name?: string;  // 客户端名称
@@ -21,6 +22,7 @@ export class BdtPeerClient extends EventEmitter {
     // 协议栈列表
     public stack_num : number;
     public stack_list: Map<string, BdtStack>;
+    public tcp_server: Map<string, TcpStack>;
     public tags: string;
     public cache_peer_info: Peer;
     public util_client?: UtilClient; // 工具类
@@ -45,6 +47,7 @@ export class BdtPeerClient extends EventEmitter {
         this.state = 0;
         this.stack_num = 0;
         this.stack_list = new Map();
+        this.tcp_server = new Map();
         this.m_timeout = 60 * 1000;
         this.port = peer.client_port!;
         this.bdt_port_range = peer.bdt_port_range!;
@@ -140,6 +143,17 @@ export class BdtPeerClient extends EventEmitter {
 
     }
     
+    async create_tcp_server(address:string,port:number=22223):Promise<{tcp_stack:TcpStack,result:api.CreateTcpServerResp}>{
+        let tcp_stack = new TcpStack(this.m_interface,this.m_agentid,this.tags,this.client_name!);
+        let result = await tcp_stack.create_tcp_server(address,port);
+        if(result.result==0){
+            this.tcp_server.set(port.toString(),tcp_stack)
+        }
+        return {tcp_stack,result}
+        
+    }
+
+
     async reportAgent(testcaseId: string): Promise<{ err: ErrorCode, log: string }> {
         // let run_action = await request("POST", "api/bdt/client/add", {
         //     name: this.tags,

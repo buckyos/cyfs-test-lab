@@ -15,7 +15,7 @@ use std::str::FromStr;
 use std::sync::atomic::AtomicU64;
 
 const PIECE_SIZE: usize = 1024 * 1024;
-const FILE_SIZE_LEN: usize = 8;
+const FILE_SIZE_LEN: usize = 16;
 
 #[derive(Clone)]
 pub struct TcpClientManager {
@@ -107,7 +107,8 @@ impl TcpClient {
                     stream.peer_addr().unwrap(),
                     stream.local_addr().unwrap()
                 );
-                log::info!("recv tcp connection {}",stream_name.clone());
+                //stream.set_nodelay(nodelay);
+                log::info!("recv tcp connection {}", stream_name.clone());
                 cli.add_stream(stream_name.clone(), &stream).await;
 
                 let _ = match lpc {
@@ -125,8 +126,8 @@ impl TcpClient {
                                 LpcActionApi::ListenerTcpConnectEvent(resp),
                             ))
                             .await;
-                    },
-                    None =>{
+                    }
+                    None => {
                         log::info!("recv tcp connection,not lpc server");
                     }
                 };
@@ -160,7 +161,7 @@ impl TcpClient {
         &mut self,
         stream_name: String,
         size: u64,
-    ) -> Result<(HashValue, u64), BuckyError> {
+    ) -> Result<(HashValue, u64, u64), BuckyError> {
         if (size < 8) {
             log::warn!(
                 "bdt tool send data piece szie = {},must be more than 8 bytes",
@@ -175,11 +176,13 @@ impl TcpClient {
         if gen_count as u64 > size_need_to_send {
             gen_count = size_need_to_send as usize;
         }
-        // 构造请求头部协议，设置发送数据长度
+        // 构造请求头部协议，设置发送数据长度 0-8 代表长度
         send_buffer[0..8].copy_from_slice(&size_need_to_send.to_be_bytes());
-
+        //8-16 代表sequence id,用来做唯一标识，socket四元组有nat会不一样
+        let sequence_id = bucky_time_now();
+        send_buffer[8..16].copy_from_slice(&sequence_id.to_be_bytes());
         // 生成测试数据 计算hash
-        random_data(send_buffer[8..].as_mut());
+        random_data(send_buffer[16..].as_mut());
         let hash = hash_data(&send_buffer[0..gen_count]);
         hashs.push(hash);
         log::info!("########## hash {}", hash);
@@ -232,17 +235,18 @@ impl TcpClient {
 
         log::info!("send file finish, size ={} ,hash={:?}", size, &hash);
 
-        Ok((hash, send_time))
+        Ok((hash, send_time, sequence_id))
     }
     pub async fn recv_stream(
         &mut self,
         stream_name: String,
-    ) -> Result<(u64, u64, HashValue), BuckyError> {
+    ) -> Result<(u64, u64, HashValue, u64), BuckyError> {
         let mut hashs = Vec::<HashValue>::new();
         let mut recv_buffer = Vec::new();
         recv_buffer.resize(PIECE_SIZE, 0u8);
         let mut piece_recv: usize = 0;
         let mut file_size: u64 = 0;
+        let mut sequence_id: u64 = 0;
         let mut total_recv: u64 = 0;
         // let mut recv_time = 0;
         let begin_recv = system_time_to_bucky_time(&std::time::SystemTime::now());
@@ -270,9 +274,13 @@ impl TcpClient {
                 if piece_recv < FILE_SIZE_LEN {
                     continue;
                 }
-                let mut b = [0u8; FILE_SIZE_LEN];
-                b.copy_from_slice(&recv_buffer[0..FILE_SIZE_LEN]);
-                file_size = u64::from_be_bytes(b);
+                // 解析 stream 的头部数据 接收数据长度 stream序列号
+                let mut len_bytes = [0u8; 8];
+                let mut sequence_bytes = [0u8; 8];
+                len_bytes.copy_from_slice(&recv_buffer[0..8]);
+                sequence_bytes.copy_from_slice(&recv_buffer[8..16]);
+                file_size = u64::from_be_bytes(len_bytes);
+                sequence_id = u64::from_be_bytes(sequence_bytes);
                 log::info!(
                     "=====================================pre recv stream,file_size={}",
                     file_size
@@ -308,7 +316,58 @@ impl TcpClient {
         }
         let hash = hash_data(total_hash.as_slice());
         log::info!("recv file finish,szie = {} hash={:?}", file_size, &hash);
-        Ok((file_size, recv_time, hash))
+        Ok((file_size, recv_time, hash, sequence_id))
+    }
+    pub async fn listener_recv_stream(
+        &mut self,
+        stream_name: String,
+        seq: Option<u32>,
+        lpc: Option<Lpc>,
+    ) -> Result<(), BuckyError> {
+        let mut client = self.clone();
+        let stream_name = stream_name.clone();
+        let lpc = lpc.clone();
+        async_std::task::spawn(async move {
+            loop {
+                let stream_name = stream_name.clone();
+                let resp = match client.recv_stream(stream_name.clone()).await {
+                    Ok((file_size, recv_time, hash, sequence_id)) => TcpStreamListenerEvent {
+                        result: 0,
+                        msg: "success".to_string(),
+                        stream_name,
+                        file_size,
+                        hash,
+                        sequence_id,
+                        recv_time,
+                    },
+                    Err(err) => TcpStreamListenerEvent {
+                        result: err.code().as_u16(),
+                        msg: err.msg().to_string(),
+                        stream_name,
+                        file_size: 0,
+                        hash: HashValue::default(),
+                        sequence_id: 0,
+                        recv_time: 0,
+                    },
+                };
+                let _ = match lpc.clone() {
+                    Some(lpc) => {
+                        let mut lpc = lpc;
+                        let _ = lpc
+                            .send_command(LpcCommand::new(
+                                seq.unwrap(),
+                                Vec::new(),
+                                LpcActionApi::TcpStreamListenerEvent(resp),
+                            ))
+                            .await;
+                    }
+                    None => {
+                        log::info!("recv tcp connection,not lpc server");
+                    }
+                };
+            }
+        });
+        Ok(())
     }
 }
 

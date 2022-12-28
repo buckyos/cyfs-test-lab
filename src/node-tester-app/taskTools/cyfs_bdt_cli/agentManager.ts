@@ -63,7 +63,16 @@ export class AgentManager {
         }
         return this.agentMap.get(agentName)!.getBdtPeerClient(client_index,stack_index);
     }
-
+    async get_bdt_peer_client(name:string):Promise<{err:number,log?:string,client?: BdtPeerClient}> {
+        let agentName = name.split("$")[0];
+        let client_index = name.split("$")[1];
+        let stack_index = name.split("$")[2];
+        if(!this.agentMap.has(agentName)){
+            this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
+            return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
+        }
+        return this.agentMap.get(agentName)!.get_bdt_peer_client(client_index);
+    }
     async getAgent(name:string):Promise<{err:number,log?:string,agent?:AgentClient}>{
         if(!this.agentMap.has(name)){
             this.m_interface.getLogger().error(`agent ${name} not exsit , agent list = ${this.agentMap.keys()}`)

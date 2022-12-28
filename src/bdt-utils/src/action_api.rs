@@ -17,7 +17,7 @@ pub enum LpcActionApi {
     UploadSystemInfoResp(UploadSystemInfoResp),
     Exit(Exit),
     Unkonwn(Unkonwn),
-    // BDT 
+    // BDT
     CreateStackReq(CreateStackReq),
     CreateStackResp(CreateStackResp),
     ConnectReq(ConnectReq),
@@ -46,7 +46,9 @@ pub enum LpcActionApi {
     TcpStreamSendResp(TcpStreamSendResp),
     TcpStreamRecvReq(TcpStreamRecvReq),
     TcpStreamRecvResp(TcpStreamRecvResp),
-    TcpStreamRecvEvent(TcpStreamRecvEvent)
+    TcpStreamListenerReq(TcpStreamListenerReq),
+    TcpStreamListenerResp(TcpStreamListenerResp),
+    TcpStreamListenerEvent(TcpStreamListenerEvent),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -68,12 +70,12 @@ pub struct Started {
     pub client_name: String,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ErrorParams{
+pub struct ErrorParams {
     pub result: u16,
     pub msg: String,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Unkonwn{
+pub struct Unkonwn {
     pub result: u16,
     pub msg: String,
 }
@@ -103,8 +105,8 @@ pub struct CreateStackResp {
     pub ep_resp: Vec<String>,
     pub online_time: u64,
     pub online_sn: Vec<String>,
-    pub peer_name : String,
-    pub device_id : String,
+    pub peer_name: String,
+    pub device_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -123,7 +125,7 @@ pub struct ConnectReq {
     //标识链接过程中需要通过sn
     pub known_eps: bool,
     // 是否直连
-    pub driect : bool,
+    pub driect: bool,
     //是否首次接收数据
     pub accept_answer: bool,
 }
@@ -150,7 +152,7 @@ pub struct ConnectMutReq {
     pub remote_sn: Vec<String>,
     //标识链接过程中需要通过sn
     pub known_eps: bool,
-    pub driect : bool,
+    pub driect: bool,
     //是否首次接收数据
     pub accept_answer: bool,
     //循环连接次数
@@ -279,6 +281,7 @@ pub struct UploadSystemInfoResp {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTcpServerReq {
     pub name: String,
+    pub address: String,
     pub port: u64,
 }
 
@@ -286,6 +289,7 @@ pub struct CreateTcpServerReq {
 pub struct CreateTcpServerResp {
     pub result: u16,
     pub msg: String,
+    pub address: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -303,25 +307,26 @@ pub struct TcpConnectReq {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TcpConnectResp {
-    pub stream_name : String,
+    pub stream_name: String,
     pub result: u16,
     pub msg: String,
-    pub connect_time : u64
+    pub connect_time: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TcpStreamSendReq {
     pub name: String,
     pub stream_name: String,
-    pub file_szie : u64,
+    pub file_szie: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TcpStreamSendResp {
     pub result: u16,
     pub msg: String,
-    pub send_time : u64,
-    pub hash : HashValue,
+    pub send_time: u64,
+    pub hash: HashValue,
+    pub sequence_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -334,16 +339,30 @@ pub struct TcpStreamRecvReq {
 pub struct TcpStreamRecvResp {
     pub result: u16,
     pub msg: String,
-    pub file_size : u64,
-    pub hash : HashValue,
-    pub recv_time : u64,
+    pub file_size: u64,
+    pub hash: HashValue,
+    pub recv_time: u64,
+    pub sequence_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TcpStreamRecvEvent {
+pub struct TcpStreamListenerReq {
+    pub name: String,
+    pub stream_name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamListenerResp {
+    pub result: u16,
+    pub msg: String,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TcpStreamListenerEvent {
     pub result: u16,
     pub msg: String,
     pub stream_name: String,
-    pub file_size : u64,
-    pub hash : HashValue,
+    pub file_size: u64,
+    pub hash: HashValue,
+    pub sequence_id: u64,
+    pub recv_time: u64,
 }

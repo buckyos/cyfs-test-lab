@@ -40,8 +40,8 @@ export type CreateStackReq = {
 export type CreateStackResp = {
     result: number,
     msg: string,
-    peer_name : string,
-    device_id : string,
+    peer_name: string,
+    device_id: string,
     ep_info: Array<string>,
     ep_resp: Array<string>,
     online_time: number,
@@ -200,22 +200,107 @@ export type ConnectMutReq = {
     remote_sn: Array<string>,
     //标识链接过程中需要通过sn
     known_eps: boolean,
-    driect : boolean,
+    driect: boolean,
     //是否首次接收数据
     accept_answer: boolean,
     //循环连接次数
     conn_sum: number,
 }
 
-export type  ConnectMutResp = {
-    peer_name: String,
+export type ConnectMutResp = {
+    peer_name: string,
     result: number,
     msg: string,
     list: Array<number>,
 }
 
+
+export type CreateTcpServerReq = {
+    name: string,
+    port: number,
+    address: string,
+}
+
+
+export type CreateTcpServerResp = {
+    result: number,
+    msg: string,
+    address: string,
+}
+
+
+export type ListenerTcpConnectEvent = {
+    result: number,
+    msg: string,
+    stream_name: string,
+}
+
+
+export type TcpConnectReq = {
+    name: string,
+    address: string,
+}
+
+
+export type TcpConnectResp = {
+    stream_name: string,
+    result: number,
+    msg: string,
+    connect_time: number
+}
+
+
+export type TcpStreamSendReq = {
+    name: string,
+    stream_name: string,
+    file_szie: number,
+}
+
+
+export type TcpStreamSendResp = {
+    result: number,
+    msg: string,
+    send_time: number,
+    hash: string,
+    sequence_id: number,
+}
+
+
+export type TcpStreamRecvReq = {
+    name: string,
+    stream_name: string,
+}
+
+
+export type TcpStreamRecvResp = {
+    result: number,
+    msg: string,
+    file_size: number,
+    hash: string,
+    recv_time: number,
+    sequence_id: number,
+}
+export type TcpStreamListenerReq = {
+    name: string,
+    stream_name: string,
+}
+
+export type TcpStreamListenerResp = {
+    result: number,
+    msg: string,
+}
+export type TcpStreamListenerEvent = {
+    result: number,
+    msg: string,
+    stream_name: string,
+    file_size: number,
+    hash: string,
+    sequence_id: number,
+    recv_time: number,
+}
+
 export interface LpcActionApi {
-    client_name?:string,
+    client_name?: string,
     TestReq?: TestReq,
     TestResp?: TestResp,
     PingReq?: PingReq,
@@ -243,4 +328,17 @@ export interface LpcActionApi {
     ListenerStreamEvent?: ListenerStreamEvent,
     ConnectSendStreamReq?: ConnectSendStreamReq,
     ConnectSendStreamResp?: ConnectSendStreamResp,
+    // TCP
+    CreateTcpServerReq?: CreateTcpServerReq,
+    CreateTcpServerResp?: CreateTcpServerResp,
+    ListenerTcpConnectEvent?: ListenerTcpConnectEvent,
+    TcpConnectReq?: TcpConnectReq,
+    TcpConnectResp?: TcpConnectResp,
+    TcpStreamSendReq?: TcpStreamSendReq,
+    TcpStreamSendResp?: TcpStreamSendResp,
+    TcpStreamRecvReq?: TcpStreamRecvReq,
+    TcpStreamRecvResp?: TcpStreamRecvResp,
+    TcpStreamListenerReq?:TcpStreamListenerReq
+    TcpStreamListenerResp?:TcpStreamListenerResp
+    TcpStreamListenerEvent?:TcpStreamListenerEvent
 }

@@ -38,7 +38,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0006"],
-        area : "1:0:0:1",
+        area : "44:0:0:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.Symmetric,
         ipv4: ['10.1.1.236'],
@@ -62,7 +62,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0009"],
-        area : "86:11:20:1",
+        area : "226:11:20:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['10.1.1.132', '10.1.2.131'],
@@ -70,7 +70,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0010"],
-        area : "86:12:20:1",
+        area : "226:12:20:1",
         OS: "Windows11",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.137'],
@@ -129,7 +129,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0017"],
-        area : "1:6:20:1",
+        area : "44:6:20:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.177'],
@@ -138,7 +138,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0018"],
-        area : "86:4:20:1",
+        area : "226:4:20:1",
         OS: "Ubuntu 22.04",
         NAT: NAT_Type.Public,
         ipv4: ['192.168.200.151'],

@@ -225,7 +225,14 @@ export class AgentClient {
         let bdt_stack =  bdtClient.stack_list.get(stack_index);
         return {err:BDTERROR.success,log:`${this.tags} ${client_index} get success`,bdt_stack}
     }
-    
+    async get_bdt_peer_client(client_index:string):Promise<{err:ErrorCode,log?:string,client?:BdtPeerClient}>{
+        this.is_run = true;
+        if(!this.bdtPeerMap.has(client_index)){
+            return {err:BDTERROR.AgentError,log:`${this.tags} ${client_index} not exsit`}
+        }
+        let client = this.bdtPeerMap.get(client_index)!
+        return {err:BDTERROR.success,log:`${this.tags} ${client_index} get success`,client}
+    }
     async reportAgent(testcaseId:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
         if(!this.is_run && check_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}

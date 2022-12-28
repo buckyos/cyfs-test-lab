@@ -458,6 +458,13 @@ pub fn device_list_to_string(device_list:&Vec<Device>) -> Vec<String>{
     }
     device_str
 }
+pub fn device_list_to_deviceid(device_list:&Vec<Device>) -> Vec<DeviceId>{
+    let mut device_str : Vec<DeviceId> = Vec::new();
+    for id in device_list{
+        let _ = device_str.push(id.desc().device_id());
+    }
+    device_str
+}
 pub fn endpoint_list_to_string(device_list:&Vec<Endpoint>) -> Vec<String>{
     let mut device_str : Vec<String> = Vec::new();
     for id in device_list{

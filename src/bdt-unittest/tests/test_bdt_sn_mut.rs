@@ -1192,7 +1192,8 @@ mod tests {
             {   
                 // 构建 BuildTunnelParams
                 let mut wan_addr = false;
-                let remote_sn = client2.get_stack().device_cache().sn_list();
+                let remote_sn = device_list_to_deviceid(client2.get_stack().sn_client().ping().sn_list());
+           
                 let sn_id = remote_sn[0].clone();
                 for sn in remote_sn.clone(){
                     log::info!("client2 sn : {}",sn.object_id().to_string());
@@ -1491,11 +1492,11 @@ mod tests {
             let mut LN_Stream = "".to_string();
             // (3.1) client1 连接 client2 首次连接
             {   
-                for sn in client1.get_stack().device_cache().sn_list(){
-                    log::info!("client1 sn info : {}",sn.object_id().to_string());
+                for sn in client1.get_stack().sn_client().ping().sn_list(){
+                    log::info!("client1 sn info : {}",sn.desc().object_id().to_string());
                 }
-                for sn in client2.get_stack().device_cache().sn_list(){
-                    log::info!("client2 sn info : {}",sn.object_id().to_string());
+                for sn in client2.get_stack().sn_client().ping().sn_list(){
+                    log::info!("client2 sn info : {}",sn.desc().object_id().to_string());
                 }
                 // 构建 BuildTunnelParams
 
@@ -1646,16 +1647,17 @@ mod tests {
             {   
                 // 构建 BuildTunnelParams
                 let mut wan_addr = false;
-                let remote_sn = client2.get_stack().device_cache().sn_list();
+                let mut remote_sn = device_list_to_deviceid(client2.get_stack().sn_client().ping().sn_list());
+        
                 let sn_id = remote_sn[0].clone();
                 for sn in remote_sn.clone(){
                     log::info!("BuildTunnelParams remote_sn sn : {}",sn.object_id().to_string());
                 }
-                for sn in client1.get_stack().device_cache().sn_list(){
-                    log::info!("client1 sn : {}",sn.object_id().to_string());
+                for sn in client1.get_stack().sn_client().ping().sn_list(){
+                    log::info!("client1 sn : {}",sn.desc().object_id().to_string());
                 }
-                for sn in client2.get_stack().device_cache().sn_list(){
-                    log::info!("client2 sn : {}",sn.object_id().to_string());
+                for sn in client2.get_stack().sn_client().ping().sn_list(){
+                    log::info!("client2 sn : {}",sn.desc().object_id().to_string());
                 }
                 let param = BuildTunnelParams {
                     remote_const: device2.desc().clone(),

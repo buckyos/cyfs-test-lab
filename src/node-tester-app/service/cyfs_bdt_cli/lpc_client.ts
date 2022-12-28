@@ -110,10 +110,10 @@ export class LpcClient extends EventEmitter {
 
     async createBdtLpcListener(event_type:string,command: BdtLpcCommand, listener: (eventArg: string) => void): Promise<BdtLpcResp> {
         let { err, resp } = await this.m_lpc!.wait_resp(command);
-        this.m_logger.info(`send BdtLpcCommand ${command.json!} err = ${err} , resp = ${JSON.stringify(resp)}`)
+        this.m_logger.info(`send createBdtLpcListener ${JSON.stringify(command.json)} err = ${err} , resp = ${JSON.stringify(resp)}`)
         if (resp) {
             if (resp.json.result) {
-                return { err: ErrorCode.fail };
+                return { err: ErrorCode.fail,resp };
             } else {
                 let onConn = (lpc: BdtLpc, notify: BdtLpcCommand) => {
                     if (resp!.seq! === notify.seq!) {
@@ -122,10 +122,10 @@ export class LpcClient extends EventEmitter {
                     }
                 };
                 this.m_lpc!.on('command', onConn);
-                return { err: ErrorCode.succ };
+                return { err: ErrorCode.succ,resp };
             }
         } else {
-            return { err };
+            return { err,resp };
         }
     }
 
