@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node"
+import * as cyfs from '../../cyfs_node';
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, all_stacks, getStack, Ready, getDecId, all_dec_id, chunk_mode } from "../../common";
 import * as path from 'path';
 //初始化日志
@@ -6141,7 +6141,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
 
             let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> = new cyfs.BuckyHashMap()
             object_map.set(new cyfs.BuckyString("path1"), inner_node)
-            let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(new cyfs.NoneOption(), object_map)
+            let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(undefined, object_map)
 
             // 第一种情况，构造一个普通大小的dir，内容可以放到desc里面
             let attr = new cyfs.Attributes(0xFFFF);
@@ -6150,7 +6150,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                 new cyfs.NDNObjectInfo({ obj_list: list }),
                 { obj_list: new cyfs.BuckyHashMap() },
                 (builder) => {
-                    builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+                    builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(undefined)
                 }
             );
             let dir_id = dir.desc().calculate_id();
@@ -6168,7 +6168,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
             obj_map.set(chunk_id.calculate_id(), new cyfs.BuckyBuffer(data));
 
             let dir2 = cyfs.Dir.create(owner, attr, new cyfs.NDNObjectInfo({ chunk_id }), { obj_list: obj_map }, (builder) => {
-                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(undefined)
             });
             let dir_id2 = dir2.desc().calculate_id();
             console.log("dir id2=", dir_id2);
@@ -6187,7 +6187,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
             // 注意： body_chunk_id需要额外的保存到本地，put_data(body_chunk, body_chunk_id)
 
             let dir4 = cyfs.Dir.create(owner, attr, new cyfs.NDNObjectInfo({ chunk_id }), { chunk_id: body_chunk_id }, (builder) => {
-                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(new cyfs.NoneOption())
+                builder.no_create_time().update_time(cyfs.JSBI.BigInt(0)).option_owner(undefined)
             });
             let dir_id4 = dir4.desc().calculate_id();
             console.log('dir id4=', dir_id4)

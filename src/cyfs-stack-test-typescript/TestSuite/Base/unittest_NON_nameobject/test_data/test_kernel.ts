@@ -1,4 +1,4 @@
-import * as cyfs from "../../../cyfs_node"
+import * as cyfs from "../../../../cyfs_node"
 import * as path from 'path'
 
 
@@ -117,14 +117,14 @@ function save_path(nameobject: string, filename: string): string {
 
 function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent, T extends cyfs.NamedObject<DC, BC>>
     (builder: cyfs.NamedObjectBuilder<DC, BC>, obj: any,
-        constructor: new (desc: cyfs.NamedObjectDesc<DC>, body: cyfs.Option<cyfs.ObjectMutBody<DC, BC>>, signs: cyfs.ObjectSigns, nonce: cyfs.Option<cyfs.JSBI>) => T): T {
+        constructor: new (desc: cyfs.NamedObjectDesc<DC>, body: cyfs.ObjectMutBody<DC, BC> | undefined, signs: cyfs.ObjectSigns, nonce?: cyfs.JSBI) => T): T {
     if (obj.owner) {
         builder = builder.owner(cyfs.ObjectId.from_base_58(obj.owner).unwrap())
     }
 
     if (obj.area) {
         if (obj.category) {
-            const arealist = [];
+            let arealist: number[] = [];
             const values = obj.area.split(":");
             for (let v of values) { const vv = parseInt(v, 10); arealist.push(vv) }
             builder = builder.area(new cyfs.Area(arealist[0], arealist[1], arealist[2], obj.category))
@@ -165,13 +165,13 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
             return false;
         }
 
-        if (actual.desc().owner()!.is_none()) {
+        if (!actual.desc().owner()) {
             output_check_err("owner", except.owner, "none")
             return false;
         }
 
-        if (actual.desc().owner()!.unwrap().to_base_58() !== except.owner) {
-            output_check_err("owner", except.owner, actual.desc().owner()!.unwrap().to_base_58())
+        if (actual.desc().owner()!.to_base_58() !== except.owner) {
+            output_check_err("owner", except.owner, actual.desc().owner()!.to_base_58())
             return false;
         }
     }
@@ -182,13 +182,13 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
             return false;
         }
 
-        if (actual.desc().area()!.is_none()) {
+        if (!actual.desc().area()) {
             output_check_err("area", except.area, "none")
             return false;
         }
 
-        if (actual.desc().area()!.unwrap().toString() !== except.area) {
-            output_check_err("area", except.area, actual.desc().area()!.unwrap().toString())
+        if (actual.desc().area()!.toString() !== except.area) {
+            output_check_err("area", except.area, actual.desc().area()!.toString())
             return false;
         }
     }
@@ -773,12 +773,12 @@ function process_dir(obj: any) {
 
             }
             else if (obj.obj_list.info.obj_list) {
-                let parent_chunk: cyfs.Option<cyfs.ChunkId>
+                let parent_chunk: cyfs.ChunkId | undefined
                 let object_map = new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo>()
 
                 if (obj.obj_list.info.obj_list.parent_chunk) {
-                    parent_chunk = cyfs.Some(cyfs.ChunkId.from_base_58(obj.obj_list.info.obj_list.parent_chunk).unwrap())
-                } else { parent_chunk = cyfs.None }
+                    parent_chunk = cyfs.ChunkId.from_base_58(obj.obj_list.info.obj_list.parent_chunk).unwrap()
+                } else { parent_chunk = undefined }
 
                 if (obj.obj_list.info.obj_list.object_map) {
                     let buckystring = new cyfs.BuckyString(obj.obj_list.info.obj_list.object_map.buckystring)

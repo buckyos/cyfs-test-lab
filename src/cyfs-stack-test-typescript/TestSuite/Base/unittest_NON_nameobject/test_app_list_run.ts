@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, run, decoder, DeleteDescFile } from './index';
@@ -86,7 +86,7 @@ describe("测试AppList对象编解码", function () {
             let app_status_map = AppList.app_list()
             let has_appid = app_status_map.has(decid1)
             let app_status_target = app_status_map.get(decid1)
-            let owner_deco = app_status_target?.desc().owner()?.unwrap();
+            let owner_deco = app_status_target?.desc().owner();
             let id_deco = app_status_target?.app_id();
             let version_deco = app_status_target?.version();
             let status1 = app_status_target?.status()
@@ -147,7 +147,7 @@ describe("测试AppList对象编解码", function () {
             let [target, buffer] = new cyfs.AppListDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let AppListId_deco = target.desc().calculate_id();
             let id_deco = target.desc().content().id
             let category_deco = target.desc().content().category
@@ -181,7 +181,7 @@ describe("测试AppList对象编解码", function () {
             app_status_map.forEach((value, key) => {
 
                 //获取AppStatus属性
-                let owner_deco = value?.desc().owner()?.unwrap();
+                let owner_deco = value?.desc().owner();
                 let id_deco = value?.app_id();
                 let version_deco = value?.version();
                 let status1 = value?.status()
@@ -249,7 +249,7 @@ describe("测试AppList对象编解码", function () {
             let [target, buffer] = new cyfs.AppListDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_ts: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_ts: any = target.desc().owner()?.to_base_58();
             let AppListId_ts: string = target.desc().calculate_id().to_base_58()
 
             //rust解码对象，校验属性值

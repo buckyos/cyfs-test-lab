@@ -69,8 +69,7 @@
     "compressing": "^1.5.1",
     "concurrently": "^6.4.0",
     "connect-restreamer": "~1.0.0",
-    "cyfs-sdk": "^0.5.9",
-    "cyfs-sdk-nightly": "^0.5.11",
+    "cyfs-sdk-nightly": "^0.5.18",
     "echarts": "^4.2.0-rc.2",
     "element-ui": "^2.4.8",
     "encoding": "^0.1.13",
@@ -122,6 +121,7 @@
     "qrcode-terminal": "^0.12.0",
     "request": "^2.88.2",
     "secp256k1": "^4.0.3",
+    "semantic-release": "15.0.0",
     "sharp": "^0.30.7",
     "should": "^13.2.3",
     "silly-datetime": "^0.1.2",
@@ -141,7 +141,6 @@
     "websocket": "^1.0.33",
     "ws": "^8.8.1",
     "xlsx": "^0.14.1",
-    "xmlhttprequest": "^1.8.0",
-    "semantic-release":"15.0.0"
+    "xmlhttprequest": "^1.8.0"
   }
 }

@@ -1,5 +1,5 @@
 import { type } from "os";
-import * as cyfs from "../../../cyfs_node";
+import * as cyfs from "../../../../cyfs_node";
 
 export type testNameObject = {
     stack_type:StackType;

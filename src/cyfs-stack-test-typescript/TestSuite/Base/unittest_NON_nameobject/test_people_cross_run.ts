@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, run, decoder, DeleteDescFile } from './index';
@@ -39,10 +39,10 @@ describe("测试People对象编解码", function () {
             console.info(`people: ${filepath}`);
             if (!fs.existsSync(filepath)) {
                 let people = cyfs.People.create(
-                    cyfs.Some(owner),
+                    owner,
                     ood_list1,
                     secret.public(),
-                    cyfs.Some(area),
+                    area,
                     name,
                     icon,
                 )
@@ -56,7 +56,7 @@ describe("测试People对象编解码", function () {
                 let p1_ood_list = p1.body_expect().content().ood_list
     
                 //属性校验
-                assert(p1.desc().owner()?.unwrap()?.equals(owner), 'owner属性不相等');
+                assert(p1.desc().owner()?.equals(owner), 'owner属性不相等');
                 assert(p1.desc().calculate_id().equals(people_id), 'PeopleId属性不相等');
                 assert(p1.icon()?.equals(icon), 'icon属性不相等');
                 assert.equal(name,  p1.name());
@@ -75,7 +75,7 @@ describe("测试People对象编解码", function () {
                 let ood_list_deco = p2.body_expect().content().ood_list
 
                 //属性校验
-                assert(p2.desc().owner()?.unwrap()?.equals(owner), 'owner属性不相等');
+                assert(p2.desc().owner()?.equals(owner), 'owner属性不相等');
                 assert(p2.icon()?.equals(icon), 'icon属性不相等');
                 assert.equal(name, p2.name());
                 for (let i in ood_list_deco) {

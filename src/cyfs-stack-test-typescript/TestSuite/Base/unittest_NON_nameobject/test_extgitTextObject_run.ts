@@ -1,8 +1,8 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, decoder, DeleteDescFile } from './index';
-import {GitTextObject, GitTextObjectDecoder} from '../../common/types/text'
+import {GitTextObject, GitTextObjectDecoder} from '../../../common/types/text'
 var assert = require("assert");
 
 

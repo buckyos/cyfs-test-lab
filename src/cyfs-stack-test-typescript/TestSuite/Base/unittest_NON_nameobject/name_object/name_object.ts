@@ -7,7 +7,7 @@
  * @FilePath: \firstSyfs\cyfs\test.ts
  */
 
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../../cyfs_node';
 import * as fs from 'fs';
 import * as path from 'path'
 import { ok } from 'assert';
@@ -111,8 +111,8 @@ export class TestDescContentDecoder extends cyfs.DescContentDecoder<TestDescCont
 
 export class TestBodyContent extends cyfs.BodyContent{
     source: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>
-    icon: cyfs.Option<cyfs.BuckyString>
-    desc: cyfs.Option<cyfs.BuckyString>
+    icon: cyfs.BuckyString|undefined
+    desc: cyfs.BuckyString|undefined
     status: number;
     source_desc: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>;
     test_store_list: cyfs.BuckyHashSet<cyfs.DecAppId>;
@@ -123,7 +123,7 @@ export class TestBodyContent extends cyfs.BodyContent{
     mix_data:cyfs.Vec<cyfs.BuckyTuple>
     // mix_data: [cyfs.Endpoint,cyfs.BuckyString,cyfs.BuckyNumber][]
     
-    constructor(source: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>, icon: cyfs.Option<cyfs.BuckyString>, desc: cyfs.Option<cyfs.BuckyString>, source_desc: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>, status: number, list: cyfs.BuckyHashSet<cyfs.DecAppId>, data:Uint8Array, test_size: number, salt: Uint8Array, endpoints: cyfs.Vec<cyfs.Endpoint>, mix_data: cyfs.Vec<cyfs.BuckyTuple>){
+    constructor(source: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>, icon: cyfs.BuckyString|undefined, desc: cyfs.BuckyString|undefined, source_desc: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>, status: number, list: cyfs.BuckyHashSet<cyfs.DecAppId>, data:Uint8Array, test_size: number, salt: Uint8Array, endpoints: cyfs.Vec<cyfs.Endpoint>, mix_data: cyfs.Vec<cyfs.BuckyTuple>){
         super();
         this.source = source;
         this.icon = icon;
@@ -499,9 +499,9 @@ export class TestIdDecoder extends cyfs.NamedObjectIdDecoder<TestDescContent, Te
 
 
 export class Test extends cyfs.NamedObject<TestDescContent, TestBodyContent>{
-    static create(owner: cyfs.ObjectId, id: string, data: Uint8Array, testSize: number, salt: Uint8Array, endpoints: cyfs.Vec<cyfs.Endpoint>, mix_data: cyfs.Vec<cyfs.BuckyTuple> ,source: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>,icon: cyfs.Option<cyfs.BuckyString>,list: cyfs.BuckyHashSet<cyfs.DecAppId>,status?: number):Test{
+    static create(owner: cyfs.ObjectId, id: string, data: Uint8Array, testSize: number, salt: Uint8Array, endpoints: cyfs.Vec<cyfs.Endpoint>, mix_data: cyfs.Vec<cyfs.BuckyTuple> ,source: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>,icon: cyfs.BuckyString|undefined,list: cyfs.BuckyHashSet<cyfs.DecAppId>,status?: number):Test{
         const desc_content = new TestDescContent(id);
-        const body_content = new TestBodyContent(source,icon, cyfs.None, new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>(), status?1:0, list, data, testSize, salt, endpoints, mix_data);
+        const body_content = new TestBodyContent(source,icon, undefined, new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>(), status?1:0, list, data, testSize, salt, endpoints, mix_data);
         const builder = new TestBuilder(desc_content, body_content);
         const self = builder.owner(owner).no_create_time().build(Test);
         return new Test(self.desc(), self.body(), self.signs(), self.nonce());
@@ -512,16 +512,16 @@ export class Test extends cyfs.NamedObject<TestDescContent, TestBodyContent>{
     }
 
     icon(): string|undefined {
-        if (this.body_expect().content().icon.is_some()) {
-            return this.body_expect().content().icon.unwrap().value();
+        if (this.body_expect().content().icon) {
+            return this.body_expect().content().icon?.value();
         } else {
             return undefined;
         }
     }
 
     app_desc(): string|undefined {
-        if (this.body_expect().content().desc.is_some()) {
-            return this.body_expect().content().icon.unwrap().value();
+        if (this.body_expect().content().desc) {
+            return this.body_expect().content().icon?.value();
         } else {
             return undefined;
         }
@@ -551,10 +551,10 @@ export class Test extends cyfs.NamedObject<TestDescContent, TestBodyContent>{
         this.body_expect().set_update_time(cyfs.bucky_time_now());
     }
 
-    set_source(version: string, source: cyfs.ObjectId, desc: cyfs.Option<string>) {
+    set_source(version: string, source: cyfs.ObjectId, desc: string|undefined) {
         this.body_expect().content().source.set(new cyfs.BuckyString(version), source);
-        if (desc.is_some()) {
-            this.body_expect().content().source_desc.set(new cyfs.BuckyString(version), new cyfs.BuckyString(desc.unwrap()));
+        if (desc) {
+            this.body_expect().content().source_desc.set(new cyfs.BuckyString(version), new cyfs.BuckyString(desc));
         }
         this.body_expect().set_update_time(cyfs.bucky_time_now());
     }

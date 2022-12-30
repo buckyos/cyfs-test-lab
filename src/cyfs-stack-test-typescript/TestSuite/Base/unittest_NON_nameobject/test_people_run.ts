@@ -1,10 +1,10 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs-extra';
 import { descpath, run, decoder, DeleteDescFile } from './index';
 import { copySync } from "fs-extra";
 var assert = require("assert");
-import { ErrorCode, RandomGenerator } from "../../common";
+import { ErrorCode, RandomGenerator } from "../../../common";
 
 
 //People对象测试
@@ -58,10 +58,10 @@ describe("测试People对象编解码", function () {
     describe("Ts编解码", function () {
         it("Ts编码：有效传入owner,ood_list,public,area,name,icon参数", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -72,7 +72,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let PeopleId_deco = target.desc().calculate_id();
             let icon_deco = target.icon()
             let name_deco = target.name();
@@ -93,10 +93,10 @@ describe("测试People对象编解码", function () {
             let ood_list = [deviceid, deviceid, deviceid, deviceid, deviceid2, deviceid2]
 
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -109,7 +109,7 @@ describe("测试People对象编解码", function () {
             let [target] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let PeopleId_deco = target.desc().calculate_id();
             let icon_deco = target.icon()
             let name_deco = target.name();
@@ -131,10 +131,10 @@ describe("测试People对象编解码", function () {
             let deviceid3: cyfs.DeviceId[] = [];
 
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 deviceid3,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -155,10 +155,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：有效传入空值的owner,name参数", async function () {
             let People = cyfs.People.create(
-                cyfs.None,
+                undefined,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 "",
                 icon,
             )
@@ -167,7 +167,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_deco: any = target.desc().owner()?.to_base_58();
 
             //属性校验
             assert.equal(undefined, owner_deco);
@@ -175,10 +175,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：有效不传入name,icon参数", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
             )
             let u8people = People.to_vec().unwrap()
             fs.writeFileSync(filepath4, u8people);
@@ -190,10 +190,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：有效调用set_name()方法，修改name属性", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -212,10 +212,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：有效调用set_icon()方法，修改icon属性", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -234,10 +234,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：设置name,icon参数为undefined", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 undefined,
                 undefined,
             )
@@ -259,10 +259,10 @@ describe("测试People对象编解码", function () {
             }
             let strRandom = fs.readFileSync(datafile).toString()
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 strRandom,
                 icon,
             )
@@ -284,10 +284,10 @@ describe("测试People对象编解码", function () {
             let namedata = fs.readFileSync(datafile).toString()
             console.log("______________________2")
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 namedata,
                 icon,
             )
@@ -310,10 +310,10 @@ describe("测试People对象编解码", function () {
             for (let index: number = 0; index < num / 2; index++) { ood_list[index] = deviceid2; }
             for (let index: number = num / 2; index < num; index++) { ood_list[index] = deviceid; }
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -331,10 +331,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：设置ood_work_mode为主备", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(area),
+                area,
                 name,
                 icon,
             )
@@ -346,7 +346,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let PeopleId_deco = target.desc().calculate_id();
             let icon_deco = target.icon()
             let name_deco = target.name();
@@ -363,10 +363,10 @@ describe("测试People对象编解码", function () {
         });
         it("Ts编码：传入的area为None", async function () {
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.None,
+                undefined,
                 name,
                 icon,
             )
@@ -377,7 +377,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let PeopleId_deco = target.desc().calculate_id();
             let icon_deco = target.icon()
             let name_deco = target.name();
@@ -396,10 +396,10 @@ describe("测试People对象编解码", function () {
             let zeroarea = new cyfs.Area(0, 0, 0, 0);
 
             let People = cyfs.People.create(
-                cyfs.Some(owner),
+                owner,
                 ood_list1,
                 secret.public(),
-                cyfs.Some(zeroarea),
+                zeroarea,
                 name,
                 icon,
             )
@@ -410,7 +410,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(u8people).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let PeopleId_deco = target.desc().calculate_id();
             let icon_deco = target.icon()
             let name_deco = target.name();
@@ -482,7 +482,7 @@ describe("测试People对象编解码", function () {
             let [target, buffer] = new cyfs.PeopleDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_deco: any = target.desc().owner()?.to_base_58();
             let PeopleId_deco: string = target.desc().calculate_id().to_base_58()
             let [ood_list_deco] = target.body_expect().content().ood_list.values()
 
@@ -525,7 +525,7 @@ describe("测试People对象编解码", function () {
                 let [target] = new cyfs.PeopleDecoder().raw_decode(rust_buffer).unwrap();
 
                 //获取属性
-                let owner_deco = target.desc().owner()?.unwrap();
+                let owner_deco = target.desc().owner();
                 let PeopleId_deco = target.desc().calculate_id();
                 let icon_deco = target.icon()
                 let name_deco = target.name();

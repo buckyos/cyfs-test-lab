@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import { Test, TestDecoder } from './name_object/name_object';
 import * as path from 'path'
 import * as fs from 'fs';
@@ -34,7 +34,7 @@ describe("测试自定义对象编解码", async function () {
     //定义传入参
     let source = new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>()
     source.set(buckystring, owner)
-    let icon = cyfs.Some(buckystring)
+    let icon = buckystring
     let list = new cyfs.BuckyHashSet<cyfs.DecAppId>()
     list.add(decappid)
 
@@ -85,7 +85,7 @@ describe("测试自定义对象编解码", async function () {
             let [target, buffer] = new TestDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let TestId_deco = target.desc().calculate_id();
             let id_deco: string = target.name();
             let data_deco: Uint8Array = target.getData()

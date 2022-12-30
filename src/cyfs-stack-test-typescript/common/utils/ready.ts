@@ -1,5 +1,5 @@
 import assert from 'assert';
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from '../../cyfs_node';
 import { RandomGenerator } from "./generator";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -32,7 +32,7 @@ export class Ready {
         await RandomGenerator.createRandomFile(saveDir, inner_path, fileSize);
 
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const pubres = (await source.trans().publish_file({
             common: {
@@ -196,7 +196,7 @@ export class Ready {
         let inner_node: cyfs.InnerNodeInfo = new cyfs.InnerNodeInfo(new cyfs.Attributes(0), new cyfs.InnerNode({ object_id: cyfs.ObjectId.default() }))
         let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> = new cyfs.BuckyHashMap()
         object_map.set(new cyfs.BuckyString("path1"), inner_node)
-        let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(new cyfs.NoneOption(), object_map)
+        let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(undefined, object_map)
         let attr: cyfs.Attributes = new cyfs.Attributes(0xFFFF)
 
         // // 第一种情况，构造一个普通大小的dir，内容可以放到desc里面

@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, run, decoder, DeleteDescFile } from './index';
@@ -52,7 +52,7 @@ describe("测试Device对象编解码", function () {
     describe("编码", function () {
         it("Ts编码：有效传入owner,unique_id,endpoints,sn_list,passive_sn_list,public_key,area,category参数", async function () {
             let Device = cyfs.Device.create(
-                cyfs.Some(owner),
+                owner,
                 unique_id,
                 [endpoint],
                 sn_list,
@@ -65,7 +65,7 @@ describe("测试Device对象编解码", function () {
         });
         it("Ts编码：有效传入多值组成的endpoints,sn_list,passive_sn_list参数", async function () {
             let Device = cyfs.Device.create(
-                cyfs.Some(owner),
+                owner,
                 unique_id,
                 endpoints,
                 sn_lists,
@@ -78,7 +78,7 @@ describe("测试Device对象编解码", function () {
         });
         it("Ts编码：有效传入空值组成的endpoints,sn_list,passive_sn_list参数", async function () {
             let Device = cyfs.Device.create(
-                cyfs.None,
+                undefined,
                 unique_id,
                 endpoint_e,
                 sn_list_e,
@@ -91,7 +91,7 @@ describe("测试Device对象编解码", function () {
         });
         it("Ts编码：有效调用set_name()方法，修改name属性", async function () {
             let Device = cyfs.Device.create(
-                cyfs.None,
+                undefined,
                 unique_id,
                 endpoint_e,
                 sn_list_e,
@@ -106,7 +106,7 @@ describe("测试Device对象编解码", function () {
         });
         it("Ts编码：有效调用set_name()方法，传入name空值属性", async function () {
             let Device = cyfs.Device.create(
-                cyfs.None,
+                undefined,
                 unique_id,
                 endpoint_e,
                 sn_list_e,
@@ -124,7 +124,7 @@ describe("测试Device对象编解码", function () {
     describe("解码", function () {
         //Ts编码生成对象
         let Device = cyfs.Device.create(
-            cyfs.Some(owner),
+            owner,
             unique_id,
             [endpoint],
             sn_list,
@@ -142,7 +142,7 @@ describe("测试Device对象编解码", function () {
             let [target, buffer] = new cyfs.DeviceDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap()
+            let owner_deco = target.desc().owner()
             let DeviceId_deco = target.desc().calculate_id()
             let snlist_deco = target.body_expect().content().sn_list()[0];
             let passive_pn_list_deco = target.body_expect().content().passive_pn_list()[0];
@@ -186,7 +186,7 @@ describe("测试Device对象编解码", function () {
             let [target, buffer] = new cyfs.DeviceDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_deco: any = target.desc().owner()?.to_base_58();
             let snlist_deco = target.body_expect().content().sn_list();
             let passive_pn_list_deco = target.body_expect().content().passive_pn_list();
             let endpoint_deco = target.body_expect().content().endpoints();
@@ -281,7 +281,7 @@ describe("测试Device对象编解码", function () {
             let [target, buffer] = new cyfs.DeviceDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_ts: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_ts: any = target.desc().owner()?.to_base_58();
             let DeviceId_ts: string = target.desc().calculate_id().to_base_58()
             let snlist_ts = target.body_expect().content().sn_list()[0];
             let catelogy_ts = target.category().unwrap()

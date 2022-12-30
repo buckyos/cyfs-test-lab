@@ -1,5 +1,5 @@
-import * as cyfs from '../../cyfs_node';
-import { UseProtoBuf, UseProtoBufDecoder,UseProtoBufId } from '../../common/types/useProtoBuf'
+import * as cyfs from '../../../cyfs_node';
+import { UseProtoBuf, UseProtoBufDecoder,UseProtoBufId } from '../../../common/types/useProtoBuf'
 var assert = require("assert");
 
 //UseProtoBuf扩展对象测试

@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, run, decoder, DeleteDescFile } from './index';
@@ -93,7 +93,7 @@ describe("测试File对象编解码", function () {
             let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap();
+            let owner_deco = target.desc().owner();
             let FileId_deco = target.desc().calculate_id()
             let len_deco = target.desc().content().len
             let [chunkinlist_deco]: any = target.body_expect().content().chunk_list.chunk_in_list
@@ -198,7 +198,7 @@ describe("测试File对象编解码", function () {
             let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_ts: any = target.desc().owner()?.unwrap().to_base_58();
+            let owner_ts: any = target.desc().owner()?.to_base_58();
             let FileId_ts: string = target.desc().calculate_id().to_base_58()
             let len_ts = target.desc().content().len
             let [chunkinlist_ts]: any = target.body_expect().content().chunk_list.chunk_in_list

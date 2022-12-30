@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, decoder, DeleteDescFile } from './index';
@@ -41,7 +41,7 @@ describe("测试UnionAccount对象编解码", async function () {
     let unionaccount2: Uint8Array
     let unionaccount3: Uint8Array
     let unionaccount4: Uint8Array
-    let udata: Uint8Array
+    let udata: Uint8Array|undefined
     let traceid: number | undefined
     let updatetime: cyfs.JSBI
     let increasetime: cyfs.JSBI
@@ -110,7 +110,7 @@ describe("测试UnionAccount对象编解码", async function () {
 
             unionaccount.body_expect().set_userdata(ud)
 
-            udata = unionaccount.body_expect().user_data().unwrap()
+            udata = unionaccount.body_expect().user_data()
             unionaccount1 = unionaccount.to_vec().unwrap()
             console.info(udata)
             console.info(unionaccount1)
@@ -223,7 +223,7 @@ describe("测试UnionAccount对象编解码", async function () {
         //
         it("Ts解码: 对设置好userdata已编码对象进行解码", async function () {
             let [o, buf] = new cyfs.UnionAccountDecoder().raw_decode(unionaccount1).unwrap()
-            let deudata = o.body_expect().user_data().unwrap()
+            let deudata = o.body_expect().user_data()
 
 
 

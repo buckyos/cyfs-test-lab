@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 var assert = require("assert");
 const crypto = require("crypto")
 
@@ -25,7 +25,7 @@ describe("测试Contract对象编解码", async function () {
     let contract3: Uint8Array
     let contract4: Uint8Array
 
-    let udata: Uint8Array
+    let udata: Uint8Array|undefined
     let traceid: number | undefined
     let updatetime: cyfs.JSBI
     let increasetime: cyfs.JSBI
@@ -54,7 +54,7 @@ describe("测试Contract对象编解码", async function () {
 
             contract.body_expect().set_userdata(ud)
 
-            udata = contract.body_expect().user_data().unwrap()
+            udata = contract.body_expect().user_data()
             contract1 = contract.to_vec().unwrap()
             console.info(udata)
             console.info(contract1)
@@ -125,7 +125,7 @@ describe("测试Contract对象编解码", async function () {
         //
         it("Ts解码: 对设置好userdata已编码对象进行解码", async function () {
             let [o, buf] = new cyfs.ContractDecoder().raw_decode(contract1).unwrap()
-            let deudata = o.body_expect().user_data().unwrap()
+            let deudata = o.body_expect().user_data()
             let decontractid = o.contract_id()
 
 

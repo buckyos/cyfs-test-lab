@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, decoder } from './index';
@@ -75,7 +75,7 @@ describe("测试AppExtInfo对象编解码", function () {
             let [target, buffer] = new cyfs.AppExtInfoDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco = target.desc().owner()?.unwrap()
+            let owner_deco = target.desc().owner();
             let id_deco: any = target.desc().content().id
             let appexyinfoid_deco = target.desc().calculate_id()
 

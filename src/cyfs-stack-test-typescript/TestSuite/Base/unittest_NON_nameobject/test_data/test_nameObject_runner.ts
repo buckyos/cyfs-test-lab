@@ -1,6 +1,6 @@
 import assert  from 'assert';
-import {cyfs} from '../../../cyfs_node';
-import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../../common'
+import * as cyfs from '../../../../cyfs_node';
+import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../../../common'
 import * as fs from "fs-extra"
 import * as path from "path"
 import * as testdatas from "./get_data"

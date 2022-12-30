@@ -1,5 +1,5 @@
-import * as cyfs from '../../cyfs_node';
-import { MyTest, MyTestDecoder } from '../../common/types/myTestObject'
+import * as cyfs from '../../../cyfs_node';
+import { MyTest, MyTestDecoder } from '../../../common/types/myTestObject'
 var assert = require("assert");
 const crypto = require("crypto")
 
@@ -9,18 +9,18 @@ describe("测试MyTest对象编解码", async function () {
 
     let objectstr = '5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW111';
     let authorstr = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijk';
-    let owner = cyfs.Some(cyfs.ObjectId.from_base_58(objectstr).unwrap())
-    let author = cyfs.Some(cyfs.ObjectId.from_str(authorstr).unwrap())
+    let owner = cyfs.ObjectId.from_base_58(objectstr).unwrap()
+    let author = cyfs.ObjectId.from_str(authorstr).unwrap()
     let prevstr = "9tGpLNnX15t9qjxyAsABtdfEFUMLLHtA9iWtfVJN2BqR"
-    let prev = cyfs.Some(cyfs.ObjectId.from_base_58(prevstr).unwrap())
+    let prev = cyfs.ObjectId.from_base_58(prevstr).unwrap()
 
     let oid = cyfs.ObjectId.from_base_58(prevstr).unwrap()
-    let ol = cyfs.Some(new cyfs.Vec([new cyfs.ObjectLink(oid, new cyfs.SomeOption(oid))]))
+    let ol = new cyfs.Vec([new cyfs.ObjectLink(oid, oid)])
     let publicKeystr = "/test/simpleGroup/" + "12346sdsdad132323qwe12eqw121eqwwe2wasdadd";
     let hashvalue = crypto.createHash("sha256").update(publicKeystr).digest("hex")
     let buf = new Uint8Array().fromHex(hashvalue).unwrap()
-    let rsa = cyfs.Some(new cyfs.RSAPublicKey(0, buf))
-    let secp = cyfs.Some(new cyfs.Secp256k1PublicKey(buf))
+    let rsa = new cyfs.RSAPublicKey(0, buf)
+    let secp = new cyfs.Secp256k1PublicKey(buf)
     //let sm2 = cyfs.Some(new cyfs.SM2PublicKey(buf))
 
     let name: string = "扩展对象公匙"
@@ -100,7 +100,7 @@ describe("测试MyTest对象编解码", async function () {
         //     assert.equal(network, mtnetwork, "断言失败，network不一致")
         // });
         it("Ts编码：puclikey为rsa类型且size为256创建MyTest对象", function () {
-            let rsa2048 = cyfs.Some(new cyfs.RSAPublicKey(1, buf))
+            let rsa2048 = new cyfs.RSAPublicKey(1, buf)
             myTest6 = MyTest.create(owner, author, prev, ol, rsa2048, name, network)
 
             let mtname = myTest6.body_expect().content().name
@@ -113,7 +113,7 @@ describe("测试MyTest对象编解码", async function () {
             assert.equal(network, mtnetwork, "断言失败，network不一致")
         });
         it("Ts编码：puclikey为rsa类型且size为384创建MyTest对象", function () {
-            let rsa3072 = cyfs.Some(new cyfs.RSAPublicKey(2, buf))
+            let rsa3072 = new cyfs.RSAPublicKey(2, buf)
             myTest7 = MyTest.create(owner, author, prev, ol, rsa3072, name, network)
 
             let mtname = myTest7.body_expect().content().name

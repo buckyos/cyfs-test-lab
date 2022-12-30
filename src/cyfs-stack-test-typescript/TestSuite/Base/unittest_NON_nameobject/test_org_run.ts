@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 var assert = require("assert");
 
 
@@ -29,7 +29,7 @@ describe("测试Org对象编解码", async function () {
     let org3: Uint8Array
     let org4: Uint8Array
 
-    let udata: Uint8Array
+    let udata: Uint8Array|undefined
     let traceid: number | undefined
     let updatetime: cyfs.JSBI
     let increasetime: cyfs.JSBI
@@ -88,7 +88,7 @@ describe("测试Org对象编解码", async function () {
 
             org.body_expect().set_userdata(ud)
 
-            udata = org.body_expect().user_data().unwrap()
+            udata = org.body_expect().user_data()
             org1 = org.to_vec().unwrap()
             console.info(udata)
             console.info(org1)
@@ -172,7 +172,7 @@ describe("测试Org对象编解码", async function () {
         //
         it("Ts解码: 对设置好userdata已编码对象进行解码", async function () {
             let [o, buf] = new cyfs.OrgDecoder().raw_decode(org1).unwrap()
-            let deudata = o.body_expect().user_data().unwrap()
+            let deudata = o.body_expect().user_data()
             let deorgid = o.org_id()
 
 

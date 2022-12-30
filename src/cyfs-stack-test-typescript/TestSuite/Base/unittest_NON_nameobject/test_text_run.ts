@@ -1,4 +1,4 @@
-import * as cyfs from '../../cyfs_node';
+import * as cyfs from '../../../cyfs_node';
 import * as path from 'path'
 import * as fs from 'fs';
 import { descpath, decoder } from './index';
@@ -34,7 +34,7 @@ describe("测试TextObject对象编解码", async function () {
     describe("编码", function () {
         it("Ts编码：有效传入owner,id,header,value参数", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id,
                 header,
                 value
@@ -43,7 +43,7 @@ describe("测试TextObject对象编解码", async function () {
         });
         it("Ts编码：有效传入owner,id,header,value为空值", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id_e,
                 header_e,
                 value_e
@@ -55,7 +55,7 @@ describe("测试TextObject对象编解码", async function () {
     describe("编码-操作方法调用", function () {
         it("Ts编码：有效set_value()调用，修改value的值", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id,
                 header,
                 value
@@ -69,7 +69,7 @@ describe("测试TextObject对象编解码", async function () {
 
         it("Ts编码：有效set_id()调用，修改id的值", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id,
                 header,
                 value
@@ -83,7 +83,7 @@ describe("测试TextObject对象编解码", async function () {
 
         it("Ts编码：有效set_header()调用，修改header的值", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id,
                 header,
                 value
@@ -96,7 +96,7 @@ describe("测试TextObject对象编解码", async function () {
         });
         it("Ts编码：有效修改id,value,header为空值", function () {
             let TextObject = cyfs.TextObject.create(
-                cyfs.Some(owner),
+                owner,
                 id,
                 header,
                 value
@@ -116,7 +116,7 @@ describe("测试TextObject对象编解码", async function () {
     describe("解码", async function () {
         //Ts编码生成对象
         let TextObject = cyfs.TextObject.create(
-            cyfs.Some(owner),
+            owner,
             id,
             header,
             value
@@ -129,7 +129,7 @@ describe("测试TextObject对象编解码", async function () {
             let [target, buffer] = new cyfs.TextObjectDecoder().raw_decode(desc_buffer).unwrap();
 
             //获取属性
-            let owner_deco: any = target.desc().owner()?.unwrap();
+            let owner_deco: any = target.desc().owner();
             let TextObjectId_deco = target.desc().calculate_id();
             let id_deco: string = target.desc().content().id
             let header_deco: string = target.desc().content().header
