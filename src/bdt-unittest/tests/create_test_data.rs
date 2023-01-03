@@ -78,6 +78,7 @@ mod tests {
             for ep in device7.mut_connect_info().mut_endpoints(){
                 log::info!("{}",ep);
             }
+            assert!(false);
         }).await
         
     }

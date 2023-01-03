@@ -20,14 +20,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_tcp_keep_100"
+    let testcaseName = "perf_stream_connect_control_tcp_keep_10000"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用TCP连接 
+        + LN RN 只使用原生TCP
         ## 操作步骤
-        + (1) LN RN 之间串行建立100个连接
+        + (1) LN RN 之间串行建立10000个连接
         + (2) 维持连接2 min
         ## 性能监控
         + LN/RN 内存、CPU、网络带宽  `,
@@ -55,7 +55,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 20000);
+    await agentManager.allAgentStartTcpServer();
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 20; i++) {
         let info = await testRunner.createPrevTask({
@@ -64,23 +65,22 @@ export async function TaskMain(_interface: TaskClientInterface) {
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 100; x++) {
+        for (let x = 0; x < 500; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                type: ActionType.connect,
+            info = await testRunner.prevTaskAddAction(new BDTAction.TcpConnectAction({
                 LN: `${LN}$1$0`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
-                    timeout: 20 * 1000,
+                    timeout: 200 * 1000,
                 },
                 expect: { err: 0 },
             }))
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
             type: ActionType.sleep,
-            LN: `${LN}$1`,
-            RN: `${RN}$1`,
+            LN: `${LN}$1$0`,
+            RN: `${RN}$1$0`,
             config: {
                 timeout: 6 * 60 * 1000,
             },

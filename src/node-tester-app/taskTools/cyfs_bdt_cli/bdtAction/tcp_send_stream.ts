@@ -1,4 +1,4 @@
-import { sleep } from '../../../base';
+import { ErrorCode, sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./base_action"
 
@@ -20,15 +20,18 @@ export class TcpSendStreamAction extends BaseAction implements ActionAbstract {
         // (3) 获取tcp stream 连接
         let stream_ln = await tcp_ln.get_tcp_stream(this.action.config.conn_tag!);
         let stream_rn = await tcp_rn.get_tcp_stream(this.action.config.conn_tag!);
-        
-        let recv_promise =  stream_rn.tcp_stream!.recv();
         let send = await stream_ln.tcp_stream!.send(this.action.fileSize!);
-        let recv = await recv_promise;
         if(send.result){
             return { err: send.result, log: send.msg }
         }
-        if(recv.result){
-            return { err: recv.result, log: recv.msg }
+        let recv  = stream_rn.tcp_stream!.recv_cookie.get(send.sequence_id);
+        if(!recv){
+            // 5s重试一次,避免事件还未触发
+            await sleep(5000);
+            recv  = stream_rn.tcp_stream!.recv_cookie.get(send.sequence_id)
+            if(!recv){
+                return { err: ErrorCode.notFound, log: "RN check recv data failed"}
+            }
         }
         this.action.send_time = send.send_time;
         this.action.info = {

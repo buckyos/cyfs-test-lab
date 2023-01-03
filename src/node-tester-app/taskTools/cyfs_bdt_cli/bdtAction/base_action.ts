@@ -1,5 +1,5 @@
 import { ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode, sleep } from '../../../base';
-import { AgentManager } from '../agentManager'
+import { AgentManager } from '../agent_manager'
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import { request, ContentType } from "../request"
 import * as fs from 'fs';
@@ -22,7 +22,7 @@ export class BaseAction implements ActionAbstract{
     }
     async checkAgent() {
         this.state = "ready";
-        await this.agentManager!.checkBdtPeerClient(this.action.LN)
+        await this.agentManager!.checkBdtCli(this.action.LN)
     }
     async init(_interface: TaskClientInterface,task:Task,index?:number,date?:string): Promise<{ err: number, log: string }> {
         this.action.testcaseId = task!.testcaseId;
@@ -126,7 +126,8 @@ export class BaseAction implements ActionAbstract{
                 setTimeout(async ()=>{
                     if(this.state == "running"){
                         // 实际超时 预期失败
-                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} ${this.action.LN} ${this.action.RN} run timeout`};
+                        this.action.result = { err: BDTERROR.timeout, log: `${this.action.action_id} ${this.action.LN} ${this.action.RN} run timeout time = ${this.action.config.timeout}`};
+                        this.logger!.error(this.action.result);
                         if(this.action.expect.err){
                             V({ err: BDTERROR.success, log: "action expect err" })
                         }

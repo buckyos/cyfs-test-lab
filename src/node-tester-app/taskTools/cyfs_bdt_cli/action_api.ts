@@ -266,20 +266,7 @@ export type TcpStreamSendResp = {
 }
 
 
-export type TcpStreamRecvReq = {
-    name: string,
-    stream_name: string,
-}
 
-
-export type TcpStreamRecvResp = {
-    result: number,
-    msg: string,
-    file_size: number,
-    hash: string,
-    recv_time: number,
-    sequence_id: number,
-}
 export type TcpStreamListenerReq = {
     name: string,
     stream_name: string,
@@ -298,7 +285,14 @@ export type TcpStreamListenerEvent = {
     sequence_id: number,
     recv_time: number,
 }
+export type DestoryStackReq = {
+    peer_name: string,
+}
 
+export type DestoryStackResp = {
+    result: number,
+    msg: string,
+}
 export interface LpcActionApi {
     client_name?: string,
     TestReq?: TestReq,
@@ -312,6 +306,8 @@ export interface LpcActionApi {
     Exit?: Exit,
     CreateStackReq?: CreateStackReq,
     CreateStackResp?: CreateStackResp,
+    DestoryStackReq?:DestoryStackReq,
+    DestoryStackResp?:DestoryStackResp,
     ConnectReq?: ConnectReq,
     ConnectResp?: ConnectResp,
     ConnectMutReq?: ConnectMutReq,
@@ -336,9 +332,7 @@ export interface LpcActionApi {
     TcpConnectResp?: TcpConnectResp,
     TcpStreamSendReq?: TcpStreamSendReq,
     TcpStreamSendResp?: TcpStreamSendResp,
-    TcpStreamRecvReq?: TcpStreamRecvReq,
-    TcpStreamRecvResp?: TcpStreamRecvResp,
-    TcpStreamListenerReq?:TcpStreamListenerReq
-    TcpStreamListenerResp?:TcpStreamListenerResp
-    TcpStreamListenerEvent?:TcpStreamListenerEvent
+    TcpStreamListenerReq?: TcpStreamListenerReq
+    TcpStreamListenerResp?: TcpStreamListenerResp
+    TcpStreamListenerEvent?: TcpStreamListenerEvent
 }

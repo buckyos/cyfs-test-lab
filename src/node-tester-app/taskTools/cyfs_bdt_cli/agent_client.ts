@@ -1,9 +1,9 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
-import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
+import {BdtCliConfig,InitBdtCliData} from "./lab_agent"
 import {Agent,Peer,BDTERROR} from './type'
 import {request,ContentType} from "./request";
-import {BdtPeerClient} from "./bdtPeerClient"
-import {bdteEchartsCPU,bdteEchartsNetwork,bdteEchartsMem} from "./perfCharts"
+import {BdtCli} from "./bdt_cli"
+import {bdteEchartsCPU,bdteEchartsNetwork,bdteEchartsMem} from "./perf_charts"
 import {BdtConnection,BdtStack,FastQAInfo} from "./bdt_stack"
 import * as path from "path"
 import * as fs from "fs-extra"
@@ -14,7 +14,7 @@ export class AgentClient {
     public agentInfo : Agent;
     private ip? : Array<string>;// ip信息
     private m_agentid? : string; //节点对应的自动化测试框架节点
-    public bdtPeerMap : Map<string,BdtPeerClient>
+    public bdtPeerMap : Map<string,BdtCli>
     public running_device : Array<string>;
     private agentMult : number;
     
@@ -107,7 +107,7 @@ export class AgentClient {
             },60*1000)
             let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
                 name : "uploadLog",
-                logName : `${testcaseId}_${this.tags}.zip`
+                log_name : `${testcaseId}_${this.tags}.zip`,
             }, this.m_agentid!, 10*1000);
             this.logger.info(`${this.tags} uploadLog = ${JSON.stringify(result)}`)
             wait = false;
@@ -188,15 +188,14 @@ export class AgentClient {
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
     
-    async startPeerClient(config:BdtPeerClientConfig,local?:string,bdt_port_range:number=40000,client_port:number=22222):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient,online_time?:number}>{
+    async startPeerClient(config:BdtCliConfig,local?:string,client_port:number=22222):Promise<{err:number,log?:string,bdtClient?:BdtCli,online_time?:number}>{
         if(myconfig.AgentConcurrencyIgnoreWAN && this.agentMult > 0 && this.agentInfo.NAT == 0){
             this.logger.error(`${this.tags} Perf test WAN agent Ignore WAN Concurrency BDT client`)
             return {err:BDTERROR.success,log:"Perf test WAN agent Ignore WAN Concurrency BDT client"}
         }
-        let peer :Peer = await InitBdtPeerClientData(this.agentInfo,config);
-        peer.bdt_port_range = bdt_port_range;
+        let peer :Peer = await InitBdtCliData(this.agentInfo,config);
         peer.client_port = client_port;
-        let bdtClient = new BdtPeerClient(this.m_interface,this.m_agentid!,this.tags,peer)
+        let bdtClient = new BdtCli(this.m_interface,this.m_agentid!,this.tags,peer)
         if(local){
             bdtClient.cache_peer_info.local =this.tags;
             bdtClient.cache_peer_info.device_tag =  local.split(".")[0];
@@ -204,7 +203,7 @@ export class AgentClient {
         }
         let result = await bdtClient.init(this.agentMult);
         if(result.err){
-            this.logger.error(`${this.tags} init bdt client faild port = ${bdt_port_range}`)
+            this.logger.error(`${this.tags} init bdt client faild port = ${client_port}`)
             return result
         }
         this.agentMult = this.agentMult + 1;
@@ -212,8 +211,15 @@ export class AgentClient {
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
         return {err:result.err,log:result.log,bdtClient}
     }
+    async startTcpServer(port:number=22223){
+        for(let client of this.bdtPeerMap.values()){
+            this.m_interface.getLogger().info(`${this.tags} ${client.client_name} start tcp server ${port}`)
+            await client.create_tcp_server(this.agentInfo.ipv4[0],port)
+            port = port + 1;
+        }
+    }
 
-    async getBdtPeerClient(client_index:string,stack_index:string):Promise<{err:ErrorCode,log?:string,bdt_stack?:BdtStack}>{
+    async getBdtCli(client_index:string,stack_index:string):Promise<{err:ErrorCode,log?:string,bdt_stack?:BdtStack}>{
         this.is_run = true;
         if(!this.bdtPeerMap.has(client_index)){
             return {err:BDTERROR.AgentError,log:`${this.tags} ${client_index} not exsit`}
@@ -225,7 +231,7 @@ export class AgentClient {
         let bdt_stack =  bdtClient.stack_list.get(stack_index);
         return {err:BDTERROR.success,log:`${this.tags} ${client_index} get success`,bdt_stack}
     }
-    async get_bdt_peer_client(client_index:string):Promise<{err:ErrorCode,log?:string,client?:BdtPeerClient}>{
+    async get_bdt_peer_client(client_index:string):Promise<{err:ErrorCode,log?:string,client?:BdtCli}>{
         this.is_run = true;
         if(!this.bdtPeerMap.has(client_index)){
             return {err:BDTERROR.AgentError,log:`${this.tags} ${client_index} not exsit`}

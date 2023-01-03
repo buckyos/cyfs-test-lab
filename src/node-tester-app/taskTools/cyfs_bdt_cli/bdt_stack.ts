@@ -3,7 +3,7 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator } from '../../base';
 import { EventEmitter } from 'events';
 import { Agent, Peer, BDTERROR } from './type'
-import { UtilClient } from "./utilClient"
+import { UtilClient } from "./util_client"
 import { request, ContentType } from "./request";
 import * as path from "./path";
 import * as config from "./config";

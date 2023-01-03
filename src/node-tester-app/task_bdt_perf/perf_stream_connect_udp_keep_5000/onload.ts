@@ -1,9 +1,9 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator } from '../../base';
-import { TestRunner } from '../../taskTools/cyfs_bdt_cli/testRunner';
+import { TestRunner } from '../../taskTools/cyfs_bdt_cli/test_runner';
 import { Testcase, Task, ActionType, Resp_ep_type } from "../../taskTools/cyfs_bdt_cli/type"
-import { labAgent, BdtPeerClientConfig, LabSnList, AgentList_LAN_WAN } from "../../taskTools/cyfs_bdt_cli/labAgent"
+import { labAgent, BdtCliConfig, LabSnList, AgentList_LAN_WAN } from "../../taskTools/cyfs_bdt_cli/lab_agent"
 import * as BDTAction from "../../taskTools/cyfs_bdt_cli/bdtAction"
-import { AgentManager } from '../../taskTools/cyfs_bdt_cli/agentManager'
+import { AgentManager } from '../../taskTools/cyfs_bdt_cli/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -36,7 +36,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await testRunner.initTestcase(testcase);
 
     //(3) 创建BDT测试客户端
-    let config: BdtPeerClientConfig = {
+    let config: BdtCliConfig = {
         eps: {
             ipv4: {
                 udp: true,
@@ -52,24 +52,24 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 20000);
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
     //(4) 测试用例执行器添加测试任务
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
         let info = await testRunner.createPrevTask({
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 500; x++) {
+        for (let x = 0; x < 250; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
                 type: ActionType.connect,
                 LN: `${LN}$1$0`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
-                    timeout: 20 * 1000,
+                    timeout: 200 * 1000,
                 },
                 expect: { err: 0 },
             }))

@@ -6,8 +6,8 @@ export class ConnectMutAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
 
         // (1) 检查测试bdt 客户端
-        let LN = await this.agentManager!.getBdtPeerClient(this.action.LN);
-        let RN = await this.agentManager!.getBdtPeerClient(this.action.RN!);
+        let LN = await this.agentManager!.getBdtCli(this.action.LN);
+        let RN = await this.agentManager!.getBdtCli(this.action.RN!);
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }

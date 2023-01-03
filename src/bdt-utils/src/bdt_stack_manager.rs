@@ -15,21 +15,28 @@ use crate::bdt_stream::*;
 use crate::tool::*;
 use crate::{bdt_ndn::*, CreateStackReq, CreateStackResp};
 
-#[derive(Clone)]
-pub struct BDTStackManager {
+
+pub struct BDTClientManager {
     BDTClient_map: HashMap<String, BDTClient>,
     temp_dir: PathBuf, //工作目录
     service_path: PathBuf,
+    bdt_port_index : Mutex<u16> 
 }
 
-impl BDTStackManager {
-    pub fn new(temp_dir: PathBuf, service_path: PathBuf) -> Self {
+impl BDTClientManager {
+    pub fn new(temp_dir: PathBuf, service_path: PathBuf,bdt_port_index:u16) -> Self {
         let mut peer_map = HashMap::new();
         Self {
             BDTClient_map: peer_map,
             temp_dir,
             service_path,
+            bdt_port_index:Mutex::new(bdt_port_index),
         }
+    }
+    pub fn increase_bdt_port_index(&self) -> u16 {
+        let mut bdt_port_index = self.bdt_port_index.lock().unwrap();
+        *bdt_port_index = *bdt_port_index + 1;
+        *bdt_port_index
     }
     pub fn is_client_exists(&self, peer_name: &str) -> bool {
         self.BDTClient_map.contains_key(peer_name)
@@ -251,19 +258,18 @@ impl BDTStackManager {
             ));
             //return Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
         }
-        let mut port: u16 = match req.bdt_port {
-            Some(n) => n as u16,
-            _ => 50000 as u16,
-        };
+        // let mut port: u16 = match req.bdt_port {
+        //     Some(n) => n as u16,
+        //     None => self.increase_bdt_port_index(),
+        // };
         let mut eps = Vec::new();
         for addr in req.addrs.iter() {
-            let ep = { format!("{}:{}", addr, port) };
-            port = port + 1;
+            let ep = { format!("{}:{}", addr, self.increase_bdt_port_index())};
             log::debug!("ep={} on create", &ep);
             eps.push(ep);
         }
         let area = Area::from_str(req.area.as_str()).unwrap();
-        // sn pn
+        //load sn pn
         let sn_list = load_desc_list(self.service_path.clone(), &req.sn).await;
         let passive_pn_list = load_desc_list(self.service_path.clone(), &req.active_pn).await;
         let active_pn_list = load_desc_list(self.service_path.clone(), &req.passive_pn).await;
@@ -281,7 +287,7 @@ impl BDTStackManager {
                 &sn_list,
                 &passive_pn_list,
                 &active_pn_list,
-                save_path,
+                None,
                 req.sn_only.clone(),
             )
             .await
@@ -289,8 +295,9 @@ impl BDTStackManager {
             //(3)解析BDT Stack 启动结果
             Ok((stack, online_time)) => {
                 let mut local = stack.sn_client().ping().default_local();
-                let online_sn = stack.sn_client().ping().sn_list().clone();
+                let online_sn_id = stack.sn_client().ping().default_client().unwrap().sn().object_id().to_string();
                 let ep_info = local.mut_connect_info().mut_endpoints().clone();
+                // 设置返回Device 对象 ep 类型用于测试
                 let _ = match req.ep_type.clone() {
                     Some(ep_type_str) => {
                         let ep_type = ep_type_str.as_str();
@@ -329,7 +336,9 @@ impl BDTStackManager {
                     }
                 };
                 let ep_resp = local.mut_connect_info().mut_endpoints();
-                let online_sn = device_list_to_string(&online_sn);
+                
+                let mut online_sn = Vec::new();
+                online_sn.push(online_sn_id);
                 let ep_info = endpoint_list_to_string(&ep_info);
                 let ep_resp = endpoint_list_to_string(&ep_resp);
                 (
@@ -361,6 +370,20 @@ impl BDTStackManager {
             ),
         };
         Ok((resp, local))
+    }
+    
+    pub fn destory_client(&mut self,peer_name:&str)-> BuckyResult<()>  {
+        let _ = match self.BDTClient_map.get(peer_name) {
+            Some(client) =>{
+                let _ = client.get_stack().sn_client().ping().stop();
+                // bdt not support stack close
+                client.get_stack().close();   
+            },
+            None =>{
+            }
+        };
+        self.BDTClient_map.remove(peer_name); 
+        Ok(())
     }
     pub async fn destory_all(&mut self) {
         for client in self.BDTClient_map.values_mut() {

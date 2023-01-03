@@ -189,7 +189,7 @@ export async function IPv6Agent() {
     return ipv6_list
 }
 
-export type BdtPeerClientConfig={
+export type BdtCliConfig={
     LW_type? :string,
     eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}
     bdt_port_range? : number,
@@ -209,7 +209,7 @@ export type BdtPeerClientConfig={
     chunk_cache? : string,
     tcp_port_mapping? : string,
 }
-export async function InitBdtPeerClientData(agent:Agent,config: BdtPeerClientConfig):Promise<Peer>  {
+export async function InitBdtCliData(agent:Agent,config: BdtCliConfig):Promise<Peer>  {
     let epList = [];
     let LW_type = "L";
     if (agent.NAT == NAT_Type.Public) {

@@ -260,19 +260,26 @@ impl BDTClient {
     }
     pub async fn connect(&mut self, remote: &Device, req: &ConnectReq) -> BuckyResult<ConnectResp> {
         log::info!("BDTClient connect, req={:?}", &req);
-
         //let (remote_desc, _other) = Device::raw_decode(buffer).unwrap();
         let req = req.clone();
         let question_size = req.question_size as usize;
         let peer_name = req.peer_name.clone().clone();
         let remote_sn = string_to_deviceid_list(&req.remote_sn);
-        let remote_desc = remote.clone();
-
+        let remote_device = match req.driect {
+            true =>{
+                Some(remote.clone())
+            },
+            false=>{
+                None
+            } 
+        };
+       
+        
         // （1）解析请求参数
         let param = BuildTunnelParams {
-            remote_const: remote_desc.desc().clone(),
+            remote_const: remote.desc().clone(),
             remote_sn:Some(remote_sn),
-            remote_desc: Some(remote_desc),
+            remote_desc:remote_device,
         };
         // 构造FastQA 请求数据
         // FastQA 最大answer为 25KB

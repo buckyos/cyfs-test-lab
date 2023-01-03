@@ -62,6 +62,7 @@ export const enum  ActionType {
     connect_second = "connect-second",  
     connect_reverse = "connect-reverse",  
     connect_mult = "connect-mult", 
+    tunnel_connect = "tunnel_connect", 
     connect_send_stream = "connect_send-stream",
     send_stream = "send-stream",
     send_stream_just_send = "send-stream-just-send",

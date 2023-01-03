@@ -19,16 +19,9 @@ export class TcpConnectAction extends BaseAction implements ActionAbstract {
         let tcp_rn = RN.client!.tcp_server.get("22223")!;
         //（3） 建立tcp 连接
         let result = await tcp_ln.tcp_connect(tcp_rn.address!,this.action.config.conn_tag!);
-        let check = await tcp_rn.check_connect(tcp_ln.address!,this.action.config.conn_tag!)
-        if(check.err){
-            await sleep(5000);
-            check = await tcp_rn.check_connect(tcp_ln.address!,this.action.config.conn_tag!)
-        }
+
         if(result.result){
             return { err: result.result, log: result.msg }
-        }
-        if(check.err){
-            return { err: BDTERROR.connnetFailed, log: "check tcp connect failed" }
         }
         this.action.connect_time = result.connect_time;
 

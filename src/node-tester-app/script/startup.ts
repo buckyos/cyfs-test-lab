@@ -274,7 +274,7 @@ async function main() {
         DirHelper.clearExpired(DirHelper.getUpdateDir(), 60);
     }, 24 * 3600 * 1000);
 
-    Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+    Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
     Base.BX_EnableFileLog(logFolder, `${path.basename((require.main as any).filename, '.js')}`, '.log');
     Base.blog.enableConsoleTarget(false);
     Base.blog.info(`current dir=${process.cwd()}, rootdir=${DirHelper.getRootDir()}`);

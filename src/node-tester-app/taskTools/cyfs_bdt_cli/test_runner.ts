@@ -1,5 +1,5 @@
 import {ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode, sleep} from '../../base';
-import {AgentManager} from './agentManager';
+import {AgentManager} from './agent_manager';
 import {BDTERROR,ActionType,Agent,Testcase,Task,Action,ActionAbstract} from './type';
 import {request,ContentType} from "./request";
 import * as config from "./config"
@@ -91,7 +91,7 @@ export class TestRunner{
     async runTask(task:Task):Promise<{err:number,log:string, record : {taskId:string,data:Array<any>}}>{
         // 判断机器状态是否正常，机器不正常
         return new Promise(async(V)=>{
-            let check = await this.agentManager.checkBdtPeerClientList(task.LN,task.RN,task.Users);
+            let check = await this.agentManager.checkBdtCliList(task.LN,task.RN,task.Users);
             task.state = "run" ;
             if(!task.timeout){
                 task.timeout = 5*60*1000;
@@ -192,7 +192,7 @@ export class TestRunner{
         return;
     }
     async saveAgentPerfInfo() {
-        if(config.ReportAgentPerfInfo){
+        if(config.SaveAgentPerfInfo){
            await this.agentManager.saveAgentPerfInfo(this.Testcase!.testcaseId);
         }
         return;

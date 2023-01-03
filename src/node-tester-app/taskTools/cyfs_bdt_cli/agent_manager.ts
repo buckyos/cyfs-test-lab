@@ -1,8 +1,8 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
-import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
+import {BdtCliConfig,InitBdtCliData} from "./lab_agent"
 import {Agent,Peer,BDTERROR, Task} from './type'
-import {BdtPeerClient} from "./bdtPeerClient"
-import {AgentClient} from "./agentClient"
+import {BdtCli} from "./bdt_cli"
+import {AgentClient} from "./agent_client"
 import {BdtConnection,BdtStack,FastQAInfo} from "./bdt_stack"
 export class AgentManager {
     static manager?: AgentManager;
@@ -44,16 +44,16 @@ export class AgentManager {
         }
     }
     
-    async checkBdtPeerClient(name:string):Promise<{err:number,log?:string}> {
+    async checkBdtCli(name:string):Promise<{err:number,log?:string}> {
         let agentName = name.split("$")[0];
         let BDTIndex = name.split("$")[1];
         
         if(!this.agentMap.has(agentName) || !this.agentMap.get(agentName)!.bdtPeerMap.has(BDTIndex)){
             return {err:BDTERROR.AgentError,log:`${name} not exsit`}
         }
-        return {err:BDTERROR.success,log:`check BdtPeerClient success`};
+        return {err:BDTERROR.success,log:`check BdtCli success`};
     }
-    async getBdtPeerClient(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
+    async getBdtCli(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
         let agentName = name.split("$")[0];
         let client_index = name.split("$")[1];
         let stack_index = name.split("$")[2];
@@ -61,12 +61,21 @@ export class AgentManager {
             this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
             return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
         }
-        return this.agentMap.get(agentName)!.getBdtPeerClient(client_index,stack_index);
+        return this.agentMap.get(agentName)!.getBdtCli(client_index,stack_index);
     }
-    async get_bdt_peer_client(name:string):Promise<{err:number,log?:string,client?: BdtPeerClient}> {
+    async get_bdt_stack(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
         let agentName = name.split("$")[0];
         let client_index = name.split("$")[1];
         let stack_index = name.split("$")[2];
+        if(!this.agentMap.has(agentName)){
+            this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
+            return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
+        }
+        return this.agentMap.get(agentName)!.getBdtCli(client_index,stack_index);
+    }
+    async get_bdt_peer_client(name:string):Promise<{err:number,log?:string,client?: BdtCli}> {
+        let agentName = name.split("$")[0];
+        let client_index = name.split("$")[1];
         if(!this.agentMap.has(agentName)){
             this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
             return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
@@ -87,20 +96,20 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,BDTClientInfo,log:`get success`};
     } 
-    async checkBdtPeerClientList(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
-        let result = await this.checkBdtPeerClient(LN);
+    async checkBdtCliList(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
+        let result = await this.checkBdtCli(LN);
         if(result.err){
             return result
         }
         if(RN){
-            result = await this.checkBdtPeerClient(RN);
+            result = await this.checkBdtCli(RN);
             if(result.err){
                 return result
             }
         }
         if(Users){
             for(let i in Users){
-                result = await this.checkBdtPeerClient(Users[i]);
+                result = await this.checkBdtCli(Users[i]);
                 if(result.err){
                     return result
                 }
@@ -114,7 +123,7 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
-    async createBdtPeerClient(agentName:string,config:BdtPeerClientConfig):Promise<{err:number,log?:string,bdtClient?:BdtPeerClient}>{
+    async createBdtCli(agentName:string,config:BdtCliConfig):Promise<{err:number,log?:string,bdtClient?:BdtCli}>{
         if(!this.agentMap.has(agentName)){
             return {err:BDTERROR.AgentError,log:`${agentName} not exsit`}
         }
@@ -127,7 +136,7 @@ export class AgentManager {
             agent.cacheInfo!.local_list = [];
         }
     }
-    async allAgentStartBdtPeer(config:BdtPeerClientConfig, num:number=1,clean:boolean=false){
+    async allAgentStartBdtPeer(config:BdtCliConfig, num:number=1,clean:boolean=false){
         let taskList = []
         if(clean == true){
             await this.allAgentCleanCache(); 
@@ -136,10 +145,6 @@ export class AgentManager {
             taskList.push(new Promise(async(V)=>{
                 
                 let taskAgent = []
-                let bdt_port_range = 40000 + RandomGenerator.integer(1,100)*10;
-                if(config.bdt_port_range){
-                    bdt_port_range = config.bdt_port_range;
-                }
                 let client_port = 22222;
                 if(config.client_port){
                     client_port = config.client_port;
@@ -151,12 +156,25 @@ export class AgentManager {
                         peer_name = agent.tags + "_" + RandomGenerator.string(10);
                     }
                     this.m_interface.getLogger().info(`start peer ${peer_name}`)
-                    let result =  await agent.startPeerClient(config,peer_name,bdt_port_range,client_port);
-                    bdt_port_range = bdt_port_range + 1000;
+                    let result =  await agent.startPeerClient(config,peer_name,client_port);
                     await sleep(100);
                 }
                 await agent.loadAgentCache("init");
 
+                V("run finished")
+            }))
+            
+        } 
+        for(let i in taskList){
+            await taskList[i]
+        }
+    }
+    async allAgentStartTcpServer(port:number=22223){
+        let taskList = []
+        for(let agent of this.agentMap.values()){
+            taskList.push(new Promise(async(V)=>{
+                this.m_interface.getLogger().info(`### ${agent.tags} start tcp server ${port}`)
+                let start = await agent.startTcpServer(port)
                 V("run finished")
             }))
             

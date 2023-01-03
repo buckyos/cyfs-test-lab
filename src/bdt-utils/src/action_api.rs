@@ -20,6 +20,8 @@ pub enum LpcActionApi {
     // BDT
     CreateStackReq(CreateStackReq),
     CreateStackResp(CreateStackResp),
+    DestoryStackReq(DestoryStackReq),
+    DestoryStackResp(DestoryStackResp),
     ConnectReq(ConnectReq),
     ConnectResp(ConnectResp),
     ConnectMutReq(ConnectMutReq),
@@ -44,8 +46,6 @@ pub enum LpcActionApi {
     TcpConnectResp(TcpConnectResp),
     TcpStreamSendReq(TcpStreamSendReq),
     TcpStreamSendResp(TcpStreamSendResp),
-    TcpStreamRecvReq(TcpStreamRecvReq),
-    TcpStreamRecvResp(TcpStreamRecvResp),
     TcpStreamListenerReq(TcpStreamListenerReq),
     TcpStreamListenerResp(TcpStreamListenerResp),
     TcpStreamListenerEvent(TcpStreamListenerEvent),
@@ -330,22 +330,6 @@ pub struct TcpStreamSendResp {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TcpStreamRecvReq {
-    pub name: String,
-    pub stream_name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TcpStreamRecvResp {
-    pub result: u16,
-    pub msg: String,
-    pub file_size: u64,
-    pub hash: HashValue,
-    pub recv_time: u64,
-    pub sequence_id: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TcpStreamListenerReq {
     pub name: String,
     pub stream_name: String,
@@ -365,4 +349,13 @@ pub struct TcpStreamListenerEvent {
     pub hash: HashValue,
     pub sequence_id: u64,
     pub recv_time: u64,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DestoryStackReq {
+    pub peer_name: String,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DestoryStackResp {
+    pub result: u16,
+    pub msg: String,
 }

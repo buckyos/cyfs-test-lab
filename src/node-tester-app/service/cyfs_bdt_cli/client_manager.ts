@@ -28,7 +28,7 @@ export class BdtClientManager extends EventEmitter {
     private m_lpcStatus: boolean;
     private is_perf: boolean = false;
     private utilTool?: UtilTool
-
+    private bdt_port_index : number;
 
     on(event: 'peer', listener: (peer: LpcClient) => void): this;
     on(event: 'unlive', listener: (client_name: string) => void): this;
@@ -60,6 +60,7 @@ export class BdtClientManager extends EventEmitter {
         this.m_peers = new Map();
         this.m_platform = _interface.getPlatform();
         this.m_lpcStatus = false;
+        this.bdt_port_index = 25000;
 
     }
     async stop_server_win() {
@@ -121,6 +122,7 @@ export class BdtClientManager extends EventEmitter {
         if (kill_server) {
             await this.kill_server();
         }
+        this.bdt_port_index = this.bdt_port_index + 2000;
         return new Promise(async (V) => {
             let lpc: BdtLpc = new BdtLpc({
                 logger: this.m_logger,
@@ -129,12 +131,16 @@ export class BdtClientManager extends EventEmitter {
             let connect = await this.connect_bdt_cli(lpc, port, 1);
             let check_timeout = true;
             // 没有现有端口 客户端 ，启动一个新的
+            let log_path = path.join(this.m_logger.dir(),client_name);
             if (connect.err) {
                 this.m_logger.info(`os type ${os.arch()}`)
                 this.m_logger.info(`os type ${this.m_platform}`)
                 this.m_logger.info(`run bdt cli path ${this.exefile!}`)
-                let sub = ChildProcess.spawn(`${this.exefile!}`, [port.toString(), client_name, path.join(this.m_logger.dir(), `../${client_name}_cache/log`), __dirname], { stdio: 'ignore', cwd: SysProcess.cwd(), detached: true, windowsHide: true, env: { CYFS_CONSOLE_LOG_LEVEL: `${log_type}`, CYFS_FILE_LOG_LEVEL_KEY: `${log_type}`, RUST_LOG: `${log_type}` } });
+                
+                fs.removeSync(log_path);
+                let sub = ChildProcess.spawn(`${this.exefile!}`, [port.toString(), client_name, log_path, __dirname,this.bdt_port_index.toString()], { stdio: 'ignore', cwd: SysProcess.cwd(), detached: true, windowsHide: true, env: { CYFS_CONSOLE_LOG_LEVEL: `${log_type}`, CYFS_FILE_LOG_LEVEL_KEY: `${log_type}`, RUST_LOG: `${log_type}` } });
                 sub.unref();
+                
                 await sleep(2000);
                 this.m_logger.info(`####bdt-cli ${client_name} start`);
                 let re_conn = await this.connect_bdt_cli(lpc, port);
@@ -174,7 +180,7 @@ export class BdtClientManager extends EventEmitter {
                     this.m_peers.set(client_name, { peer });
                     this.emit('peer', peer);
                     check_timeout = false;
-                    return V({ err: ErrorCode.succ, client_name: `${client_name!}` });
+                    return V({ err: ErrorCode.succ, client_name: `${client_name!}`});
                 }
             };
             lpc.once('command', onCommand);

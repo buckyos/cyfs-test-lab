@@ -2,18 +2,28 @@ import { sleep } from '../../../base';
 import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } from '../type'
 import {BaseAction} from "./base_action"
 
-export class ConnectAction extends BaseAction implements ActionAbstract {
+export class BdtTunnelConnectAction extends BaseAction implements ActionAbstract {
+    /**
+     * LN设备创建一个新的bdt stack,向RN 发起连接
+     * @returns 
+     */
     async run(): Promise<{ err: number, log: string }> {
-
+        this.action.type = ActionType.tunnel_connect;
         // (1) 检查测试bdt 客户端
-        let LN = await this.agentManager!.getBdtCli(this.action.LN);
-        let RN = await this.agentManager!.getBdtCli(this.action.RN!);
+        let LN = await this.agentManager!.get_bdt_peer_client(this.action.LN);
+        let RN = await this.agentManager!.get_bdt_stack(this.action.RN!);
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }
         if (RN.err) {
             return { err: RN.err, log: `${this.action.RN} bdt client not exist` }
         }
+        // (2) LN 客户端创建一个 bdt stack
+        let ln_stack = await  LN.client!.create_bdt_stack(false);
+        if(ln_stack.err){
+            return { err: ln_stack.err, log: ln_stack.log }
+        }
+
         // (2) ConnectAction 操作的参数设置
         // 判断LN是否要进行FristQA  question数据发送
         let FirstQ = 0
@@ -43,7 +53,7 @@ export class ConnectAction extends BaseAction implements ActionAbstract {
             this.action.config!.known_eps = 0
         }
         // (3) ConnectAction 建立连接
-        let result = await LN!.bdt_stack!.connect(RN!.bdt_stack!.device_object!, FirstQ, this.action.config!.known_eps, this.action.config!.accept_answer!, this.action.config!.conn_tag!)
+        let result = await ln_stack!.bdt_stack!.connect(RN!.bdt_stack!.device_object!, FirstQ, this.action.config!.known_eps, this.action.config!.accept_answer!, this.action.config!.conn_tag!)
         // (4) ConnectAction 建立连接对结果的检查
         let info = result.resp;
         if (info.result) {
@@ -53,11 +63,11 @@ export class ConnectAction extends BaseAction implements ActionAbstract {
         this.logger!.info(`${this.action.LN} conenct ${this.action.RN} success, connect_time = ${info.connect_time!} stream_name = ${result.conn?.stream_name}`)
         
         //校验RN 连接成功
-        let check = await RN.bdt_stack!.remark_accpet_conn_name(result.conn!.TempSeq, LN!.bdt_stack!.peerid!, this.action.config!.conn_tag);
+        let check = await RN.bdt_stack!.remark_accpet_conn_name(result.conn!.TempSeq, ln_stack!.bdt_stack!.peerid!, this.action.config!.conn_tag);
         if (check.err) {
             // 等待2s再试一次，监听事件可能有网络延时
             await sleep(2000);
-            check = await await RN.bdt_stack!.remark_accpet_conn_name(result.conn!.TempSeq, LN!.bdt_stack!.peerid!, this.action.config!.conn_tag);
+            check = await await RN.bdt_stack!.remark_accpet_conn_name(result.conn!.TempSeq, ln_stack!.bdt_stack!.peerid!, this.action.config!.conn_tag);
             if (check.err) {
                 return { err: BDTERROR.connnetFailed, log: ` ${this.action.RN!} confirm failed` }
             }

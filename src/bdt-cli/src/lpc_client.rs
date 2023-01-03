@@ -10,7 +10,7 @@ use std::net::Shutdown;
 use std::str::FromStr;
 use std::{path::PathBuf, time::Duration};
 struct BDTCliImpl {
-    pub bdt_stack_manager: Arc<Mutex<BDTStackManager>>,
+    pub bdt_stack_manager: Arc<Mutex<BDTClientManager>>,
     pub temp_dir: PathBuf, //工作目录
     pub service_path: PathBuf,
     pub address: String,
@@ -21,11 +21,12 @@ struct BDTCliImpl {
 #[derive(Clone)]
 pub struct BDTCli(Arc<BDTCliImpl>);
 impl BDTCli {
-    pub fn new(address: String, temp_dir: PathBuf, service_path: PathBuf) -> Self {
+    pub fn new(address: String, temp_dir: PathBuf, service_path: PathBuf,bdt_port_index :u16) -> Self {
         Self(Arc::new(BDTCliImpl {
-            bdt_stack_manager: Arc::new(Mutex::new(BDTStackManager::new(
+            bdt_stack_manager: Arc::new(Mutex::new(BDTClientManager::new(
                 temp_dir.clone(),
                 service_path.clone(),
+                bdt_port_index
             ))),
             address,
             temp_dir,
@@ -66,6 +67,16 @@ impl BDTCli {
             .await
             .create_client(&req)
             .await
+    }
+    pub async fn destory_client(
+        &mut self,
+        peer_name: &str,
+    ) -> BuckyResult<()> {
+        self.0
+            .bdt_stack_manager
+            .lock()
+            .await
+            .destory_client(peer_name)
     }
     pub fn get_address(&self) -> String {
         self.0.address.clone()
@@ -143,7 +154,10 @@ impl BDTCli {
                         // BDT 测试请求指令
                         LpcActionApi::CreateStackReq(req) => {
                             log::info!("#### CreateStackReq");
-                            let _ = cli.on_create_stack(lpc, seq, buffer, req).await;
+                            let _ = cli.on_create_bdt_client(lpc, seq, buffer, req).await;
+                        }
+                        LpcActionApi::DestoryStackReq(req) => {
+                            let _ = cli.on_destory_bdt_client(lpc, seq, req).await;
                         }
                         LpcActionApi::AutoAcceptReq(req) => {
                             let _ = cli.on_auto_accept(lpc, seq, buffer, req).await;
@@ -162,19 +176,16 @@ impl BDTCli {
                         }
                         // TCP 测试客户端
                         LpcActionApi::CreateTcpServerReq(req) => {
-                            let _ = cli.on_create_tcp_server(lpc, seq, buffer, req).await;
+                            let _ = cli.on_create_tcp_server(lpc, seq, req).await;
                         }
                         LpcActionApi::TcpConnectReq(req) => {
                             let _ = cli.on_tcp_connect(lpc, seq, buffer, req).await;
                         }
                         LpcActionApi::TcpStreamSendReq(req) => {
-                            let _ = cli.on_tcp_send_stream(lpc, seq, buffer, req).await;
-                        }
-                        LpcActionApi::TcpStreamRecvReq(req) => {
-                            let _ = cli.on_tcp_recv_stream(lpc, seq, buffer, req).await;
+                            let _ = cli.on_tcp_send_stream(lpc, seq, req).await;
                         }
                         LpcActionApi::TcpStreamListenerReq(req) => {
-                            let _ = cli.on_listener_tcp_stream(lpc, seq, buffer, req).await;
+                            let _ = cli.on_listener_tcp_stream(lpc, seq, req).await;
                         }
                         _ => {
                             log::error!("recv unkonwn command");
@@ -189,7 +200,33 @@ impl BDTCli {
             };
         }
     }
-    pub async fn on_create_stack(
+
+    pub async fn on_destory_bdt_client(&mut self,
+        lpc: Lpc,
+        seq: u32,
+        req: &DestoryStackReq,
+    ){
+        log::info!("on destory bdt stack, req={:?}", &req);
+        let mut cli = self.clone();
+        let mut req = req.clone();
+        task::spawn(async move {
+            let _ = cli.destory_client(req.peer_name.as_str()).await;
+            let mut lpc = lpc;
+            let resp : DestoryStackResp = DestoryStackResp{
+                result : 0,
+                msg : "success".to_string()
+            };
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::DestoryStackResp(resp),
+                ))
+                .await;
+        });
+    } 
+
+    pub async fn on_create_bdt_client(
         &mut self,
         lpc: Lpc,
         seq: u32,
@@ -432,6 +469,10 @@ impl BDTCli {
                 handler_list.push(task::spawn(async move {
                     let conn_req = conn_req;
                     let peer_name = conn_req.peer_name.clone();
+                    //(1) 创建一个bdt stack 
+
+                    //(2) 向remote 设备发起连接
+                    //cli.create_client(req)
                     let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
                     let connect_time = match bdt_client.connect(&remote_desc, &conn_req).await {
                         Ok(resp) => resp.connect_time,
@@ -500,7 +541,6 @@ impl BDTCli {
         &mut self,
         lpc: Lpc,
         seq: u32,
-        buffer: &[u8],
         req: &CreateTcpServerReq,
     ) {
         log::info!("on create bdt stack, req={:?}", &req);
@@ -567,7 +607,6 @@ impl BDTCli {
         &mut self,
         lpc: Lpc,
         seq: u32,
-        buffer: &[u8],
         req: &TcpStreamSendReq,
     ) {
         log::info!("on create bdt stack, req={:?}", &req);
@@ -601,53 +640,10 @@ impl BDTCli {
                 .await;
         });
     }
-
-    pub async fn on_tcp_recv_stream(
-        &mut self,
-        lpc: Lpc,
-        seq: u32,
-        buffer: &[u8],
-        req: &TcpStreamRecvReq,
-    ) {
-        log::info!("on create bdt stack, req={:?}", &req);
-        let mut cli = self.clone();
-        let mut req = req.clone();
-        let mut lpc = lpc;
-        task::spawn(async move {
-            let mut req = req.clone();
-            let mut client = cli.get_tcp_client(req.name).await;
-            let resp = match client.recv_stream(req.stream_name).await {
-                Ok((file_size, recv_time, hash,sequence_id)) => TcpStreamRecvResp {
-                    result: 0,
-                    msg: "success".to_string(),
-                    recv_time,
-                    file_size,
-                    hash,
-                    sequence_id
-                },
-                Err(err) => TcpStreamRecvResp {
-                    result: err.code().as_u16(),
-                    msg: err.msg().to_string(),
-                    recv_time: 0,
-                    file_size: 0,
-                    hash: HashValue::default(),
-                    sequence_id : 0,
-                },
-            };
-            let _ = lpc
-                .send_command(LpcCommand::new(
-                    seq,
-                    Vec::new(),
-                    LpcActionApi::TcpStreamRecvResp(resp),
-                ))
-                .await;
-        });
-    }
     pub async fn on_listener_tcp_stream(
         &mut self,
         lpc: Lpc,
         seq: u32,
-        buffer: &[u8],
         req: &TcpStreamListenerReq,
     ) {
         log::info!("on create bdt stack, req={:?}", &req);

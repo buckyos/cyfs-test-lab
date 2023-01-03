@@ -1,7 +1,7 @@
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator } from '../../base';
 import { EventEmitter } from 'events';
 import { Agent, Peer, BDTERROR } from './type'
-import { UtilClient } from "./utilClient"
+import { UtilClient } from "./util_client"
 import { request, ContentType } from "./request";
 import * as path from "./path";
 import * as config from "./config";
@@ -9,7 +9,7 @@ import * as api from "./action_api"
 import {BdtConnection,BdtStack,FastQAInfo} from "./bdt_stack"
 import {TcpStack,TcpStream} from "./tcp_stack"
 
-export class BdtPeerClient extends EventEmitter {
+export class BdtCli extends EventEmitter {
     public client_name?: string;  // 客户端名称
     private m_agentid: string; // 测试框架 id
     private m_interface: TaskClientInterface;
@@ -18,7 +18,6 @@ export class BdtPeerClient extends EventEmitter {
     private m_acceptCookie?: number;
     private logger: Logger;
     public port : number;
-    public bdt_port_range : number;
     // 协议栈列表
     public stack_num : number;
     public stack_list: Map<string, BdtStack>;
@@ -50,12 +49,17 @@ export class BdtPeerClient extends EventEmitter {
         this.tcp_server = new Map();
         this.m_timeout = 60 * 1000;
         this.port = peer.client_port!;
-        this.bdt_port_range = peer.bdt_port_range!;
         this.client_name = `${tags}_${this.port}`;
     }
 
-
+    get_stack_index(){
+        this.stack_num = this.stack_num + 1;
+        return this.stack_num - 1;
+    } 
     async init(index: number = 1): Promise<{ err: number, log?: string }> {
+        let stack_index = this.get_stack_index()
+        
+        
         return new Promise(async (resolve) => {
             // 1. 连接或启动bdt 测试客户端
             if (config.RUST_LOG) {
@@ -97,14 +101,13 @@ export class BdtPeerClient extends EventEmitter {
             }
             await sleep(2000)
             // 2. 实例化一个bdt 协议栈
-            let peer_name = `${this.client_name}_${this.stack_num}`;            
+            let peer_name = `${this.client_name}_${stack_index}`;            
             let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
                 client_name: this.client_name,
                 action: {
                     CreateStackReq :{
                         peer_name : peer_name,
                         addrs: this.cache_peer_info!.addrInfo!,
-                        bdt_port: this.bdt_port_range,
                         sn: this.cache_peer_info!.sn_files,
                         active_pn: this.cache_peer_info!.active_pn_files!,
                         passive_pn: this.cache_peer_info!.passive_pn_files!,
@@ -121,7 +124,6 @@ export class BdtPeerClient extends EventEmitter {
                 
             }, this.m_agentid!, 10 * 1000);
             this.logger.debug(`callApi create BuckyResult result = ${start_stack.value.result},msg = ${start_stack.value.msg}`)
-            this.bdt_port_range = this.bdt_port_range + 10;
             if (start_stack.err) {
                 this.logger.error(`${this.tags} start bdt stack failed,err = ${start_stack.err}`)
                 resolve({ err: start_tool.err, log: `${this.tags} start bdt stack failed` })
@@ -135,8 +137,8 @@ export class BdtPeerClient extends EventEmitter {
             let device =  start_stack.bytes!;
             this.logger.info(`${this.tags} start bdt client success client_name = ${this.client_name},resp = ${JSON.stringify(start_stack.value)}`);
             let bdt_stack = new BdtStack(this.m_interface,this.m_agentid,this.tags,this.cache_peer_info,result.CreateStackResp!,this.client_name!,device)
-            this.stack_list.set(`${this.stack_num}`,bdt_stack)
-            this.stack_num = this.stack_num + 1;
+            this.stack_list.set(`${stack_index}`,bdt_stack)
+           
             let autoAccept = await bdt_stack.autoAccept(this.cache_peer_info.answer_size);
             resolve({ err: BDTERROR.success, log: `${this.tags} start bdt stack success` })
         })
@@ -145,29 +147,67 @@ export class BdtPeerClient extends EventEmitter {
     
     async create_tcp_server(address:string,port:number=22223):Promise<{tcp_stack:TcpStack,result:api.CreateTcpServerResp}>{
         let tcp_stack = new TcpStack(this.m_interface,this.m_agentid,this.tags,this.client_name!);
-        let result = await tcp_stack.create_tcp_server(address,port);
+        let result = await tcp_stack.create_tcp_server(address,false,port);
         if(result.result==0){
             this.tcp_server.set(port.toString(),tcp_stack)
         }
         return {tcp_stack,result}
         
     }
-
-
-    async reportAgent(testcaseId: string): Promise<{ err: ErrorCode, log: string }> {
-        // let run_action = await request("POST", "api/bdt/client/add", {
-        //     name: this.tags,
-        //     testcaseId: testcaseId,
-        //     client_name: this.client_name,
-        //     peerid: this.peerid,
-        //     peerInfo: JSON.stringify(this.cache_peer_info),
-        //     sn_resp_eps: JSON.stringify(this.sn_resp_eps),
-        //     online_time: this.online_time,
-        //     online_sn: this.online_sn,
-        // }, ContentType.json)
-        // this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
-        return { err: BDTERROR.success, log: `reportAgent to server success` }
+    async create_bdt_stack(auto_accept:boolean=true): Promise<{ err: number, log: string,bdt_stack?:BdtStack}>{
+        let stack_index = this.get_stack_index()
+        // 设置 desc/sec 存放路径
+        let local = this.cache_peer_info!.local;
+        let device_tag = this.cache_peer_info!.device_tag;
+        if (!local) {
+            local = this.tags;
+            device_tag = this.client_name;
+        }
+        let peer_name = `${this.client_name}_${stack_index}`;            
+            let start_stack = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(''), {
+                client_name: this.client_name,
+                action: {
+                    CreateStackReq :{
+                        peer_name : peer_name,
+                        addrs: this.cache_peer_info!.addrInfo!,
+                        sn: this.cache_peer_info!.sn_files,
+                        active_pn: this.cache_peer_info!.active_pn_files!,
+                        passive_pn: this.cache_peer_info!.passive_pn_files!,
+                        local: local,
+                        area : this.cache_peer_info!.area,
+                        device_tag,
+                        chunk_cache: this.cache_peer_info!.chunk_cache!,
+                        ep_type: this.cache_peer_info!.ep_type,
+                        ndn_event: this.cache_peer_info!.ndn_event,
+                        ndn_event_target: this.cache_peer_info!.ndn_event_target,
+                        sn_only: this.cache_peer_info.udp_sn_only,
+                    }
+                } 
+                
+            }, this.m_agentid!, 10 * 1000);
+            this.logger.debug(`callApi create BuckyResult result = ${start_stack.value.result},msg = ${start_stack.value.msg}`)
+            if (start_stack.err) {
+                this.logger.error(`${this.tags} start bdt stack failed,err = ${start_stack.err}`)
+                 return  { err: start_stack.err, log: `${this.tags} start bdt stack failed` }
+            }
+            let result : api.LpcActionApi = start_stack.value;
+            
+            if(!result.CreateStackResp || result.CreateStackResp.result){
+                this.logger.error(`${this.tags} start bdt stack response error data ${result}`)
+                return{ err: start_stack.err, log: `${result.CreateStackResp?.msg}` }
+            }
+            let device =  start_stack.bytes!;
+            this.logger.info(`${this.tags} start bdt client success client_name = ${this.client_name},resp = ${JSON.stringify(start_stack.value)}`);
+            let bdt_stack = new BdtStack(this.m_interface,this.m_agentid,this.tags,this.cache_peer_info,result.CreateStackResp!,this.client_name!,device)
+            this.stack_list.set(`${stack_index}`,bdt_stack)
+            if(auto_accept){
+                let autoAccept = await bdt_stack.autoAccept(this.cache_peer_info.answer_size);
+            }
+            this.stack_list.set(`${stack_index}`,bdt_stack)
+            return  { err: start_stack.err, log: `${this.tags} start bdt stack failed`,bdt_stack}
     }
+
+
     getReportData(testcaseId: string) {
         return {
             name: this.tags,

@@ -33,6 +33,7 @@ pub async fn setup(testcaseName:&str) -> () {
         
         //函数第一次执行会执行该部分内容
         let log_dir : String = "C:\\cyfs\\cyfs-test-lab\\deploy\\log".to_string();
+        let url = "https://oapi.dingtalk.com/robot/send?access_token=336c5b9e11d6450539b3ac4b765f4559caac2bd3bda6abd67b0a1970ec7376c8";
         #[cfg(debug_assertions)]
         //let log_default_level = "info";
         cyfs_debug::CyfsLoggerBuilder::new_app("bdt-unittest")

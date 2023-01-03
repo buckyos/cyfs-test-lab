@@ -187,6 +187,11 @@ async function main() {
     const serviceid = "679";
     
     const taskList = [
+        "perf_stream_connect_control_tcp_keep_100",
+        "perf_stream_connect_control_tcp_keep_1000",
+        "Perf_stream_connect_control_tcp_keep_2000",
+        "perf_stream_connect_control_tcp_keep_5000",
+        "perf_stream_connect_control_tcp_keep_10000",
         "perf_stream_connect_tcp_keep_100",
         "perf_stream_connect_tcp_keep_1000",
         "perf_stream_connect_tcp_keep_2000",

@@ -673,7 +673,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager = BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -823,7 +823,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -975,7 +975,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -1129,7 +1129,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -1282,7 +1282,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -1431,7 +1431,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);
@@ -1580,7 +1580,7 @@ mod tests {
             pns.push(pn);
    
             // (1)初始化测试的BDT 协议栈
-            let mut stack_manager = BDTStackManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap());
+            let mut stack_manager =  BDTClientManager::new(PathBuf::from_str(LOG_PATH).unwrap(),PathBuf::from_str(LOG_PATH).unwrap(), 25000 as u16);
             let mut eps1 = Vec::new();
             let ep = format!("L4udp192.168.100.74");
             eps1.push(ep);

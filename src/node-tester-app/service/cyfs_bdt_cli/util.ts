@@ -309,12 +309,12 @@ export class UtilTool {
     }
     async uploadLog(command:BdtLpcCommand):Promise<BdtLpcResp>{
         this.m_logger.info(`command : ${JSON.stringify(command.json)}`)
-        if(!command.json.logName){
+        if(!command.json.log_name){
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
             return {err:ErrorCode.unknownCommand}
         }
         
-        let zip = await this.m_interface.zip(this.m_interface.getLogger().dir(),command.json.logName)
+        let zip = await this.m_interface.zip(this.m_logger.dir(),command.json.log_name)
         let upload = await this.m_interface.uploadFile(zip.dstPath!,"logs");
         this.m_logger.info(`upload log to server ,result = ${JSON.stringify(upload)}`)
         return {err:ErrorCode.succ,resp:{

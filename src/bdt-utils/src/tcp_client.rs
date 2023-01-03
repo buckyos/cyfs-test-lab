@@ -72,9 +72,9 @@ impl TcpClient {
     pub async fn get_lpc(&self) -> Option<Lpc> {
         self.0.lpc.lock().await.clone()
     }
-    pub async fn set_lpc(&self, lpc_new: Lpc) {
+    pub async fn set_lpc(&self, lpc_new: Option<Lpc> ) {
         let mut lpc_self = self.0.lpc.lock().await;
-        *lpc_self = Some(lpc_new);
+        *lpc_self = lpc_new;
     }
     pub async fn add_stream(&mut self, stream_name: String, stream: &TcpStream) {
         self.0
@@ -97,9 +97,11 @@ impl TcpClient {
     pub async fn start_listener(&mut self, lpc: Option<Lpc>, seq: Option<u32>) {
         let listener = self.0.listener.lock().await;
         let mut incoming = listener.incoming();
+       
+        let mut cli = self.clone();
+        cli.set_lpc(lpc).await;
         while let Some(stream) = incoming.next().await {
-            let mut cli = self.clone();
-            let mut lpc = lpc.clone();
+            let mut cli = cli.clone();
             async_std::task::spawn(async move {
                 let stream = stream.unwrap();
                 let stream_name = format!(
@@ -111,7 +113,7 @@ impl TcpClient {
                 log::info!("recv tcp connection {}", stream_name.clone());
                 cli.add_stream(stream_name.clone(), &stream).await;
 
-                let _ = match lpc {
+                let _ = match cli.get_lpc().await{
                     Some(lpc) => {
                         let resp = ListenerTcpConnectEvent {
                             result: 0,
@@ -357,7 +359,7 @@ impl TcpClient {
                             .send_command(LpcCommand::new(
                                 seq.unwrap(),
                                 Vec::new(),
-                                LpcActionApi::TcpStreamListenerEvent(resp),
+                                LpcActionApi::TcpStreamListenerEvent(resp.clone()),
                             ))
                             .await;
                     }
@@ -365,6 +367,9 @@ impl TcpClient {
                         log::info!("recv tcp connection,not lpc server");
                     }
                 };
+                if(resp.result>0){
+                    break;
+                }
             }
         });
         Ok(())
@@ -399,14 +404,14 @@ async fn test_tcp() {
             let stream_name_test = stream_name.clone();
             async_std::task::spawn(async move {
                 let _ = match client2.recv_stream(stream_name_test.clone()).await {
-                    Ok((file_size, recv_time, hash)) => {
+                    Ok((file_size, recv_time, hash,sequence_id)) => {
                         println!("recv stream {}", hash.to_string());
                     }
                     Err(err) => {}
                 };
             });
             let _ = match client1.send_stream(stream_name, 100 * 1024).await {
-                Ok((hash, send_time)) => {
+                Ok((hash, send_time,sequence_id)) => {
                     println!("send stream {}", hash.to_string());
                 }
                 Err(err) => {}
