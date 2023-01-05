@@ -11,10 +11,10 @@ import * as fs from "fs-extra";
 export class StackManager {
     private driver_type: CyfsDriverType;
     // stack_map规则 ：{ `${peer_name}` : {`system`:SharedCyfsStack,`${}_${dec_id}`}}
-    public peer_map: Map<string, Map<string, cyfs.SharedCyfsStack>>;
+    public peer_map: Map<string, Map<string, cyfs.SharedCyfsStack | undefined>>;
     private driver_manager?: CyfsStackDriverManager;
     public driver?: CyfsStackDriver
-
+    private logger? : any
     constructor(driver_type?: CyfsDriverType) {
         this.peer_map = new Map();
         if (!driver_type) {
@@ -30,6 +30,10 @@ export class StackManager {
         } else {
             this.driver_type = driver_type;
         }
+        console.info(`StackManager driver_type = ${this.driver_type} `)
+    }
+    get_logger(){
+        return this.logger!;
     }
     async init() {
         // 初始化测试驱动
@@ -44,6 +48,8 @@ export class StackManager {
             file_max_size: 1024 * 1024 * 10,
             file_max_count: 10,
         });
+        this.logger = cyfs.clog;
+        this.logger.info(`init cyfs stack manager log success`);
         this.driver_manager = CyfsStackDriverManager.createInstance();
         let result = await this.driver_manager.create_driver(this.driver_type);
         if (result.err) {
@@ -54,7 +60,7 @@ export class StackManager {
         return result;
 
     }
-    async load_config_stack(requestor_type: cyfs.CyfsStackRequestorType = cyfs.CyfsStackRequestorType.Http, dec_id?: cyfs.ObjectId): Promise<{ err: ErrorCode, log: string }> {
+    async load_config_stack(requestor_type: cyfs.CyfsStackRequestorType = cyfs.CyfsStackRequestorType.Http, dec_id: cyfs.ObjectId): Promise<{ err: ErrorCode, log: string }> {
         if (this.driver_type == CyfsDriverType.real_machine) {
             await this.load_real_machine(requestor_type, dec_id)
         } else if (this.driver_type == CyfsDriverType.simulator) {
@@ -76,15 +82,15 @@ export class StackManager {
             let check_list: Array<Promise<cyfs.BuckyResult<null>>> = [];
             for (let peer of this.peer_map.values()) {
                 for (let stack of peer.values()) {
-                    check_list.push(stack.wait_online());
+                    check_list.push(stack!.wait_online());
                 }
             }
             for (let check of check_list) {
                 let result = await check;
                 if (result.err) {
                     running = false;
-                    console.error(`######## cyfs satck check online timeout`)
-                    V({ err: ErrorCode.cyfsStackOnlineTimeout, log: "cyfs satck online timeout" });
+                    console.error(`######## cyfs satck check online fail,result = ${JSON.stringify(result)}`)
+                    V({ err: ErrorCode.cyfsStackOnlineFailed, log: "cyfs satck online failed" });
                 }
             }
             running = false;
@@ -94,7 +100,7 @@ export class StackManager {
 
     }
 
-    async load_real_machine(requestor_type: cyfs.CyfsStackRequestorType, dec_id?: cyfs.ObjectId) {
+    async load_real_machine(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         for (let agent of REAL_MACHINE_LIST) {
             console.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
@@ -112,7 +118,7 @@ export class StackManager {
             this.peer_map.set(agent.peer_name, stack_map);
         }
     }
-    async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id?: cyfs.ObjectId) {
+    async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         for (let agent of SIMULATOR_LIST) {
             console.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
@@ -138,7 +144,17 @@ export class StackManager {
         if(!this.peer_map.get(peer_name)!.has(`${dec_id}_${type}`)){
             return {err:ErrorCode.notFound,log:`error dec_id dec_id =  ${dec_id},type = ${type}`}
         }
+        console.info(`get satck ${peer_name} success,dec_id = ${dec_id} type = ${type}`)
         return {err:ErrorCode.succ,log:`get cyfs stack success`,stack:this.peer_map.get(peer_name)!.get(`${dec_id}_${type}`)!}
+    }
+    destory(){
+        console.info(`cyfs satck manager destory all cyfs stack`)
+        for(let peer of this.peer_map.values()){
+            for(let stack of peer.values()){
+                stack = undefined;
+            }
+        }
+        this.peer_map.clear()
     }
 
 }

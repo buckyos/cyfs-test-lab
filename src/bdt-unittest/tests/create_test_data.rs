@@ -72,8 +72,8 @@ mod tests {
     #[tokio::test]
     async fn show_desc_info1() {
         run_test_async("show_desc_info", async{
-            let save_path = PathBuf::from_str("E:\\BDT\\config\\lab_pn").unwrap();
-            let  (device7,key7) = load_device(&save_path,"sn-miner").await;
+            let save_path = PathBuf::from_str("E:\\git_test\\cyfs-test-lab\\src\\bdt-unittest\\src\\config\\nightly").unwrap();
+            let  (device7,key7) = load_device(&save_path,"sn-miner_CN").await;
             let mut device7 = device7;
             for ep in device7.mut_connect_info().mut_endpoints(){
                 log::info!("{}",ep);

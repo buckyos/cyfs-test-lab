@@ -31,8 +31,8 @@ export const BDTERROR = {
     connnetFailed: 1006, //调用BDT connnet接口，BDT报错
     acceptFailed: 1007, //调用BDT accept接口，BDT报错
     confirmFailed: 1008, //调用BDT confirm接口，BDT报错
-    sendDataFailed: 1009,//调用BDT sendData接口，BDT报错
-    recvDataFailed: 1010, //调用BDT recvData接口，BDT报错
+    SendStreamFailed: 1009,//调用BDT sendData接口，BDT报错
+    RecvStreamFailed: 1010, //调用BDT recvData接口，BDT报错
     initPeerFailed: 1011, //初始化BDT协议栈报错
     destoryPeerFailed: 1012, //释放BDT节点报错
     setChunckFailed:1013, //local 创建 chunk失败
@@ -41,6 +41,7 @@ export const BDTERROR = {
     CloseConnectionFailed:1016,//关闭连接错误
     DestoryStackFailed:1017,//关闭连接错误
     RNCheckConnFailed:1018,//RN 检查连接错误
+    CheckHashFailed : 1019,// 检查Hash 错误
     // 测试数据生成类型的报错
     RandFileError : 20000,
     GetCachePathError : 20001,
@@ -159,6 +160,7 @@ export type Action ={
        not_wait_upload_finished?:boolean,
        address?:string,
        port? : number,
+       shutdown_type? : string,
        restart? : {
             ndn_event : string,
             ndn_event_target : string,

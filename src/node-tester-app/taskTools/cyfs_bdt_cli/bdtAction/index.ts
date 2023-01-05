@@ -8,3 +8,6 @@ export * from "./sleep"
 export * from "./tcp_connect";
 export * from "./tcp_create_server";
 export * from "./tcp_send_stream";
+export * from "./bdt_send_stream";
+export * from "./bdt_send_stream_close_local";
+export * from "./bdt_send_stream_close_remote";

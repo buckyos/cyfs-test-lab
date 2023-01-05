@@ -57,15 +57,25 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.allAgentStartBdtPeer(config)
     await agentManager.uploadSystemInfo(testcase.testcaseId, 20000);
     //(4) 测试用例执行器添加测试任务
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 1; i++) {
         let info = await testRunner.createPrevTask({
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 100; x++) {
+        for (let x = 0; x < 1; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
+            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+                type: ActionType.connect,
+                LN: `${LN}$1$0`,
+                RN: `${RN}$1$0`,
+                config: {
+                    conn_tag: connect_1,
+                    timeout: 20 * 1000,
+                },
+                expect: { err: 0 },
+            }))
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                 type: ActionType.connect,
                 LN: `${LN}$1$0`,

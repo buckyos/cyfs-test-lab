@@ -1,6 +1,6 @@
 # 多SN 需求
 
-+ (1) 客户端选择SN的方式：通过Device 对象中的Area 和SN Device中的 Area,选择最近的SN上线
++ (1) 客户端选择SN的方式：通过Device 对象中的Area 和SN Device中的 Area,选择最近的SN上线，通过异或计算获取最近的SN
 
 ```
 pub struct Area {
@@ -10,7 +10,7 @@ pub struct Area {
     pub inner: u8, //对不同的对象来说有不同的意义，比如device这里就表示 device的设备类型。
 }
 ```
-  1. 就近规则优先级：|local_country - SN_country| > |local_carrier - SN_carrier| > |local_city - SN_city| 优先现在最近的国家，然后选择最近的州/省，然后是城市
+  1. 就近规则优先级：通过地区编码，优先现在最近的国家，然后选择最近的州/省，然后是城市
 
 + (2) 客户端Device对象中包含多个SN，只会选择最近的一个SN上线,sh
 

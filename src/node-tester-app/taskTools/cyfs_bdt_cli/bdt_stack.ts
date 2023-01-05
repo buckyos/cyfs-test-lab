@@ -132,6 +132,7 @@ export class BdtStack extends EventEmitter {
         let conn = new BdtConnection({
             agentid: this.m_agentid,
             client_name: this.client_name!,
+            peer_name:this.peer_name,
             stream_name: result.ConnectResp.stream_name,
             _interface: this.m_interface,
             timeout: this.m_timeout,
@@ -203,7 +204,7 @@ export class BdtStack extends EventEmitter {
                         send_hash: eventIfo.ConfirmStreamEvent.send_hash,
                         recv_hash: eventIfo.ConfirmStreamEvent.recv_hash,
                     }
-                    let conn = new BdtConnection({ agentid: this.m_agentid, client_name: this.client_name!, stream_name: eventIfo.ConfirmStreamEvent.stream_name, _interface: this.m_interface, timeout: this.m_timeout,fastQAInfo, conn_tag: this.conn_tag})
+                    let conn = new BdtConnection({ agentid: this.m_agentid,peer_name:this.peer_name, client_name: this.client_name!, stream_name: eventIfo.ConfirmStreamEvent.stream_name, _interface: this.m_interface, timeout: this.m_timeout,fastQAInfo, conn_tag: this.conn_tag})
                     this.m_conns.set(eventIfo.ConfirmStreamEvent.stream_name, conn);
                 }
             }, this.m_agentid, this.m_timeout);
@@ -250,7 +251,8 @@ export class BdtConnection extends EventEmitter {
     private logger: Logger
     private m_stream_name: string;
     private m_interface: TaskClientInterface;
-    private client_name: string;
+    public client_name: string;
+    public peer_name: string; 
     private m_timeout: number;
     public state: number; // 0：未连接 ，1：已连接 ，2 已启动recv,-1 ：已经释放连接
     private m_connInfo: string;
@@ -266,6 +268,7 @@ export class BdtConnection extends EventEmitter {
     constructor(options: {
         agentid: string;
         client_name: string;
+        peer_name : string;
         stream_name: string;
         _interface: TaskClientInterface;
         timeout: number;
@@ -277,6 +280,7 @@ export class BdtConnection extends EventEmitter {
         this.m_agentid = options.agentid;
         this.m_connInfo = options.stream_name;
         this.m_stream_name = options.stream_name;
+        this.peer_name = options.peer_name;
         this.client_name = options.client_name;
         this.m_interface = options._interface;
         this.m_timeout = options.timeout;
@@ -292,53 +296,75 @@ export class BdtConnection extends EventEmitter {
         this.tags = options.tags
 
     }
-
-    async close(): Promise<ErrorCode> {
-        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
-            name: 'close',
-            client_name: this.client_name,
-            unique_id: this.client_name,
-            stream_name: this.stream_name,
-        }, this.m_agentid, 0);
-        if (info.err) {
-            this.logger.error(`${this.tags} ${this.stream_name} close failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+    async send_stream(fileSize: number): Promise<{err: ErrorCode ,result?:api.SendStreamResp}> {
+        let action : api.LpcActionApi = {
+            SendStreamReq : {
+                peer_name: this.peer_name,
+                stream_name: this.stream_name,
+                size : fileSize
+            }
         }
-        this.state = -1;
-        return info.err;
-    }
-
-    async send(fileSize: number): Promise<{ err: ErrorCode, time?: number, hash?: string }> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
-            name: 'send',
             client_name: this.client_name,
-            unique_id: this.client_name,
-            stream_name: this.stream_name,
-            size: fileSize,
+            action
         }, this.m_agentid, 0);
         this.logger.debug(`callApi send BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
-        if (info.err || info.value.result) {
-            this.logger.error(`${this.tags} ${this.stream_name} send failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-            return { err: BDTERROR.sendDataFailed, time: info.value?.time, hash: info.value?.hash };
+        let result : api.LpcActionApi  = info.value;
+        this.state = -1;
+        if (!result.SendStreamResp) {
+            this.logger.error(`${this.tags} ${this.stream_name} shutdown failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return { err: ErrorCode.exception, result:result.SendStreamResp};
         }
-        return { err: info.err, time: info.value?.time, hash: info.value?.hash };
+        return { err: result.SendStreamResp!.result, result:result.SendStreamResp!};
+
     }
 
 
-    async recv(): Promise<{ err: ErrorCode, size?: number, hash?: string }> {
+    async recv_stream():  Promise<{err: ErrorCode ,result?:api.RecvStreamResp}> {
+        let action : api.LpcActionApi = {
+            RecvStreamReq : {
+                peer_name: this.peer_name,
+                stream_name: this.stream_name,
+            }
+        }
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
-            name: 'recv',
             client_name: this.client_name,
-            unique_id: this.client_name,
-            stream_name: this.stream_name,
+            action
         }, this.m_agentid, 0);
         this.logger.debug(`callApi recv BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
-        if (info.err) {
-            this.logger.error(`${this.tags} ${this.stream_name} recv failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
-            return { err: BDTERROR.recvDataFailed, size: info.value?.size, hash: info.value?.hash };
+        let result : api.LpcActionApi  = info.value;
+        this.state = -1;
+        if (!result.RecvStreamResp) {
+            this.logger.error(`${this.tags} ${this.stream_name} shutdown failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return { err: ErrorCode.exception, result:result.RecvStreamResp};
         }
-        return { err: info.err, size: info.value?.size, hash: info.value?.hash };
+        return { err: result.RecvStreamResp!.result, result:result.RecvStreamResp!};
 
     }
+    async shutdown(shutdown_type:string): Promise<{err: ErrorCode ,result?:api.ShutdownResp}> {
+        let action : api.LpcActionApi = {
+            ShutdownReq : {
+                peer_name: this.peer_name,
+                stream_name: this.stream_name,
+                shutdown_type : shutdown_type
+            }
+        }
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""),  {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.debug(`callApi shutdown BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
+        let result : api.LpcActionApi  = info.value;
+        this.state = -1;
+        if (!result.ShutdownResp) {
+            this.logger.error(`${this.tags} ${this.stream_name} shutdown failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return { err: ErrorCode.exception, result:result.ShutdownResp};
+        }
+        return { err: result.ShutdownResp!.result, result:result.ShutdownResp!};
+
+    }
+
+
     async send_object(obj_path: string, obj_type: number): Promise<{ err: ErrorCode, time?: number, hash?: string }> {
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
             name: 'send_object',

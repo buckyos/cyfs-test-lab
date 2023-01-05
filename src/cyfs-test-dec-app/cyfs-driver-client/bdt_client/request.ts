@@ -34,11 +34,11 @@ export async function request(method:string,route:string,postData?:any,psotType?
     
 }
 
-async function main() {
-    let run =await request("POST","api/bdt/report/reportHtml",{version:"Stream_AllEP"},ContentType.json)
-    console.info(JSON.stringify(run))
-}
-main()
+// async function main() {
+//     let run =await request("POST","api/bdt/report/reportHtml",{version:"Stream_AllEP"},ContentType.json)
+//     console.info(JSON.stringify(run))
+// }
+// main()
 
 
 

@@ -21,12 +21,17 @@ struct BDTCliImpl {
 #[derive(Clone)]
 pub struct BDTCli(Arc<BDTCliImpl>);
 impl BDTCli {
-    pub fn new(address: String, temp_dir: PathBuf, service_path: PathBuf,bdt_port_index :u16) -> Self {
+    pub fn new(
+        address: String,
+        temp_dir: PathBuf,
+        service_path: PathBuf,
+        bdt_port_index: u16,
+    ) -> Self {
         Self(Arc::new(BDTCliImpl {
             bdt_stack_manager: Arc::new(Mutex::new(BDTClientManager::new(
                 temp_dir.clone(),
                 service_path.clone(),
-                bdt_port_index
+                bdt_port_index,
             ))),
             address,
             temp_dir,
@@ -68,10 +73,7 @@ impl BDTCli {
             .create_client(&req)
             .await
     }
-    pub async fn destory_client(
-        &mut self,
-        peer_name: &str,
-    ) -> BuckyResult<()> {
+    pub async fn destory_client(&mut self, peer_name: &str) -> BuckyResult<()> {
         self.0
             .bdt_stack_manager
             .lock()
@@ -160,7 +162,7 @@ impl BDTCli {
                             let _ = cli.on_destory_bdt_client(lpc, seq, req).await;
                         }
                         LpcActionApi::AutoAcceptReq(req) => {
-                            let _ = cli.on_auto_accept(lpc, seq, buffer, req).await;
+                            let _ = cli.on_auto_accept(lpc, seq, req).await;
                         }
                         LpcActionApi::ConnectReq(req) => {
                             let _ = cli.on_connect(lpc, seq, buffer, req).await;
@@ -169,17 +171,20 @@ impl BDTCli {
                             let _ = cli.on_connect_mut(lpc, seq, buffer, req).await;
                         }
                         LpcActionApi::SendStreamReq(req) => {
-                            let _ = cli.on_send_stream(lpc, seq, buffer, req).await;
+                            let _ = cli.on_send_stream(lpc, seq, req).await;
                         }
                         LpcActionApi::RecvStreamReq(req) => {
-                            let _ = cli.on_recv_stream(lpc, seq, buffer, req).await;
+                            let _ = cli.on_recv_stream(lpc, seq, req).await;
+                        }
+                        LpcActionApi::ShutdownReq(req) => {
+                            let _ = cli.on_shutdown_stream(lpc, seq, req).await;
                         }
                         // TCP 测试客户端
                         LpcActionApi::CreateTcpServerReq(req) => {
                             let _ = cli.on_create_tcp_server(lpc, seq, req).await;
                         }
                         LpcActionApi::TcpConnectReq(req) => {
-                            let _ = cli.on_tcp_connect(lpc, seq, buffer, req).await;
+                            let _ = cli.on_tcp_connect(lpc, seq, req).await;
                         }
                         LpcActionApi::TcpStreamSendReq(req) => {
                             let _ = cli.on_tcp_send_stream(lpc, seq, req).await;
@@ -201,20 +206,16 @@ impl BDTCli {
         }
     }
 
-    pub async fn on_destory_bdt_client(&mut self,
-        lpc: Lpc,
-        seq: u32,
-        req: &DestoryStackReq,
-    ){
+    pub async fn on_destory_bdt_client(&mut self, lpc: Lpc, seq: u32, req: &DestoryStackReq) {
         log::info!("on destory bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let mut req = req.clone();
         task::spawn(async move {
             let _ = cli.destory_client(req.peer_name.as_str()).await;
             let mut lpc = lpc;
-            let resp : DestoryStackResp = DestoryStackResp{
-                result : 0,
-                msg : "success".to_string()
+            let resp: DestoryStackResp = DestoryStackResp {
+                result: 0,
+                msg: "success".to_string(),
             };
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -224,7 +225,7 @@ impl BDTCli {
                 ))
                 .await;
         });
-    } 
+    }
 
     pub async fn on_create_bdt_client(
         &mut self,
@@ -267,7 +268,7 @@ impl BDTCli {
         });
     }
 
-    pub async fn on_auto_accept(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &AutoAcceptReq) {
+    pub async fn on_auto_accept(&mut self, lpc: Lpc, seq: u32, req: &AutoAcceptReq) {
         log::info!("on_auto_accept, req={:?}", &req);
 
         let req = req.clone();
@@ -331,9 +332,8 @@ impl BDTCli {
         });
     }
 
-    pub async fn on_send_stream(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &SendStreamReq) {
+    pub async fn on_send_stream(&mut self, lpc: Lpc, seq: u32, req: &SendStreamReq) {
         log::info!("on_send_stream, req={:?}", &req);
-        let (remote, _other) = Device::raw_decode(buffer).unwrap();
         let mut cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
@@ -361,9 +361,9 @@ impl BDTCli {
         });
     }
 
-    pub async fn on_recv_stream(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &RecvStreamReq) {
+    pub async fn on_recv_stream(&mut self, lpc: Lpc, seq: u32, req: &RecvStreamReq) {
         log::info!("on_recv_stream, req={:?}", &req);
-        let (remote, _other) = Device::raw_decode(buffer).unwrap();
+
         let mut cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
@@ -386,6 +386,25 @@ impl BDTCli {
                     seq,
                     Vec::new(),
                     LpcActionApi::RecvStreamResp(resp),
+                ))
+                .await;
+        });
+    }
+    pub async fn on_shutdown_stream(&mut self, lpc: Lpc, seq: u32, req: &ShutdownReq) {
+        log::info!("on_recv_stream, req={:?}", &req);
+
+        let mut cli = self.clone();
+        let peer_name = req.peer_name.clone();
+        let req = req.clone();
+        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        task::spawn(async move {
+            let resp = bdt_client.shutdown(&req);
+            let mut lpc = lpc;
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::ShutdownResp(resp.unwrap()),
                 ))
                 .await;
         });
@@ -469,7 +488,7 @@ impl BDTCli {
                 handler_list.push(task::spawn(async move {
                     let conn_req = conn_req;
                     let peer_name = conn_req.peer_name.clone();
-                    //(1) 创建一个bdt stack 
+                    //(1) 创建一个bdt stack
 
                     //(2) 向remote 设备发起连接
                     //cli.create_client(req)
@@ -537,19 +556,14 @@ impl BDTCli {
             .await;
     }
 
-    pub async fn on_create_tcp_server(
-        &mut self,
-        lpc: Lpc,
-        seq: u32,
-        req: &CreateTcpServerReq,
-    ) {
+    pub async fn on_create_tcp_server(&mut self, lpc: Lpc, seq: u32, req: &CreateTcpServerReq) {
         log::info!("on create bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let mut req = req.clone();
         let mut lpc = lpc;
         task::spawn(async move {
             let mut req = req.clone();
-            let address = format!("{}:{}", req.address,req.port);
+            let address = format!("{}:{}", req.address, req.port);
             let address = cli.add_tcp_client(req.name.clone(), address).await;
             let mut client = cli.get_tcp_client(req.name.clone()).await;
             let mut lpc1 = lpc.clone();
@@ -572,7 +586,7 @@ impl BDTCli {
         });
     }
 
-    pub async fn on_tcp_connect(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &TcpConnectReq) {
+    pub async fn on_tcp_connect(&mut self, lpc: Lpc, seq: u32, req: &TcpConnectReq) {
         log::info!("on create bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let mut req = req.clone();
@@ -603,12 +617,7 @@ impl BDTCli {
         });
     }
 
-    pub async fn on_tcp_send_stream(
-        &mut self,
-        lpc: Lpc,
-        seq: u32,
-        req: &TcpStreamSendReq,
-    ) {
+    pub async fn on_tcp_send_stream(&mut self, lpc: Lpc, seq: u32, req: &TcpStreamSendReq) {
         log::info!("on create bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let mut req = req.clone();
@@ -616,7 +625,7 @@ impl BDTCli {
         task::spawn(async move {
             let mut client = cli.get_tcp_client(req.name).await;
             let resp = match client.send_stream(req.stream_name, req.file_szie).await {
-                Ok((hash, send_time,sequence_id)) => TcpStreamSendResp {
+                Ok((hash, send_time, sequence_id)) => TcpStreamSendResp {
                     result: 0,
                     msg: "success".to_string(),
                     send_time,
@@ -628,7 +637,7 @@ impl BDTCli {
                     msg: err.msg().to_string(),
                     hash: HashValue::default(),
                     send_time: 0,
-                    sequence_id : 0
+                    sequence_id: 0,
                 },
             };
             let _ = lpc
@@ -640,12 +649,7 @@ impl BDTCli {
                 .await;
         });
     }
-    pub async fn on_listener_tcp_stream(
-        &mut self,
-        lpc: Lpc,
-        seq: u32,
-        req: &TcpStreamListenerReq,
-    ) {
+    pub async fn on_listener_tcp_stream(&mut self, lpc: Lpc, seq: u32, req: &TcpStreamListenerReq) {
         log::info!("on create bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let mut req = req.clone();
@@ -653,7 +657,10 @@ impl BDTCli {
         task::spawn(async move {
             let mut req = req.clone();
             let mut client = cli.get_tcp_client(req.name).await;
-            let resp = match client.listener_recv_stream(req.stream_name,Some(seq),Some(lpc.clone())).await {
+            let resp = match client
+                .listener_recv_stream(req.stream_name, Some(seq), Some(lpc.clone()))
+                .await
+            {
                 Ok(()) => TcpStreamListenerResp {
                     result: 0,
                     msg: "success".to_string(),

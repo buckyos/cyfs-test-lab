@@ -52,11 +52,14 @@ pub async fn load_sn(sn_list: &Vec<PathBuf>) -> Vec<Device> {
             "sn device decode success,sn object id =  {}",
             device.desc().calculate_id()
         );
-        let desc_info = device.desc().object_id().info();
-        if let ObjectIdInfo::Standard(obj) = desc_info {
-            let tmp_area = obj.area.unwrap();
-            log::info!("sn area = {}", tmp_area);
-        }
+        let _ = match device.desc().object_id().info().area(){
+            Some(area)=>{
+                log::info!("sn device decode success,sn object id =  {} ,area = {}",device.desc().calculate_id(),area.to_string()); 
+            },
+            None=>{
+                log::info!("sn device decode success,sn object id =  {} ,area = None",device.desc().calculate_id());     
+            }
+        };
         sns.push(device);
     }
     sns

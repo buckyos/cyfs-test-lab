@@ -443,7 +443,7 @@ impl BDTClient {
     }
 
     pub async fn recv_stream(&mut self, req: &RecvStreamReq) -> BuckyResult<RecvStreamResp>{
-        let mut conn = self.get_stream(req.stream_name.clone().as_str());
+        let mut conn = self.get_stream(req.stream_name.as_str());
         let resp = match conn.recv_stream().await {
             Err(e) => {
                 log::error!("recv failed, name={}, e={}", &req.stream_name, &e);
@@ -470,4 +470,25 @@ impl BDTClient {
         };
         Ok(resp)
     } 
+
+    pub fn shutdown(&mut self, req: &ShutdownReq) -> BuckyResult<ShutdownResp>{
+        let mut conn = self.get_stream(req.stream_name.as_str());
+        let resp = match conn.shutdown(req.shutdown_type.as_str()) {
+            Ok(_)=>{
+                log::info!("{} shutdown success",req.stream_name);
+                ShutdownResp{
+                    result : 0,
+                    msg : "success".to_string()
+                }
+            },
+            Err(err)=>{
+                log::info!("{} shutdown fail,error = {}",req.stream_name,err);
+                ShutdownResp{
+                    result : 1,
+                    msg : err.to_string()
+                }
+            }
+        };
+        Ok(resp) 
+    }
 }

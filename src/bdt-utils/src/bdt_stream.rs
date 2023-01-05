@@ -222,6 +222,17 @@ impl BDTConnection {
         Ok((file_size, recv_time, hash))
     }
 
+
+    pub fn shutdown(&mut self,shutdown_str:&str)-> Result<(), std::io::Error>{
+        let shutdown_type = match shutdown_str {
+            "Both" =>std::net::Shutdown::Both,
+            "Read" =>std::net::Shutdown::Read,
+            "Write" =>std::net::Shutdown::Write,
+             _ => std::net::Shutdown::Both
+        };
+        self.stream.shutdown(shutdown_type) 
+    }
+
     pub async fn send_object(
         &mut self,
         obj_type: u64,

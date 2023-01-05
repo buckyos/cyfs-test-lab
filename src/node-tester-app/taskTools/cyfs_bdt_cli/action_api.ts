@@ -293,6 +293,21 @@ export type DestoryStackResp = {
     result: number,
     msg: string,
 }
+
+
+export type ShutdownReq = {
+    peer_name: string,
+    stream_name: string,
+    shutdown_type : string
+}
+
+export type ShutdownResp = {
+    result: number,
+    msg: string,
+}
+
+
+
 export interface LpcActionApi {
     client_name?: string,
     TestReq?: TestReq,
@@ -319,6 +334,8 @@ export interface LpcActionApi {
     SendStreamResp?: SendStreamResp,
     RecvStreamReq?: RecvStreamReq,
     RecvStreamResp?: RecvStreamResp,
+    ShutdownReq?: ShutdownReq,
+    ShutdownResp?: ShutdownResp,
     ListenerStreamReq?: ListenerStreamReq,
     ListenerStreamResp?: ListenerStreamResp,
     ListenerStreamEvent?: ListenerStreamEvent,

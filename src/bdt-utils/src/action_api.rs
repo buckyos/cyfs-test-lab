@@ -33,6 +33,8 @@ pub enum LpcActionApi {
     SendStreamResp(SendStreamResp),
     RecvStreamReq(RecvStreamReq),
     RecvStreamResp(RecvStreamResp),
+    ShutdownReq(ShutdownReq),
+    ShutdownResp(ShutdownResp),
     ListenerStreamReq(ListenerStreamReq),
     ListenerStreamResp(ListenerStreamResp),
     ListenerStreamEvent(ListenerStreamEvent),
@@ -218,6 +220,20 @@ pub struct RecvStreamResp {
     pub file_size: u64,
     pub hash: HashValue,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ShutdownReq{
+    pub peer_name: String,
+    pub stream_name: String,
+    pub shutdown_type : String
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ShutdownResp{
+    pub result: u16,
+    pub msg: String,
+}
+
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ListenerStreamReq {
     pub peer_name: String,

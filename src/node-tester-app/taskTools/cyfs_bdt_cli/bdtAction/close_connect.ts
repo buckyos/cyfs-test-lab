@@ -14,9 +14,9 @@ export class CloseConnectAction extends BaseAction implements ActionAbstract {
         if(info.err){
             return { err: info.err, log: `${this.action.LN} Connecion ${this.action.config.conn_tag!} not exist` } 
         }
-        let close = await info.conn!.close();
+        let close = await info.conn!.shutdown("Both");
         if(close){
-            return { err: close, log: `${this.action.LN} Connecion ${this.action.config.conn_tag!} close failed` } 
+            return { err: close.result!.result, log: `${this.action.LN} Connecion ${this.action.config.conn_tag!} close failed` } 
         }
         await sleep(2000);
         return { err: BDTERROR.success, log: "CloseConnectAction run success" }
