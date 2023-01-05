@@ -76,7 +76,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     shutdown_type : "Write"
                 },
                 fileSize : 1000*1024*1024,
-                expect: { err: 0 },
+                expect: { err: 14 },
             }))
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
