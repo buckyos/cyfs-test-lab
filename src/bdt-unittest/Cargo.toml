@@ -15,6 +15,7 @@ cyfs-base = {path = "../../CYFS/src/component/cyfs-base"}
 cyfs-debug = { path = "../../CYFS/src/component/cyfs-debug"}
 cyfs-util = { path="../../CYFS/src/component/cyfs-util"}
 cyfs-bdt = {path = "../../CYFS/src/component/cyfs-bdt"}
+bdt-utils = {path = "../bdt-utils"}
 hyper = { version = "0.14.19", features = ["full"] }
 tokio = { version = "1.x", features = ["macros", "rt-multi-thread"] }
 anyhow = "1.0.58"

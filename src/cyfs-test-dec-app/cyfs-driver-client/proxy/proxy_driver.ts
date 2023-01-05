@@ -148,10 +148,11 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         if (!this.stack_client_map.has(name)) {
             return { err: ErrorCode.notFound, log: "cleint not found" }
         }
+        this.logger.info(`CyfsStackProxyDriver get_client ${name} success`)
         return { err: ErrorCode.succ, log: "init success", client: this.stack_client_map.get(name)! }
     }
     add_client(name: string, client: CyfsStackProxyClient): { err: ErrorCode, log: string } {
-        if (!this.stack_client_map.has(name)) {
+        if (this.stack_client_map.has(name)) {
             return { err: ErrorCode.invalidState, log: "cleint is exist" }
         }
         this.stack_client_map.set(name, client);

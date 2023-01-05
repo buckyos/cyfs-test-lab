@@ -13,7 +13,7 @@ async function main() {
     DirHelper.setRootDir(dir);
     let logFolder = DirHelper.getLogDir();
 
-    Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+    Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
     Base.BX_EnableFileLog(logFolder, `${path.basename(process.argv[1], '.js')}`, '.log');
     Base.blog.enableConsoleTarget(false);
     Base.blog.info(`current dir=${process.cwd()}, rootdir=${DirHelper.getRootDir()}`);

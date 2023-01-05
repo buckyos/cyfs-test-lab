@@ -17,7 +17,7 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     constructor(log_path:string) {
         this.log_path = log_path;
         this.cache_path = path.join(this.log_path,"../cache");
-        this.simulator_path = path.join(__dirname,"../../config/zone-simulator.exe")
+        this.simulator_path = path.join(__dirname,"../../cyfs/zone-simulator.exe")
         this.stack_client_map = new Map();
         this.pid = 0;
         DirHelper.setRootDir(path.join(__dirname, "../../"));
@@ -34,8 +34,9 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     async start(): Promise<{ err: ErrorCode, log: string }> {
         await this.stop();
         return new Promise(async (v) => {
-            this.logger.info(`####### start Zone Simulator`)
+            this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
             this.process =  ChildProcess.spawn(this.simulator_path, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(this.simulator_path) })
+            this.process.unref();
             while (!this.pid) {
                 await this.initPid();
             }
@@ -47,12 +48,12 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
         return new Promise(async (v) => {
             let process = ChildProcess.exec(`tasklist|findstr /c:zone-simulator.exe`)
             process!.on('exit', (code: number, singal: any) => {
-                this.logger.info(`check exit,pid = ${this.pid}`);
+                this.logger.info(`check finished,pid = ${this.pid}`);
                 v(this.pid)
             });
             process.stdout?.on('data', (data) => {
                 let str: string = `${data.toString()}`;
-                this.logger.info(`cehck result = ${str}`)
+                this.logger.info(`check result = ${str}`)
                 str = str.split('Console')[0].split(`zone-simulator.exe`)[1];
                 this.logger.info(`cehck result split = ${str}`)
                 this.logger.info(str);
@@ -117,10 +118,18 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
         }
         return { err: ErrorCode.succ, log: "init success" }
     }
-    get_client(name: string): { err: ErrorCode, log: string, client: CyfsStackSimulatorClient } {
+    get_client(name: string): { err: ErrorCode, log: string, client?: CyfsStackSimulatorClient } {
+        if (!this.stack_client_map.has(name)) {
+            return { err: ErrorCode.notFound, log: "cleint not found" }
+        }
+        this.logger.info(`CyfsStackSimulatorDriver get_client ${name} success`)
         return { err: ErrorCode.succ, log: "init success", client: this.stack_client_map.get(name)! }
     }
     add_client(name: string, client: CyfsStackSimulatorClient): { err: ErrorCode, log: string } {
+        if (this.stack_client_map.has(name)) {
+            return { err: ErrorCode.invalidState, log: "cleint is exist" }
+        }
+        this.stack_client_map.set(name, client);
         return { err: ErrorCode.succ, log: "init success" }
     }
 }

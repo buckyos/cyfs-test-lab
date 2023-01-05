@@ -28,7 +28,7 @@ describe("SharedCyfsStack util相关接口测试", function () {
             //遍历获取所有协议栈
             for(let peer of stack_manager.peer_map.values()){
                 for(let stack of peer.values()){
-                    let run =await stack.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
+                    let run =await stack!.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
                     assert(!run.err, `调用接口失败:${run}`)
                     console.info(`${JSON.stringify(run.unwrap())}`)
                 }

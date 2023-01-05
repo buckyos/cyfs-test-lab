@@ -246,7 +246,7 @@ export class TestcaseIdDecoder extends cyfs.NamedObjectIdDecoder<cyfs.DeviceDesc
 export class Testcase extends cyfs.NamedObject<TestcaseDescContent, TestcaseBodyContent>{
     static create(
         testcase : TestcaseType,
-        owner: cyfs.Option<cyfs.ObjectId>
+        owner?:cyfs.ObjectId,
     ): Testcase {
         const desc_content = new TestcaseDescContent(testcase.desc);
         const body_content = new TestcaseBodyContent(testcase.body);
