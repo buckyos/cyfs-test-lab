@@ -295,8 +295,14 @@ impl BDTClientManager {
             //(3)解析BDT Stack 启动结果
             Ok((stack, online_time)) => {
                 let mut local = stack.sn_client().ping().default_local();
-                let online_sn_id = stack.sn_client().ping().default_client().unwrap().sn().object_id().to_string();
+                let online_sn_id = match stack.sn_client().ping().default_client() {
+                    Some(client)=>{client.sn().object_id().to_string()},
+                    None => {"None".to_string()}
+                };
                 let ep_info = local.mut_connect_info().mut_endpoints().clone();
+                for ep in ep_info.clone(){
+                    log::info!("sn_client local ep: {}",ep.to_string());
+                }
                 // 设置返回Device 对象 ep 类型用于测试
                 let _ = match req.ep_type.clone() {
                     Some(ep_type_str) => {

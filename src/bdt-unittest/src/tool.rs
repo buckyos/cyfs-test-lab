@@ -47,6 +47,7 @@ pub async fn setup(testcaseName:&str) -> () {
         cyfs_debug::PanicBuilder::new("bdt-unittest", "bdt-unittest")
             .exit_on_panic(true)
             .build()
+            .http_bug_report(url)
             .start();
         log::info!("########################## Before all testcase init ##########################");
         

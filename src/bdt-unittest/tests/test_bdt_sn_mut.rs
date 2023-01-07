@@ -98,6 +98,8 @@ mod tests {
             for sn in stack.sn_client().ping().sn_list(){
                 log::info!("lcoal sn list:{}",sn.desc().object_id().to_string());
             }
+            let running_sn = stack.sn_client().ping().default_client().unwrap().sn().object_id().to_string();
+            log::info!("{}",running_sn);
             
         }).await
         
