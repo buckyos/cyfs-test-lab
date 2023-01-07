@@ -116,7 +116,7 @@ export class BdtStack extends EventEmitter {
         this.logger.debug(`callApi connect BuckyResult result = ${JSON.stringify(info.value)}`)
         let result : api.LpcActionApi  = info.value;
         if (!result.ConnectResp || result.ConnectResp.result) {
-            return {resp:info.value};
+            return {resp:result.ConnectResp!};
         }
         this.logger.info(`${this.tags} connect success ,stream name = ${result.ConnectResp.stream_name}`)
         

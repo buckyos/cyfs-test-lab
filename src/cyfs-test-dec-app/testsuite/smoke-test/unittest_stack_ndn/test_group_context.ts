@@ -32,7 +32,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
     describe("Trans 模块", function () {
 
         describe("CYFS Stack NDN group context 冒烟测试", function () {
-            it.only("简单业务流程测试-publish_file",async()=>{
+            it("简单业务流程测试-无group context",async()=>{
                 let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
                 let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
                 let stack1_tool = stack_manager.driver!.get_client("zone1_ood").client!.get_util_tool();
@@ -94,6 +94,105 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                 
                     // 源设备(hub)列表
                     device_list: [stack2.local_device_id()],
+                    auto_start: true
+                })
+                logger.info(`create_task : ${JSON.stringify(info2)}`);
+                while (true){
+                    let info_check = await stack1.trans().get_task_state({
+                        common:  {
+                            // api级别
+                            level: cyfs.NDNAPILevel.NDN,             
+                            flags: 1,
+                        },
+                    
+                        task_id: info2.unwrap().task_id,
+                    });
+                    logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
+                    if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+                        break;
+                    }
+                    await sleep(1000); 
+                };
+            })
+            it.only("简单业务流程测试-group context",async()=>{
+                let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
+                let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
+                let stack1_tool = stack_manager.driver!.get_client("zone1_ood").client!.get_util_tool();
+                let stack2_tool = stack_manager.driver!.get_client("zone1_device1").client!.get_util_tool();
+                logger.info(`stack1 : ${stack1.local_device_id().object_id.to_base_58()}`)
+                logger.info(`stack2 : ${stack2.local_device_id().object_id.to_base_58()}`)
+                let local_file = await stack2_tool.create_file(10*1024*1024);
+                logger.info(`local_file : ${JSON.stringify(local_file)}`);
+                // 发布文件
+                let info1 = await stack2.trans().publish_file({
+                    common: {
+                        // api级别
+                        level: cyfs.NDNAPILevel.NDC,             
+                        flags: 1,
+                    },
+                    // 文件所属者
+                    owner: stack2.local_device_id().object_id,
+                    // 文件的本地路径
+                    local_path: local_file.file_path!,
+                    // chunk大小
+                    chunk_size: 4*1024*1024,
+                });
+                logger.info(`publish_file : ${info1.unwrap().file_id.to_base_58()}`);
+                // 发送文件对象
+                let info_non_get = await stack2.non_service().get_object({
+                    common:{
+                        // api级别
+                        level: cyfs.NONAPILevel.NOC,
+                        flags: 1,
+                    },
+                    object_id: info1.unwrap().file_id,
+                    
+                })
+                logger.info(`info_non_get : ${ JSON.stringify(info_non_get.unwrap())}`);
+                let info_non_put =await stack2.non_service().put_object({
+                    common: {                    
+                        // api级别
+                        level: cyfs.NONAPILevel.NON,
+                    
+                        // 用以处理默认行为
+                        target: stack1.local_device_id().object_id,
+                    
+                        flags: 1,
+                    },
+                    object: info_non_get.unwrap().object,
+                
+                })
+                logger.info(`info_non_put : ${ JSON.stringify(info_non_put.unwrap())}`);
+                let context = cyfs.TransContext.new(dec_app_1,'/smoke_test')
+                logger.info(`context ${context.desc().calculate_id().to_base_58()}`)
+                context.body_expect().content().device_list.push( new cyfs.TransContextDevice(stack2.local_device_id(),cyfs.ChunkCodecDesc.Stream()));
+                logger.info(`${JSON.stringify(context.device_list())}`)
+                let info_context = await stack1.trans().put_context({
+                    common: {
+                        // api级别
+                        level: cyfs.NDNAPILevel.NDN,             
+                        flags: 1,
+                    },
+                    context:context,
+                    access : cyfs.AccessString.full()
+
+                });
+                logger.info(`put_context err =  ${ JSON.stringify(info_context.err)}`);
+                let info2 = await stack1.trans().create_task( {
+                    common: {
+                        // api级别
+                        level: cyfs.NDNAPILevel.NDN,             
+                        flags: 1,
+                    },
+                    object_id: info1.unwrap().file_id,
+                
+                    // 保存到的本地目录or文件
+                    local_path: path.join((await stack1_tool.get_cache_path()).cache_path!.file_download,local_file.file_name!),
+                
+                    // 源设备(hub)列表
+                    device_list: [stack2.local_device_id()],
+                    group : `/smoke_test`,
+                    context : `/smoke_test`,
                     auto_start: true
                 })
                 logger.info(`create_task : ${JSON.stringify(info2)}`);

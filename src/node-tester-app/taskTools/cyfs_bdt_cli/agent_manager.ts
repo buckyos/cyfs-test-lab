@@ -57,6 +57,9 @@ export class AgentManager {
         let agentName = name.split("$")[0];
         let client_index = name.split("$")[1];
         let stack_index = name.split("$")[2];
+        if(!stack_index){
+            stack_index = "0"
+        }
         if(!this.agentMap.has(agentName)){
             this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
             return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
