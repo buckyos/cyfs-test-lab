@@ -1,9 +1,9 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import {TestRunner} from '../../taskTools/cyfs_bdt_cli/test_runner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt_cli/type"
+import {labAgent,BdtCliConfig,LabSnList} from "../../taskTools/cyfs_bdt_cli/lab_agent"
+import  * as BDTAction from "../../taskTools/cyfs_bdt_cli/bdtAction"
+import {AgentManager} from '../../taskTools/cyfs_bdt_cli/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -30,7 +30,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     };
     await testRunner.initTestcase(testcase);
     //(3) 创建BDT测试客户端
-    let config : BdtPeerClientConfig = {
+    let config : BdtCliConfig = {
             eps:{
                 ipv4:{
                     udp:true,

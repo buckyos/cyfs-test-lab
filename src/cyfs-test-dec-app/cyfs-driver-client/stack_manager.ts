@@ -10,11 +10,19 @@ import path from "path";
 import * as fs from "fs-extra";
 export class StackManager {
     private driver_type: CyfsDriverType;
+    static manager?: StackManager;
     // stack_map规则 ：{ `${peer_name}` : {`system`:SharedCyfsStack,`${}_${dec_id}`}}
     public peer_map: Map<string, Map<string, cyfs.SharedCyfsStack | undefined>>;
     private driver_manager?: CyfsStackDriverManager;
     public driver?: CyfsStackDriver
     private logger? : any
+    //单例模式
+    static createInstance(driver_type?: CyfsDriverType): StackManager {
+        if (!StackManager.manager) {
+            StackManager.manager = new StackManager(driver_type);
+        }
+        return StackManager.manager;
+    }
     constructor(driver_type?: CyfsDriverType) {
         this.peer_map = new Map();
         if (!driver_type) {
@@ -137,6 +145,7 @@ export class StackManager {
             this.peer_map.set(agent.peer_name, stack_map);
         }
     }
+    
     get_cyfs_satck(peer_name:string,dec_id:string=`system`,type: cyfs.CyfsStackRequestorType = cyfs.CyfsStackRequestorType.Http ): { err: ErrorCode, log: string,stack?:cyfs.SharedCyfsStack} {
         if(!this.peer_map.has(peer_name)){
             return {err:ErrorCode.notFound,log:`error peer name ${peer_name}`}
