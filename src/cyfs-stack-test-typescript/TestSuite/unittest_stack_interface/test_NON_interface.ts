@@ -63,7 +63,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     this.timeout(0);
     this.beforeAll(async function () {
 
-        await ZoneSimulator.init();
+        //await ZoneSimulator.init();
+        await ZoneSimulator.init(false,false,' Console',"http");
         zone1device1_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
         zone1device2_dec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
         zone1ooddec_id = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1ooddecapp")
@@ -698,8 +699,9 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const get_ret2 = await zone1device1.non_service().get_object(get_req);  //当前设备
             const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
             console.info('get_object result:', get_ret1);
+            console.info('多个分组设置组合权限-当前zone和OwnerDec权限为full get_object result2:',get_ret2) 
             assert(!get_ret1.err);
-            assert(get_ret2.err);
+            assert(!get_ret2.err);
 
             const del_req: cyfs.NONDeleteObjectOutputRequest = {
                 common: {
@@ -714,7 +716,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const delete_ret = await zone1device1.non_service().delete_object(del_req);
             const delete_ret1 = await zone1device2.non_service().delete_object(del_req);
             console.info('delete_object result:', delete_ret);
-            assert(delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
+            assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
             assert(!delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
     
@@ -745,8 +747,9 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_ret3 = await zone1device2.non_service().put_object(put_req);
             const put_ret4 = await zone2device2.non_service().put_object(put_req);
             console.log(put_ret3)
+            console.log("多个分组设置组合权限-otherZone和OtherDec权限为full put_ret3",put_ret3)
             assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
-            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(put_ret3.unwrap().result == "AlreadyExists", `put object failed,err : ${JSON.stringify(put_ret3)}`)
             assert(put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
             // get
             const get_req: cyfs.NONGetObjectOutputRequest = {
@@ -813,9 +816,9 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const put_ret2 = await zone1device1.non_service().put_object(put_req);
             const put_ret3 = await zone1device2.non_service().put_object(put_req);
             const put_ret4 = await zone1device1.non_service().put_object(put_req);
-            console.log(put_ret3)
+            console.log("回收当前设备的读写权限其他zone的读权限 put_ret3",put_ret3)
             assert(!put_ret2.err, `put object failed,err : ${JSON.stringify(put_ret2)}`)
-            assert(put_ret3.err, `put object failed,err : ${JSON.stringify(put_ret3)}`)
+            assert(put_ret3.unwrap().result == "AlreadyExists", `put object failed,err : ${JSON.stringify(put_ret3)}`)
             assert(!put_ret4.err, `put object failed,err : ${JSON.stringify(put_ret4)}`)
             // get
             const get_req: cyfs.NONGetObjectOutputRequest = {
@@ -832,7 +835,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             const get_ret1 = await zone1device2.non_service().get_object(get_req);  //当前zone
             const get_ret3 = await zone2device1.non_service().get_object(get_req);  //otherzone
             console.info('get_object result:', get_ret1);
-            assert(get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
+            assert(!get_ret1.err, `delete object failed ,err : ${JSON.stringify(get_ret1)}`);
             assert(!get_ret2.err);
             assert(get_ret3.err);
 
