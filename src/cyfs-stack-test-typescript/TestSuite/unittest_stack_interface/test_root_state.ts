@@ -12,7 +12,6 @@ cyfs.clog.enable_file_log({
 
 let stack_runtime:cyfs.SharedCyfsStack;
 let stack_ood:cyfs.SharedCyfsStack;
-console.info("add testcase")
 
 describe("SharedCyfsStack root_state 相关接口测试",function(){
     this.timeout(0);
