@@ -1,24 +1,50 @@
-import {BaseAction,ActionAbstract} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../action";
 import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
 import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
+import { type } from "os";
+
+/**
+ * 输入数据
+ */
+type TestInput = {
+    local_path : string,
+    chunk_size : number,
+    req_path?: string,
+    level: cyfs.NDNAPILevel,
+    referer_object?: cyfs.NDNDataRefererObject[],
+    flags: number,
+}
 
 export class PublishFileAction extends BaseAction implements ActionAbstract {
-    async run(req:{
-        local_path : string,
-        chunk_size : number,
-        req_path?: string,
-        level: cyfs.NDNAPILevel,
-        referer_object?: cyfs.NDNDataRefererObject[],
-        flags: number,
-    }): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
+
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
+        let run =  new PublishFileAction({
+            local :  action.local,
+            remote : action.local,
+            input : {
+                timeout : action.input.timeout,
+            },
+            parent_action : action.action_id!,
+            expect : {err:0},
+
+        },logger)
+        return {err:ErrorCode.succ,action:run}
+    }
+    async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
+        this.action.type = "PublishFileAction";
+        this.action.action_id = `PublishFileAction-${Date.now()}`
+        return await super.start(req)
+    }
+    async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> { 
         // 获取连接池中的cyfs stack
-        this.action.type = "publish_file";
+        
         let stack_manager = StackManager.createInstance();
-        let local_get = stack_manager.get_cyfs_satck(this.action.local.peer_name,this.action.local.dec_id,this.action.local.type);
-        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!.peer_name,this.action.remote!.dec_id,this.action.remote!.type);
-        if(local_get.err || remote_get.err){
+        let local_get = stack_manager.get_cyfs_satck(this.action.local);
+        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
+        if (local_get.err || remote_get.err) {
             this.logger.info(`StackManager not found cyfs satck`);
+            return {err:ErrorCode.notFound,log:`协议栈未初始化`}
         }
         let local = local_get.stack!;
         let remote = remote_get.stack!;
@@ -46,12 +72,16 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         });
         this.action.output! = {
             total_time : Date.now() - begin_time
-        };
-        this.logger.info(`publish_file : ${JSON.stringify(info1)}`);
+        }; 
         if(info1.err){
+            this.logger.error(`publish_file error : ${JSON.stringify(info1.err)} `);
             return { err: info1.val.code, log: info1.val.msg}
+        }else{
+            this.logger.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);
+            return { err: ErrorCode.succ, log: "success",resp:{file_id:info1.unwrap().file_id}}
         }
-        return { err: ErrorCode.succ, log: "success",resp:{file_id:info1.unwrap().file_id}}
+     
+        
        
     }
 }

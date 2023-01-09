@@ -20,17 +20,18 @@ export type Action ={
         type?: cyfs.CyfsStackRequestorType
     },  //remote 设备
     user_list? : Array<string>, //其他协议栈列表 
-    testcase_id? : string // 测试用例id 
+    testcase_id? : string, // 测试用例id 
     parent_action?:string, //父任务
     input:{
         timeout : number, //超时时间
         req_path? : string,
-        ndn_level?:cyfs.NDNAPILevel,
-        non_level?:cyfs.NONAPILevel,
         object_size? : number, // non 对象大小
         file_size? : number,   // 文件大小
         chunk_size? : number,  // chunk 大小
-        common? : any ,// 协议栈参数    
+        common_non? : cyfs.NDNOutputRequestCommon ,// 协议栈参数  
+        common_ndn? : cyfs.NONOutputRequestCommon ,// 协议栈参数  
+        ndn_level?:cyfs.NDNAPILevel,
+        non_level?:cyfs.NONAPILevel,  
     },
     expect:{err:number};   //预期结果    
     output?:{
@@ -56,10 +57,13 @@ export class BaseAction implements ActionAbstract{
         this.child_actions = [];
     }
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
-        this.logger!.info(`##### ${this.action.action_id} start running `)
+        this.logger!.info(`##### ${this.action.action_id} ${this.action.parent_action} start running `)
         return new Promise(async(V)=>{
             try {
                 // 创建超时检测
+                if(!this.action.input.timeout){
+                    this.action.input.timeout = 60*1000;
+                }
                 let timer  =  setTimeout(async ()=>{
                     this.action.result = { err: ErrorCode.timeout, log: `${this.action.action_id} ${this.action.local.peer_name} ${this.action.remote?.peer_name} run timeout time = ${this.action.input.timeout}`};
                     this.logger!.error(this.action.result);
@@ -93,6 +97,7 @@ export class BaseAction implements ActionAbstract{
         })
     }
     async run(req:any):Promise<{ err: number, log: string,resp?:any}>{
+        // 默认没有操作
         return { err: ErrorCode.succ, log: "Action run success" }
     }
 }

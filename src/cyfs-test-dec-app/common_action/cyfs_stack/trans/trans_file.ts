@@ -1,19 +1,33 @@
-import {BaseAction,ActionAbstract} from "../../action";
-import { ErrorCode, Logger} from '../../../base';
+import { BaseAction, ActionAbstract } from "../../action";
+import { ErrorCode, Logger,sleep } from '../../../base';
 import * as cyfs from "../../../cyfs";
-import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
-import {PublishFileAction} from "./publish_file"
-import {PutNocObjectAction} from "../non/pub_noc_object"
+import { StackManager, CyfsDriverType } from "../../../cyfs-driver-client"
+import { PublishFileAction } from "./publish_file"
+import { PutContextAction } from "./put_context"
+import { PutNocObjectAction } from "../non/pub_noc_object"
+import * as path from "path";
+/**
+ * 输入数据
+ */
+ type TestInput = {
+    req_path?: string,
+    group? : string,
+    context_path?: string,
+}
 export class TransFileAction extends BaseAction implements ActionAbstract {
-    async run(req?:{
-        req_path : string,
-    }): Promise<{ err: ErrorCode, log: string }> {
+    async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
+        this.action.type = "TransFileAction"
+        this.action.action_id = `TransFileAction-${Date.now()}`
+        return await super.start(req);
+    }
+    async run(req: TestInput): Promise<{ err: ErrorCode, log: string }> {
         // 获取连接池中的cyfs stack
         let stack_manager = StackManager.createInstance();
-        let local_get = stack_manager.get_cyfs_satck(this.action.local.peer_name,this.action.local.dec_id,this.action.local.type);
-        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!.peer_name,this.action.remote!.dec_id,this.action.remote!.type);
-        if(local_get.err || remote_get.err){
+        let local_get = stack_manager.get_cyfs_satck(this.action.local);
+        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
+        if (local_get.err || remote_get.err) {
             this.logger.info(`StackManager not found cyfs satck`);
+            return {err:ErrorCode.notFound,log:`协议栈未初始化`}
         }
         let local = local_get.stack!;
         let remote = remote_get.stack!;
@@ -23,94 +37,66 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         this.logger.info(`remote : ${remote.local_device_id().object_id.to_base_58()}`)
         // 创建测试文件
-        let local_file = await remote_tool.create_file(this.action.input.file_size!);
+        let local_file = await local_tool.create_file(this.action.input.file_size!);
         this.logger.info(`local_file : ${JSON.stringify(local_file)}`);
-        // 发布文件
-        let publish_action = new PublishFileAction({
-            local : this.action.local,
-            remote : this.action.local,
-            input : {
-                timeout : this.action.input.timeout,
-            },
-            parent_action : this.action.action_id!,
-            expect : {err:0},
-
-        },this.logger);
-        let info1 =await publish_action.start({
-            local_path : local_file.file_path,
-            chunk_size : this.action.input.chunk_size,
-            req_path : this.action.input.req_path!,
-            level: this.action.input.ndn_level,
+        // 发布文件子任务
+        let info1 = await PublishFileAction.create_by_parent(this.action, this.logger).action!.start({
+            local_path: local_file.file_path!,
+            chunk_size: this.action.input.chunk_size!,
+            req_path: this.action.input.req_path!,
+            level: this.action.input.ndn_level!,
             flags: 1,
         });
-        if(info1.err){
+        if (info1.err) {
             return info1;
         }
         // 推送obejct   
-        let file_id : cyfs.ObjectId  = info1.resp.file_id;
+        let file_id: cyfs.ObjectId = info1.resp.file_id;
         // 发送文件对象
-        let pub_object_action = new PutNocObjectAction({
-                local : this.action.local,
-                remote : this.action.local,
-                input : {
-                    timeout : this.action.input.timeout,
-                },
-                parent_action : this.action.action_id!,
-                expect : {err:0},
-            
-        },this.logger);
-        
-
-
-        this.logger.info(`info_non_put : ${ JSON.stringify(info_non_put)}`);
-        let context = cyfs.TransContext.new(dec_app_1,'/smoke_test')
-        this.logger.info(`context ${context.desc().calculate_id().to_base_58()}`)
-        context.body_expect().content().device_list.push( new cyfs.TransContextDevice(remote.local_device_id(),cyfs.ChunkCodecDesc.Stream()));
-        this.logger.info(`${JSON.stringify(context.device_list())}`)
-        let info_context = await local.trans().put_context({
-            common: {
-                // api级别
-                level: cyfs.NDNAPILevel.NDN,             
-                flags: 1,
-            },
-            context:context,
-            access : cyfs.AccessString.full()
-
+        let send_file_object_info = await PutNocObjectAction.create_by_parent(this.action, this.logger).action!.start({
+            object_id: file_id,
+            level: this.action.input.non_level!,
         });
-        this.logger.info(`put_context err =  ${ JSON.stringify(info_context.err)}`);
-        let info2 = await local.trans().create_task( {
+        stack_manager.logger!.info(JSON.stringify(send_file_object_info));
+        // 下载端创建 TransContext  
+        this.logger.info(`info_non_put : ${JSON.stringify(send_file_object_info)}`);
+        let create_context_info = await PutContextAction.create_by_parent(this.action, this.logger).action!.start({
+            context_path : req.context_path!,
+            chunk_codec_desc : cyfs.ChunkCodecDesc.Stream(),
+            deviceid_list : [local.local_device_id(),remote.local_device_id()]
+        });
+        stack_manager.logger!.info(JSON.stringify(create_context_info));
+        // 开始传输文件
+        let info2 = await remote.trans().create_task({
             common: {
-                // api级别
-                level: cyfs.NDNAPILevel.NDN,             
+                level: this.action.input.ndn_level!,
                 flags: 1,
             },
-            object_id: info1.unwrap().file_id,
-        
+            object_id: file_id,
             // 保存到的本地目录or文件
-            local_path: path.join((await local_tool.get_cache_path()).cache_path!.file_download,local_file.file_name!),
-        
+            local_path: path.join((await remote_tool.get_cache_path()).cache_path!.file_download, local_file.file_name!),
             // 源设备(hub)列表
-            device_list: [remote.local_device_id()],
-            group : `/smoke_test`,
-            context : `/smoke_test`,
+            device_list: [local.local_device_id()],
+            group: req!.group,
+            context: req!.context_path,
             auto_start: true
         })
         this.logger.info(`create_task : ${JSON.stringify(info2)}`);
-        while (true){
-            let info_check = await local.trans().get_task_state({
-                common:  {
+        remote.trans().start_task
+        while (true) {
+            let info_check = await remote.trans().get_task_state({
+                common: {
                     // api级别
-                    level: cyfs.NDNAPILevel.NDN,             
+                    level: cyfs.NDNAPILevel.NDN,
                     flags: 1,
                 },
-            
                 task_id: info2.unwrap().task_id,
             });
             this.logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-            if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+            if (info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err) {
                 break;
             }
-            await sleep(1000); 
+            await sleep(1000);
         };
         return { err: ErrorCode.succ, log: "run success" }
     }

@@ -1,20 +1,48 @@
-import {BaseAction,ActionAbstract} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../action";
 import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
 import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
 
+
+/**
+ * 输入数据
+ */
+ type TestInput = {
+    object_id : cyfs.ObjectId,
+    level: cyfs.NONAPILevel,
+}
+
 export class PutNocObjectAction extends BaseAction implements ActionAbstract {
-    async run(req:{
-        object_id : cyfs.ObjectId,
-        level: cyfs.NONAPILevel,
-    }): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
-        // 获取连接池中的cyfs stack
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PutNocObjectAction}{
+        let run =  new PutNocObjectAction({
+            local : action.local,
+            remote : action.remote,
+            input : {
+                timeout : action.input.timeout,
+            },
+            parent_action : action.action_id!,
+            expect : {err:0},
+
+        },logger)
+        return {err:ErrorCode.succ,action:run}
+    }
+    async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
         this.action.type = "PutNocObjectAction";
+        this.action.action_id = `PutNocObjectAction-${Date.now()}`
+        return await super.start(req)
+    }
+    async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
+        // 获取连接池中的cyfs stack
         let stack_manager = StackManager.createInstance();
-        let local_get = stack_manager.get_cyfs_satck(this.action.local.peer_name,this.action.local.dec_id,this.action.local.type);
-        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!.peer_name,this.action.remote!.dec_id,this.action.remote!.type);
-        if(local_get.err || remote_get.err){
+        let local_get = stack_manager.get_cyfs_satck(this.action.local!);
+        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
+        if (local_get.err) {
             this.logger.info(`StackManager not found cyfs satck`);
+            return {err:ErrorCode.notFound,log:`协议栈未初始化`}
+        }
+        if (remote_get.err) {
+            this.logger.info(`StackManager not found cyfs satck`);
+            return {err:ErrorCode.notFound,log:`协议栈未初始化`}
         }
         let local = local_get.stack!;
         let remote = remote_get.stack!;

@@ -1,6 +1,6 @@
 import * as cyfs from "../cyfs"
 import {RandomGenerator} from "../base"
-import {Uint8Array_to_string,string_to_Uint8Array} from "../common"
+import {Uint8Array_to_string,string_to_Uint8Array} from "../common_action"
 
 async function rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:number,chunk_id:cyfs.ChunkId,chunk_data:Uint8Array}>{
     console.info(`rand_cyfs_chunk_cache file_size = ${chunk_size}`)
