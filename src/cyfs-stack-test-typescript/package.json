@@ -70,6 +70,7 @@
     "concurrently": "^6.4.0",
     "connect-restreamer": "~1.0.0",
     "cyfs-sdk-nightly": "^0.5.18",
+    "cyfs-sdk": "^0.5.15",
     "echarts": "^4.2.0-rc.2",
     "element-ui": "^2.4.8",
     "encoding": "^0.1.13",
