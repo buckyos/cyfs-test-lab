@@ -380,7 +380,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
         console.info("download_id",download_id)
 
 
-        for(let i =0;i<10;i++){
+        while(true){
             let task = await stack_device.trans().get_task_state( {
                 common:  {
                     req_path: "qaTest",
