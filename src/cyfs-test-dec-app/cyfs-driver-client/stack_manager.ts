@@ -35,9 +35,9 @@ export class StackManager {
         this.peer_map = new Map();
         if (!driver_type) {
             // 不指定使用配置文件
-            if (DRIVER_TYPE == CyfsDriverType.real_machine) {
+            if (DRIVER_TYPE == CyfsDriverType.real_machine.toString()) {
                 this.driver_type = CyfsDriverType.real_machine
-            } else if (DRIVER_TYPE == CyfsDriverType.simulator) {
+            } else if (DRIVER_TYPE == CyfsDriverType.simulator.toString()) {
                 this.driver_type = CyfsDriverType.simulator
             } else {
                 // 默认使用模拟器

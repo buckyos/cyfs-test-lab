@@ -56,19 +56,31 @@ export class LocalUtilTool implements UtilTool {
         // 初始化随机cache
         await this.init_cache();
         // 每次往文件中写入质数个bytes,避免chunk 重复 
-        while (file_size > this.cahce_buff!.byteLength) {
-            await fs.appendFileSync(file_path, this.cahce_buff!)
-            file_size = file_size - this.cahce_buff!.byteLength;
+        try {
+            while (file_size > this.cahce_buff!.byteLength) {
+                await fs.appendFileSync(file_path, this.cahce_buff!)
+                file_size = file_size - this.cahce_buff!.byteLength;
+            }
+            await fs.appendFileSync(file_path, Buffer.from(this.string(file_size)))
+        } catch (error) {
+            this.logger!.error(`create random file err = ${JSON.stringify(error)}`);
+            return {err:error}
         }
-        await fs.appendFileSync(file_path, Buffer.from(this.string(file_size)))
-        return
+        
+        
     }
     async _md5(file_path: string) {
-        let fsHash = crypto.createHash('md5')
-        let fileInfo = fs.readFileSync(file_path,)
-        fsHash.update(fileInfo)
-        let md5 = fsHash.digest('hex')
-        return md5;
+        try {
+            let fsHash = crypto.createHash('md5')
+            let fileInfo = fs.readFileSync(file_path,)
+            fsHash.update(fileInfo)
+            let md5 = fsHash.digest('hex')
+            return md5;
+        } catch (error) {
+            this.logger!.error(`md5 file err = ${JSON.stringify(error)}`);
+            return JSON.stringify(error)
+        }
+        
     }
     async create_file(file_size: number): Promise<{ err: ErrorCode, log?: string, file_name?: string, file_path?: string, md5?: string }> {
         let file_name = `${this.string(10)}.txt`

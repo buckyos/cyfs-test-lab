@@ -491,4 +491,22 @@ impl BDTClient {
         };
         Ok(resp) 
     }
+
+    pub async fn reset_stack(&mut self,endpoints:Option<Vec<Endpoint>>,sn_list:Option<Vec<Device>>){
+        
+        let mut bdt_stack = self.get_stack();
+        let _ =  match endpoints {
+            Some(ep)=>{
+                let ping_client = bdt_stack.reset_endpoints(&ep).await; 
+            }
+            None => {}
+        };
+        let _ =  match sn_list {
+            Some(sns)=>{
+                let ping_client = bdt_stack.reset_sn_list(sns).await; 
+            }
+            None => {}
+        };
+    }
+
 }

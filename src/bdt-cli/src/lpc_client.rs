@@ -179,6 +179,9 @@ impl BDTCli {
                         LpcActionApi::ShutdownReq(req) => {
                             let _ = cli.on_shutdown_stream(lpc, seq, req).await;
                         }
+                        LpcActionApi::ResetStackReq(req) => {
+                            let _ = cli.on_reset_stack(lpc, seq, req).await;
+                        }
                         // TCP 测试客户端
                         LpcActionApi::CreateTcpServerReq(req) => {
                             let _ = cli.on_create_tcp_server(lpc, seq, req).await;
@@ -409,7 +412,25 @@ impl BDTCli {
                 .await;
         });
     }
+    pub async fn on_reset_stack(&mut self, lpc: Lpc, seq: u32, req: &ResetStackReq) {
+        log::info!("on_recv_stream, req={:?}", &req);
 
+        let mut cli = self.clone();
+        let peer_name = req.peer_name.clone();
+        let req = req.clone();
+        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        task::spawn(async move {
+            let resp = bdt_client.shutdown(&req);
+            let mut lpc = lpc;
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::ShutdownResp(resp.unwrap()),
+                ))
+                .await;
+        });
+    }
     pub async fn on_upload_system_info(&mut self, lpc: Lpc, seq: u32, req: &UploadSystemInfoReq) {
         let mut req = req.clone();
         let cli = self.clone();

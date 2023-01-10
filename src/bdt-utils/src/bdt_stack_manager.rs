@@ -13,24 +13,23 @@ use std::{
 use crate::bdt_client::*;
 use crate::bdt_stream::*;
 use crate::tool::*;
-use crate::{bdt_ndn::*, CreateStackReq, CreateStackResp};
-
+use crate::{bdt_ndn::*,action_api::*};
 
 pub struct BDTClientManager {
     BDTClient_map: HashMap<String, BDTClient>,
     temp_dir: PathBuf, //工作目录
     service_path: PathBuf,
-    bdt_port_index : Mutex<u16> 
+    bdt_port_index: Mutex<u16>,
 }
 
 impl BDTClientManager {
-    pub fn new(temp_dir: PathBuf, service_path: PathBuf,bdt_port_index:u16) -> Self {
+    pub fn new(temp_dir: PathBuf, service_path: PathBuf, bdt_port_index: u16) -> Self {
         let mut peer_map = HashMap::new();
         Self {
             BDTClient_map: peer_map,
             temp_dir,
             service_path,
-            bdt_port_index:Mutex::new(bdt_port_index),
+            bdt_port_index: Mutex::new(bdt_port_index),
         }
     }
     pub fn increase_bdt_port_index(&self) -> u16 {
@@ -207,7 +206,7 @@ impl BDTClientManager {
                             stack.clone(),
                             acceptor,
                             client_path,
-                            self.service_path.clone()
+                            self.service_path.clone(),
                         );
                         v.insert(info);
                         Ok((stack, online_time))
@@ -239,7 +238,7 @@ impl BDTClientManager {
             let client = self.BDTClient_map.get(&req.peer_name.clone()).unwrap();
             let mut local = client.get_stack().sn_client().ping().default_local();
             let online_sn_info = client.get_stack().sn_client().ping().sn_list().clone();
-            let mut endpoints =client.get_stack().net_manager().listener().endpoints();
+            let mut endpoints = client.get_stack().net_manager().listener().endpoints();
             let online_sn = device_list_to_string(&online_sn_info);
             let ep_info = endpoint_tree_to_string(&endpoints);
             let ep_resp = endpoint_tree_to_string(&endpoints);
@@ -264,7 +263,7 @@ impl BDTClientManager {
         // };
         let mut eps = Vec::new();
         for addr in req.addrs.iter() {
-            let ep = { format!("{}:{}", addr, self.increase_bdt_port_index())};
+            let ep = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
             log::debug!("ep={} on create", &ep);
             eps.push(ep);
         }
@@ -295,7 +294,14 @@ impl BDTClientManager {
             //(3)解析BDT Stack 启动结果
             Ok((stack, online_time)) => {
                 let mut local = stack.sn_client().ping().default_local();
-                let online_sn_id = stack.sn_client().ping().default_client().unwrap().sn().object_id().to_string();
+                let online_sn_id = stack
+                    .sn_client()
+                    .ping()
+                    .default_client()
+                    .unwrap()
+                    .sn()
+                    .object_id()
+                    .to_string();
                 let ep_info = local.mut_connect_info().mut_endpoints().clone();
                 // 设置返回Device 对象 ep 类型用于测试
                 let _ = match req.ep_type.clone() {
@@ -336,7 +342,7 @@ impl BDTClientManager {
                     }
                 };
                 let ep_resp = local.mut_connect_info().mut_endpoints();
-                
+
                 let mut online_sn = Vec::new();
                 online_sn.push(online_sn_id);
                 let ep_info = endpoint_list_to_string(&ep_info);
@@ -371,18 +377,57 @@ impl BDTClientManager {
         };
         Ok((resp, local))
     }
-    
-    pub fn destory_client(&mut self,peer_name:&str)-> BuckyResult<()>  {
-        let _ = match self.BDTClient_map.get(peer_name) {
-            Some(client) =>{
+
+    pub async fn reset_client(&mut self, req: &ResetStackReq) {
+
+        // 更新endpoint 端口
+        let endpoints = match &req.endpoints {
+            Some(addrs)=>{
+                let mut eps = Vec::new();
+                for addr in addrs.iter() {
+                    let ep_str = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
+                    log::debug!("ep={} on create", &ep_str);
+                    let ep = Endpoint::from_str(s.as_str())
+                    .map_err(|e| {
+                        log::error!("parse ep failed, s={}, e={}", s, &e);
+                        e
+                    })
+                    .unwrap();
+                    eps.push(ep);
+                }
+                Some(eps)
+            },
+            None=> None
+        };
+        // 加载本地sn_list
+        let sn_list = match &req.sn_list  {
+            Some(sns)=>{
+                let sn_devices = load_desc_list(self.service_path.clone(), &sns).await;
+                Some(sn_devices)
+            },
+            None => None
+        };
+        let _ = match self.BDTClient_map.get(req.peer_name.as_str()) {
+            Some(client) => {
                 let _ = client.get_stack().sn_client().ping().stop();
                 // bdt not support stack close
-                client.get_stack().close();   
-            },
-            None =>{
+                client.get_stack().close();
             }
+            None => {}
         };
-        self.BDTClient_map.remove(peer_name); 
+        
+    }
+
+    pub fn destory_client(&mut self, peer_name: &str) -> BuckyResult<()> {
+        let _ = match self.BDTClient_map.get(peer_name) {
+            Some(client) => {
+                let _ = client.get_stack().sn_client().ping().stop();
+                // bdt not support stack close
+                client.get_stack().close();
+            }
+            None => {}
+        };
+        self.BDTClient_map.remove(peer_name);
         Ok(())
     }
     pub async fn destory_all(&mut self) {

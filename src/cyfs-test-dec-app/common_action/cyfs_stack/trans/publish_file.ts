@@ -1,7 +1,7 @@
 import {BaseAction,ActionAbstract,Action} from "../../action";
 import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
-import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
+import {StackManager,CyfsDriverType,PeerInfo} from "../../../cyfs-driver-client"
 import { type } from "os";
 
 /**
@@ -18,9 +18,9 @@ type TestInput = {
 
 export class PublishFileAction extends BaseAction implements ActionAbstract {
 
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
+    static create_by_parent(file_source_device : PeerInfo,action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
         let run =  new PublishFileAction({
-            local :  action.local,
+            local :  file_source_device,
             remote : action.local,
             input : {
                 timeout : action.input.timeout,

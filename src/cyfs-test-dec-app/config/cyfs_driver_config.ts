@@ -8,8 +8,12 @@ export type CyfsStackClientConfig = {
     ws_port: number,
 }
 
-
-export const DRIVER_TYPE = "real_machine";
+// enum CyfsDriverType {
+//     real_machine = "real_machine",
+//     simulator = "Simulator",
+//     bdt_client = "bdt_client",
+// }
+export const DRIVER_TYPE = "Simulator";
 
 /**
  * 真机代理配置
@@ -31,22 +35,22 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
         http_port: 31002,
         ws_port: 31003,
     },
-    // {
-    //     peer_name : "zone1_device2",
-    //     zone_tag : "zone1",
-    //     stack_type : "runtime",
-    //     bdt_port:30003,
-    //     http_port:31004,
-    //     ws_port: 31005,
-    // },
-    // {
-    //     peer_name : "zone1_standby_ood",
-    //     zone_tag : "zone1",
-    //     stack_type : "ood",
-    //     bdt_port:30004,
-    //     http_port:31006,
-    //     ws_port: 31007,
-    // },
+    {
+        peer_name : "zone1_device2",
+        zone_tag : "zone1",
+        stack_type : "runtime",
+        bdt_port:30003,
+        http_port:31004,
+        ws_port: 31005,
+    },
+    {
+        peer_name : "zone1_standby_ood",
+        zone_tag : "zone1",
+        stack_type : "ood",
+        bdt_port:30004,
+        http_port:31006,
+        ws_port: 31007,
+    },
     {
         peer_name: "zone2_ood",
         zone_tag: "zone2",
@@ -63,22 +67,15 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
         http_port: 31012,
         ws_port: 31013,
     },
-    // {
-    //     peer_name : "zone2_device2",
-    //     zone_tag : "zone2",
-    //     stack_type : "runtime",
-    //     bdt_port:30012,
-    //     http_port:31014,
-    //     ws_port: 31015,
-    // },
-    // {
-    //     peer_name : "zone2_standby_ood",
-    //     zone_tag : "zone2",
-    //     stack_type : "ood",
-    //     bdt_port:30013,
-    //     http_port:31016,
-    //     ws_port: 31017,
-    // }
+    {
+        peer_name : "zone2_device2",
+        zone_tag : "zone2",
+        stack_type : "runtime",
+        bdt_port:30012,
+        http_port:31014,
+        ws_port: 31015,
+    },
+
 ]
 
 /**

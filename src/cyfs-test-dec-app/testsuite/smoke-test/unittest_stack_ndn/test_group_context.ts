@@ -115,7 +115,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                     await sleep(1000); 
                 };
             })
-            it.only("简单业务流程测试-group context",async()=>{
+            it("简单业务流程测试-group context",async()=>{
                 let stack1 = stack_manager.get_cyfs_satck({peer_name :"zone1_ood",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
                 let stack2 = stack_manager.get_cyfs_satck({peer_name :"zone1_device1",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
                 let stack1_tool = stack_manager.driver!.get_client("zone1_ood").client!.get_util_tool();
