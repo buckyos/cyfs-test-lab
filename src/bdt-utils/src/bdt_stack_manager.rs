@@ -378,7 +378,7 @@ impl BDTClientManager {
         Ok((resp, local))
     }
 
-    pub async fn reset_client(&mut self, req: &ResetStackReq) {
+    pub async fn reset_client(&mut self, req: &ResetStackReq)->ResetStackResp {
 
         // 更新endpoint 端口
         let endpoints = match &req.endpoints {
@@ -387,9 +387,9 @@ impl BDTClientManager {
                 for addr in addrs.iter() {
                     let ep_str = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
                     log::debug!("ep={} on create", &ep_str);
-                    let ep = Endpoint::from_str(s.as_str())
+                    let ep = Endpoint::from_str(ep_str.as_str())
                     .map_err(|e| {
-                        log::error!("parse ep failed, s={}, e={}", s, &e);
+                        log::error!("parse ep failed, s={}, e={}", ep_str, &e);
                         e
                     })
                     .unwrap();
@@ -407,16 +407,35 @@ impl BDTClientManager {
             },
             None => None
         };
-        let _ = match self.BDTClient_map.get(req.peer_name.as_str()) {
-            Some(client) => {
-                let _ = client.get_stack().sn_client().ping().stop();
-                // bdt not support stack close
-                client.get_stack().close();
+        match self.BDTClient_map.get(req.peer_name.as_str()) {
+            Some(mut client) => {
+                match client.clone().reset_stack(sn_list,endpoints).await {
+                    Ok(result)=>{
+                        ResetStackResp{
+                            result : 0,
+                            msg : result
+                        }
+                    },
+                    Err(err)=>{
+                        ResetStackResp{
+                            result : err.code().as_u16(),
+                            msg : err.msg().to_string()
+                        }
+                    }    
+                } 
             }
-            None => {}
-        };
+            None => {
+                ResetStackResp{
+                    result : 1,
+                    msg : "bdt client not found".to_string()
+                }
+            }
+        }
         
     }
+
+
+
 
     pub fn destory_client(&mut self, peer_name: &str) -> BuckyResult<()> {
         let _ = match self.BDTClient_map.get(peer_name) {

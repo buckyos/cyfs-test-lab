@@ -237,7 +237,6 @@ pub struct ShutdownResp{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ResetStackReq{
     pub peer_name: String,
-    pub stream_name: String,
     pub endpoints : Option<Vec<String>>,
     pub sn_list : Option<Vec<String>> 
 }

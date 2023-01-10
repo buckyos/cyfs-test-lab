@@ -83,6 +83,9 @@ impl BDTCli {
     pub fn get_address(&self) -> String {
         self.0.address.clone()
     }
+    pub async fn reset_client(&self,req: &ResetStackReq)-> ResetStackResp{
+        self.0.bdt_stack_manager.lock().await.reset_client(req).await
+    }
     pub async fn is_upload_system_info(&self) -> bool {
         self.0.upload_system_info.lock().await.clone()
     }
@@ -418,15 +421,14 @@ impl BDTCli {
         let mut cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.shutdown(&req);
+            let resp = cli.reset_client(&req).await;
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
                     seq,
                     Vec::new(),
-                    LpcActionApi::ShutdownResp(resp.unwrap()),
+                    LpcActionApi::ResetStackResp(resp),
                 ))
                 .await;
         });

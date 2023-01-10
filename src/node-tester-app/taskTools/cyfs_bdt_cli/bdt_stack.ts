@@ -92,6 +92,30 @@ export class BdtStack extends EventEmitter {
         }
         return BDTERROR.success;
     }
+    async reset_stack(opt:{
+        sn_list?:Array<string>,
+        endpoints?:Array<string>
+    }):Promise<{err:ErrorCode,result?:api.ResetStackResp}>{
+        let action : api.LpcActionApi = {
+            ResetStackReq : {
+                peer_name: this.peer_name,
+                sn_list: opt.sn_list,
+                endpoints: opt.endpoints,
+            }
+        }
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""),  {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.debug(`callApi reset_stack BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
+        let result : api.LpcActionApi  = info.value;
+ 
+        if (info.err) {
+            this.logger.error(`${this.tags} reset_stack failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+            return { err: ErrorCode.exception};
+        }
+        return { err: result.ResetStackResp!.result, result:result.ResetStackResp!};
+    }
     // BDT 相关操作
     async connect(remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectResp,conn?:BdtConnection}> {
         

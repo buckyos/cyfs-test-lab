@@ -81,6 +81,7 @@ export const enum  ActionType {
     send_file_range = "send-file-range" ,
     send_file_object = "send-file-object" ,
     send_dir_object = "send-dir-object" ,
+    reset_bdt_stack = "reset_bdt_stack",
     sleep = "sleep",
     tcp_create_server = "tcp_create_server",
     tcp_connect = "tcp_connect",
@@ -160,6 +161,7 @@ export type Action ={
        not_wait_upload_finished?:boolean,
        address?:string,
        port? : number,
+       sn_list? : Array<string>,
        shutdown_type? : string,
        restart? : {
             ndn_event : string,

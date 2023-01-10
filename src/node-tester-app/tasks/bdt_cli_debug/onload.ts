@@ -10,8 +10,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agentManager = AgentManager.createInstance(_interface);
     // 选指定连个节点进行测试
     let testAgent = [];
-    const LN = "PC_0006";
-    const RN = "PC_0018";
+    const LN = "PC_0007";
+    const RN = "PC_0011";
     for (let agent of labAgent) {
         if (agent.tags[0] == LN || agent.tags[0] == RN) {
             testAgent.push(agent)
@@ -49,7 +49,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         },
         logType: "info",
         udp_sn_only: true,
-        SN: LabSnList,
+        SN: ['sn-miner-zero.desc'],
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
     }
     // 每台机器运行一个bdt 客户端
@@ -66,6 +66,18 @@ export async function TaskMain(_interface: TaskClientInterface) {
         })
         for (let x = 0; x < 1; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
+            info = await testRunner.prevTaskAddAction(new BDTAction.ResetSNAndEndpoint({
+                type: ActionType.connect,
+                LN: `${LN}$1$0`,
+                RN: `${RN}$1$0`,
+                config: {
+                    conn_tag: connect_1,
+                    timeout: 20 * 1000,
+                    sn_list:LabSnList
+                },
+                expect: { err: 0 },
+            }))
+
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
                 type: ActionType.connect,
                 LN: `${LN}$1$0`,
@@ -87,16 +99,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 expect: { err: 0 },
             }))
         }
-        await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
-            type: ActionType.sleep,
-            LN: `${LN}$1`,
-            RN: `${RN}$1`,
-            config: {
-                timeout: 6 * 60 * 1000,
-            },
-            set_time: 2 * 60 * 1000,
-            expect: { err: 0 },
-        }))
         await testRunner.prevTaskRun();
     }
     await testRunner.waitFinished()

@@ -492,21 +492,70 @@ impl BDTClient {
         Ok(resp) 
     }
 
-    pub async fn reset_stack(&mut self,endpoints:Option<Vec<Endpoint>>,sn_list:Option<Vec<Device>>){
-        
-        let mut bdt_stack = self.get_stack();
-        let _ =  match endpoints {
-            Some(ep)=>{
-                let ping_client = bdt_stack.reset_endpoints(&ep).await; 
+   
+    pub async fn reset_endpoints(&mut self,endpoints:Vec<Endpoint>)->BuckyResult<String>{
+        let ping_client = self.get_stack().reset_endpoints(&endpoints).await;
+        match future::timeout(
+            Duration::from_secs(20),
+            ping_client.wait_online(),
+        ).await{
+            Ok(state)=>{
+                Ok(state.unwrap().to_string())
+            },
+            Err(err)=>{
+                log::error!("reset_endpoints err ={}",err);
+                Err(BuckyError::new(
+                    BuckyErrorCode::Timeout,
+                    "reset_endpoints wait online timeout",
+                ))
             }
-            None => {}
-        };
-        let _ =  match sn_list {
-            Some(sns)=>{
-                let ping_client = bdt_stack.reset_sn_list(sns).await; 
-            }
-            None => {}
-        };
+        }  
     }
-
+    pub async fn reset_sn_list(&mut self,sn_list:Vec<Device>)->BuckyResult<String>{
+        match future::timeout(
+            Duration::from_secs(20),
+            self.get_stack().reset_sn_list(sn_list).wait_online(),
+        ).await{
+            Ok(state)=>{
+                Ok(state.unwrap().to_string())
+            },
+            Err(err)=>{
+                log::error!("reset_sn_list err ={}",err);
+                Err(BuckyError::new(
+                    BuckyErrorCode::Timeout,
+                    "reset_sn_list wait online timeout",
+                ))
+            }
+        }
+        
+    }
+    pub async fn reset_stack(&mut self,sn_list:Option<Vec<Device>>,endpoints:Option<Vec<Endpoint>>)->BuckyResult<String>{
+        let _ = match sn_list {
+            Some(sns)=>{
+                let _ = match self.reset_sn_list(sns).await{
+                    Ok(_)=>{
+                        log::info!("reset_sn_list run success");
+                    },
+                    Err(err)=>{
+                        return  Err(err)
+                    }
+                };
+            },
+            None=>{}
+        };
+        let _ = match endpoints {
+            Some(eps)=>{
+                let _ = match self.reset_endpoints(eps).await{
+                    Ok(_)=>{
+                        log::info!("reset_endpoints run success");
+                    },
+                    Err(err)=>{
+                        return  Err(err)
+                    }
+                };
+            },
+            None=>{}
+        };
+        Ok("success".to_string()) 
+    }
 }

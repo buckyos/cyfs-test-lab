@@ -306,7 +306,15 @@ export type ShutdownResp = {
     msg: string,
 }
 
-
+export type ResetStackReq = {
+    peer_name: string,
+    endpoints? : Array<string>,
+    sn_list? : Array<string>,
+}
+export type ResetStackResp = {
+    result: number,
+    msg: string,
+}
 
 export interface LpcActionApi {
     client_name?: string,
@@ -341,6 +349,8 @@ export interface LpcActionApi {
     ListenerStreamEvent?: ListenerStreamEvent,
     ConnectSendStreamReq?: ConnectSendStreamReq,
     ConnectSendStreamResp?: ConnectSendStreamResp,
+    ResetStackReq?:ResetStackReq,
+    ResetStackResp?:ResetStackResp,
     // TCP
     CreateTcpServerReq?: CreateTcpServerReq,
     CreateTcpServerResp?: CreateTcpServerResp,
