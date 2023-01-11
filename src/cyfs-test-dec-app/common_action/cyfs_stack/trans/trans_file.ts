@@ -87,6 +87,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         // 开始传输文件
         let info2 = await remote.trans().create_task({
             common: {
+                req_path : req.req_path,
                 level: this.action.input.ndn_level!,
                 flags: 1,
             },
