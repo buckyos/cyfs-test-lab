@@ -37,9 +37,10 @@ export type Action ={
         common_ndn? : cyfs.NONOutputRequestCommon ,// 协议栈参数  
         ndn_level?:cyfs.NDNAPILevel,
         non_level?:cyfs.NONAPILevel,
-        action_req? : any  
+       
     },
-    expect:{err:number};   //预期结果    
+    expect:{err:number};   //预期结果 
+    action_req?:any,   
     output?:{
         publish_time ? : number,
         send_object_time ? : Array<number>,
@@ -110,7 +111,7 @@ export class BaseAction implements ActionAbstract{
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
         this.logger!.info(`##### ${this.action.action_id} ${this.action.parent_action} start running `)
         // 记录自定义参数
-        this.action.input.action_req = req;
+        this.action.action_req = req;
         // 初始化结果统计
         this.action.output= {};
         // 加载测试操作

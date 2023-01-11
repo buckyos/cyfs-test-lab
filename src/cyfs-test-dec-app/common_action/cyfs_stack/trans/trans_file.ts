@@ -26,11 +26,8 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         return await super.start(req);
     }
     async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: TestOutput }> {
-        
-
         let local = this.local!;
         let remote = this.remote!;
-      
         // 获取连 接池中的cyfs stack ,用来上传文件的设备file_source_device
         // file_source_device 默认为 local
         let stack_manager = StackManager.createInstance();
@@ -63,9 +60,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         this.action.output!.publish_time =Date.now() - publish_begin;
         if (info1.err) {
             return info1;
-        }
-        // 赋予权限
-        
+        }       
         // 推送obejct   
         let file_id: cyfs.ObjectId = info1.resp.file_id;
         // 发送文件对象

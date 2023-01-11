@@ -25,7 +25,7 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
         let run = new PutContextAction({
             local: action.remote!,
             remote: action.remote,
-            input: action.input,
+            input: JSON.parse(JSON.stringify(action.input)),
             parent_action: action.action_id!,
             expect: { err: 0 },
 
