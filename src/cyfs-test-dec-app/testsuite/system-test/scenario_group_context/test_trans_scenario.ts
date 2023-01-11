@@ -472,7 +472,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     let path_id = RandomGenerator.string(20)
                     let result = await action.start({
                         file_source_device : {
-                            peer_name: "zone1_ood",
+                            peer_name: "zone1_device1",
                             dec_id: dec_app_1.to_base_58(),
                             type: cyfs.CyfsStackRequestorType.Http
                         },

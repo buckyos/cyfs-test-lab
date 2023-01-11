@@ -1,7 +1,7 @@
 import { ErrorCode, Logger} from '../base';
 var date = require("silly-datetime");
 import * as cyfs from "../cyfs"
-
+import { StackManager, CyfsDriverType ,PeerInfo} from "../cyfs-driver-client"
 export type Action ={
     // 默认数据
     type? : string, //操作类型
@@ -58,9 +58,9 @@ export class BaseAction implements ActionAbstract{
     public action: Action;
     public logger: Logger;
     public child_actions : Array<Action>;
-    private local? : cyfs.SharedCyfsStack;
-    private remote? : cyfs.SharedCyfsStack;
-    private user_list? : Array<cyfs.SharedCyfsStack>;
+    public local? : cyfs.SharedCyfsStack;
+    public remote? : cyfs.SharedCyfsStack;
+    public user_list? : Array<cyfs.SharedCyfsStack>;
 
     constructor(action: Action,logger:Logger) {
         this.action = action;
@@ -69,15 +69,42 @@ export class BaseAction implements ActionAbstract{
     }
 
     async init_satck(){
+        // 加载测试需要操作的协议栈
+        let stack_manager = StackManager.createInstance();
         if(this.action.local){
-
+            let local_get = stack_manager.get_cyfs_satck(this.action.local);
+            if (local_get.err) {
+                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.local}`);
+                return {err:ErrorCode.notFound,log:` ${this.action.local} 协议栈未初始化`}
+            }else{
+                this.logger.info(`${this.action.action_id} found stack local: ${this.action.local}`);
+                this.local = local_get.stack!
+            }
         }
         if(this.action.remote){
-            
+            let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
+            if (remote_get.err) {
+                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.remote}`);
+                return {err:ErrorCode.notFound,log:` ${this.action.remote} 协议栈未初始化`}
+            }else{
+                this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote}`);
+                this.remote = remote_get.stack!
+            }
         }
         if(this.action.user_list){
-            
+            this.user_list = [];
+            for(let stack_info of this.action.user_list){
+                let statck_get = stack_manager.get_cyfs_satck(stack_info);
+                if (statck_get.err) {
+                    this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${stack_info}`);
+                    return {err:ErrorCode.notFound,log:` ${stack_info} 协议栈未初始化`}
+                }else{
+                    this.logger.info(`${this.action.action_id} found stack user: ${stack_info}`);
+                    this.user_list.push(statck_get.stack!);
+                }
+            }
         }
+        return {err:ErrorCode.succ,log:"success"}
     }
 
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
@@ -86,6 +113,12 @@ export class BaseAction implements ActionAbstract{
         this.action.input.action_req = req;
         // 初始化结果统计
         this.action.output= {};
+        // 加载测试操作
+        let init = await this.init_satck();
+        if(init.err){
+            return init;
+        }
+        // 执行测试任务
         return new Promise(async(V)=>{
             try {
                 // 创建超时检测

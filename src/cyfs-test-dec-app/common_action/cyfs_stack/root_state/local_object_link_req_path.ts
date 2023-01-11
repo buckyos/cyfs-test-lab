@@ -32,13 +32,8 @@ export class LocalObjectLinkReqPathAction extends BaseAction implements ActionAb
     }
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
         // 获取连接池中的cyfs stack
-        let stack_manager = StackManager.createInstance();
-        let local_get = stack_manager.get_cyfs_satck(this.action.local!);
-        if (local_get.err) {
-            this.logger.info(`StackManager not found cyfs satck`);
-            return {err:ErrorCode.notFound,log:`协议栈未初始化`}
-        }
-        let local = local_get.stack!;
+        let local = this.local!;
+
 
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         // 将对象挂载

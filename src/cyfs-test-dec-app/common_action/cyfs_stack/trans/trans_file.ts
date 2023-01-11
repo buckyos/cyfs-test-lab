@@ -26,29 +26,28 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         return await super.start(req);
     }
     async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: TestOutput }> {
-        // 获取连接池中的cyfs stack
+        
+
+        let local = this.local!;
+        let remote = this.remote!;
+      
+        // 获取连 接池中的cyfs stack ,用来上传文件的设备file_source_device
+        // file_source_device 默认为 local
         let stack_manager = StackManager.createInstance();
-        let local_get = stack_manager.get_cyfs_satck(this.action.local);
-        let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
-        // 默认publish file 设备为 local
         if(!req.file_source_device){
             req.file_source_device = this.action.local
         }
         let file_source_device = stack_manager.get_cyfs_satck(req.file_source_device);
-        if (local_get.err || remote_get.err || file_source_device.err) {
+        if (file_source_device.err) {
             this.logger.info(`StackManager not found cyfs satck`);
             return {err:ErrorCode.notFound,log:`协议栈未初始化`}
         }
-        let local = local_get.stack!;
-        let remote = remote_get.stack!;
         let file_source = file_source_device.stack!;
         // 获取测试驱动中的工具类
         let local_tool = stack_manager.driver!.get_client(this.action.local.peer_name).client!.get_util_tool();
         let remote_tool = stack_manager.driver!.get_client(this.action.remote!.peer_name).client!.get_util_tool();
         let file_source_tool = stack_manager.driver!.get_client(req.file_source_device!.peer_name).client!.get_util_tool();
-        this.logger.info(`publish file device : ${file_source.local_device_id().object_id.to_base_58()}`)
-        this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
-        this.logger.info(`remote : ${remote.local_device_id().object_id.to_base_58()}`)
+        this.logger.info(`publish file device : ${file_source.local_device_id().object_id.to_base_58()}`);
         // 创建测试文件
         let local_file = await file_source_tool.create_file(this.action.input.file_size!);
         this.logger.info(`local_file : ${JSON.stringify(local_file)}`);
@@ -118,7 +117,6 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
             }
             
         };
-        remote.trans().control_task
         // 对下载端的文件hash进行校验
         let remote_hash = await remote_tool.md5_file(path.join((await remote_tool.get_cache_path()).cache_path!.file_download, local_file.file_name!))
         if(remote_hash.md5 != local_file.md5){
