@@ -24,6 +24,7 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             remote : action.local,
             input : {
                 timeout : action.input.timeout,
+                chunk_size : action.input.chunk_size
             },
             parent_action : action.action_id!,
             expect : {err:0},
@@ -68,13 +69,13 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             // 文件的本地路径
             local_path: req.local_path,
             // chunk大小
-            chunk_size: 4*1024*1024,
+            chunk_size: this.action.input.chunk_size!,
         });
         this.action.output! = {
             total_time : Date.now() - begin_time
         }; 
         if(info1.err){
-            this.logger.error(`publish_file error : ${JSON.stringify(info1.err)} `);
+            this.logger.error(`publish_file error : ${JSON.stringify(info1)} `);
             return { err: info1.val.code, log: info1.val.msg}
         }else{
             this.logger.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);

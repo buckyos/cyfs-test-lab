@@ -19,10 +19,10 @@ type TestOutput = {
     file_id?:cyfs.ObjectId,
     task_id?:string,
 }
-export class TransFileAction extends BaseAction implements ActionAbstract {
+export class PrepareFileTask extends BaseAction implements ActionAbstract {
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
-        this.action.type = "TransFileAction"
-        this.action.action_id = `TransFileAction-${Date.now()}`
+        this.action.type = "PrepareFileTask"
+        this.action.action_id = `PrepareFileTask-${Date.now()}`
         return await super.start(req);
     }
     async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: TestOutput }> {
@@ -53,27 +53,22 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         let local_file = await file_source_tool.create_file(this.action.input.file_size!);
         this.logger.info(`local_file : ${JSON.stringify(local_file)}`);
         // 发布文件子任务
-        let publish_begin =  Date.now();
         let info1 = await PublishFileAction.create_by_parent(req.file_source_device,this.action, this.logger).action!.start({
             local_path: local_file.file_path!,
             chunk_size: this.action.input.chunk_size!,
-            req_path: req.req_path!,
+            req_path: this.action.input.req_path!,
             level: this.action.input.ndn_level!,
             flags: 1,
         });
-        this.action.output!.publish_time =Date.now() - publish_begin;
         if (info1.err) {
             return info1;
         }
-        // 赋予权限
-        
         // 推送obejct   
         let file_id: cyfs.ObjectId = info1.resp.file_id;
         // 发送文件对象
         let send_file_object_info = await PubObjectCrossZone.create_by_parent(this.action, this.logger).action!.start({
             object_id: file_id,
             level: this.action.input.non_level!,
-            req_path : req.req_path!
         });
         stack_manager.logger!.info(JSON.stringify(send_file_object_info));
         // 下载端创建 TransContext  
@@ -97,32 +92,8 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
             device_list: [local.local_device_id()],
             group: req!.group,
             context: req!.context_path,
-            auto_start: true
+            auto_start: false
         })
-        this.logger.info(`create_task : ${JSON.stringify(info2)}`);
-        while (true) {
-            let info_check = await remote.trans().get_task_state({
-                common: {
-                    // api级别
-                    level: cyfs.NDNAPILevel.NDN,
-                    flags: 1,
-                },
-                task_id: info2.unwrap().task_id,
-            });
-            this.logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-            if (info_check.unwrap().state.state == cyfs.TransTaskState.Pending  || info_check.unwrap().state.state == cyfs.TransTaskState.Downloading) {
-                await sleep(1000); 
-            }else{
-                break;
-            }
-            
-        };
-        remote.trans().control_task
-        // 对下载端的文件hash进行校验
-        let remote_hash = await remote_tool.md5_file(path.join((await remote_tool.get_cache_path()).cache_path!.file_download, local_file.file_name!))
-        if(remote_hash.md5 != local_file.md5){
-            return { err: ErrorCode.invalidState, log: `cehck hash failed local = ${local_file.md5} remote= ${remote_hash.md5}` }
-        }
         return { err: ErrorCode.succ, log: "run success" ,resp:{file_id,task_id:info2.unwrap().task_id}}
     }
 }

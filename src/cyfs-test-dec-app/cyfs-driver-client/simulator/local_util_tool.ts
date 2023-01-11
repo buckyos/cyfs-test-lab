@@ -72,9 +72,10 @@ export class LocalUtilTool implements UtilTool {
     async _md5(file_path: string) {
         try {
             let fsHash = crypto.createHash('md5')
-            let fileInfo = fs.readFileSync(file_path,)
+            let fileInfo = fs.readFileSync(file_path)
             fsHash.update(fileInfo)
             let md5 = fsHash.digest('hex')
+            this.logger.info(`${file_path} md5 =${md5}`)
             return md5;
         } catch (error) {
             this.logger!.error(`md5 file err = ${JSON.stringify(error)}`);

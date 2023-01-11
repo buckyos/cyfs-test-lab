@@ -264,7 +264,15 @@ impl BDTClient {
         let req = req.clone();
         let question_size = req.question_size as usize;
         let peer_name = req.peer_name.clone().clone();
-        let remote_sn = string_to_deviceid_list(&req.remote_sn);
+        let remote_sn = match &req.remote_sn.len() {
+            0 =>{
+                None
+            },
+            _ =>{
+                Some(string_to_deviceid_list(&req.remote_sn))
+            }
+        }; 
+        
         let remote_device = match req.driect {
             true =>{
                 Some(remote.clone())
@@ -278,7 +286,7 @@ impl BDTClient {
         // （1）解析请求参数
         let param = BuildTunnelParams {
             remote_const: remote.desc().clone(),
-            remote_sn:Some(remote_sn),
+            remote_sn,
             remote_desc:remote_device,
         };
         // 构造FastQA 请求数据

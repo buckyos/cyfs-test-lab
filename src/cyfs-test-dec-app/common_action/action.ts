@@ -7,6 +7,7 @@ export type Action ={
     type? : string, //操作类型
     begin_date  ? : string , //执行日期
     end_date  ? : string , //执行日期
+    testcase_id? : string, // 测试用例id 
     action_id?:string, // action id
     // 输入数据
     local : {
@@ -19,8 +20,12 @@ export type Action ={
         dec_id ? : string,
         type?: cyfs.CyfsStackRequestorType
     },  //remote 设备
-    user_list? : Array<string>, //其他协议栈列表 
-    testcase_id? : string, // 测试用例id 
+    user_list? : Array<{
+        peer_name : string,
+        dec_id ? : string,
+        type?: cyfs.CyfsStackRequestorType
+    }>, //其他协议栈列表 
+    
     parent_action?:string, //父任务
     input:{
         timeout : number, //超时时间
@@ -31,11 +36,14 @@ export type Action ={
         common_non? : cyfs.NDNOutputRequestCommon ,// 协议栈参数  
         common_ndn? : cyfs.NONOutputRequestCommon ,// 协议栈参数  
         ndn_level?:cyfs.NDNAPILevel,
-        non_level?:cyfs.NONAPILevel,  
+        non_level?:cyfs.NONAPILevel,
+        action_req? : any  
     },
     expect:{err:number};   //预期结果    
     output?:{
-        send_time ? : number,
+        publish_time ? : number,
+        send_object_time ? : Array<number>,
+        send_file_time ? : Array<number>,
         total_time ? : number,
        
     }
@@ -47,17 +55,37 @@ export abstract  class ActionAbstract{
     abstract  run(req:any): Promise<{err:number,log:string}>;
 }
 export class BaseAction implements ActionAbstract{
-    public action: Action
+    public action: Action;
     public logger: Logger;
-    public child_actions : Array<Action>
-   
+    public child_actions : Array<Action>;
+    private local? : cyfs.SharedCyfsStack;
+    private remote? : cyfs.SharedCyfsStack;
+    private user_list? : Array<cyfs.SharedCyfsStack>;
+
     constructor(action: Action,logger:Logger) {
         this.action = action;
         this.logger = logger; 
         this.child_actions = [];
     }
+
+    async init_satck(){
+        if(this.action.local){
+
+        }
+        if(this.action.remote){
+            
+        }
+        if(this.action.user_list){
+            
+        }
+    }
+
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
         this.logger!.info(`##### ${this.action.action_id} ${this.action.parent_action} start running `)
+        // 记录自定义参数
+        this.action.input.action_req = req;
+        // 初始化结果统计
+        this.action.output= {};
         return new Promise(async(V)=>{
             try {
                 // 创建超时检测
@@ -72,9 +100,9 @@ export class BaseAction implements ActionAbstract{
                     }
                     V({ err: ErrorCode.timeout, log: `${this.action.action_id} run timeout`});
                 },this.action.input.timeout!)
-                this.action.begin_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:SS');
+                this.action.begin_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
                 let result = await this.run(req);
-                this.action.end_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:SS');
+                this.action.end_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
                 // 释放超时检测
                 clearTimeout(timer); 
                 this.action.result = result;
