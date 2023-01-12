@@ -2,6 +2,11 @@ import { ErrorCode, Logger} from '../base';
 var date = require("silly-datetime");
 import * as cyfs from "../cyfs"
 import { StackManager, CyfsDriverType ,PeerInfo} from "../cyfs-driver-client"
+import {ActionManager} from "./action_manager"
+
+
+const data_manager =  ActionManager.createInstance();
+
 export type Action ={
     // 默认数据
     type? : string, //操作类型
@@ -13,17 +18,20 @@ export type Action ={
     local : {
         peer_name : string,
         dec_id ? : string,
-        type?: cyfs.CyfsStackRequestorType
+        type?: cyfs.CyfsStackRequestorType,
+        device_id?:cyfs.ObjectId
     },   //local 设备
     remote? : {
         peer_name : string,
         dec_id ? : string,
         type?: cyfs.CyfsStackRequestorType
+        device_id?:cyfs.ObjectId
     },  //remote 设备
     user_list? : Array<{
         peer_name : string,
         dec_id ? : string,
-        type?: cyfs.CyfsStackRequestorType
+        type?: cyfs.CyfsStackRequestorType,
+        device_id?:cyfs.ObjectId,
     }>, //其他协议栈列表 
     
     parent_action?:string, //父任务
@@ -55,6 +63,8 @@ export abstract  class ActionAbstract{
     abstract  start(req:any): Promise<{err:number,log:string}>;
     abstract  run(req:any): Promise<{err:number,log:string}>;
 }
+
+
 export class BaseAction implements ActionAbstract{
     public action: Action;
     public logger: Logger;
@@ -80,6 +90,7 @@ export class BaseAction implements ActionAbstract{
             }else{
                 this.logger.info(`${this.action.action_id} found stack local: ${this.action.local}`);
                 this.local = local_get.stack!
+                this.action.local.device_id = this.local.local_device_id().object_id
             }
         }
         if(this.action.remote){
@@ -90,6 +101,7 @@ export class BaseAction implements ActionAbstract{
             }else{
                 this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote}`);
                 this.remote = remote_get.stack!
+                this.action.remote.device_id = this.remote.local_device_id().object_id
             }
         }
         if(this.action.user_list){
@@ -102,6 +114,7 @@ export class BaseAction implements ActionAbstract{
                 }else{
                     this.logger.info(`${this.action.action_id} found stack user: ${stack_info}`);
                     this.user_list.push(statck_get.stack!);
+                    stack_info.device_id = statck_get.stack!.local_device_id().object_id
                 }
             }
         }
@@ -140,6 +153,7 @@ export class BaseAction implements ActionAbstract{
                 // 释放超时检测
                 clearTimeout(timer); 
                 this.action.result = result;
+                data_manager.record_action(this.action);
                 // 实际失败 预期失败
                 if(this.action.result.err !=0 &&  this.action.result.err  == this.action.expect.err){
                     V({ err: ErrorCode.succ, log: `action run error ${this.action.expect.err} is expect`})

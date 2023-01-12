@@ -6,7 +6,7 @@ import { RandomGenerator, sleep } from '../../../base';
 import path = require('path');
 import * as addContext  from "mochawesome/addContext"
 import * as action_api from "../../../common_action"
-
+ 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
 
@@ -23,6 +23,7 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 describe("CYFS Stack Trans 模块测试", function () {
     this.timeout(0);
     const stack_manager = StackManager.createInstance();
+    const data_manager =  action_api.ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
@@ -34,15 +35,19 @@ describe("CYFS Stack Trans 模块测试", function () {
     this.afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
-        //await sleep(10*1000)
+        // 停止测试驱动
         await stack_manager.driver!.stop();
+        // 保存测试记录
+        data_manager.save_history_to_file(stack_manager.logger!.dir());
     })
     let report_result : {
         title: string;
         value: any;
     } ;
     beforeEach(function () {
+        // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
+        data_manager.update_current_testcase_id(testcase_id);
         report_result = {
             title : `用例:${testcase_id}`, 
             value : {}
@@ -50,6 +55,8 @@ describe("CYFS Stack Trans 模块测试", function () {
         stack_manager.logger!.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
+        // 将当前用例执行记录到history
+        data_manager.report_current_actions();
         stack_manager.logger!.info(`########### ${report_result.title} 运行结束`)
         addContext.default(this,report_result);
     });
@@ -930,7 +937,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             dec_id: dec_app_1.to_base_58(),
                             type: cyfs.CyfsStackRequestorType.Http
                         }).stack!;
-                        let start_info = await remote.trans().start_task({
+                        let start_info = await remote.trans().stop_task({
                             task_id:result.resp!.task_id!,
                             common : {
                                 level: cyfs.NDNAPILevel.NDN,
@@ -953,7 +960,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     })
                 })
 
-                describe.only("File传输 Task 初始化状态为Pasue： 调用Start/Stop/Delete",()=>{
+                describe("File传输 Task 初始化状态为Pasue： 调用Start/Stop/Delete",()=>{
                     it("任务状态Paused -> start_task -> Downloading",async () =>{
                         // 创建测试任务 local -> remote
                         let action = new action_api.PrepareFileTask({
@@ -1298,6 +1305,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             context_path:  `/zone/${path_id}`,
                             group: `/zone/${path_id}`,
                             auto_start : true,
+                            action_wait : 5000,
                         });
                         assert.equal(result.err,0,result.log);
                         report_result.value = action.action;
@@ -1330,22 +1338,203 @@ describe("CYFS Stack Trans 模块测试", function () {
                     })
                 })
                 describe("File传输 Task 初始化状态为Canceled： 调用Start/Stop/Delete",()=>{
-                    
+                    // TODD  目前无法构造 Canceled 的类型任务。
                 })
                 describe("File传输 Task 初始化状态为Finished： 调用Start/Stop/Delete",()=>{
-                    
+                    it("任务状态Finished -> start_task -> Finished",async () =>{
+                        // 创建测试任务
+                       
+                        let action = new action_api.TransFileAction({
+                            local: {
+                                peer_name: "zone1_ood",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            remote: {
+                                peer_name: "zone1_device2",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            input: {
+                                timeout: 200 * 1000,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
+                                non_level: cyfs.NONAPILevel.NON,
+                                ndn_level: cyfs.NDNAPILevel.NDN,
+                            },
+                            expect: { err: 0 },
+            
+                        }, stack_manager.logger!);
+                        let path_id = RandomGenerator.string(20)
+                        let result = await action.start({
+                            file_source_device : {
+                                peer_name: "zone1_device1",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            req_path: `/zone/${path_id}`,
+                            context_path:  `/zone/${path_id}`,
+                            group: `/zone/${path_id}`,
+                        });
+                        assert.equal(result.err,0,result.log)
+                        report_result.value = action.action;
+                        let remote = stack_manager.get_cyfs_satck( {
+                            peer_name: "zone1_device2",
+                            dec_id: dec_app_1.to_base_58(),
+                            type: cyfs.CyfsStackRequestorType.Http
+                        }).stack!;
+                        let start_info = await remote.trans().start_task({
+                            task_id:result.resp!.task_id!,
+                            common : {
+                                level: cyfs.NDNAPILevel.NDN,
+                                flags: 1,
+                            }
+                        });
+                        assert.ok(!start_info.err,start_info.val?.msg);
+                        await sleep(10*1000);
+                        // remote 检查 任务状态
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action,stack_manager.logger!).action!.start({task_id:result.resp!.task_id!})
+                        if(check_state.resp!.state.state == cyfs.TransTaskState.Finished){
+                            stack_manager.logger!.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            stack_manager.logger!.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            stack_manager.logger!.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            stack_manager.logger!.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                        }else{
+                            assert.ok(false,"错误任务状态")
+                        } 
+                        assert.equal(check_state.resp!.group,`${dec_app_1.to_base_58()}/zone/${path_id}`)
+                    })
+                    it("任务状态Finished -> stop_task -> Finished",async () =>{
+                        // 创建测试任务
+                       
+                        let action = new action_api.TransFileAction({
+                            local: {
+                                peer_name: "zone1_ood",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            remote: {
+                                peer_name: "zone1_device2",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            input: {
+                                timeout: 200 * 1000,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
+                                non_level: cyfs.NONAPILevel.NON,
+                                ndn_level: cyfs.NDNAPILevel.NDN,
+                            },
+                            expect: { err: 0 },
+            
+                        }, stack_manager.logger!);
+                        let path_id = RandomGenerator.string(20)
+                        let result = await action.start({
+                            file_source_device : {
+                                peer_name: "zone1_device1",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            req_path: `/zone/${path_id}`,
+                            context_path:  `/zone/${path_id}`,
+                            group: `/zone/${path_id}`,
+                        });
+                        assert.equal(result.err,0,result.log)
+                        report_result.value = action.action;
+                        let remote = stack_manager.get_cyfs_satck( {
+                            peer_name: "zone1_device2",
+                            dec_id: dec_app_1.to_base_58(),
+                            type: cyfs.CyfsStackRequestorType.Http
+                        }).stack!;
+                        let start_info = await remote.trans().stop_task({
+                            task_id:result.resp!.task_id!,
+                            common : {
+                                level: cyfs.NDNAPILevel.NDN,
+                                flags: 1,
+                            }
+                        });
+                        assert.equal(start_info.val!.code,7,start_info.val?.msg);
+                    })
+                    it("任务状态Finished -> delete_task -> Finished",async () =>{
+                        // 创建测试任务
+                       
+                        let action = new action_api.TransFileAction({
+                            local: {
+                                peer_name: "zone1_ood",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            remote: {
+                                peer_name: "zone1_device2",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            input: {
+                                timeout: 200 * 1000,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
+                                non_level: cyfs.NONAPILevel.NON,
+                                ndn_level: cyfs.NDNAPILevel.NDN,
+                            },
+                            expect: { err: 0 },
+            
+                        }, stack_manager.logger!);
+                        let path_id = RandomGenerator.string(20)
+                        let result = await action.start({
+                            file_source_device : {
+                                peer_name: "zone1_device1",
+                                dec_id: dec_app_1.to_base_58(),
+                                type: cyfs.CyfsStackRequestorType.Http
+                            },
+                            req_path: `/zone/${path_id}`,
+                            context_path:  `/zone/${path_id}`,
+                            group: `/zone/${path_id}`,
+                        });
+                        assert.equal(result.err,0,result.log)
+                        report_result.value = action.action;
+                        let remote = stack_manager.get_cyfs_satck( {
+                            peer_name: "zone1_device2",
+                            dec_id: dec_app_1.to_base_58(),
+                            type: cyfs.CyfsStackRequestorType.Http
+                        }).stack!;
+                        let start_info = await remote.trans().delete_task({
+                            task_id:result.resp!.task_id!,
+                            common : {
+                                level: cyfs.NDNAPILevel.NDN,
+                                flags: 1,
+                            }
+                        });
+                        assert.equal(start_info.val?.code,7,start_info.val?.msg);
+                    })
                 })
                 describe("File传输 Task 初始化状态为Err： 调用Start/Stop/Delete",()=>{
-                    
+                    // TODD  目前无法构造 Err 类型任务。
                 })
             })
         })
         describe("Trans 传输 Group-Context",async () => {
             describe("group-树状结构构造",async () => {
+                it("group-树状结构构造=校验",async()=>{
 
+                })
             })
             describe("group 任务调度控制-状态切换",async () => {
-
+                beforeEach(async ()=>{
+                    stack_manager.logger!.info("构造group树")
+                    for(let i=0;i<5;i++){
+                        await sleep(1000)
+                        
+                    }
+                })
+                it("sss",async()=>{
+                  
+                })
+                it("sss",async()=>{
+                    
+                })
+                it("sss",async()=>{
+                   
+                })
             })
             describe("group 任务调度控制-任务树控制",async () => {
 
