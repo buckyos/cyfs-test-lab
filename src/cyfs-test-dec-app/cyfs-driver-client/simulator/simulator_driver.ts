@@ -54,9 +54,12 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
             process.stdout?.on('data', (data) => {
                 let pid_data: string = `${data.toString()}`;
                 this.logger.info(`check result = ${pid_data}`)
-                let str = pid_data.split('Console')[0].split(`zone-simulator.exe`)[1];
-                if(!str){
-                    str = pid_data.split('RDP-Tcp')[0].split(`zone-simulator.exe`)[1];
+                let str = "0";
+                if(pid_data.includes("Console")){
+                    str = pid_data.split('Console')[0].split(`zone-simulator.exe`)[1];
+                }
+                if(pid_data.includes("RDP-Tcp")){
+                    str =  pid_data.split('RDP-Tcp')[0].split(`zone-simulator.exe`)[1];
                 }
                 this.logger.info(`cehck result split = ${str}`)
                 this.logger.info(str);
