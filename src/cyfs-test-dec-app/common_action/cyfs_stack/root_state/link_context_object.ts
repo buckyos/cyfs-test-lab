@@ -1,7 +1,6 @@
 import {BaseAction,ActionAbstract,Action} from "../../action";
 import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
-import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
 
 
 /**
@@ -13,11 +12,14 @@ import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
     access : cyfs.AccessString
 }
 
-export class LocalObjectLinkReqPathAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:LocalObjectLinkReqPathAction}{
-        let run =  new LocalObjectLinkReqPathAction({
+export class LinkContextObjectAction extends BaseAction implements ActionAbstract {
+    /**
+     * 父任务只支持本地修改本地
+     */
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:LinkContextObjectAction}{
+        let run =  new LinkContextObjectAction({
             local : action.local,
-            remote : action.remote,
+            remote : action.local,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
@@ -26,15 +28,13 @@ export class LocalObjectLinkReqPathAction extends BaseAction implements ActionAb
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
-        this.action.type = "ObjectLinkReqPathAction";
-        this.action.action_id = `ObjectLinkReqPathAction-${Date.now()}`
+        this.action.type = "LinkFileObjectAction";
+        this.action.action_id = `LinkFileObjectAction-${Date.now()}`
         return await super.start(req)
     }
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
         // 获取连接池中的cyfs stack
         let local = this.local!;
-
-
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         // 将对象挂载
         let op_env = (await local.root_state_stub(local.local_device_id().object_id,local.dec_id).create_path_op_env()).unwrap();

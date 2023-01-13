@@ -15,6 +15,9 @@ type TestInput = {
     referer_object?: cyfs.NDNDataRefererObject[],
     flags: number,
 }
+type TestOutput = {
+    file_id : cyfs.ObjectId
+}
 
 export class PublishFileAction extends BaseAction implements ActionAbstract {
 
@@ -32,40 +35,35 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         },logger)
         return {err:ErrorCode.succ,action:run}
     }
-    async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
+    async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput; }> {
         this.action.type = "PublishFileAction";
         this.action.action_id = `PublishFileAction-${Date.now()}`
         return await super.start(req)
     }
-    async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> { 
+    async run(req:TestInput): Promise<{ err: number, log: string, resp?:TestOutput }> { 
         // 获取连接池中的cyfs stack
         let local = this.local!;
-        let remote = this.remote!;
+        //let remote = this.remote!;
         // 获取测试驱动中的工具类
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
-        this.logger.info(`remote : ${remote.local_device_id().object_id.to_base_58()}`)
+        this.logger.info(`remote : ${this.action.remote?.device_id}`)
         // 发布文件
         let begin_time = Date.now();
-        let info1 = await remote.trans().publish_file({
+        let info1 = await local.trans().publish_file({
             common: {
                 // api级别
                 dec_id : local.dec_id,
                 req_path : req.req_path,
                 level: req.level,
                 referer_object : req.referer_object,
-                target : remote.local_device_id().object_id,             
+                target :this.action.remote?.device_id,             
                 flags: req.flags,
             },
-            // 文件所属者
-            owner: remote.local_device_id().object_id,
-            // 文件的本地路径
+            owner: this.action.remote!.device_id!,
             local_path: req.local_path,
-            // chunk大小
             chunk_size: this.action.input.chunk_size!,
         });
-        this.action.output! = {
-            total_time : Date.now() - begin_time
-        }; 
+        this.action.output!.total_time = Date.now() - begin_time; 
         if(info1.err){
             this.logger.error(`publish_file error : ${JSON.stringify(info1)} `);
             return { err: info1.val.code, log: info1.val.msg}

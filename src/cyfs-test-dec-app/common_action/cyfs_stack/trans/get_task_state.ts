@@ -1,11 +1,6 @@
 import { BaseAction, ActionAbstract ,Action} from "../../action";
 import { ErrorCode, Logger,sleep } from '../../../base';
 import * as cyfs from "../../../cyfs";
-import { StackManager, CyfsDriverType ,PeerInfo} from "../../../cyfs-driver-client"
-import { PublishFileAction } from "./publish_file"
-import { PutContextAction } from "./put_context"
-import { PubObjectCrossZone } from "../non/put_object_cross_zone"
-import * as path from "path";
 /**
  * 输入数据
  */

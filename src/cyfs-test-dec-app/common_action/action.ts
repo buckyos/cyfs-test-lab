@@ -70,8 +70,8 @@ export class BaseAction implements ActionAbstract{
     public logger: Logger;
     public child_actions : Array<Action>;
     public local? : cyfs.SharedCyfsStack;
-    public remote? : cyfs.SharedCyfsStack;
-    public user_list? : Array<cyfs.SharedCyfsStack>;
+    private remote? : cyfs.SharedCyfsStack;
+    private user_list? : Array<cyfs.SharedCyfsStack>;
 
     constructor(action: Action,logger:Logger) {
         this.action = action;
@@ -88,7 +88,7 @@ export class BaseAction implements ActionAbstract{
                 this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.local}`);
                 return {err:ErrorCode.notFound,log:` ${this.action.local} 协议栈未初始化`}
             }else{
-                this.logger.info(`${this.action.action_id} found stack local: ${this.action.local}`);
+                this.logger.info(`${this.action.action_id} found stack local:  ${JSON.stringify(this.action.local) }`);
                 this.local = local_get.stack!
                 this.action.local.device_id = this.local.local_device_id().object_id
             }
@@ -96,7 +96,7 @@ export class BaseAction implements ActionAbstract{
         if(this.action.remote){
             let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
             if (remote_get.err) {
-                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.remote}`);
+                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${JSON.stringify(this.action.remote)}`);
                 return {err:ErrorCode.notFound,log:` ${this.action.remote} 协议栈未初始化`}
             }else{
                 this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote}`);
@@ -112,13 +112,21 @@ export class BaseAction implements ActionAbstract{
                     this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${stack_info}`);
                     return {err:ErrorCode.notFound,log:` ${stack_info} 协议栈未初始化`}
                 }else{
-                    this.logger.info(`${this.action.action_id} found stack user: ${stack_info}`);
+                    this.logger.info(`${this.action.action_id} found stack user: ${JSON.stringify(stack_info)}`);
                     this.user_list.push(statck_get.stack!);
                     stack_info.device_id = statck_get.stack!.local_device_id().object_id
                 }
             }
         }
         return {err:ErrorCode.succ,log:"success"}
+    }
+    get_remote(){
+        this.logger.error(`action ${this.action.action_id} use remote stack is unsafe`);
+        return this.remote
+    }
+    get_user_list(){
+        this.logger.error(`action ${this.action.action_id} use user_list stack is unsafe`);
+        return this.user_list
     }
 
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {

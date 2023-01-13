@@ -1,6 +1,6 @@
 import path from "path";
 import * as fs from 'fs-extra';
-import * as cyfs from '../cyfs';
+import * as cyfs from '../../cyfs';
 import JSBI from 'jsbi';
 import { Command } from "commander";
 import fetch from 'node-fetch'

@@ -1,9 +1,6 @@
 import { BaseAction, ActionAbstract, Action } from "../../action";
 import { ErrorCode, Logger } from '../../../base';
 import * as cyfs from "../../../cyfs";
-import { StackManager, CyfsDriverType } from "../../../cyfs-driver-client"
-import { type } from "os";
-
 
 
 /**
@@ -23,8 +20,8 @@ type TestOutput = {
 export class PutContextAction extends BaseAction implements ActionAbstract {
     static create_by_parent(action: Action, logger: Logger): { err: number, action?: PutContextAction } {
         let run = new PutContextAction({
-            local: action.remote!,
-            remote: action.remote,
+            local: action.local!,
+            remote: action.local,
             input: JSON.parse(JSON.stringify(action.input)),
             parent_action: action.action_id!,
             expect: { err: 0 },
@@ -54,8 +51,6 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
     async run(req: TestInput): Promise<TestOutput> {
         // 获取连接池中的cyfs stack
         let local = this.local!;
-        let remote = this.remote!;
-
         // 推送context
         let begin_time = Date.now();
         let context = cyfs.TransContext.new(local.dec_id, req!.context_path!)

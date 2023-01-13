@@ -2,7 +2,7 @@ import {BaseAction,ActionAbstract,Action} from "../../action";
 import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
 import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
-import {LocalObjectLinkReqPathAction} from "../root_state"
+import {LinkObjectAction} from "../root_state"
 
 /**
  * 输入数据
@@ -37,7 +37,7 @@ export class PubObjectCrossZone extends BaseAction implements ActionAbstract {
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
         // 获取连接池中的cyfs stack
         let local = this.local!;
-        let remote = this.remote!;
+        let remote = this.get_remote()!;
         //从本地noc 获取完整对象
         let begin_time = Date.now();
         let info_non_get = await local.non_service().get_object({
@@ -51,7 +51,7 @@ export class PubObjectCrossZone extends BaseAction implements ActionAbstract {
         })
         this.logger.info(`info_non_get : ${ JSON.stringify(info_non_get.unwrap())}`);
         //修改文件对象挂载root_state,并且赋予权限
-        let root_state_action  = await LocalObjectLinkReqPathAction.create_by_parent(this.action,this.logger).action!.start({
+        let root_state_action  = await LinkObjectAction.create_by_parent(this.action,this.logger).action!.start({
             req_path :  req.req_path!,
             object_id : req.object_id!,
             access : cyfs.AccessString.full()

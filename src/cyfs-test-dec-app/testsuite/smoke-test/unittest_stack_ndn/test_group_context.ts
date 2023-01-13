@@ -109,7 +109,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                         task_id: info2.unwrap().task_id,
                     });
                     logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-                    if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+                    if(info_check.unwrap().state.state == cyfs.TransTaskState.Finished || info_check.unwrap().state.state == cyfs.TransTaskState.Err){
                         break;
                     }
                     await sleep(1000); 
@@ -208,7 +208,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                         task_id: info2.unwrap().task_id,
                     });
                     logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-                    if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+                    if(info_check.unwrap().state.state == cyfs.TransTaskState.Finished || info_check.unwrap().state.state == cyfs.TransTaskState.Err){
                         break;
                     }
                     await sleep(1000); 

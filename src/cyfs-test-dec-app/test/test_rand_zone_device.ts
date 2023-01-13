@@ -1,4 +1,4 @@
-import {run} from "../common_action/desc"
+import {run} from "../common_base/tool/desc"
 
 
 async function main() {

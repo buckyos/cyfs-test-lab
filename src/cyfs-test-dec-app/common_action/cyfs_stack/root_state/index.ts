@@ -1,1 +1,1 @@
-export * from "./local_object_link_req_path";
+export * from "./link_object";

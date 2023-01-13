@@ -1,0 +1,1 @@
+export * from "./dec_objects_pb"

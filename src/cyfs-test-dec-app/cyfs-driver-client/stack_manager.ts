@@ -13,7 +13,8 @@ import * as fs from "fs-extra";
 export type PeerInfo ={ 
     peer_name: string, 
     dec_id?: string, 
-    type?: cyfs.CyfsStackRequestorType 
+    type?: cyfs.CyfsStackRequestorType,
+    device_id?:cyfs.ObjectId 
 }
 
 export class StackManager {
