@@ -29,11 +29,16 @@ export type InvalidParam = {
 export type TransFileHandlerReq = {
     req_path: string,
     target : string,
-    context_id : string,
     context_path? : string,
     group: string,
     file_id : string,
     file_name : string,
+    chunk_codec_desc? : {
+        unknown?: boolean,
+        stream?:Array<number>,
+        raptor?: Array<number>,
+    },
+    deviceid_list? : Array<cyfs.ObjectId>,
 }
 
 export type TransFileHandlerResp = {
@@ -46,14 +51,19 @@ export type TransFileHandlerResp = {
 export type PrepareTransFileHandlerReq = {
     req_path: string,
     target : string,
-    context_id : string,
-    context_path? : string,
+    context_path : string,
     group: string,
     file_id : string,
     file_name : string,
     auto_start : boolean,
-    action? : cyfs.TransTaskControlAction
+    action? : cyfs.TransTaskControlAction,
     action_wait?:number,
+    chunk_codec_desc? : {
+        unknown?: boolean,
+        stream?:Array<number>,
+        raptor?: Array<number>
+    },
+    deviceid_list : Array<cyfs.ObjectId>,
 }
 
 export type PrepareTransFileHandlerResp = {

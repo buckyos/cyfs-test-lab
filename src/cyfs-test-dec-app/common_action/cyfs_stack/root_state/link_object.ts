@@ -38,6 +38,7 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         let modify_path = await op_env.insert_with_path(req.req_path!,req.object_id);
         this.logger.info(`${local.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);
         let commit_result = await op_env.commit();
+        this.logger.info(`root state link path ,root_path =${req.req_path} ,object = ${req.object_id} result= ${JSON.stringify(commit_result)}`);
         // 修改对象权限
         let test = await local.root_state_meta_stub(local.local_device_id().object_id,local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
             req.req_path!,
@@ -56,6 +57,15 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         }); 
         if(check_result.err){
             this.logger.error(`${local.local_device_id().object_id.to_base_58()} get req_path ${req.req_path!}  result =  ${JSON.stringify(check_result)}`)
+            let get_noc  =await this.local!.non_service().get_object({
+                common :{
+                    dec_id: local.dec_id,
+                    flags: 1,
+                    level : cyfs.NONAPILevel.NOC,
+                },
+                object_id : req.object_id
+            })
+            this.logger!.error(`get object by noc ,result = ${JSON.stringify(get_noc)}`)
             return { err: ErrorCode.fail, log: `${JSON.stringify(check_result)}`}
         }else{
             this.logger.info(`${local.local_device_id().object_id.to_base_58()} get req_path ${req.req_path!}  object =  ${check_result.unwrap().object.object.object_id.to_base_58()}`)

@@ -16,12 +16,13 @@ import {CommonPostObjectHandler} from "../../../common_service"
  * 
  */
 export class RegisterCommonHandler extends BaseAction implements ActionAbstract {
-    static create_by_parent(peer: PeerInfo,action:Action,logger:Logger): {err:number,action?:RegisterCommonHandler}{
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:RegisterCommonHandler}{
         let run =  new RegisterCommonHandler({
-            local : peer,
+            local :  action.remote!,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
+
         },logger)
         return {err:ErrorCode.succ,action:run}
     }
@@ -33,11 +34,14 @@ export class RegisterCommonHandler extends BaseAction implements ActionAbstract 
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:{file_id?:cyfs.ObjectId} }> {
         // 获取连接池中的cyfs stack
         let local = this.local!;
-        //await local.root_state_meta().
+        //  修改 GlobalStatePath 权限
         let req_path = new cyfs.RequestGlobalStatePath(local.dec_id, req.req_path!).toString()
-
-        let test = await local.root_state_meta_stub(local.local_device_id().object_id, local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
+        let test_access_global = await local.root_state_meta_stub(local.local_device_id().object_id, local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
             req_path!,
+            cyfs.AccessString.full()
+        ));
+        let test_gloab_req = await local.root_state_meta_stub(local.local_device_id().object_id, local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
+            req.req_path!,
             cyfs.AccessString.full()
         ));
         //local.root_state_meta_stub().add_object_meta()
@@ -46,7 +50,7 @@ export class RegisterCommonHandler extends BaseAction implements ActionAbstract 
             this.action.action_id!,
             0,
             undefined, 
-            req_path,
+            req_path!,
             cyfs.RouterHandlerAction.Default,
             new CommonPostObjectHandler(this.local!,this.action.local,this.logger)
         );

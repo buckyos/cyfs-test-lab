@@ -21,9 +21,9 @@ type TestOutput = {
 
 export class PublishFileAction extends BaseAction implements ActionAbstract {
 
-    static create_by_parent(file_source_device : PeerInfo,action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
         let run =  new PublishFileAction({
-            local :  file_source_device,
+            local :  action.local,
             remote : action.local,
             input : {
                 timeout : action.input.timeout,
@@ -43,10 +43,9 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:TestOutput }> { 
         // 获取连接池中的cyfs stack
         let local = this.local!;
-        //let remote = this.remote!;
         // 获取测试驱动中的工具类
-        this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
-        this.logger.info(`remote : ${this.action.remote?.device_id}`)
+        this.logger.info(`PublishFileAction : local : ${local.local_device_id().object_id.to_base_58()}`)
+        this.logger.info(`PublishFileAction: remote : ${this.action.remote!.device_id}`)
         // 发布文件
         let begin_time = Date.now();
         let info1 = await local.trans().publish_file({
@@ -55,13 +54,13 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
                 dec_id : local.dec_id,
                 req_path : req.req_path,
                 level: req.level,
-                referer_object : req.referer_object,
-                target :this.action.remote?.device_id,             
+                referer_object : req.referer_object,           
                 flags: req.flags,
             },
-            owner: this.action.remote!.device_id!,
+            owner: this.action.local!.device_id!,
             local_path: req.local_path,
             chunk_size: this.action.input.chunk_size!,
+            access : cyfs.AccessString.full()
         });
         this.action.output!.total_time = Date.now() - begin_time; 
         if(info1.err){
@@ -72,7 +71,5 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             return { err: ErrorCode.succ, log: "success",resp:{file_id:info1.unwrap().file_id}}
         }
      
-        
-       
     }
 }

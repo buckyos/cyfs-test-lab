@@ -4,3 +4,4 @@ export * from "./prepare_file_task";
 export * from "./put_context";
 export * from "./publish_file";
 export * from "./get_task_state";
+export * from "./build_trans_group_tree";

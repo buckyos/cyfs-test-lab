@@ -24,7 +24,6 @@ export class PrePareTransFileHandler extends BaseHandler {
         let param = req.PrepareTransFileHandlerReq!
         // 获取文件对象
         let file_id = cyfs.ObjectId.from_base_58(param.file_id).unwrap();
-        let context_id = cyfs.ObjectId.from_base_58(param.context_id).unwrap();
         let target = cyfs.ObjectId.from_base_58(param.target).unwrap();
         let target_device_id = cyfs.DeviceId.try_from_object_id(target).unwrap();
         let get_file = await this.stack.non_service().get_object({
@@ -52,33 +51,24 @@ export class PrePareTransFileHandler extends BaseHandler {
             }
         }
         this.logger.info(`get file object resp : ${get_file.unwrap().object.object_id}`)
-        
-        // 获取context
-        let get_context = await this.stack.trans().get_context({
-            common: {
-                req_path: param.req_path,
-                // 来源DEC
-                dec_id: this.stack.dec_id,
-                // api级别
-                level: cyfs.NDNAPILevel.Router,
-                // 用以处理默认行为
-                target: target,
-                // 需要处理数据的关联对象，主要用以chunk/file等
-                flags: 1,
-            },
-            context_id: context_id,
-            context_path: param.context_path
-        });
-        if(get_context.err){
-            return {
-                PrepareTransFileHandlerResp: {
-                    result: get_context.val.code,
-                    msg: get_context.val.msg,
-                }
+        // 构建下载context
+        let context = cyfs.TransContext.new(this.stack.dec_id, param!.context_path!)
+        this.logger.info(`create context ${context.desc().calculate_id().to_base_58()}`)
+        // 设置context 的源列表,具体编码方式 TO DO
+        for (let device of param.deviceid_list!) {
+            let chunk_codec_desc : cyfs.ChunkCodecDesc = cyfs.ChunkCodecDesc.Stream();
+            if(param.chunk_codec_desc?.stream){
+                chunk_codec_desc = cyfs.ChunkCodecDesc.Stream();
+            }else if(param.chunk_codec_desc?.raptor){
+                chunk_codec_desc = cyfs.ChunkCodecDesc.Raptor();
             }
+            else if(param.chunk_codec_desc?.unknown){
+                chunk_codec_desc = cyfs.ChunkCodecDesc.Unknown();
+            }
+            let  device_id = cyfs.DeviceId.from_base_58(device.toString()).unwrap();
+            this.logger.info(`${context.desc().calculate_id().to_base_58()} context add device source ${device_id} ${JSON.stringify(chunk_codec_desc)}`)
+            context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device_id,chunk_codec_desc!));
         }
-        this.logger.info(`get context object resp : ${get_context.unwrap().context.calculate_id()}`)
-        
         let put_context = await this.stack.trans().put_context({
             common: {
                 req_path: param.req_path,
@@ -89,18 +79,18 @@ export class PrePareTransFileHandler extends BaseHandler {
                 // 需要处理数据的关联对象，主要用以chunk/file等
                 flags: 1,
             },
-            context: get_context.unwrap().context,
+            context: context,
             access: cyfs.AccessString.full(),
         });
         if(put_context.err){
             return {
-                PrepareTransFileHandlerResp: {
+                TransFileHandlerResp: {
                     result: put_context.val.code,
                     msg: put_context.val.msg,
                 }
             }
         }
-        this.logger.info(`get context object resp : ${get_context.unwrap().context.calculate_id()}`)
+        this.logger.info(`put_context object resp : ${JSON.stringify(put_context.unwrap())}`)
         // 创建文件传输任务
         let stack_manager = StackManager.createInstance();
         let local_tool = stack_manager.driver!.get_client(this.handler_info.local.peer_name).client!.get_util_tool();

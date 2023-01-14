@@ -660,11 +660,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     }, stack_manager.logger!);
 
                     let result = await action.start({
-                        file_source_device: {
-                            peer_name: "zone1_device1",
-                            dec_id: dec_app_1.to_base_58(),
-                            type: cyfs.CyfsStackRequestorType.Http
-                        },
+                        
                         req_path: `/req_path/${path_id}`,
                         context_path: `/context_path/${path_id}`,
                         group: `/group/${path_id}`,
@@ -713,18 +709,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         expect: { err: 0 },
 
                     }, stack_manager.logger!);
-
-                    /**
-                     * req_path: `/req_path/${path_id}`,
-                    context_path:  `/context_path/${path_id}`,
-                        group: `/group/${path_id}`,
-                     */
                     let result = await action.start({
-                        file_source_device: {
-                            peer_name: "zone1_device1",
-                            dec_id: dec_app_1.to_base_58(),
-                            type: cyfs.CyfsStackRequestorType.Http
-                        },
                         req_path: `/req_path/${path_id}`,
                         context_path: `/context_path/${path_id}`,
                         group: `/group/${path_id}`,
@@ -779,11 +764,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -839,11 +820,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -907,11 +884,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -989,11 +962,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1063,11 +1032,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1145,11 +1110,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1227,11 +1188,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1301,11 +1258,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1386,11 +1339,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1469,11 +1418,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1544,11 +1489,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1630,11 +1571,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1712,11 +1649,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1786,11 +1719,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1875,11 +1804,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -1956,11 +1881,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -2025,11 +1946,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         }, stack_manager.logger!);
 
                         let result = await action.start({
-                            file_source_device: {
-                                peer_name: "zone1_device1",
-                                dec_id: dec_app_1.to_base_58(),
-                                type: cyfs.CyfsStackRequestorType.Http
-                            },
+                            
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}`,
                             group: `/group/${path_id}`,
@@ -2058,16 +1975,70 @@ describe("CYFS Stack Trans 模块测试", function () {
         })
         describe("Trans 传输 Group-Context", async () => {
             describe("group-树状结构构造", async () => {
+                it.only("创建group-树状结构", async () => {
+                    let trans_file_tree_action = new action_api.BuildTransGroupTree({
+                        local: {
+                            peer_name: "zone1_device1",
+                            dec_id: dec_app_1.to_base_58(),
+                            type: cyfs.CyfsStackRequestorType.Http
+                        },
+                        remote: {
+                            peer_name: "zone1_ood",
+                            dec_id: dec_app_1.to_base_58(),
+                            type: cyfs.CyfsStackRequestorType.Http
+                        },
+                        input: {
+                            timeout: 200 * 1000,
+                            file_size: 100 * 1024 * 1024,
+                            chunk_size: 4 * 1024 * 1024,
+                            non_level: cyfs.NONAPILevel.NON,
+                            ndn_level: cyfs.NDNAPILevel.NDN,
+                        },
+                        expect: { err: 0 },
+
+                    }, stack_manager.logger!);
+                    let path_id = RandomGenerator.string(20)
+                    let result_handler = await trans_file_tree_action.start({
+                        root_req_path : `/req_path/${path_id}`,
+                        task_list : [
+                            {
+                                req_path : `/req_path/${path_id}/groupA`,
+                                context_path :`/context_path/${path_id}/groupA`,
+                                group : `/group_path/${path_id}/groupA`
+                            },
+                            {
+                                req_path : `/req_path/${path_id}/groupA/task1`,
+                                context_path :`/context_path/${path_id}/groupA/task1`,
+                                group : `/group_path/${path_id}/groupA/task1`
+                            },
+                            // {
+                            //     req_path : `/req_path/${path_id}/groupA/task2`,
+                            //     context_path :`/context_path/${path_id}/groupA/task2`,
+                            //     group : `/group_path/${path_id}/groupA/task2`
+                            // },
+                            // {
+                            //     req_path :`/req_path/${path_id}/groupB`,
+                            //     context_path :`/context_path/${path_id}/groupB`,
+                            //     group : `/group_path/${path_id}/groupA/groupB`
+                            // },
+                            // {
+                            //     req_path :`/req_path/${path_id}/groupB/task1`,
+                            //     context_path :`/context_path/${path_id}/groupB/task1`,
+                            //     group : `/group_path/${path_id}/groupB/task1`
+                            // },
+                            // {
+                            //     req_path :`/req_path/${path_id}/groupB/task1`,
+                            //     context_path :`/context_path/${path_id}/groupB/task1`,
+                            //     group : `/group_path/${path_id}/groupB/task1`
+                            // },
+                        ]
+                    });
+                    stack_manager.logger!.info(`${JSON.stringify(result_handler)}`)      
+                })
             })
             describe("group 任务调度控制-状态切换", async () => {
-                beforeEach(async () => {
-                    stack_manager.logger!.info("构造group树")
-                    for (let i = 0; i < 5; i++) {
-                        await sleep(1000)
-
-                    }
-                })
-                it("sss", async () => {
+        
+                it("创建", async () => {
 
                 })
                 it("sss", async () => {

@@ -34,12 +34,12 @@ export class BaseHandler {
             let buffer = req.request_buffer;
             let result = await this.run(json_data);
             return HandlerRequestObject.create(this.stack.local_device_id().object_id,req.request_type,req.id,JSON.stringify(result),Buffer.from(""));
-        } catch (error) {
-            this.logger.error(`${JSON.stringify(error)}`)
+        } catch (err) {
+            this.logger.error(`${JSON.stringify(err)}`)
             let result : HandlerApi = {
                 InvalidParam :{
                     result : ErrorCode.invalidParam,
-                    msg : `decode request param error =${JSON.stringify(error)}`,
+                    msg : `decode request param error =${JSON.stringify(err)}`,
                     data : req.request_json 
                 }
             }

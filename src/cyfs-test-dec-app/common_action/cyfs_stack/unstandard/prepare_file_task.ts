@@ -31,7 +31,7 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
     }
     async run(req: TestInput): Promise<{ err: number, log: string,resp?: TestOutput }> {
         let local = this.local!;
-        let remote = this.get_remote()!;
+        let remote = this.get_remote();
         // 获取连 接池中的cyfs stack ,用来上传文件的设备file_source_device
         // file_source_device 默认为 local
         let stack_manager = StackManager.createInstance();
@@ -54,7 +54,7 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
         this.logger.info(`local_file : ${JSON.stringify(local_file)}`);
         // 发布文件子任务
         let publish_begin =  Date.now();
-        let info1 = await PublishFileAction.create_by_parent(req.file_source_device,this.action, this.logger).action!.start({
+        let info1 = await PublishFileAction.create_by_parent(this.action, this.logger).action!.start({
             local_path: local_file.file_path!,
             chunk_size: this.action.input.chunk_size!,
             req_path: req.req_path!,
