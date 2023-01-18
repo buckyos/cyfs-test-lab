@@ -11,7 +11,9 @@ members=[
     "cyfs-stack-test-rust/unittest_nameobject",
     "cyfs-stack-test-rust/profile",
     "stack-tool", 
+    "ndn-demos/sync-lib",
     "ndn-demos/sync-src",
+    "ndn-demos/sync-dst",
 ]
 
 [profile.release]
