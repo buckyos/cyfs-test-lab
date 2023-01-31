@@ -16,7 +16,7 @@ async fn main() {
     CyfsLoggerBuilder::new_app("ndn-demos-sync")
         .level("debug")
         .console("debug")
-        .enable_bdt(Some("error"), Some("error"))
+        .enable_bdt(Some("debug"), Some("error"))
         .disable_file_config(true)
         .file(true)
         .build()
@@ -56,10 +56,18 @@ async fn listen_sync() {
         async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, task_path: &str) {
             info!("{} pre-download with task group, group_path={}", session, task_path);
         }
+
+        async fn on_error(&self, session: &DstSyncSession, err: BuckyError) {
+            error!("{} failed, err={}", session, err);
+        }
+
+        async fn on_finish(&self, session: &DstSyncSession) {
+            info!("{} finished", session);
+        }
     }
 
     let dst_stack = TestLoader::get_shared_stack(DeviceIndex::User1OOD);
-    let listener = SyncListener::new(&dst_stack).await.unwrap();
+    let listener = SyncListener::new(&dst_stack, 10).await.unwrap();
 
     let mut incoming = listener.incoming();
     loop {
@@ -70,7 +78,7 @@ async fn listen_sync() {
 
 async fn start_sync() {
     let src_stack = TestLoader::get_shared_stack(DeviceIndex::User1Device1);
-    let manager = SyncManager::new(&src_stack).unwrap();
+    let manager = SyncManager::new(&src_stack).await.unwrap();
     
     let local_path = Path::new("H:/depends");
     

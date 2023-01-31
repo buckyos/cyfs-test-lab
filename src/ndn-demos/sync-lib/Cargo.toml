@@ -10,6 +10,7 @@ log = "0.4"
 async-std = { version = "1.11", features = ["unstable", "attributes"] }
 futures = { version = '0.3', features = ['default', 'thread-pool'] }
 async-trait = '0.1.53'
+async-recursion = '1.0'
 once_cell = '1.12'
 cyfs-util = { path = "../../../CYFS/src/component/cyfs-util" }
 cyfs-bdt = { path = "../../../CYFS/src/component/cyfs-bdt" }

@@ -2,7 +2,7 @@ use log::*;
 use std::{
     sync::{Arc, Weak, RwLock}, 
     path::{Path, PathBuf}, 
-    collections::HashMap
+    collections::BTreeMap, str::FromStr
 };
 use async_std::{
     task, 
@@ -13,6 +13,8 @@ use cyfs_base::*;
 use cyfs_core::*;
 use cyfs_lib::*;
 use cyfs_util::*;
+
+const CHUNK_SIZE: u32 = 4 * 1024 * 1024;
 
 struct UploadingIterator {
     rel_path: String, 
@@ -167,7 +169,7 @@ impl SrcSyncSession {
     }
 
     pub fn task_path(&self) -> Option<String> {
-        self.dir_id().map(|id| [id.to_string(), self.local_path().to_str().unwrap().to_owned()].join("/"))
+        self.dir_id().map(|id| id.to_string())
     }
 
 
@@ -241,7 +243,7 @@ impl SrcSyncSession {
             },
             owner: self.stack().local_device().desc().owner().clone().unwrap(),
             local_path: self.local_path().to_owned(),
-            chunk_size: 4 * 1024 * 1024,
+            chunk_size: CHUNK_SIZE,
             chunk_method: TransPublishChunkMethod::None,
             access: None,
             file_id: None,
@@ -299,11 +301,23 @@ impl SrcSyncSession {
             }
         }
     }
+
+    async fn on_interest(&self, chunk: &ChunkId, rel_path: &str) -> BuckyResult<InterestUploadSource> {
+        let rel_path = Path::new(rel_path);
+        let chunk_index = rel_path.file_name().and_then(|n| n.to_str())
+            .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid rel path {:?}", rel_path)))
+            .and_then(|n| usize::from_str(n).map_err(|err| BuckyError::from(err)))?;
+        let rel_path = rel_path.parent()
+            .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid rel path {:?}", rel_path)))?;
+        let abs_path = self.local_path().join(rel_path);
+        let offset = chunk_index as u64 * CHUNK_SIZE as u64;
+        Ok(InterestUploadSource::File { path: abs_path.to_owned(), offset})
+    }
 }
 
 struct ManagerImpl {
     stack: SharedCyfsStack, 
-    sessions: RwLock<HashMap<String, SrcSyncSession>>
+    sessions: RwLock<BTreeMap<ObjectId, SrcSyncSession>>
 }
 
 #[derive(Clone)]
@@ -318,13 +332,13 @@ impl std::fmt::Display for SyncManager {
 }
 
 impl SyncManager {
-    pub fn new(stack: &SharedCyfsStack) -> BuckyResult<Self> {
+    pub async fn new(stack: &SharedCyfsStack) -> BuckyResult<Self> {
         let manager = Self(Arc::new(ManagerImpl {
             stack: stack.clone(), 
-            sessions: RwLock::new(HashMap::new())
+            sessions: RwLock::new(BTreeMap::new())
         }));
 
-        let _ = manager.listen()?;
+        let _ = manager.listen().await?;
         Ok(manager)
     }
 
@@ -336,8 +350,57 @@ impl SyncManager {
         WeakSyncManager(Arc::downgrade(&self.0))
     }
 
-    fn listen(&self) -> BuckyResult<()> {
+    async fn listen(&self) -> BuckyResult<()> {
+        struct OnSyncChunk(SyncManager);
+
+        #[async_trait::async_trait]
+        impl EventListenerAsyncRoutine<RouterHandlerInterestRequest, RouterHandlerInterestResult> for OnSyncChunk {
+            async fn call(&self, param: &RouterHandlerInterestRequest) -> BuckyResult<RouterHandlerInterestResult> {
+                let task_path = param.request.group_path.as_ref().unwrap();
+                info!("{} got interest task_path={}", self.0, task_path);
+                let mut parts = task_path.split("/").skip(1);
+
+                let id_str = parts.next()
+                    .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid task path {}", task_path)))?; 
+                
+                let rel_parts: Vec<_> = parts.collect();
+                let rel_path = rel_parts.join("/");
+
+                let dir_id = ObjectId::from_str(id_str)?;
+                let session = self.0.session_of(&dir_id, &param.request.from_channel)
+                    .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("dir {} to {} not found", dir_id, param.request.from_channel)))?; 
+                
+                let source = session.on_interest(&param.request.chunk, &rel_path).await?;
+                Ok(RouterHandlerInterestResult {
+                    action: RouterHandlerAction::Response,
+                    request: None,
+                    response: Some(Ok(InterestHandlerResponse::Upload {
+                            source, 
+                            groups: vec![task_path.to_owned()]
+                        }))
+                })
+            }
+        }
+
+        let _ = self.stack().router_handlers().interest().add_handler(
+            RouterHandlerChain::NDN, 
+            "OnSyncChunk", 
+            0, 
+            Some(format!("group_path == {}/in_zone_sync", self.stack().dec_id().unwrap())), 
+            None, 
+            RouterHandlerAction::Reject, 
+            Some(Box::new(OnSyncChunk(self.clone())))
+        ).await.map_err(|err| {
+            error!("{} listen failed, err=add interest handler failed {}", self, err);
+            err 
+        })?;
+
         Ok(())
+    }
+
+    fn session_of(&self, dir_id: &ObjectId, dst: &DeviceId) -> Option<SrcSyncSession> {
+        let sessions = self.0.sessions.read().unwrap();
+        sessions.get(dir_id).and_then(|session| if session.target().eq(dst) { Some(session.clone()) } else { None })
     }
 
     fn req_path_of(session: &SrcSyncSession) -> String {
@@ -351,7 +414,7 @@ impl SyncManager {
     async fn on_post_publish(&self, session: &SrcSyncSession) {
         let exists = {
             let mut sessions = self.0.sessions.write().unwrap();
-            sessions.insert(session.task_path().unwrap(), session.clone())
+            sessions.insert(session.dir_id().unwrap(), session.clone())
         };
         if let Some(exists) = exists {
             if !exists.ptr_eq(session) {
@@ -371,8 +434,8 @@ impl SyncManager {
 
     fn sync_with_session_state(&self, session: &SrcSyncSession) {
         let mut sessions = self.0.sessions.write().unwrap();
-        if sessions.get(&session.task_path().unwrap()).and_then(|exists| if exists.ptr_eq(session) { Some(exists) } else { None }).is_some() {
-            let _ = sessions.remove(&session.task_path().unwrap());
+        if sessions.get(&session.dir_id().unwrap()).and_then(|exists| if exists.ptr_eq(session) { Some(exists) } else { None }).is_some() {
+            let _ = sessions.remove(&session.dir_id().unwrap());
         }
     }
 
