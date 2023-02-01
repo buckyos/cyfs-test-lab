@@ -1,6 +1,6 @@
 use log::*;
 use std::{
-    path::{Path}
+    path::{Path}, 
 };
 use async_std::{
     task
@@ -15,8 +15,8 @@ use ndn_demo_sync_lib::*;
 async fn main() {
     CyfsLoggerBuilder::new_app("ndn-demos-sync")
         .level("debug")
-        .console("debug")
-        .enable_bdt(Some("debug"), Some("error"))
+        .console("off")
+        .enable_bdt(Some("debug"), Some("off"))
         .disable_file_config(true)
         .file(true)
         .build()
@@ -40,8 +40,7 @@ async fn main() {
 
 
 async fn listen_sync() {
-    struct LoggerDelegate {
-    }
+    struct LoggerDelegate {};
 
     #[async_trait::async_trait]
     impl DstSyncDelegate for LoggerDelegate {
@@ -49,20 +48,16 @@ async fn listen_sync() {
             Box::new(LoggerDelegate {})
         }
 
-        async fn on_pre_download(&self, session: &DstSyncSession, task_path: &str) {
-            info!("{} pre-download with task group, group_path={}", session, task_path);
-        }
-
-        async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, task_path: &str) {
-            info!("{} pre-download with task group, group_path={}", session, task_path);
+        async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, _task_path: &str) {
+            println!("ood {} downloading file {:?}", session.stack().local_device_id(), session.local_path().join(&iter.rel_path));
         }
 
         async fn on_error(&self, session: &DstSyncSession, err: BuckyError) {
-            error!("{} failed, err={}", session, err);
+            println!("{} failed, err={}", session, err);
         }
 
         async fn on_finish(&self, session: &DstSyncSession) {
-            info!("{} finished", session);
+            println!("{} finished", session);
         }
     }
 
@@ -72,6 +67,7 @@ async fn listen_sync() {
     let mut incoming = listener.incoming();
     loop {
         let session = incoming.next().await.unwrap().unwrap();
+        println!("ood {} begin sync dir id {} path {:?} from device {}", session.stack().local_device_id(), session.dir_id(), session.local_path(), session.source());
         session.start(LoggerDelegate {});
     }
 }
@@ -88,16 +84,15 @@ async fn start_sync() {
     #[async_trait::async_trait]
     impl SrcSyncDelegate for LoggerDelegate {
         async fn on_post_publish(&self, session: &SrcSyncSession, dir_id: &ObjectId) {
-            info!("{} has published object, id={}", session, dir_id);
+            println!("deivce {} published sync dir {:?} object {}", session.stack().local_device_id(), session.local_path(), dir_id);
         }
 
-        async fn on_pre_upload(&self, session: &SrcSyncSession, task_path: &str) {
-            info!("{} pre-upload with task group, group_path={}", session, task_path);
-
+        async fn on_post_push(&self, session: &SrcSyncSession) {
+            println!("deivce {} post object {} to ood", session.stack().local_device_id(), session.dir_id().unwrap());
         }
 
         async fn on_pre_upload_file(&self, session: &SrcSyncSession, rel_path: &Path, task_path: &str) {
-            info!("{} pre-upload file, file_path={:?}, task_path={}", session, rel_path, task_path);
+            println!("{} pre-upload file, file_path={:?}, task_path={}", session, rel_path, task_path);
         }
     }
     
@@ -106,6 +101,8 @@ async fn start_sync() {
         None, 
         LoggerDelegate {}
     ).await.unwrap();
+
+    println!("deivce {} begin sync dir {:?}", src_stack.local_device_id(), session.local_path());
     
     let _ = session.start().unwrap();
     let _ = session.wait_finish().await.unwrap();

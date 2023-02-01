@@ -43,7 +43,7 @@ enum PhaseImpl {
 #[async_trait::async_trait]
 pub trait SrcSyncDelegate: Send + Sync {
     async fn on_post_publish(&self, session: &SrcSyncSession, dir_id: &ObjectId);
-    async fn on_pre_upload(&self, session: &SrcSyncSession, task_path: &str);
+    async fn on_post_push(&self, session: &SrcSyncSession);
     async fn on_pre_upload_file(&self, session: &SrcSyncSession, rel_path: &Path, task_path: &str);
 }
 
@@ -181,7 +181,7 @@ impl SrcSyncSession {
         let _ = self.0.dir_id.write().unwrap().set(dir_id);
     }
 
-    fn stack(&self) -> &SharedCyfsStack {
+    pub fn stack(&self) -> &SharedCyfsStack {
         &self.0.stack
     }
 
@@ -269,11 +269,13 @@ impl SrcSyncSession {
             dir_id.clone(), 
             resp.object.object_raw);
         req.common.req_path = Some(SyncManager::req_path_of(self));
-        let resp = self.stack().non_service().post_object(req).await
+        let _ = self.stack().non_service().post_object(req).await
             .map_err(|err| {
                 error!("{} push failed, err=post object {}", self, err);
                 err
             })?;
+        self.delegate().on_post_push(self).await;
+        
         info!("{} has post object to ood", self); 
         Ok(())
     }
@@ -302,7 +304,7 @@ impl SrcSyncSession {
         }
     }
 
-    async fn on_interest(&self, chunk: &ChunkId, rel_path: &str) -> BuckyResult<InterestUploadSource> {
+    async fn on_interest(&self, _chunk: &ChunkId, rel_path: &str, task_path: &str) -> BuckyResult<InterestUploadSource> {
         let rel_path = Path::new(rel_path);
         let chunk_index = rel_path.file_name().and_then(|n| n.to_str())
             .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid rel path {:?}", rel_path)))
@@ -311,6 +313,7 @@ impl SrcSyncSession {
             .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid rel path {:?}", rel_path)))?;
         let abs_path = self.local_path().join(rel_path);
         let offset = chunk_index as u64 * CHUNK_SIZE as u64;
+        self.delegate().on_pre_upload_file(self, &Path::new(rel_path), task_path).await;
         Ok(InterestUploadSource::File { path: abs_path.to_owned(), offset})
     }
 }
@@ -358,7 +361,7 @@ impl SyncManager {
             async fn call(&self, param: &RouterHandlerInterestRequest) -> BuckyResult<RouterHandlerInterestResult> {
                 let task_path = param.request.group_path.as_ref().unwrap();
                 info!("{} got interest task_path={}", self.0, task_path);
-                let mut parts = task_path.split("/").skip(1);
+                let mut parts = task_path.split("/").skip(2);
 
                 let id_str = parts.next()
                     .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("invalid task path {}", task_path)))?; 
@@ -370,7 +373,7 @@ impl SyncManager {
                 let session = self.0.session_of(&dir_id, &param.request.from_channel)
                     .ok_or_else(|| BuckyError::new(BuckyErrorCode::InvalidInput, format!("dir {} to {} not found", dir_id, param.request.from_channel)))?; 
                 
-                let source = session.on_interest(&param.request.chunk, &rel_path).await?;
+                let source = session.on_interest(&param.request.chunk, &rel_path, task_path).await?;
                 Ok(RouterHandlerInterestResult {
                     action: RouterHandlerAction::Response,
                     request: None,
@@ -382,11 +385,36 @@ impl SyncManager {
             }
         }
 
+        let system_stack = self.stack()
+            .fork_with_new_dec(Some(cyfs_core::get_system_dec_app().to_owned()))
+            .await.map_err(|err| {
+                error!("{} listen failed, err=add access {}", self, err);
+                err
+            })?;
+
+        let meta = system_stack.root_state_meta_stub(None, None);
+       
+        let item = GlobalStatePathAccessItem {
+            path: "/.cyfs/api/handler/ndn/interest/".to_owned(),
+            access: GlobalStatePathGroupAccess::Specified(GlobalStatePathSpecifiedGroup {
+                zone: None,
+                zone_category: Some(DeviceZoneCategory::CurrentZone),
+                dec: self.stack().dec_id().cloned(),
+                access: AccessPermissions::WriteOnly as u8,
+            }),
+        };
+
+        meta.add_access(item)
+            .await.map_err(|err| {
+                error!("{} listen failed, err=add access {}", self, err);
+                err
+            })?;
+
         let _ = self.stack().router_handlers().interest().add_handler(
             RouterHandlerChain::NDN, 
             "OnSyncChunk", 
             0, 
-            Some(format!("group_path == {}/in_zone_sync", self.stack().dec_id().unwrap())), 
+            Some(format!("group_path=='{}/in_zone_sync/**'", self.stack().dec_id().unwrap())), 
             None, 
             RouterHandlerAction::Reject, 
             Some(Box::new(OnSyncChunk(self.clone())))

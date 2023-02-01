@@ -22,14 +22,13 @@ use cyfs_util::*;
 
 #[derive(Debug, Clone)]
 pub struct DstSyncIterator {
-    rel_path: String, 
-    chunk: Option<(usize, ChunkId)>, 
+    pub rel_path: String, 
+    pub chunk: Option<(usize, ChunkId)>, 
 }
 
 #[async_trait::async_trait]
 pub trait DstSyncDelegate: Send + Sync {
     fn clone_as_dst_sync_delegate(&self) -> Box<dyn DstSyncDelegate>;
-    async fn on_pre_download(&self, session: &DstSyncSession, task_path: &str);
     async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, task_path: &str);
     async fn on_error(&self, session: &DstSyncSession, err: BuckyError);
     async fn on_finish(&self, session: &DstSyncSession);
@@ -117,23 +116,23 @@ impl DstSyncSession {
         }))
     }
 
-    fn stack(&self) -> &SharedCyfsStack {
+    pub fn stack(&self) -> &SharedCyfsStack {
         &self.0.stack
     }
 
-    fn dir_id(&self) -> &ObjectId {
+    pub fn dir_id(&self) -> &ObjectId {
         &self.0.dir_id
     }
 
-    fn source(&self) -> &DeviceId {
+    pub fn source(&self) -> &DeviceId {
         &self.0.source
     }
 
-    fn local_path(&self) -> &Path {
+    pub fn local_path(&self) -> &Path {
         self.0.local_path.as_path()
     }
 
-    fn task_path(&self) -> String {
+    pub fn task_path(&self) -> String {
         ["in_zone_sync".to_owned(), self.dir_id().to_string()].join("/")
     }
 
@@ -161,7 +160,6 @@ impl DstSyncSession {
         
         let session = self.clone();
         task::spawn(async move {
-            delegate.on_pre_download(&session, session.task_path().as_str()).await;
             let result = session.download_process().await;
 
             if let Err(err) = result {
@@ -288,7 +286,7 @@ impl DstSyncSession {
         let parent_path = Path::new(cur_path).parent();
         if let Some(upper) = parent_path {
             let iter = DstSyncIterator {
-                rel_path: upper.to_str().unwrap().to_owned(), 
+                rel_path: upper.to_str().unwrap().trim_end_matches('/').to_owned(), 
                 chunk: None
             };
             self.next_chunk(sub_dirs, &iter).await
@@ -303,10 +301,11 @@ impl DstSyncSession {
         sub_dirs: &mut HashMap<String, RelPathStub>, 
         iter: &DstSyncIterator
     ) -> BuckyResult<Option<DstSyncIterator>> {
+        debug!("{} continue explore dir, iter={:?}", self, iter);
         if let Some((index, _)) = &iter.chunk {
             let file_chunks = sub_dirs.get(&iter.rel_path).unwrap().as_file().unwrap();
             let index = *index + 1;
-            if index == file_chunks.chunks().len() - 1 {
+            if index == file_chunks.chunks().len() {
                 debug!("{} all chunks finished, backtrace to parent, iter={:?}", self, iter);
                 self.backtrace_to_parent(sub_dirs, &iter.rel_path).await
             } else {
