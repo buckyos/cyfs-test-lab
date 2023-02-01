@@ -68,11 +68,14 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
         }          
         let file_id: cyfs.ObjectId = info1.resp!.file_id;       
         // 将文件对象挂载在root_state
-        // let link_file = await LinkObjectAction.create_by_parent(this.action,this.logger).action!.start({
-        //     object_id : file_id,
-        //     req_path : req.req_path!,
-        //     access : cyfs.AccessString.full()
-        // })
+        let link_file = await LinkObjectAction.create_by_parent(this.action,this.logger).action!.start({
+            object_id : file_id,
+            req_path : req.req_path! , // + `/${RandomGenerator.string(10)}`
+            access : cyfs.AccessString.full()
+        })
+        if (link_file.err) {
+            return {err:link_file.err,log:link_file.log};
+        }  
         // Post object 通知remote 下载文件
         let result  = await PrepareTransFileRequest.create_by_parent(this.action,this.logger).action!.start({
             req_path: req.req_path!,

@@ -33,7 +33,6 @@ export class TransFileHandler extends BaseHandler {
                 dec_id: this.stack.dec_id,
                 // api级别
                 level: cyfs.NONAPILevel.Router,
-
                 // 用以处理默认行为
                 target: target,
 

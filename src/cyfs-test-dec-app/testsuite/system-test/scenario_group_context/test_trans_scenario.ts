@@ -2004,7 +2004,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             {
                                 req_path : `/req_path/${path_id}/groupA`,
                                 context_path :`/context_path/${path_id}/groupA`,
-                                group : `/group_path/${path_id}/groupA`
+                                group : `/group_path/${path_id}/groupA/`
                             },
                             {
                                 req_path : `/req_path/${path_id}/groupA/task1`,
