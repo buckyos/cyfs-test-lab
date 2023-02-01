@@ -34,7 +34,7 @@ export class ActionManager {
     update_current_testcase_id(testcase_id:string){
         this.current_action.testcase_id = testcase_id;
     }
-    report_current_actions(){
+    report_current_actions(): ActionRecord{
         let current_action = JSON.parse(JSON.stringify(this.current_action));
         this.current_action = {
             testcase_id :  `Testcase-${RandomGenerator.string(10)}-${Date.now()}`,

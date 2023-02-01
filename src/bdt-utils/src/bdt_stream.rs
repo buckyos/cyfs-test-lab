@@ -74,6 +74,9 @@ impl BDTConnection {
     pub fn get_stream(&self)->&StreamGuard {
         &self.stream
     }
+    // pub fn get_remote(&self)->&StreamGuard {
+    //     &self.stream.remote()
+    // }
     pub fn get_name(&self)->String{
         format!("{}", self.stream)
     }

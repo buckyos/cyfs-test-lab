@@ -5,11 +5,13 @@ import * as cyfs from "../../../cyfs";
  * 输入数据
  */
 type TestInput = {
-    task_id: string,
+    task_status: cyfs.TransTaskStatus,
+    range? : [number|cyfs.JSBI,number],
+
 }
 type TestOutput = {
-    state: cyfs.TransTaskStateInfo,
-    group?: string,
+    task_list : cyfs.TransTaskInfo[]
+    
 }
 export class GetTransTaskState extends BaseAction implements ActionAbstract {
     static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetTransTaskState}{
@@ -35,19 +37,20 @@ export class GetTransTaskState extends BaseAction implements ActionAbstract {
     }
     async run(req: TestInput): Promise<{ err: number, log: string,resp?: TestOutput }> {
         let local = this.local!;
-        let info_check = await local.trans().get_task_state({
+        let info_check = await local.trans().query_tasks({
             common: {
                 // api级别
                 level: cyfs.NDNAPILevel.NDN,
                 flags: 1,
             },
-            task_id: req.task_id,
-        });
-        this.logger.info(`get_task_state ${req.task_id}: ${JSON.stringify(info_check)}`);
+            task_status: req.task_status,
+            range: req.range,
+        })
+        this.logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
         if(info_check.err){
             return {err: info_check.val.code, log: info_check.val.msg}
         }else{
-            return { err: ErrorCode.succ, log: "run success" ,resp:info_check.unwrap()}
+            return { err: ErrorCode.succ, log: "run success" ,resp: {task_list:info_check.unwrap().task_list}}
         }
        
     }

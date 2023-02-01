@@ -10,39 +10,21 @@ import { StackManager, CyfsDriverType, PeerInfo } from "../../cyfs-driver-client
  * handler：remote 监听文件传输行为（ 参数group 设置传输组,get_object 获取file 对象，post_object 获取context对象，trans 创建传输任务，完成下载流程） 
  */
 
-export class UpdateContextHandler extends BaseHandler {
+export class AddContextHandler extends BaseHandler {
     async start(req: HandlerRequestObject): Promise<HandlerRequestObject> {
         // 封装一些操作
-        this.handler_info.type = "UpdateContextHandler"
+        this.handler_info.type = "AddContextHandler"
         return await super.start(req);
     }
     async run(req: HandlerApi): Promise<HandlerApi> {
         // 默认没有操作返回报错
-        if (!req.UpdateContextHandlerReq) {
+        if (!req.AddContextHandlerReq) {
             return InvalidParamError
         }
-        let param = req.UpdateContextHandlerReq!
-        let context_id = cyfs.ObjectId.from_base_58(param.context_id).unwrap();
-        // 获取文件对象
-        let get_context =  await this.stack.trans().get_context({
-            common: {
-                dec_id: this.stack.dec_id,
-                // api级别
-                level: cyfs.NDNAPILevel.NDC,
-                // 需要处理数据的关联对象，主要用以chunk/file等
-                flags: 1,
-            },
-            context_id,
-        })
-        if(get_context.err){
-            return {
-                UpdateContextHandlerResp: {
-                    result: get_context.val.code,
-                    msg: get_context.val.msg,
-                }
-            }
-        }
-        let context_cache  = get_context.unwrap().context;
+        let param = req.AddContextHandlerReq!
+        
+        let context_cache  = cyfs.TransContext.new(this.stack.dec_id, param!.context_path!);
+        let context_id = context_cache.desc().calculate_id().to_base_58();
         if(param.deviceid_list){
             context_cache.body_expect().content().device_list = [];
             for (let device of param.deviceid_list!) {
@@ -60,9 +42,6 @@ export class UpdateContextHandler extends BaseHandler {
                 context_cache.body_expect().content().device_list.push(new cyfs.TransContextDevice(device_id,chunk_codec_desc!));
             }
         }
-        context_cache.body_expect().increase_update_time(
-            cyfs.bucky_time_now()
-        );
         let put_context = await this.stack.trans().put_context({
             common: {
                 dec_id: this.stack.dec_id,
@@ -76,7 +55,7 @@ export class UpdateContextHandler extends BaseHandler {
         });
         if(put_context.err){
             return {
-                UpdateContextHandlerResp: {
+                AddContextHandlerResp: {
                     result: put_context.val.code,
                     msg: put_context.val.msg,
                 }
@@ -84,9 +63,10 @@ export class UpdateContextHandler extends BaseHandler {
         }
        
         return {
-            UpdateContextHandlerResp: {
+            AddContextHandlerResp: {
                 result: 0,
                 msg: "success",
+                context_id,
             }
         }
     }

@@ -86,7 +86,7 @@ export class BaseAction implements ActionAbstract{
             let local_get = stack_manager.get_cyfs_satck(this.action.local);
             if (local_get.err) {
                 this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.local}`);
-                return {err:ErrorCode.notFound,log:` ${this.action.local} 协议栈未初始化`}
+                return {err:ErrorCode.notFound,log:` ${JSON.stringify(this.action.local)} 协议栈未初始化`}
             }else{
                 this.logger.info(`${this.action.action_id} found stack local:  ${JSON.stringify(this.action.local) }`);
                 this.local = local_get.stack!
@@ -97,7 +97,7 @@ export class BaseAction implements ActionAbstract{
             let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
             if (remote_get.err) {
                 this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${JSON.stringify(this.action.remote)}`);
-                return {err:ErrorCode.notFound,log:` ${this.action.remote} 协议栈未初始化`}
+                return {err:ErrorCode.notFound,log:` ${JSON.stringify(this.action.remote)} 协议栈未初始化`}
             }else{
                 this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote}`);
                 this.remote = remote_get.stack!
@@ -110,7 +110,7 @@ export class BaseAction implements ActionAbstract{
                 let statck_get = stack_manager.get_cyfs_satck(stack_info);
                 if (statck_get.err) {
                     this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${stack_info}`);
-                    return {err:ErrorCode.notFound,log:` ${stack_info} 协议栈未初始化`}
+                    return {err:ErrorCode.notFound,log:` ${JSON.stringify(stack_info)} 协议栈未初始化`}
                 }else{
                     this.logger.info(`${this.action.action_id} found stack user: ${JSON.stringify(stack_info)}`);
                     this.user_list.push(statck_get.stack!);
@@ -131,6 +131,7 @@ export class BaseAction implements ActionAbstract{
 
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
         this.logger!.info(`##### ${this.action.action_id} ${this.action.parent_action} start running `)
+        this.logger!.debug(`${this.action.action_id} req = ${JSON.stringify(req)} `)
         // 记录自定义参数
         this.action.action_req = req;
         // 初始化结果统计
@@ -158,6 +159,7 @@ export class BaseAction implements ActionAbstract{
                 this.action.begin_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
                 let result = await this.run(req);
                 this.action.end_date =  date.format(new Date(),'YYYY/MM/DD HH:mm:ss');
+                this.logger!.debug(`${this.action.action_id} resp = ${JSON.stringify(result)} `)
                 // 释放超时检测
                 clearTimeout(timer); 
                 this.action.result = result;
@@ -172,10 +174,10 @@ export class BaseAction implements ActionAbstract{
                 }
                 // 预期成功 返回实际结果
                 V(result)
-            } catch (error) {
+            } catch (e) {
                 //测试程序异常，进行捕获
-                this.logger!.error(error);
-                V({ err: ErrorCode.exception, log: `${error}` })
+                this.logger!.error(`action run throw Error: ${e}`);
+                V({ err: ErrorCode.exception, log: `${e}`})
             }
             
         })

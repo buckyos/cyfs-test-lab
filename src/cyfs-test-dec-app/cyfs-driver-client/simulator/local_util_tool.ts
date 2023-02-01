@@ -28,9 +28,9 @@ export class LocalUtilTool implements UtilTool {
     }
     async init_cache(){
         if (!this.cache_mb) {
-            this.cache_mb = Buffer.from(this.string(1000000));
+            this.cache_mb = Buffer.from(this.string(999000));
         }
-        this.cache_kb = Buffer.from(this.string(37));
+        this.cache_kb = Buffer.from(this.string(1037));
         this.cahce_buff = Buffer.concat([this.cache_kb, this.cache_mb]);
     }
     string(length: number = 32) {

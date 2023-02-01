@@ -124,14 +124,18 @@ export class StackManager {
                 let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
                 stack_param.requestor_config = ws_param
             }
-            let stack = cyfs.SharedCyfsStack.open(stack_param);
             let stack_map = new Map();
+            if(this.peer_map.has(agent.peer_name)){
+                stack_map = this.peer_map.get(agent.peer_name)!
+            }else{
+                this.peer_map.set(agent.peer_name, stack_map);
+            }
+            let stack = cyfs.SharedCyfsStack.open(stack_param);
             if (dec_id) {
                 stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
             } else {
                 stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
             }
-            this.peer_map.set(agent.peer_name, stack_map);
         }
     }
     async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
@@ -142,15 +146,18 @@ export class StackManager {
                 let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
                 stack_param.requestor_config = ws_param
             }
-            let stack = cyfs.SharedCyfsStack.open(stack_param);
             let stack_map = new Map();
+            if(this.peer_map.has(agent.peer_name)){
+                stack_map = this.peer_map.get(agent.peer_name)!
+            }else{
+                this.peer_map.set(agent.peer_name, stack_map);
+            }
+            let stack = cyfs.SharedCyfsStack.open(stack_param);
             if (dec_id) {
                 stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
             } else {
                 stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
             }
-
-            this.peer_map.set(agent.peer_name, stack_map);
         }
     }
 
@@ -164,6 +171,17 @@ export class StackManager {
         this.logger!.info(`get satck ${local.peer_name} success,dec_id = ${local.dec_id} type = ${local.type}`)
         return { err: ErrorCode.succ, log: `get cyfs stack success`, stack: this.peer_map.get(local.peer_name)!.get(`${local.dec_id}_${local.type}`)! }
     }
+    get_device_id(local: PeerInfo):{ err: ErrorCode, log: string, device_id?: cyfs.DeviceId }{
+        if (!this.peer_map.has(local.peer_name)) {
+            return { err: ErrorCode.notFound, log: `error peer name ${local.peer_name}` }
+        }
+        if (!this.peer_map.get(local.peer_name)!.has(`${local.dec_id}_${local.type}`)) {
+            return { err: ErrorCode.notFound, log: `error dec_id dec_id =  ${local.dec_id},type = ${local.type}` }
+        }
+        let device_id =  this.peer_map.get(local.peer_name)!.get(`${local.dec_id}_${local.type}`)!.local_device_id();
+        return { err: ErrorCode.succ, log: `get cyfs stack device_id success`, device_id}
+    } 
+
     destory() {
         this.logger!.info(`cyfs satck manager destory all cyfs stack`)
         for (let peer of this.peer_map.values()) {

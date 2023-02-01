@@ -5,18 +5,16 @@ import * as cyfs from "../../../cyfs";
  * 输入数据
  */
 type TestInput = {
-    task_id: string,
+    group: string,
+    action : cyfs.TransTaskGroupControlAction
 }
-type TestOutput = {
-    state: cyfs.TransTaskStateInfo,
-    group?: string,
-}
-export class GetTransTaskState extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetTransTaskState}{
+
+export class ControlTaskGroup extends BaseAction implements ActionAbstract {
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:ControlTaskGroup}{
         /**
          * 父任务下载端 remote 查询任务状态
          */
-        let run = new GetTransTaskState({
+        let run = new ControlTaskGroup({
             local :  action.remote!,
             remote : action.remote,
             input : {
@@ -28,22 +26,23 @@ export class GetTransTaskState extends BaseAction implements ActionAbstract {
         },logger)
         return {err:ErrorCode.succ,action:run}
     }
-    async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
-        this.action.type = "GetTransTaskState"
-        this.action.action_id = `GetTransTaskState-${Date.now()}`
+    async start(req:TestInput): Promise<{ err: number; log: string, resp?: cyfs.TransControlTaskGroupOutputResponse}> {
+        this.action.type = "ControlTaskGroup"
+        this.action.action_id = `ControlTaskGroup-${Date.now()}`
         return await super.start(req);
     }
-    async run(req: TestInput): Promise<{ err: number, log: string,resp?: TestOutput }> {
+    async run(req: TestInput): Promise<{ err: number, log: string,resp?: cyfs.TransControlTaskGroupOutputResponse }> {
         let local = this.local!;
-        let info_check = await local.trans().get_task_state({
+        let info_check = await local.trans().control_task_group({
             common: {
                 // api级别
                 level: cyfs.NDNAPILevel.NDN,
                 flags: 1,
             },
-            task_id: req.task_id,
+            group : req.group,
+            action : req.action
         });
-        this.logger.info(`get_task_state ${req.task_id}: ${JSON.stringify(info_check)}`);
+        this.logger.info(`control_task_group : ${JSON.stringify(info_check)}`);
         if(info_check.err){
             return {err: info_check.val.code, log: info_check.val.msg}
         }else{

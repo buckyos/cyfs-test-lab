@@ -40,6 +40,9 @@ export class CommonPostObjectHandler implements cyfs.RouterHandlerPostObjectRout
             case HandlerType.UpdateContext: {
                 return await (new HandlerListenr.UpdateContextHandler(this.stack,this.local,this.logger).start(request));
             }
+            case HandlerType.AddContext: {
+                return await (new HandlerListenr.AddContextHandler(this.stack,this.local,this.logger).start(request));
+            }
             default: {
                 let result = NotFoundError
                 return HandlerRequestObject.create(this.stack.local_device_id().object_id,request.request_type, request.id,JSON.stringify({ result }), Buffer.from(""))

@@ -11,12 +11,14 @@ import {PrepareTransFileHandlerResp} from "../../../common_base"
  * 输入数据
  */
 type TestInput = {
-    req_path?: string,
-    group? : string,
-    context_path?: string,
-    auto_start:boolean,
-    action?:cyfs.TransTaskControlAction,
-    action_wait?:number, 
+    req_path?: string, // req_path 权限控制路径
+    group? : string, // 文件传输任务分组
+    context_path?: string, // 文件传输任务下载源
+    auto_start:boolean, // 任务是否自动开始
+    action?:cyfs.TransTaskControlAction, //设置传输任务的初始状态
+    action_wait?:number, // action 操作的间隔时间
+    deviceid_list?:Array<cyfs.ObjectId>, // 设置context 的deviceid_list
+    not_set_context?: boolean
 }
 /**
  * 输出结果
@@ -75,8 +77,11 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
         })
         if (link_file.err) {
             return {err:link_file.err,log:link_file.log};
-        }  
+        }   
         // Post object 通知remote 下载文件
+        if(!req.deviceid_list){
+            req.deviceid_list = [local.local_device_id().object_id]
+        }
         let result  = await PrepareTransFileRequest.create_by_parent(this.action,this.logger).action!.start({
             req_path: req.req_path!,
             target : local.local_device_id().to_base_58(),
@@ -85,10 +90,11 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
             file_id : file_id.to_base_58(),
             file_name : local_file.file_name!,
             auto_start : req.auto_start,
+            not_set_context : req.not_set_context,
             action :req.action,
             action_wait : req.action_wait,
             chunk_codec_desc : {stream:[0,0,0]},
-            deviceid_list : [local.local_device_id().object_id],
+            deviceid_list : req.deviceid_list,
         })
                 
         return result;

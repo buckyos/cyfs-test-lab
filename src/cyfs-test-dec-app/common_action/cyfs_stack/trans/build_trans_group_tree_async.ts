@@ -18,8 +18,6 @@ type TestInput = {
         req_path: string,
         group : string,
         context_path: string,
-        auto_start?:boolean,
-        action?:cyfs.TransTaskControlAction
     }>
 }
 
@@ -31,7 +29,6 @@ type TestOutput = {
         req_path: string,
         group : string,
         context_path: string,
-        
     }>
 }
 /**
@@ -55,45 +52,35 @@ type TestOutput = {
 *  (11) loacl: loacl收到post_object返回结果 
  */
 
-export class BuildTransGroupTree extends BaseAction implements ActionAbstract {
+export class BuildTransGroupTreeAsync extends BaseAction implements ActionAbstract {
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
-        this.action.type = "BuildTransGroupTree"
-        this.action.action_id = `BuildTransGroupTree-${Date.now()}`
+        this.action.type = "BuildTransGroupTreeAsync"
+        this.action.action_id = `BuildTransGroupTreeAsync-${Date.now()}`
         return await super.start(req);
     }
     async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: TestOutput }> {
         let local = this.local!;
-
         let action_handler = await RegisterCommonHandler.create_by_parent(this.action,this.logger!).action!.start({
             req_path: req.root_req_path,
         });
         this.logger.info(`add handler : ${action_handler}`);
         let task_result_list = []
-        let task_running_list = []
         for(let task of req.task_list){
-            if(task.auto_start == undefined){
-                task.auto_start = true;
-            }
-            task_running_list.push(PrepareFileTask.create_by_parent(this.action,this.logger!).action!.start({
+            let task_action = await PrepareFileTask.create_by_parent(this.action,this.logger!).action!.start({
                 req_path: task.req_path,
                 context_path: task.context_path,
                 group: task.group,
-                auto_start:  task.auto_start!,
-                action : task.action
-            }));
-            
-           
-        }
-        for(let index in task_running_list){
-            let  task_action = await task_running_list[index];
+                auto_start: true
+            });
             task_result_list.push({
                 err : task_action.err,
                 log : task_action.log,
                 task_id : task_action.resp?.task_id,
-                req_path: req.task_list[index].req_path,
-                group : req.task_list[index].group,
-                context_path: req.task_list[index].context_path,
+                req_path: task.req_path,
+                group :task.group,
+                context_path: task.context_path,
             })
+           
         }
         return {err:0,log:"success",resp:{task_list:task_result_list} };
     }

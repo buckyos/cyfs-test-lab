@@ -35,16 +35,28 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         // 将对象挂载
         let op_env = (await local.root_state_stub(local.local_device_id().object_id,local.dec_id).create_path_op_env()).unwrap();
+        let running  = await op_env.lock([req.req_path],cyfs.JSBI.BigInt(1000));
         let modify_path = await op_env.insert_with_path(req.req_path!,req.object_id);
+        
         this.logger.info(`${local.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);
         let commit_result = await op_env.commit();
         this.logger.info(`root state link path ,root_path =${req.req_path} ,object = ${req.object_id} result= ${JSON.stringify(commit_result)}`);
         // 修改对象权限
-        let test = await local.root_state_meta_stub(local.local_device_id().object_id,local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
+        let modify_access = await local.root_state_meta_stub(local.local_device_id().object_id,local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
             req.req_path!,
             req.access
         ));
-        this.logger.info(`${req.req_path} root_state_meta_stub add_access result = ${test}`);
+        if(modify_access.err){
+            this.logger.error(`${req.req_path} root_state_meta_stub add_access error ,will retry`);
+            modify_access = await local.root_state_meta_stub(local.local_device_id().object_id,local.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
+                req.req_path!,
+                req.access
+            ));
+        }
+        this.logger.info(`${req.req_path} root_state_meta_stub add_access result = ${JSON.stringify(modify_access)}`);
+        if(modify_access.err){
+
+        }
         let check_result = await local.root_state_accessor().get_object_by_path({
             common: {
                 // 来源DEC

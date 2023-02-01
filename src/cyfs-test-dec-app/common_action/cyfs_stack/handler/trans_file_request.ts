@@ -46,7 +46,7 @@ export class TransFileRequest extends BaseAction implements ActionAbstract {
         let response = result.unwrap();
         let response_object = new HandlerRequestObjectDecoder().from_raw( response.object!.object_raw).unwrap();
         this.logger.info(`post_object resp = ${JSON.stringify(response_object.request_json)}`)
-        return { err: ErrorCode.succ, log: "success",resp:JSON.parse(response_object.request_json)}
+        return { err: ErrorCode.succ, log: "success",resp:JSON.parse(response_object.request_json).TransFileHandlerResp}
        
     }
 }

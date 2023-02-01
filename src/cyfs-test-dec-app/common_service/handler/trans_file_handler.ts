@@ -26,6 +26,7 @@ export class TransFileHandler extends BaseHandler {
         let file_id = cyfs.ObjectId.from_base_58(param.file_id).unwrap();
         let target = cyfs.ObjectId.from_base_58(param.target).unwrap();
         let target_device_id = cyfs.DeviceId.try_from_object_id(target).unwrap();
+        let get_file_object_begin = Date.now();
         let get_file = await this.stack.non_service().get_object({
             common: {
                 req_path: param.req_path,
@@ -41,6 +42,7 @@ export class TransFileHandler extends BaseHandler {
 
             object_id: file_id,
         })
+        let get_file_object_time = Date.now() - get_file_object_begin;
         if(get_file.err){
             return {
                 TransFileHandlerResp: {
@@ -142,9 +144,11 @@ export class TransFileHandler extends BaseHandler {
         return {
             TransFileHandlerResp: {
                 result: 0,
+                task_id : task_id,
                 msg: "success",
                 download_time,
-                md5
+                md5,
+                get_file_object_time
             }
         }
     }
