@@ -16,39 +16,38 @@ use async_std::{
 };
 use cyfs_base::*;
 use cyfs_bdt::*;
-use cyfs_core::*;
 use cyfs_lib::*;
 use cyfs_util::*;
 
 #[derive(Debug, Clone)]
-pub struct DstSyncIterator {
+pub struct BackupDstIterator {
     pub rel_path: String, 
     pub chunk: Option<(usize, ChunkId)>, 
 }
 
 #[async_trait::async_trait]
-pub trait DstSyncDelegate: Send + Sync {
-    fn clone_as_dst_sync_delegate(&self) -> Box<dyn DstSyncDelegate>;
-    async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, task_path: &str);
-    async fn on_error(&self, session: &DstSyncSession, err: BuckyError);
-    async fn on_finish(&self, session: &DstSyncSession);
+pub trait BackupDstDelegate: Send + Sync {
+    fn clone_as_backup_dst_delegate(&self) -> Box<dyn BackupDstDelegate>;
+    async fn on_pre_download_file(&self, session: &BackupDstSession, rel_path: &str, file: &File, task_path: &str);
+    async fn on_error(&self, session: &BackupDstSession, err: BuckyError);
+    async fn on_finish(&self, session: &BackupDstSession);
 }
 
 #[derive(Debug)]
-pub enum DstSyncPhase {
+pub enum BackupDstPhase {
     Waiting, 
     Downloading, 
     Finished, 
     Error(BuckyError)
 }
 
-impl From<&PhaseImpl> for DstSyncPhase {
+impl From<&PhaseImpl> for BackupDstPhase {
     fn from(phase: &PhaseImpl) -> Self {
         match phase {
-            PhaseImpl::Waiting => DstSyncPhase::Waiting,
-            PhaseImpl::Downloading { .. } => DstSyncPhase::Downloading,
-            PhaseImpl::Finished => DstSyncPhase::Finished, 
-            PhaseImpl::Error(err) => DstSyncPhase::Error(err.clone()), 
+            PhaseImpl::Waiting => BackupDstPhase::Waiting,
+            PhaseImpl::Downloading { .. } => BackupDstPhase::Downloading,
+            PhaseImpl::Finished => BackupDstPhase::Finished, 
+            PhaseImpl::Error(err) => BackupDstPhase::Error(err.clone()), 
         }
     }
 }
@@ -56,7 +55,7 @@ impl From<&PhaseImpl> for DstSyncPhase {
 enum PhaseImpl {
     Waiting, 
     Downloading {
-        delegate: Box<dyn DstSyncDelegate>, 
+        delegate: Box<dyn BackupDstDelegate>, 
     }, 
     Finished, 
     Error(BuckyError)
@@ -71,11 +70,11 @@ struct SessionImpl {
 }
 
 #[derive(Clone)]
-pub struct DstSyncSession(Arc<SessionImpl>);
+pub struct BackupDstSession(Arc<SessionImpl>);
 
-impl std::fmt::Display for DstSyncSession {
+impl std::fmt::Display for BackupDstSession {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "DstSyncSession{{local:{}, dir_id:{}, source:{}, path:{:?}}}", self.stack().local_device_id(), self.dir_id(), self.source(), self.local_path())
+        write!(f, "BackupDstSession{{local:{}, dir_id:{}, source:{}, path:{:?}}}", self.stack().local_device_id(), self.dir_id(), self.source(), self.local_path())
     }
 }
 
@@ -87,20 +86,20 @@ enum RelPathStub {
 impl RelPathStub {
     fn as_file(&self) -> Option<ChunkListDesc> {
         match self {
-            Self::File(id, chunks) => Some(chunks.clone()), 
+            Self::File(_id, chunks) => Some(chunks.clone()), 
             _ => None
         }
     } 
 
     fn as_dir(&self) -> Option<SingleOpEnvStub> {
         match self {
-            Self::Dir(id, op) => Some(op.clone()),
+            Self::Dir(_id, op) => Some(op.clone()),
             _ => None
         }
     }
 }
 
-impl DstSyncSession {
+impl BackupDstSession {
     fn new(
         stack: &SharedCyfsStack, 
         source: DeviceId, 
@@ -136,18 +135,22 @@ impl DstSyncSession {
         ["in_zone_sync".to_owned(), self.dir_id().to_string()].join("/")
     }
 
-    fn task_path_of(&self, iter: &DstSyncIterator) -> Option<String> {
-        iter.chunk.as_ref().map(|(index, _)| [self.task_path(), [iter.rel_path.clone(), index.to_string()].join("/")].join(""))
+    fn task_path_of(&self, iter: &BackupDstIterator) -> String {
+        if let Some((index, _)) = iter.chunk.as_ref() {
+            [self.task_path(), iter.rel_path.clone(), index.to_string()].join("/")
+        } else {
+            [self.task_path(), iter.rel_path.clone()].join("/")
+        }
     }
 
-    pub fn start<T: 'static + DstSyncDelegate>(&self, delegate: T) -> BuckyResult<()> {
+    pub fn start<T: 'static + BackupDstDelegate>(&self, delegate: T) -> BuckyResult<()> {
         info!("{} start", self);
         let _ = {
             let mut phase = self.0.phase.write().unwrap();
             match &mut *phase {
                 PhaseImpl::Waiting => {
                     *phase = PhaseImpl::Downloading { 
-                        delegate: delegate.clone_as_dst_sync_delegate(), 
+                        delegate: delegate.clone_as_backup_dst_delegate(), 
                     };
                     Ok(())
                 }, 
@@ -167,7 +170,7 @@ impl DstSyncSession {
                     let mut phase = session.0.phase.write().unwrap();
                     match &mut *phase {
                         PhaseImpl::Downloading { delegate, .. } => {
-                            let delegate = Some(delegate.clone_as_dst_sync_delegate());
+                            let delegate = Some(delegate.clone_as_backup_dst_delegate());
                             *phase = PhaseImpl::Error(err.clone());
                             delegate
                         }, 
@@ -181,6 +184,14 @@ impl DstSyncSession {
         });
 
         Ok(())
+    }
+
+    fn delegate(&self) -> BuckyResult<Box<dyn BackupDstDelegate>> {
+        let phase = self.0.phase.read().unwrap();
+        match & *phase {
+            PhaseImpl::Downloading { delegate, .. } => Ok(delegate.clone_as_backup_dst_delegate()),
+            _ => Err(BuckyError::new(BuckyErrorCode::ErrorState, "get delegate not in downloading state"))
+        } 
     }
 
     async fn download_process(&self) -> BuckyResult<()> {
@@ -206,24 +217,14 @@ impl DstSyncSession {
             return Ok(());
         }
         
-        let mut iter = DstSyncIterator { rel_path: "".to_owned(), chunk: None };
+        let mut iter = BackupDstIterator { rel_path: "".to_owned(), chunk: None };
         let result = loop {
             match self.next_chunk(&mut sub_dirs, &iter).await {
                 Ok(new_iter) => if let Some(cur) = new_iter {
-                    let delegate = {
-                        let mut phase = self.0.phase.write().unwrap();
-                        match &mut *phase {
-                            PhaseImpl::Downloading { delegate, .. } => {
-                                Some(delegate.clone_as_dst_sync_delegate())
-                            }, 
-                            _ => None
-                        } 
-                    };
                     iter = cur;
 
-                    if let Some(delegate) = delegate {
-                        let task_path = self.task_path_of(&iter).unwrap();
-                        delegate.on_pre_download_chunk(self, &iter, task_path.as_str()).await;
+                    if self.delegate().is_ok() {
+                        let task_path = self.task_path_of(&iter);
                         let ret = self.download_chunk(&iter.chunk.as_ref().unwrap().1, task_path).await;
                         if ret.is_err() {
                             break ret;
@@ -236,7 +237,7 @@ impl DstSyncSession {
                         let mut phase = self.0.phase.write().unwrap();
                         match &mut *phase {
                             PhaseImpl::Downloading { delegate, .. } => {
-                                let delegate = Some(delegate.clone_as_dst_sync_delegate());
+                                let delegate = Some(delegate.clone_as_backup_dst_delegate());
                                 *phase = PhaseImpl::Finished;
                                 delegate
                             }, 
@@ -282,10 +283,10 @@ impl DstSyncSession {
         &self, 
         sub_dirs: &mut HashMap<String, RelPathStub>, 
         cur_path: &str
-    ) -> BuckyResult<Option<DstSyncIterator>> {
+    ) -> BuckyResult<Option<BackupDstIterator>> {
         let parent_path = Path::new(cur_path).parent();
         if let Some(upper) = parent_path {
-            let iter = DstSyncIterator {
+            let iter = BackupDstIterator {
                 rel_path: upper.to_str().unwrap().trim_end_matches('/').to_owned(), 
                 chunk: None
             };
@@ -299,8 +300,8 @@ impl DstSyncSession {
     async fn next_chunk(
         &self, 
         sub_dirs: &mut HashMap<String, RelPathStub>, 
-        iter: &DstSyncIterator
-    ) -> BuckyResult<Option<DstSyncIterator>> {
+        iter: &BackupDstIterator
+    ) -> BuckyResult<Option<BackupDstIterator>> {
         debug!("{} continue explore dir, iter={:?}", self, iter);
         if let Some((index, _)) = &iter.chunk {
             let file_chunks = sub_dirs.get(&iter.rel_path).unwrap().as_file().unwrap();
@@ -309,7 +310,7 @@ impl DstSyncSession {
                 debug!("{} all chunks finished, backtrace to parent, iter={:?}", self, iter);
                 self.backtrace_to_parent(sub_dirs, &iter.rel_path).await
             } else {
-                let iter = DstSyncIterator {
+                let iter = BackupDstIterator {
                     rel_path: iter.rel_path.clone(), 
                     chunk: Some((index, file_chunks.chunks()[index].clone()))
                 };
@@ -336,13 +337,24 @@ impl DstSyncSession {
                             err
                         })?;
 
-                    let child_path = [iter.rel_path.as_str(), child_path.as_str()].join("/").to_owned();
+                    let child_path = if iter.rel_path.len() > 0 {
+                        [iter.rel_path.clone(), child_path.clone()].join("/")
+                    } else {
+                        child_path.clone()
+                    };
                     if child_id.obj_type_code() == ObjectTypeCode::File {
                         let file_obj = File::clone_from_slice(get_resp.object.object_raw.as_slice())
                             .map_err(|err| {
                                 error!("{} download process failed, iter={:?}, err=load file {}", self, child_path, err);
                                 err
                             })?;
+
+                        let delegate = self.delegate()?;
+                        delegate.on_pre_download_file(self, &child_path, &file_obj, &self.task_path_of(&BackupDstIterator {
+                            rel_path: child_path.clone(), 
+                            chunk: None
+                        })).await;
+                           
                         let file_chunks = ChunkListDesc::from_file(&file_obj)
                             .map_err(|err| {
                                 error!("{} download process failed, iter={:?}, err=get chunk list {}", self, child_path, err);
@@ -354,7 +366,7 @@ impl DstSyncSession {
                         } else {
                             sub_dirs.insert(child_path.clone(), RelPathStub::File(child_id.clone(), file_chunks.clone()));
 
-                            let iter = DstSyncIterator {
+                            let iter = BackupDstIterator {
                                 rel_path: child_path, 
                                 chunk: Some((0, file_chunks.chunks()[0].clone()))
                             };
@@ -376,7 +388,7 @@ impl DstSyncSession {
                         
                         sub_dirs.insert(child_path.clone(), RelPathStub::Dir(child_id.clone(), child_obj.clone()));
 
-                        let iter = DstSyncIterator {
+                        let iter = BackupDstIterator {
                             rel_path: child_path, 
                             chunk: None
                         };
@@ -393,15 +405,15 @@ impl DstSyncSession {
         }
     }
 
-    pub fn phase(&self) -> DstSyncPhase {
-        DstSyncPhase::from(&*self.0.phase.read().unwrap())
+    pub fn phase(&self) -> BackupDstPhase {
+        BackupDstPhase::from(&*self.0.phase.read().unwrap())
     }
 
 }
 
 enum ListenerState {
     Init, 
-    Listening(Sender<DstSyncSession>, Receiver<DstSyncSession>), 
+    Listening(Sender<BackupDstSession>, Receiver<BackupDstSession>), 
     Stopped
 }
 
@@ -445,7 +457,7 @@ impl SyncListener {
                 let path_str = parts.join("/");
                 let local_path = PathBuf::from_str(path_str.as_str())
                     .map_err(|_| BuckyError::new(BuckyErrorCode::InvalidParam, format!("invalid local path {}", path_str)))?;
-                let session = DstSyncSession::new(
+                let session = BackupDstSession::new(
                     self.0.stack(), 
                     param.request.common.source.zone.device.clone().unwrap(), 
                     param.request.object.object_id, 
@@ -511,7 +523,7 @@ impl SyncListener {
         Ok(())
     }
 
-    pub async fn accept(&self) -> Option<BuckyResult<DstSyncSession>> {
+    pub async fn accept(&self) -> Option<BuckyResult<BackupDstSession>> {
         let receiver = {
             let state = self.0.state.read().unwrap();
             match &*state {
@@ -525,7 +537,7 @@ impl SyncListener {
         }
     }
 
-    async fn push_session(&self, session: DstSyncSession) {
+    async fn push_session(&self, session: BackupDstSession) {
         info!("{} push session = {}", self, session);
         let sender = {
             let state = self.0.state.read().unwrap();
@@ -553,14 +565,14 @@ impl SyncListener {
 
 
 struct IncommingState {
-    result: Option<Option<std::io::Result<DstSyncSession>>>,
+    result: Option<Option<std::io::Result<BackupDstSession>>>,
     waker: Option<Waker>,
 }
 
 pub struct SessionIncoming(SyncListener, Arc<Mutex<IncommingState>>);
 
 impl async_std::stream::Stream for SessionIncoming {
-    type Item = std::io::Result<DstSyncSession>;
+    type Item = std::io::Result<BackupDstSession>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<<Self as async_std::stream::Stream>::Item>> {
         let (poll_result, is_accept_next) = {

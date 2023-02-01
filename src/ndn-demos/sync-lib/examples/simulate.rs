@@ -40,24 +40,24 @@ async fn main() {
 
 
 async fn listen_sync() {
-    struct LoggerDelegate {};
+    struct LoggerDelegate {}
 
     #[async_trait::async_trait]
-    impl DstSyncDelegate for LoggerDelegate {
-        fn clone_as_dst_sync_delegate(&self) -> Box<dyn DstSyncDelegate> {
+    impl BackupDstDelegate for LoggerDelegate {
+        fn clone_as_backup_dst_delegate(&self) -> Box<dyn BackupDstDelegate> {
             Box::new(LoggerDelegate {})
         }
 
-        async fn on_pre_download_chunk(&self, session: &DstSyncSession, iter: &DstSyncIterator, _task_path: &str) {
-            println!("ood {} downloading file {:?}", session.stack().local_device_id(), session.local_path().join(&iter.rel_path));
+        async fn on_pre_download_file(&self, session: &BackupDstSession, rel_path: &str, _file: &File, _task_path: &str) {
+            println!("ood {} downloading file {:?} ", session.stack().local_device_id(), session.local_path().join(rel_path));
         }
 
-        async fn on_error(&self, session: &DstSyncSession, err: BuckyError) {
-            println!("{} failed, err={}", session, err);
+        async fn on_error(&self, session: &BackupDstSession, err: BuckyError) {
+            println!("ood {} backup path {:?} from device {} failed for {}", session.stack().local_device_id(), session.local_path(), session.source(), err);
         }
 
-        async fn on_finish(&self, session: &DstSyncSession) {
-            println!("{} finished", session);
+        async fn on_finish(&self, session: &BackupDstSession) {
+            println!("ood {} backup path {:?} from device {} finished", session.stack().local_device_id(), session.local_path(), session.source());
         }
     }
 
@@ -67,8 +67,8 @@ async fn listen_sync() {
     let mut incoming = listener.incoming();
     loop {
         let session = incoming.next().await.unwrap().unwrap();
-        println!("ood {} begin sync dir id {} path {:?} from device {}", session.stack().local_device_id(), session.dir_id(), session.local_path(), session.source());
-        session.start(LoggerDelegate {});
+        println!("ood {} begin backup dir id {} path {:?} from device {}", session.stack().local_device_id(), session.dir_id(), session.local_path(), session.source());
+        let _ = session.start(LoggerDelegate {});
     }
 }
 
@@ -82,17 +82,25 @@ async fn start_sync() {
     }
 
     #[async_trait::async_trait]
-    impl SrcSyncDelegate for LoggerDelegate {
-        async fn on_post_publish(&self, session: &SrcSyncSession, dir_id: &ObjectId) {
-            println!("deivce {} published sync dir {:?} object {}", session.stack().local_device_id(), session.local_path(), dir_id);
+    impl BackupSrcDelegate for LoggerDelegate {
+        async fn on_post_publish(&self, session: &BackupSrcSession, dir_id: &ObjectId) {
+            println!("deivce {} has published sync dir {:?} as object {}", session.stack().local_device_id(), session.local_path(), dir_id);
         }
 
-        async fn on_post_push(&self, session: &SrcSyncSession) {
-            println!("deivce {} post object {} to ood", session.stack().local_device_id(), session.dir_id().unwrap());
+        async fn on_post_push(&self, session: &BackupSrcSession) {
+            println!("deivce {} has pushed dir object {} to ood", session.stack().local_device_id(), session.dir_id().unwrap());
         }
 
-        async fn on_pre_upload_file(&self, session: &SrcSyncSession, rel_path: &Path, task_path: &str) {
-            println!("{} pre-upload file, file_path={:?}, task_path={}", session, rel_path, task_path);
+        async fn on_pre_upload_file(&self, session: &BackupSrcSession, rel_path: &str, _task_path: &str) {
+            println!("deivce {} uploading file {:?}", session.stack().local_device_id(), session.local_path().join(rel_path));
+        }
+
+        async fn on_error(&self, session: &BackupSrcSession, err: BuckyError) {
+            println!("deivce {} sync dir {:?} failed for {}", session.stack().local_device_id(), session.local_path(), err);
+        }
+
+        async fn on_finish(&self, session: &BackupSrcSession) {
+            println!("deivce {} sync dir {:?} finished", session.stack().local_device_id(), session.local_path());
         }
     }
     
@@ -105,5 +113,5 @@ async fn start_sync() {
     println!("deivce {} begin sync dir {:?}", src_stack.local_device_id(), session.local_path());
     
     let _ = session.start().unwrap();
-    let _ = session.wait_finish().await.unwrap();
+    let _ = session.wait_finish().await;
 }
