@@ -6,6 +6,7 @@ export enum HandlerType{
     PrepareTransFile = "prepare-trans-file",
     UpdateContext = "update-context",
     AddContext = "add-context",
+    ShareFileAddAccess = "share-file-add-access"
 }
 
 export interface HandlerApi {
@@ -19,14 +20,26 @@ export interface HandlerApi {
     AddContextHandlerResp?:AddContextHandlerResp,
     UpdateContextHandlerReq?:UpdateContextHandlerReq,
     UpdateContextHandlerResp?:UpdateContextHandlerResp,
+    ShareFileAddAccessHandlerReq?:ShareFileAddAccessHandlerReq,
+    ShareFileAddAccessHandlerResp?:ShareFileAddAccessHandlerResp,
 }
+
+export type ShareFileAddAccessHandlerReq = {
+    req_path: string,
+    file_id:string,
+}
+export type ShareFileAddAccessHandlerResp = {
+    result: number,
+    msg: string,
+}
+
 export type AddContextHandlerReq = {
     req_path: string,
     context_path : string,
     chunk_codec_desc? : {
         unknown?: boolean,
-        stream?:Array<number>,
-        raptor?: Array<number>,
+        stream?:[number|undefined, number|undefined, number|undefined]
+        raptor?: [number|undefined, number|undefined, number|undefined]
     },
     deviceid_list? : Array<cyfs.ObjectId>,
 }
@@ -42,8 +55,8 @@ export type UpdateContextHandlerReq = {
     context_id : string,
     chunk_codec_desc? : {
         unknown?: boolean,
-        stream?:Array<number>,
-        raptor?: Array<number>,
+        stream?:[number|undefined, number|undefined, number|undefined],
+        raptor?: [number|undefined, number|undefined, number|undefined]
     },
     deviceid_list? : Array<cyfs.ObjectId>,
 }
@@ -99,10 +112,10 @@ export type PrepareTransFileHandlerReq = {
     action_wait?:number,
     chunk_codec_desc? : {
         unknown?: boolean,
-        stream?:Array<number>,
-        raptor?: Array<number>
+        stream?:[number|undefined, number|undefined, number|undefined],
+        raptor?: [number|undefined, number|undefined, number|undefined]
     },
-    deviceid_list : Array<cyfs.ObjectId>,
+    deviceid_list? : Array<cyfs.ObjectId>,
 }
 
 export type PrepareTransFileHandlerResp = {

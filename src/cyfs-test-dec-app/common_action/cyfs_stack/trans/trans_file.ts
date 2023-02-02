@@ -81,7 +81,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         this.action.output!.publish_time =Date.now() - publish_begin;
         if (info1.err) {
             return {err:info1.err,log:info1.log};
-        }       
+        }         
         let file_id: cyfs.ObjectId = info1.resp!.file_id;
         // 将文件对象挂载在root_state
         let link_file = await LinkObjectAction.create_by_parent(this.action,this.logger).action!.start({

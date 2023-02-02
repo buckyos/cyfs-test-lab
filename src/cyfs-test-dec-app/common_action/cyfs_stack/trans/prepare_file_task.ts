@@ -18,7 +18,12 @@ type TestInput = {
     action?:cyfs.TransTaskControlAction, //设置传输任务的初始状态
     action_wait?:number, // action 操作的间隔时间
     deviceid_list?:Array<cyfs.ObjectId>, // 设置context 的deviceid_list
-    not_set_context?: boolean
+    not_set_context?: boolean,
+    chunk_codec_desc? : {
+        unknown?: boolean,
+        stream?:[number|undefined, number|undefined, number|undefined],
+        raptor?:[number|undefined, number|undefined, number|undefined]
+    },
 }
 /**
  * 输出结果
@@ -39,12 +44,12 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
         return {err:ErrorCode.succ,action:run}
     }
 
-    async start(req:TestInput): Promise<{ err: number; log: string, resp?: PrepareTransFileHandlerResp}> {
+    async start(req:TestInput): Promise<{ err: number; log: string, resp?: PrepareTransFileHandlerResp,file_info?:{file_name:string,file_id:string} }> {
         this.action.type = "PrepareFileTask"
         this.action.action_id = `PrepareFileTask-${Date.now()}`
         return await super.start(req);
     }
-    async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: PrepareTransFileHandlerResp }> {
+    async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: PrepareTransFileHandlerResp,file_info?:{file_name:string,file_id:string}  }> {
         let local = this.local!;
         // 获取连 接池中的cyfs stack ,用来上传文件的设备file_source_device
         let stack_manager = StackManager.createInstance();
@@ -82,6 +87,9 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
         if(!req.deviceid_list){
             req.deviceid_list = [local.local_device_id().object_id]
         }
+        if(!req.chunk_codec_desc){
+            req.chunk_codec_desc  = {stream:[0,0,0]}
+        }
         let result  = await PrepareTransFileRequest.create_by_parent(this.action,this.logger).action!.start({
             req_path: req.req_path!,
             target : local.local_device_id().to_base_58(),
@@ -93,10 +101,18 @@ export class PrepareFileTask extends BaseAction implements ActionAbstract {
             not_set_context : req.not_set_context,
             action :req.action,
             action_wait : req.action_wait,
-            chunk_codec_desc : {stream:[0,0,0]},
+            chunk_codec_desc : req.chunk_codec_desc,
             deviceid_list : req.deviceid_list,
         })
                 
-        return result;
+        return {
+            err : result.err,
+            log : result.log,
+            resp : result.resp,
+            file_info : {
+                file_id : file_id.to_base_58(),
+                file_name : local_file.file_name!,
+            }
+        };
     }
 }

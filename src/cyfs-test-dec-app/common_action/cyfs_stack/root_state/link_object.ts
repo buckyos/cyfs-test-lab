@@ -35,7 +35,7 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         // 将对象挂载
         let op_env = (await local.root_state_stub(local.local_device_id().object_id,local.dec_id).create_path_op_env()).unwrap();
-        let running  = await op_env.lock([req.req_path],cyfs.JSBI.BigInt(1000));
+        let lock_await  = await op_env.try_lock([req.req_path],cyfs.JSBI.BigInt(1000));
         let modify_path = await op_env.insert_with_path(req.req_path!,req.object_id);
         
         this.logger.info(`${local.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);

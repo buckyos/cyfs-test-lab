@@ -60,8 +60,10 @@ export class TransFileHandler extends BaseHandler {
         for (let device of param.deviceid_list!) {
             let chunk_codec_desc : cyfs.ChunkCodecDesc = cyfs.ChunkCodecDesc.Stream();
             if(param.chunk_codec_desc?.stream){
+                //param.chunk_codec_desc.stream[0],param.chunk_codec_desc.stream[1],param.chunk_codec_desc.stream[2]
                 chunk_codec_desc = cyfs.ChunkCodecDesc.Stream();
             }else if(param.chunk_codec_desc?.raptor){
+                //param.chunk_codec_desc?.raptor[0],param.chunk_codec_desc?.raptor[1],param.chunk_codec_desc?.raptor[2]
                 chunk_codec_desc = cyfs.ChunkCodecDesc.Raptor();
             }
             else if(param.chunk_codec_desc?.unknown){
