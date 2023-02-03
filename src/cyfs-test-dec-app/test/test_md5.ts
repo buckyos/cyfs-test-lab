@@ -18,6 +18,7 @@
     
 }
 
+
 async function main() {
     let md5_1 = await _md5("E:\\git_test\\cyfs-test-lab\\src\\cyfs-test-dec-app\\blog\\cache\\zone1_device1\\file_upload\\xXX0EppWQk.txt")
     let md5_2 = await _md5("E:\\git_test\\cyfs-test-lab\\src\\cyfs-test-dec-app\\blog\\cache\\zone1_device2\\file_download\\xXX0EppWQk.txt")

@@ -1,5 +1,6 @@
 import { ErrorCode, Logger, TaskClientInterface } from '../../base';
 import { UtilTool } from "../cyfs_driver";
+import {string_to_Uint8Array} from "../../common_base"
 import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import path from 'path';
@@ -133,20 +134,25 @@ export class LocalUtilTool implements UtilTool {
             cache_path: this.cache_path,
         }
     }
-    async rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:ErrorCode,chunk_id:cyfs.ChunkId,chunk_data:Buffer}>{
-        this.logger.info(`rand_cyfs_chunk_cache in memory file_size = ${chunk_size}`)
-        await this.init_cache()
-        let chunk_data =Buffer.from(this.string(chunk_size))
-        while (chunk_size > this.cahce_buff!.byteLength) {
-            chunk_data  = Buffer.concat([chunk_data,this.cahce_buff!]);
-            chunk_size = chunk_size - this.cahce_buff!.byteLength;
+    async rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:ErrorCode,chunk_id:cyfs.ChunkId,chunk_data:Uint8Array}>{
+        this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
+        
+        await this.init_cache();
+        let chunk_data : Buffer = Buffer.from("");
+        //let chunk_data =  string_to_Uint8Array(this.string(chunk_size));
+        let length = this.cahce_buff!.length;
+        while(chunk_size > length){
+            this.logger.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
+            chunk_data = Buffer.concat([chunk_data,this.cahce_buff!]);
+            chunk_size = chunk_size - length;
         }
-        chunk_data  = Buffer.concat([chunk_data,Buffer.from(this.string(chunk_size))]);
-        let chunk_id = cyfs.ChunkId.calculate(chunk_data as Uint8Array).unwrap();
+        chunk_data = Buffer.concat([chunk_data,Buffer.from(this.string(chunk_size))]);
+        //this.logger.info(chunk_data);
+        let chunk_id =  cyfs.ChunkId.calculate(chunk_data).unwrap();
         return {err:ErrorCode.succ,chunk_data,chunk_id}
     }
 
-    async rand_cyfs_file_cache(owner: cyfs.ObjectId,file_size:number,chunk_size:number):Promise<{err:ErrorCode,file:cyfs.File,file_data:Buffer}>{
+    async rand_cyfs_file_cache(owner: cyfs.ObjectId,file_size:number,chunk_size:number):Promise<{err:ErrorCode,file:cyfs.File,file_data:Buffer,md5:string}>{
         this.logger.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
         let chunk_list : Array<cyfs.ChunkId> = []
         let file_data : Buffer = Buffer.from("");
@@ -164,6 +170,15 @@ export class LocalUtilTool implements UtilTool {
         let hash_value =  cyfs.HashValue.hash_data(file_data);
         let chunkList = new cyfs.ChunkList(chunk_list);
         let file = cyfs.File.create(owner,cyfs.JSBI.BigInt(file_size),hash_value,chunkList)
-        return {err:ErrorCode.succ,file,file_data}
+        let fsHash = crypto.createHash('md5')
+        fsHash.update(file_data)
+        let md5 = fsHash.digest('hex')
+        return {err:ErrorCode.succ,file,file_data,md5}
+    }
+    async md5_buffer(file_data: Buffer): Promise<string> {
+        let fsHash = crypto.createHash('md5')
+        fsHash.update(file_data)
+        let md5 = fsHash.digest('hex')
+        return md5
     }
 }

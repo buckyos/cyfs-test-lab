@@ -176,7 +176,7 @@ export class BaseAction implements ActionAbstract{
                 V(result)
             } catch (e) {
                 //测试程序异常，进行捕获
-                this.logger!.error(`action run throw Error: ${e}`);
+                this.logger!.error(`action run throw Error: ${JSON.stringify(e)}`);
                 V({ err: ErrorCode.exception, log: `${e}`})
             }
             

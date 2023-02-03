@@ -44,7 +44,9 @@ export abstract class UtilTool{
     //文件缓存目录
     abstract get_cache_path():Promise<{err:ErrorCode,cache_path? : {file_upload:string,file_download:string}}>
     //内存中生成随机cyfs Chunk 
-    abstract rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:ErrorCode,chunk_id:cyfs.ChunkId,chunk_data:Buffer}>
+    abstract rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:ErrorCode,chunk_id:cyfs.ChunkId,chunk_data:Uint8Array}>
     //内存中生成随机cyfs File
-    abstract rand_cyfs_file_cache(owner: cyfs.ObjectId,file_size:number,chunk_size:number):Promise<{err:ErrorCode,file:cyfs.File,file_data:Buffer}>
+    abstract rand_cyfs_file_cache(owner: cyfs.ObjectId,file_size:number,chunk_size:number):Promise<{err:ErrorCode,file:cyfs.File,file_data:Buffer,md5:string}>
+    // 计算内存中Buffer md5
+    abstract md5_buffer(file_data: Buffer): Promise<string>
 }

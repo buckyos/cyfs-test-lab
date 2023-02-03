@@ -24,6 +24,17 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         },logger)
         return {err:ErrorCode.succ,action:run}
     }
+    static create_by_parent_for_remote(action:Action,logger:Logger): {err:number,action?:LinkObjectAction}{
+        let run =  new LinkObjectAction({
+            local : action.remote!,
+            remote : action.remote,
+            input : action.input,
+            parent_action : action.action_id!,
+            expect : {err:0},
+
+        },logger)
+        return {err:ErrorCode.succ,action:run}
+    }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
         this.action.type = "ObjectLinkReqPathAction";
         this.action.action_id = `ObjectLinkReqPathAction-${Date.now()}`
@@ -35,7 +46,10 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         this.logger.info(`local : ${local.local_device_id().object_id.to_base_58()}`)
         // 将对象挂载
         let op_env = (await local.root_state_stub(local.local_device_id().object_id,local.dec_id).create_path_op_env()).unwrap();
-        let lock_await  = await op_env.try_lock([req.req_path],cyfs.JSBI.BigInt(1000));
+        let lock_await  = await op_env.lock([req.req_path],cyfs.JSBI.BigInt(5000));
+        if(lock_await.err){
+            return { err: lock_await.val.code, log: lock_await.val.msg}
+        }
         let modify_path = await op_env.insert_with_path(req.req_path!,req.object_id);
         
         this.logger.info(`${local.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);
