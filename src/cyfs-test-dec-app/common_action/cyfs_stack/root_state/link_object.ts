@@ -71,6 +71,7 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
         if(modify_access.err){
 
         }
+        this.logger.info(`get_object_by_path inner_path: ${req.req_path}`)
         let check_result = await local.root_state_accessor().get_object_by_path({
             common: {
                 // 来源DEC
@@ -80,7 +81,8 @@ export class LinkObjectAction extends BaseAction implements ActionAbstract {
                 flags: 1
             },
             inner_path: req.req_path!,
-        }); 
+        });
+        this.logger.info(`get_object_by_path result: ${JSON.stringify(check_result)}`)
         if(check_result.err){
             this.logger.error(`${local.local_device_id().object_id.to_base_58()} get req_path ${req.req_path!}  result =  ${JSON.stringify(check_result)}`)
             let get_noc  =await this.local!.non_service().get_object({

@@ -10,3 +10,4 @@ export * from "./wait_task_finished";
 export * from "./build_trans_group_tree";
 export * from "./build_trans_group_tree_async";
 export * from "./group_state_listerner";
+export * from "./publish_dir"

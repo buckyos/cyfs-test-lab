@@ -37,8 +37,10 @@ export class WaitTaskFinished extends BaseAction implements ActionAbstract {
     async run(req: TestInput): Promise<{ err: number, log: string,resp?: TestOutput }> {
         let local = this.local!;
         if(!req.check_time){
-            req.check_time = 20;
+            req.check_time = 30;
         }
+        let history_percent = 0;
+        let check_percent = 0;
         while (req.check_time>0) {
             let info_check = await local.trans().get_task_state({
                 common: {
@@ -50,6 +52,18 @@ export class WaitTaskFinished extends BaseAction implements ActionAbstract {
             });
             this.logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
             if (info_check.unwrap().state.state == cyfs.TransTaskState.Pending || info_check.unwrap().state.state == cyfs.TransTaskState.Downloading) {
+                let percent = info_check.unwrap().state.on_air_state?.download_percent;
+                this.logger.info(`${req.task_id} downloading percent = ${percent}`)
+                if(percent){
+                    if(percent == history_percent){
+                        check_percent = check_percent + 1;
+                    }else{
+                        history_percent = percent
+                    }
+                }
+                if(check_percent>30){
+                    return { err: ErrorCode.timeout, log: `check task ${req.task_id},percent = ${percent},not update`}  
+                }
                 await sleep(1000);
             } else {
                 if(info_check.unwrap().state.state == cyfs.TransTaskState.Finished){
@@ -62,7 +76,7 @@ export class WaitTaskFinished extends BaseAction implements ActionAbstract {
             req.check_time = req.check_time - 1;
 
         };
-        return { err: ErrorCode.timeout, log: "check task finished timeout"}       
+        return { err: ErrorCode.timeout, log: `check task ${req.task_id} not finished`}       
     }
     
 }

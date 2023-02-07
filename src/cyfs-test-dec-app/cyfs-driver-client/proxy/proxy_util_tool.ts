@@ -1,6 +1,6 @@
 import { ErrorCode, Logger, TaskClientInterface } from '../../base';
 import { UtilTool } from "../cyfs_driver"
-import {string_to_Uint8Array} from "../../common_base"
+import { string_to_Uint8Array } from "../../common_base"
 import * as cyfs from "../../cyfs"
 import * as crypto from 'crypto';
 const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';
@@ -26,7 +26,10 @@ export class ProxyUtilTool implements UtilTool {
         this.logger.info(`${this.tags} createFile = ${JSON.stringify(result)}`)
         return result.value;
     }
-    async create_dir(file_number: number, file_size: number, dir_number: number, deep: string): Promise<{ err: ErrorCode, log?: string, dir_name?: string, dir_path?: string }> {
+    async create_dir(file_number: number, file_size: number, dir_number: number, deep: string): Promise<{
+        err: ErrorCode, log?: string, dir_name?: string, dir_path?: string, file_list?: Array<{
+            file_name: string, md5: string,
+        }> }> {
         let result = await this.m_interface.callApi('util_request', Buffer.from(''), {
             name: "create_dir",
             peer_name: this.peer_name,
@@ -73,36 +76,36 @@ export class ProxyUtilTool implements UtilTool {
         }
         return result;
     };
-    async rand_cyfs_chunk_cache(chunk_size:number):Promise<{err:ErrorCode,chunk_id:cyfs.ChunkId,chunk_data:Uint8Array}>{
+    async rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }> {
         this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
-        let chunk_data =  string_to_Uint8Array(this.string(chunk_size));
+        let chunk_data = string_to_Uint8Array(this.string(chunk_size));
         this.logger.info(chunk_data);
-        let chunk_id =  cyfs.ChunkId.calculate(chunk_data).unwrap();
-        return {err:ErrorCode.succ,chunk_data,chunk_id}
+        let chunk_id = cyfs.ChunkId.calculate(chunk_data).unwrap();
+        return { err: ErrorCode.succ, chunk_data, chunk_id }
     }
 
-    async rand_cyfs_file_cache(owner: cyfs.ObjectId,file_size:number,chunk_size:number):Promise<{err:ErrorCode,file:cyfs.File,file_data:Buffer,md5:string}>{
+    async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {
         this.logger.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
-        let chunk_list : Array<cyfs.ChunkId> = []
-        let file_data : Buffer = Buffer.from("");
+        let chunk_list: Array<cyfs.ChunkId> = []
+        let file_data: Buffer = Buffer.from("");
         while (file_size > chunk_size) {
-            let chunk_info  = await this.rand_cyfs_chunk_cache(chunk_size);
+            let chunk_info = await this.rand_cyfs_chunk_cache(chunk_size);
             chunk_list.push(chunk_info.chunk_id);
-            file_data = Buffer.concat([file_data,chunk_info.chunk_data]);
+            file_data = Buffer.concat([file_data, chunk_info.chunk_data]);
             file_size = file_size - chunk_size;
         }
-        if(file_size>0){
-            let chunk_info  = await this.rand_cyfs_chunk_cache(file_size);
+        if (file_size > 0) {
+            let chunk_info = await this.rand_cyfs_chunk_cache(file_size);
             chunk_list.push(chunk_info.chunk_id);
-            file_data = Buffer.concat([file_data,chunk_info.chunk_data]);
+            file_data = Buffer.concat([file_data, chunk_info.chunk_data]);
         }
-        let hash_value =  cyfs.HashValue.hash_data(file_data);
+        let hash_value = cyfs.HashValue.hash_data(file_data);
         let chunkList = new cyfs.ChunkList(chunk_list);
-        let file = cyfs.File.create(owner,cyfs.JSBI.BigInt(file_size),hash_value,chunkList)
+        let file = cyfs.File.create(owner, cyfs.JSBI.BigInt(file_size), hash_value, chunkList)
         let fsHash = crypto.createHash('md5')
         fsHash.update(file_data)
         let md5 = fsHash.digest('hex')
-        return {err:ErrorCode.succ,file,file_data,md5}
+        return { err: ErrorCode.succ, file, file_data, md5 }
     }
     async md5_buffer(file_data: Buffer): Promise<string> {
         let fsHash = crypto.createHash('md5')

@@ -3,7 +3,6 @@ import { ErrorCode, Logger} from '../../../base';
 import * as cyfs from "../../../cyfs";
 import {HandlerApi} from "../../../common_base"
 import { StackManager, CyfsDriverType ,PeerInfo} from "../../../cyfs-driver-client"
-import * as fs from "fs-extra";
 /**
  * 输入数据
  */
@@ -18,9 +17,9 @@ type TestOutput = {
     object_id : cyfs.ObjectId,
 }
 
-export class PutDataAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PutDataAction}{
-        let run =  new PutDataAction({
+export class PutSharedDataAction extends BaseAction implements ActionAbstract {
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PutSharedDataAction}{
+        let run =  new PutSharedDataAction({
             local : action.remote!,
             remote : action.remote,
             input : action.input,
@@ -30,8 +29,8 @@ export class PutDataAction extends BaseAction implements ActionAbstract {
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {
-        this.action.type = "PutDataAction";
-        this.action.action_id = `PutDataAction-${Date.now()}`
+        this.action.type = "PutSharedDataAction";
+        this.action.action_id = `PutSharedDataAction-${Date.now()}`
         return await super.start(req)
     }
     async run(req:TestInput): Promise<{ err: number, log: string, resp?:TestOutput}> {
@@ -59,7 +58,7 @@ export class PutDataAction extends BaseAction implements ActionAbstract {
         }
         this.logger.info(`random data success ${object_id.to_base_58()}`)
         let begin_send = Date.now();
-        let put_result =await stack.ndn_service().put_data({
+        let put_result =await stack.ndn_service().put_shared_data({
             common: {
                 level: cyfs.NDNAPILevel.NDC,
                 flags: 1,
@@ -68,7 +67,6 @@ export class PutDataAction extends BaseAction implements ActionAbstract {
             length,
             data,
         });
-        //await fs.appendFileSync("E:\\cyfs\\data_put.txt", data);
         let send_time = Date.now() - begin_send;
         this.logger.info(`put_data send_time = ${send_time} result =  ${put_result.err}`)
         if(put_result.err){

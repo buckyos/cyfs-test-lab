@@ -7,6 +7,7 @@ import {PutDataAction} from "./put_data"
 import {LinkObjectAction} from "../root_state/link_object"
 import {PublishFileAction,PutContextAction,PublishDirAction} from "../trans"
 import {GetObjectAction,BuildDirFromObjectMapAction} from "../non"
+import * as fs from "fs-extra";
 /**
  * 输入数据
  */
@@ -18,10 +19,6 @@ import {GetObjectAction,BuildDirFromObjectMapAction} from "../non"
     object_type: string,
     chunk_size: number,
     file_size?: number,
-    not_set_context?:boolean,
-    is_link_root_state?:boolean,
-    object_id?:cyfs.ObjectId
-    md5?:string
 }
 type TestOutput = {
     send_time?:number,
@@ -31,9 +28,9 @@ type TestOutput = {
     hash : cyfs.HashValue
 }
 
-export class GetDataAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetDataAction}{
-        let run =  new GetDataAction({
+export class GetSharedDataAction extends BaseAction implements ActionAbstract {
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetSharedDataAction}{
+        let run =  new GetSharedDataAction({
             local : action.local,
             remote : action.remote,
             input : action.input,
@@ -43,8 +40,8 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput}> {
-        this.action.type = "GetDataAction";
-        this.action.action_id = `GetDataAction-${Date.now()}`
+        this.action.type = "GetSharedDataAction";
+        this.action.action_id = `GetSharedDataAction-${Date.now()}`
         return await super.start(req)
     }
     async run(req:TestInput): Promise<{ err: number, log: string, resp?: TestOutput}> {
@@ -121,44 +118,33 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
                          }
                     }
                 }})
-        }else if(req.object_type == "object_id"){
-            object_id =req.object_id!;
-            md5_source = req.md5!;
         }
         let stack_manager = StackManager.createInstance();
         let local_tool = stack_manager.driver!.get_client(this.action.local.peer_name).client!.get_util_tool();
         // remote 将 put_data 的object 关联到root_state req_path
-        if(req.is_link_root_state){
-            let link_action = await LinkObjectAction.create_by_parent_for_remote(this.action,this.logger).action!.start({
-                object_id:object_id!,
-                req_path : req.req_path,
-                access : cyfs.AccessString.full()
-            })
-        } 
+        let link_action = await LinkObjectAction.create_by_parent_for_remote(this.action,this.logger).action!.start({
+            object_id:object_id!,
+            req_path : req.req_path,
+            access : cyfs.AccessString.full()
+        })
         // local 创建context 对象
-        if(!req.not_set_context){
-            if(req.context){
-                let context_action =await PutContextAction.create_by_parent(this.action,this.logger).action!.start({
-                    context_path: req.context,
-                    chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
-                    deviceid_list: [this.get_remote()!.local_device_id()]
-                });
-                if(context_action.err){
-                    return {err:context_action.err,log:context_action.log}
-                }
+        if(req.context){
+            let context_action =await PutContextAction.create_by_parent(this.action,this.logger).action!.start({
+                context_path: req.context,
+                chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
+                deviceid_list: [this.get_remote()!.local_device_id()]
+            });
+            if(context_action.err){
+                return {err:context_action.err,log:context_action.log}
             }
         }
         let begin_send = Date.now();
-        let target : cyfs.ObjectId | undefined
-        if(!req.context && !req.not_set_context){
-            target = this.action.remote?.device_id
-        }
-        let get_result =await stack.ndn_service().get_data({
+        let get_result =await stack.ndn_service().get_shared_data({
             common: {
                 level: this.action.input.ndn_level!,
                 req_path : req.req_path,
                 flags: 1,
-                target,
+                target: this.action.remote?.device_id
             },
             object_id: object_id!,
             //range: req.range,
@@ -174,11 +160,13 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
             return {err:get_result.val.code,log:get_result.val.msg}
         }
         let result = get_result.unwrap();
+        //await fs.appendFileSync("E:\\cyfs\\data_get.txt", result.data as Buffer);
         let md5 = await local_tool.md5_buffer(result.data! as Buffer);
         let hash = cyfs.HashValue.hash_data(result.data!);
         if(md5 != md5_source && req.object_type != "dir"){
             return { err: ErrorCode.fail, log: `error data: ${md5} !=${md5_source}`} 
         }
         return { err: ErrorCode.succ, log: "success",resp: {send_time,md5,object_id:object_id!,inner_path : dir_inner_path,hash}}
+       
     }
 }

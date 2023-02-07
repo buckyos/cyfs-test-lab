@@ -85,10 +85,10 @@ export class BaseAction implements ActionAbstract{
         if(this.action.local){
             let local_get = stack_manager.get_cyfs_satck(this.action.local);
             if (local_get.err) {
-                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.local}`);
+                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${this.action.local.peer_name}`);
                 return {err:ErrorCode.notFound,log:` ${JSON.stringify(this.action.local)} 协议栈未初始化`}
             }else{
-                this.logger.info(`${this.action.action_id} found stack local:  ${JSON.stringify(this.action.local) }`);
+                this.logger.info(`${this.action.action_id} found stack local:  ${JSON.stringify(this.action.local.peer_name) }`);
                 this.local = local_get.stack!
                 this.action.local.device_id = this.local.local_device_id().object_id
             }
@@ -96,10 +96,10 @@ export class BaseAction implements ActionAbstract{
         if(this.action.remote){
             let remote_get = stack_manager.get_cyfs_satck(this.action.remote!);
             if (remote_get.err) {
-                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${JSON.stringify(this.action.remote)}`);
-                return {err:ErrorCode.notFound,log:` ${JSON.stringify(this.action.remote)} 协议栈未初始化`}
+                this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${JSON.stringify(this.action.remote.peer_name)}`);
+                return {err:ErrorCode.notFound,log:` ${JSON.stringify(this.action.remote.peer_name)} 协议栈未初始化`}
             }else{
-                this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote}`);
+                this.logger.info(`${this.action.action_id} found stack remote: ${this.action.remote.peer_name}`);
                 this.remote = remote_get.stack!
                 this.action.remote.device_id = this.remote.local_device_id().object_id
             }
@@ -109,10 +109,10 @@ export class BaseAction implements ActionAbstract{
             for(let stack_info of this.action.user_list){
                 let statck_get = stack_manager.get_cyfs_satck(stack_info);
                 if (statck_get.err) {
-                    this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${stack_info}`);
+                    this.logger.error(`${this.action.action_id} StackManager not found cyfs satck ${stack_info.peer_name}`);
                     return {err:ErrorCode.notFound,log:` ${JSON.stringify(stack_info)} 协议栈未初始化`}
                 }else{
-                    this.logger.info(`${this.action.action_id} found stack user: ${JSON.stringify(stack_info)}`);
+                    this.logger.info(`${this.action.action_id} found stack user: ${JSON.stringify(stack_info.peer_name)}`);
                     this.user_list.push(statck_get.stack!);
                     stack_info.device_id = statck_get.stack!.local_device_id().object_id
                 }
@@ -143,14 +143,14 @@ export class BaseAction implements ActionAbstract{
         }
         // 执行测试任务
         return new Promise(async(V)=>{
-            try {
+            // try {
                 // 创建超时检测
                 if(!this.action.input.timeout){
                     this.action.input.timeout = 60*1000;
                 }
                 let timer  =  setTimeout(async ()=>{
                     this.action.result = { err: ErrorCode.timeout, log: `${this.action.action_id} ${this.action.local.peer_name} ${this.action.remote?.peer_name} run timeout time = ${this.action.input.timeout}`};
-                    this.logger!.error(this.action.result);
+                    this.logger!.error(`run timeout ${JSON.stringify(this.action.result)}`);
                     if(this.action.expect.err && this.action.expect.err == ErrorCode.timeout){
                         V({ err: ErrorCode.succ, log: `action run error ${this.action.expect.err} is expect` })
                     }
@@ -174,11 +174,11 @@ export class BaseAction implements ActionAbstract{
                 }
                 // 预期成功 返回实际结果
                 V(result)
-            } catch (e) {
-                //测试程序异常，进行捕获
-                this.logger!.error(`action run throw Error: ${JSON.stringify(e)}`);
-                V({ err: ErrorCode.exception, log: `${e}`})
-            }
+            // } catch (e) {
+            //     //测试程序异常，进行捕获
+            //     this.logger!.error(`action run throw Error: ${JSON.stringify(e.toString())}`);
+            //     V({ err: ErrorCode.exception, log: `${e}`})
+            // }
             
         })
     }

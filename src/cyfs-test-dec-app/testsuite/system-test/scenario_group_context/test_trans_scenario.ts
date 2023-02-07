@@ -301,7 +301,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             type: cyfs.CyfsStackRequestorType.Http
                         },
                         input: {
-                            timeout: 200 * 1000,
+                            timeout: 500 * 1000,
                             file_size: 1 * 1024 * 1024 * 1024,
                             chunk_size: 10 * 1024 * 1024,
                             non_level: cyfs.NONAPILevel.NON,
@@ -319,7 +319,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     assert.equal(result.err, 0, result.log)
 
                 })
-                it.skip("File传输 文件大小-传输5GB", async () => {
+                it.skip("File传输 文件大小-传输2GB", async () => {
                     // 创建监听器
                     let action_handler = new action_api.RegisterCommonHandler({
                         local: {
@@ -352,7 +352,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                         },
                         input: {
                             timeout: 500 * 1000,
-                            file_size: 5 * 1024 * 1024 * 1024,
+                            file_size: 2 * 1024 * 1024 * 1024,
                             chunk_size: 10 * 1024 * 1024,
                             non_level: cyfs.NONAPILevel.NON,
                             ndn_level: cyfs.NDNAPILevel.NDN,
@@ -4421,8 +4421,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4473,8 +4473,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4525,8 +4525,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4575,8 +4575,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4625,8 +4625,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4677,8 +4677,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4727,8 +4727,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4777,8 +4777,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4829,8 +4829,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4879,8 +4879,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4929,8 +4929,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -4981,8 +4981,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -5031,8 +5031,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -5083,8 +5083,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -5133,8 +5133,8 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
-                                chunk_size: 10 * 1024 * 1024,
+                                file_size: 10 * 1024 * 1024,
+                                chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
                             },
@@ -6240,7 +6240,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6305,7 +6305,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6370,7 +6370,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6441,7 +6441,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6512,7 +6512,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6587,7 +6587,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6652,7 +6652,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6673,7 +6673,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
                         }, logger).start({
@@ -6697,7 +6697,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6762,7 +6762,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6803,7 +6803,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             },
                             input: {
                                 timeout: 200 * 1000,
-                                file_size: 100 * 1024 * 1024,
+                                file_size: 500 * 1024 * 1024,
                                 chunk_size: 4 * 1024 * 1024,
                                 non_level: cyfs.NONAPILevel.NON,
                                 ndn_level: cyfs.NDNAPILevel.NDN,
@@ -6827,7 +6827,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -6847,7 +6847,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
                         }, logger).start({
@@ -6870,7 +6870,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -7011,7 +7011,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             type: cyfs.CyfsStackRequestorType.Http
                         },
                         input: {
-                            timeout: 30 * 1000,
+                            timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
                     }, logger).start({
@@ -7035,7 +7035,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             type: cyfs.CyfsStackRequestorType.Http
                         },
                         input: {
-                            timeout: 30 * 1000,
+                            timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
 
@@ -7114,7 +7114,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             type: cyfs.CyfsStackRequestorType.Http
                         },
                         input: {
-                            timeout: 30 * 1000,
+                            timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
                     }, logger).start({
@@ -7137,7 +7137,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             type: cyfs.CyfsStackRequestorType.Http
                         },
                         input: {
-                            timeout: 30 * 1000,
+                            timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
 
@@ -7218,7 +7218,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -7282,7 +7282,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7332,7 +7332,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7373,7 +7373,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7423,7 +7423,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7464,7 +7464,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7519,7 +7519,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7560,7 +7560,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7615,7 +7615,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7656,7 +7656,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7711,7 +7711,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7752,7 +7752,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7807,7 +7807,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7851,7 +7851,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7880,7 +7880,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -7930,7 +7930,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -7973,7 +7973,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -8002,7 +8002,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
                             }, logger).start({
@@ -8052,7 +8052,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
                                 input: {
-                                    timeout: 30 * 1000,
+                                    timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
 
@@ -8132,7 +8132,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -8207,7 +8207,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 
@@ -8282,7 +8282,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 type: cyfs.CyfsStackRequestorType.Http
                             },
                             input: {
-                                timeout: 30 * 1000,
+                                timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
 

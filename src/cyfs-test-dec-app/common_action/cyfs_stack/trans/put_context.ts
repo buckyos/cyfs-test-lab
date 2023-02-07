@@ -29,6 +29,17 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
         }, logger)
         return { err: ErrorCode.succ, action: run }
     }
+    static create_by_parent_for_remote(action: Action, logger: Logger): { err: number, action?: PutContextAction } {
+        let run = new PutContextAction({
+            local: action.remote!,
+            remote: action.remote,
+            input: JSON.parse(JSON.stringify(action.input)),
+            parent_action: action.action_id!,
+            expect: { err: 0 },
+
+        }, logger)
+        return { err: ErrorCode.succ, action: run }
+    }
     static async put_noc_random_context(req: TestInput,local: { peer_name: string; dec_id?: string | undefined; type?: cyfs.CyfsStackRequestorType | undefined; }, logger: Logger): Promise<{ err: number,log:string,action?: PutContextAction, context?: cyfs.TransContext }>  {
         let action = new PutContextAction({
             local: local,

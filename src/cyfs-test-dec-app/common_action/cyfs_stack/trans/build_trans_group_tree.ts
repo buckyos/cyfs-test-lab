@@ -19,7 +19,8 @@ type TestInput = {
         group : string,
         context_path: string,
         auto_start?:boolean,
-        action?:cyfs.TransTaskControlAction
+        action_wait?:number,
+        action?: cyfs.TransTaskControlAction
     }>
 }
 
@@ -79,7 +80,8 @@ export class BuildTransGroupTree extends BaseAction implements ActionAbstract {
                 context_path: task.context_path,
                 group: task.group,
                 auto_start:  task.auto_start!,
-                action : task.action
+                action_wait : task.action_wait,
+                action : task.action,
             }));
             
            
