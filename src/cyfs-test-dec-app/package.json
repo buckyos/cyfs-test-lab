@@ -3,6 +3,7 @@
     "init": "node init.js",
     "test": "cross-env ts-node",
     "prepare_protoc": "npm i -g ts-protoc-gen",
+    "init": "node init.js",
     "protos_dec": "protoc.exe --proto_path=./common_base/codec/protos --js_out=import_style=commonjs,binary:./common_base/codec/protos --ts_out=./common_base/codec/protos ./common_base/codec/protos/dec_objects.proto",
     "protos": "npm run prepare_protoc && npm run protos_dec"
   },

@@ -5,11 +5,11 @@ var CyfsSDKType;
 (function (CyfsSDKType) {
     CyfsSDKType["cyfs_beta_ts"] = "export * from 'cyfs-sdk';";
     CyfsSDKType["cyfs_nightly_ts"] = "export * from 'cyfs-sdk-nightly';";
-    CyfsSDKType["cyfs_node_ts"] = "export * from '../cyfs_node/cyfs_node';";
+    CyfsSDKType["cyfs_node_ts"] = "export * from './cyfs_node';";
     CyfsSDKType["cyfs_source_ts"] = "export * from '../../../cyfs-ts-sdk/src/sdk';";
 })(CyfsSDKType = exports.CyfsSDKType || (exports.CyfsSDKType = {}));
 async function changeImport(type) {
-    let path_ts = path.join(__dirname, "./cyfs_node/index.ts");
+    let path_ts = path.join(__dirname, "./cyfs/index.ts");
     console.info(`change cyfs sdk type to ${type}`);
     if (fs.pathExistsSync(path_ts)) {
         fs.writeFileSync(path_ts, type);
@@ -27,7 +27,7 @@ async function main() {
     var type = SysProcess.argv[2];
     if (type == "source") {
         console.info(`You will use cyfs-sdk source code`);
-        child_process.execSync("init_source.bat master");
+        //child_process.execSync("init_source.bat master");
         await changeImport(CyfsSDKType.cyfs_source_ts);
     }else if (type == "cyfs-node") {
         console.info(`You will use cyfs-sdk complite cyfs_node`);
