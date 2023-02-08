@@ -8,9 +8,10 @@ import { DRIVER_TYPE } from "../config/cyfs_driver_config"
 var date = require("silly-datetime");
 
 export enum CyfsDriverType {
-    real_machine = "real_machine",
+    real_machine = "Real_machine",
     simulator = "Simulator",
-    bdt_client = "bdt_client",
+    bdt_client = "Bdt_client",
+    other = "Other"
 }
 
 export class CyfsStackDriverManager {

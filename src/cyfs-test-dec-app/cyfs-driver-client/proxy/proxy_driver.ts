@@ -54,7 +54,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
             agentid: this.agentid!,
             version: GlobalConfig.version,
             heartbeatIntervalTime: GlobalConfig.heartbeatIntervalTime,
-            logger: this.logger!,
+            logger:this.logger,
             storage: this.local_storage,
             platform: this.platform,
         });

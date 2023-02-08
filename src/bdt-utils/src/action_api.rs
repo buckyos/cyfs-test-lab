@@ -35,6 +35,8 @@ pub enum LpcActionApi {
     RecvStreamResp(RecvStreamResp),
     ShutdownReq(ShutdownReq),
     ShutdownResp(ShutdownResp),
+    ResetStackReq(ResetStackReq),
+    ResetStackResp(ResetStackResp),
     ListenerStreamReq(ListenerStreamReq),
     ListenerStreamResp(ListenerStreamResp),
     ListenerStreamEvent(ListenerStreamEvent),
@@ -232,8 +234,17 @@ pub struct ShutdownResp{
     pub result: u16,
     pub msg: String,
 }
-
-
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResetStackReq{
+    pub peer_name: String,
+    pub endpoints : Option<Vec<String>>,
+    pub sn_list : Option<Vec<String>> 
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResetStackResp{
+    pub result: u16,
+    pub msg: String,
+}
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ListenerStreamReq {
     pub peer_name: String,

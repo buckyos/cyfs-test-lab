@@ -1,9 +1,9 @@
 
 import {NAT_Type,Agent,Peer} from "./type"
 
-export let LabSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
+export let LabSnList = ['sn-miner-cn.desc','sn-miner-un.desc','sn-miner-zero.desc'];
 
-export let LabMutSnList = ['sn-miner_lab1.desc','sn-miner_lab2.desc','sn-miner_lab3.desc'];
+export let LabMutSnList = ['sn-miner-cn.desc','sn-miner-un.desc','sn-miner-zero.desc'];
 export let PNType = {
     active: {
         activePnFiles: ["pn-miner.desc"],
@@ -46,7 +46,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0007"],
-        area : "0:0:0:1",
+        area : "44:0:0:1",
         OS: "Windows10",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['10.1.2.189'],
@@ -78,7 +78,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0011"],
-        area : "9:1:20:1",
+        area : "226:1:20:1",
         OS: "Ubuntu 20.04",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.1.109'],

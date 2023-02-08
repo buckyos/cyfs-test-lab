@@ -83,6 +83,9 @@ impl BDTCli {
     pub fn get_address(&self) -> String {
         self.0.address.clone()
     }
+    pub async fn reset_client(&self,req: &ResetStackReq)-> ResetStackResp{
+        self.0.bdt_stack_manager.lock().await.reset_client(req).await
+    }
     pub async fn is_upload_system_info(&self) -> bool {
         self.0.upload_system_info.lock().await.clone()
     }
@@ -178,6 +181,9 @@ impl BDTCli {
                         }
                         LpcActionApi::ShutdownReq(req) => {
                             let _ = cli.on_shutdown_stream(lpc, seq, req).await;
+                        }
+                        LpcActionApi::ResetStackReq(req) => {
+                            let _ = cli.on_reset_stack(lpc, seq, req).await;
                         }
                         // TCP 测试客户端
                         LpcActionApi::CreateTcpServerReq(req) => {
@@ -409,7 +415,24 @@ impl BDTCli {
                 .await;
         });
     }
+    pub async fn on_reset_stack(&mut self, lpc: Lpc, seq: u32, req: &ResetStackReq) {
+        log::info!("on_recv_stream, req={:?}", &req);
 
+        let mut cli = self.clone();
+        let peer_name = req.peer_name.clone();
+        let req = req.clone();
+        task::spawn(async move {
+            let resp = cli.reset_client(&req).await;
+            let mut lpc = lpc;
+            let _ = lpc
+                .send_command(LpcCommand::new(
+                    seq,
+                    Vec::new(),
+                    LpcActionApi::ResetStackResp(resp),
+                ))
+                .await;
+        });
+    }
     pub async fn on_upload_system_info(&mut self, lpc: Lpc, seq: u32, req: &UploadSystemInfoReq) {
         let mut req = req.clone();
         let cli = self.clone();

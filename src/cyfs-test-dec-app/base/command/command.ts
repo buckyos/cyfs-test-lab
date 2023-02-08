@@ -130,6 +130,7 @@ export function encodeCommand(c: Command, writer: BufferWriter): ErrorCode {
     encodeNamespace(c.to, writerTo);
     let buffer: Buffer = writerTo.render();
     writer.writeU16(buffer.length);
+    
     writer.writeBytes(buffer);
 
     let writerFrom: BufferWriter = new BufferWriter();

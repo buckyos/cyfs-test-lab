@@ -2,13 +2,13 @@ use async_std::{fs::File, future, io::prelude::*, sync::Arc, task};
 use cyfs_base::*;
 use cyfs_bdt::*;
 use cyfs_util::cache::{NamedDataCache, TrackerCache};
-use futures::{StreamExt, AsyncWriteExt};
+use futures::{StreamExt};
 use rand::Rng;
 use sha2::Digest;
 use std::{
     collections::{hash_map, BTreeSet, HashMap},
     convert::TryFrom,
-    io::{Read, Seek, Write},
+    io::{Read, Write},
     path::{Path, PathBuf},
     str::FromStr,
     sync::Mutex,
@@ -39,7 +39,7 @@ impl TaskMap {
         self.tasks_map.contains_key(file_name)
     }
 
-    pub fn get_task_state(&self, file_name: &str) -> Option<DownloadTaskState> {
+    pub fn get_task_state(&self, file_name: &str) -> Option<NdnTaskState> {
         let task = self.get_task(file_name);
         if task.is_some() {
             Some(task.unwrap().state())
@@ -49,7 +49,7 @@ impl TaskMap {
     }
 
     pub fn get_task(&self, file_name: &str) -> Option<Box<dyn DownloadTask>> {
-        self.tasks_map.get(file_name).map(|v| v.clone_as_task())
+        self.tasks_map.get(file_name).map(|v| v.clone_as_download_task())
     }
 
     pub fn add_task(
@@ -662,7 +662,7 @@ impl Peer {
                                                     answer_size
                                                 );
                                                 let mut answer = Vec::new();
-                                                if (answer_size > 0) {
+                                                if answer_size > 0 {
                                                     log::info!("create random answer data");
                                                     answer.resize(answer_size, 0u8);
                                                     Self::random_data(
@@ -2176,7 +2176,7 @@ impl Peer {
                         &stack,
                         c.chunk_id.clone(),
                         None,
-                        SingleDownloadContext::desc_streams(
+                        SampleDownloadContext::desc_streams(
                             "".to_string(),
                             vec![c.remote.desc().clone()],
                         ),
@@ -2262,7 +2262,7 @@ impl Peer {
                         c.task_name.clone(),
                         &c.chunk_list.clone(),
                         None,
-                        SingleDownloadContext::desc_streams(
+                        SampleDownloadContext::desc_streams(
                             "".to_string(),
                             vec![c.remote.desc().clone()],
                         ),
@@ -2376,9 +2376,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(..) => "downloading",
-                                DownloadTaskState::Finished => "finished",
-                                DownloadTaskState::Paused => "paused",
+                                NdnTaskState::Running => "downloading",
+                                NdnTaskState::Finished => "finished",
+                                NdnTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_download_file_state: session {} {}", task_id, state_str);
@@ -2503,10 +2503,10 @@ impl Peer {
                                 &stack,
                                 file.clone(),
                                 None,
-                                SingleDownloadContext::id_streams(
+                                SampleDownloadContext::id_streams(
                                     &*stack,
                                     "".to_string(),
-                                    vec![c.default_hub],
+                                    &vec![c.default_hub],
                                 )
                                 .await
                                 .unwrap(),
@@ -2569,7 +2569,7 @@ impl Peer {
                 }
                 Ok(_) => GetTransSessionStateCommandResp {
                     seq,
-                    state: Ok(DownloadTaskState::Downloading(0, 0.0)),
+                    state: Ok(NdnTaskState::Running),
                 },
             };
 
@@ -2600,9 +2600,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(..) => "downloading",
-                                DownloadTaskState::Finished => "finished",
-                                DownloadTaskState::Paused => "paused",
+                                NdnTaskState::Running => "downloading",
+                                NdnTaskState::Finished => "finished",
+                                NdnTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!(
@@ -3480,7 +3480,7 @@ impl Peer {
                         let task_id = task_id_gen(c.path);
                         log::info!("recver: task_id {}", &task_id);
                         let mut tasks = peer.0.tasks.lock().unwrap();
-                        match tasks.add_task(&task_id.as_str(), task.clone_as_task()) {
+                        match tasks.add_task(&task_id.as_str(), task.clone_as_download_task()) {
                             Ok(_) => Ok(task_id),
                             Err(e) => Err(e),
                         }
@@ -3564,10 +3564,10 @@ impl Peer {
                                 &stack,
                                 file.clone(),
                                 c.group,
-                                SingleDownloadContext::id_streams(
+                                SampleDownloadContext::id_streams(
                                     &stack,
                                     "".to_string(),
-                                    c.remotes,
+                                    &c.remotes,
                                 )
                                 .await
                                 .unwrap(),
@@ -3715,9 +3715,9 @@ impl Peer {
                     match task {
                         Some(state) => {
                             let state_str = match state {
-                                DownloadTaskState::Downloading(..) => "downloading",
-                                DownloadTaskState::Finished => "finished",
-                                DownloadTaskState::Paused => "paused",
+                                NdnTaskState::Running => "downloading",
+                                NdnTaskState::Finished => "finished",
+                                NdnTaskState::Paused => "paused",
                                 _ => "unkown",
                             };
                             log::info!("on_download_file_state: session {} {}", task_id, state_str);

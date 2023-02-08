@@ -48,7 +48,7 @@ impl FileTaskMap {
         self.tasks_map.contains_key(file_name)
     }
 
-    pub fn get_task_state(&self, file_name: &str) -> Option<DownloadTaskState> {
+    pub fn get_task_state(&self, file_name: &str) -> Option<NdnTaskState> {
         let task = self.get_task(file_name);
         if task.is_some() {
             Some(task.unwrap().task.state())

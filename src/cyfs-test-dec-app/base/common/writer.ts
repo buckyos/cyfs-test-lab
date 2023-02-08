@@ -161,7 +161,7 @@ export class BufferWriter {
             }
         }
 
-        assert(off === data.length);
+        assert(off === data.length,`off = ${off} data.length = ${data.length}`);
 
         this.destroy();
 

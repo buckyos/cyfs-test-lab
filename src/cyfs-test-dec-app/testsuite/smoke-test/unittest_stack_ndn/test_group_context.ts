@@ -33,8 +33,8 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
 
         describe("CYFS Stack NDN group context 冒烟测试", function () {
             it("简单业务流程测试-无group context",async()=>{
-                let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
-                let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
+                let stack1 = stack_manager.get_cyfs_satck({peer_name :"zone1_ood",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
+                let stack2 = stack_manager.get_cyfs_satck({peer_name :"zone1_device1",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
                 let stack1_tool = stack_manager.driver!.get_client("zone1_ood").client!.get_util_tool();
                 let stack2_tool = stack_manager.driver!.get_client("zone1_device1").client!.get_util_tool();
                 logger.info(`stack1 : ${stack1.local_device_id().object_id.to_base_58()}`)
@@ -97,6 +97,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                     auto_start: true
                 })
                 logger.info(`create_task : ${JSON.stringify(info2)}`);
+                //await stack1.trans().get_context()
                 while (true){
                     let info_check = await stack1.trans().get_task_state({
                         common:  {
@@ -108,15 +109,15 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                         task_id: info2.unwrap().task_id,
                     });
                     logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-                    if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+                    if(info_check.unwrap().state.state == cyfs.TransTaskState.Finished || info_check.unwrap().state.state == cyfs.TransTaskState.Err){
                         break;
                     }
                     await sleep(1000); 
                 };
             })
-            it.only("简单业务流程测试-group context",async()=>{
-                let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
-                let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
+            it("简单业务流程测试-group context",async()=>{
+                let stack1 = stack_manager.get_cyfs_satck({peer_name :"zone1_ood",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
+                let stack2 = stack_manager.get_cyfs_satck({peer_name :"zone1_device1",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
                 let stack1_tool = stack_manager.driver!.get_client("zone1_ood").client!.get_util_tool();
                 let stack2_tool = stack_manager.driver!.get_client("zone1_device1").client!.get_util_tool();
                 logger.info(`stack1 : ${stack1.local_device_id().object_id.to_base_58()}`)
@@ -207,7 +208,7 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
                         task_id: info2.unwrap().task_id,
                     });
                     logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
-                    if(info_check.unwrap().state == cyfs.TransTaskState.Finished || info_check.unwrap().state == cyfs.TransTaskState.Err){
+                    if(info_check.unwrap().state.state == cyfs.TransTaskState.Finished || info_check.unwrap().state.state == cyfs.TransTaskState.Err){
                         break;
                     }
                     await sleep(1000); 
@@ -220,8 +221,8 @@ describe("CYFS Stack NDN Trans 冒烟测试", function () {
 
         describe("NDN 模块-put_data 流程", function () {
             it("同zone Runtime->OOD put_data chunk流程",async()=>{
-                let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
-                let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
+                let stack1 = stack_manager.get_cyfs_satck({peer_name :"zone1_ood",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
+                let stack2 = stack_manager.get_cyfs_satck({peer_name :"zone1_device1",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
                 logger.info(`stack1 : ${stack1.local_device_id().object_id.to_base_58()}`)
                 logger.info(`stack2 : ${stack2.local_device_id().object_id.to_base_58()}`)
                 let stack1_client = stack_manager.driver!.get_client("zone1_ood")

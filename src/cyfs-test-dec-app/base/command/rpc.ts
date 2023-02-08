@@ -208,8 +208,10 @@ export class Rpc extends EventEmitter {
     private _encodeMsg(rpcMsg: RpcMsg): { err: ErrorCode, buffer?: Buffer } {
         try {
             let buffer: Buffer = Buffer.allocUnsafe(2 + 4);
+            // this.m_logger.info(`command `)
+            // this.m_logger.info(`version = ${rpcMsg.version}`)
+            // this.m_logger.info(`byteLength = ${rpcMsg.magic.byteLength}`)
             buffer.writeUInt16LE(rpcMsg.version, 0);
-
             let writer: BufferWriter = new BufferWriter();
             let err = encodeCommand(rpcMsg.command, writer);
             if (err) {
@@ -218,7 +220,6 @@ export class Rpc extends EventEmitter {
             let body: Buffer = writer.render();
             buffer.writeUInt32LE(body.length, 2);
             buffer = Buffer.concat([rpcMsg.magic.slice(0, 2), buffer, body]);
-
             return { err: ErrorCode.succ, buffer };
         } catch (e) {
             this.m_logger.error(`[rpc] encode msg exception, e=${e}`);

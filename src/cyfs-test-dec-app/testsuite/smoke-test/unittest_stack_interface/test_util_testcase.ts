@@ -34,8 +34,8 @@ describe("SharedCyfsStack util相关接口测试", function () {
                 }
             }
             // 指定获取
-            let stack1 = stack_manager.get_cyfs_satck("zone1_ood",dec_app_1.to_base_58(),cyfs.CyfsStackRequestorType.Http).stack!;
-            let stack2 = stack_manager.get_cyfs_satck("zone1_device1",dec_app_2.to_base_58(),cyfs.CyfsStackRequestorType.WebSocket).stack!;
+            let stack1 = stack_manager.get_cyfs_satck({peer_name:"zone1_ood",dec_id:dec_app_1.to_base_58(),type:cyfs.CyfsStackRequestorType.Http}).stack!;
+            let stack2 = stack_manager.get_cyfs_satck({peer_name:"zone1_ood",dec_id:dec_app_2.to_base_58(),type:cyfs.CyfsStackRequestorType.WebSocket}).stack!;
             let run =await stack1.util().get_device({ common: { req_path: undefined, dec_id: undefined, target: undefined, flags: 0 } })
             assert(!run.err, `调用接口失败:${run}`)
             console.info(`${JSON.stringify(run.unwrap())}`)

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+// TextObject
+message TextDescContent {
+    string id = 1;
+    string header = 2;
+}
+
+message TextContent {
+    string value = 1;
+}
+
+// HandlerRequest
+
+message HandlerRequestDescContent {
+    string id = 1;
+    string request_type = 2;
+}
+
+message HandlerRequestContent {
+    string request_json = 1;
+    optional bytes request_buffer = 2;
+}
+
