@@ -143,7 +143,7 @@ export class BaseAction implements ActionAbstract{
         }
         // 执行测试任务
         return new Promise(async(V)=>{
-            // try {
+            try {
                 // 创建超时检测
                 if(!this.action.input.timeout){
                     this.action.input.timeout = 60*1000;
@@ -174,11 +174,11 @@ export class BaseAction implements ActionAbstract{
                 }
                 // 预期成功 返回实际结果
                 V(result)
-            // } catch (e) {
-            //     //测试程序异常，进行捕获
-            //     this.logger!.error(`action run throw Error: ${JSON.stringify(e.toString())}`);
-            //     V({ err: ErrorCode.exception, log: `${e}`})
-            // }
+            } catch (e) {
+                //测试程序异常，进行捕获
+                this.logger!.error(`action run throw Error: ${e}`);
+                V({ err: ErrorCode.exception, log: `${e}`})
+            }
             
         })
     }

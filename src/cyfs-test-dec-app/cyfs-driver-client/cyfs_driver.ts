@@ -45,7 +45,8 @@ export abstract class UtilTool {
     //计算文件hash md5算法
     abstract md5_file(file_path: string): Promise<{ err: ErrorCode, md5?: string }>;
     //文件缓存目录
-    abstract get_cache_path(): Promise<{ err: ErrorCode, cache_path?: { file_upload: string, file_download: string } }>
+    abstract get_cache_path(): Promise<{ err: ErrorCode, platform?:string,cache_path?: { file_upload: string, file_download: string } }>
+    
     //内存中生成随机cyfs Chunk 
     abstract rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }>
     //内存中生成随机cyfs File

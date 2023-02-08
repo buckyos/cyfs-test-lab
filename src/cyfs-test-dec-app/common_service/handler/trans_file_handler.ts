@@ -99,6 +99,13 @@ export class TransFileHandler extends BaseHandler {
         let stack_manager = StackManager.createInstance();
         let local_tool = stack_manager.driver!.get_client(this.handler_info.local.peer_name).client!.get_util_tool();
         let download_begin = Date.now();
+        let local_path_info = await local_tool.get_cache_path();
+        let save_path = local_path_info.cache_path!.file_download;
+        if(local_path_info.platform== "linux"){
+            save_path = save_path + "/" + param.file_name
+        }else{
+            save_path = path.join(save_path, param.file_name!)
+        }
         let create_task = await this.stack.trans().create_task({
             common: {
                 req_path: param.req_path,
@@ -107,7 +114,7 @@ export class TransFileHandler extends BaseHandler {
             },
             object_id: file_id,
             // 保存到的本地目录or文件
-            local_path: path.join((await local_tool.get_cache_path()).cache_path!.file_download, param.file_name!),
+            local_path: save_path,
             // 源设备(hub)列表
             device_list: [target_device_id],
             group: param!.group,
@@ -142,7 +149,7 @@ export class TransFileHandler extends BaseHandler {
 
         };
         let download_time = Date.now() - download_begin;
-        let md5 = await (await local_tool.md5_file(path.join((await local_tool.get_cache_path()).cache_path!.file_download, param.file_name!))).md5
+        let md5 = await (await local_tool.md5_file(save_path)).md5
         return {
             TransFileHandlerResp: {
                 result: 0,

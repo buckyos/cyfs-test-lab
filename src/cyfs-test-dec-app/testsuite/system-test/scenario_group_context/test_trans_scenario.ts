@@ -623,7 +623,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     assert.equal(result.err, 0, result.log)
 
                 })
-                it("同Zone:device1 publish_file 到 ood1 , device2 从 ood1 下载文件", async () => {
+                it("同Zone:ood1 publish_file 到 ood1 , device2 从 ood1 下载文件", async () => {
                     // 创建监听器
                     let action_handler = new action_api.RegisterCommonHandler({
                         local: {
@@ -675,7 +675,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                     assert.equal(result.err, 0, result.log)
 
                 })
-                it("跨Zone:device1 publish_file 到 ood1 , ood2 从 ood1 下载文件", async () => {
+                it("跨Zone:ood1 publish_file 到 ood1 , ood2 从 ood1 下载文件", async () => {
                     // 创建监听器
                     let action_handler = new action_api.RegisterCommonHandler({
                         local: {

@@ -22,7 +22,7 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
         this.pid = 0;
         DirHelper.setRootDir(path.join(__dirname, "../../"));
         Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
-        Base.BX_EnableFileLog(log_path, `cyfs_stack_real_driver_${Date.now()}`, '.log');
+        Base.BX_EnableFileLog(log_path, `cyfs_stack_simulator_driver_${Date.now()}`, '.log');
         Base.blog.enableConsoleTarget(false);
         this.logger = new Logger(Base.blog.info, Base.blog.debug, Base.blog.error, log_path);
         
@@ -31,17 +31,28 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
         // 加载配置文件中
         return { err: ErrorCode.succ, log: "init success" }
     }
-    async start(): Promise<{ err: ErrorCode, log: string }> {
-        await this.stop();
-        return new Promise(async (v) => {
-            this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
-            this.process =  ChildProcess.spawn(this.simulator_path, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(this.simulator_path) })
-            this.process.unref();
-            while (!this.pid) {
-                await this.initPid();
-            }
-            v({err:ErrorCode.succ,log:"start Zone Simulator success"})
-        })
+    async start(debug:boolean=false): Promise<{ err: ErrorCode, log: string }> {
+        if(debug){
+            return new Promise(async (v) => {
+                this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
+                while (!this.pid) {
+                    await this.initPid();
+                }
+                v({err:ErrorCode.succ,log:"start Zone Simulator success"})
+            })
+        }else{
+            await this.stop();
+            return new Promise(async (v) => {
+                this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
+                this.process =  ChildProcess.spawn(this.simulator_path, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(this.simulator_path) })
+                this.process.unref();
+                while (!this.pid) {
+                    await this.initPid();
+                }
+                v({err:ErrorCode.succ,log:"start Zone Simulator success"})
+            })
+        }
+        
     }
     async initPid() {
         this.logger.info(`begin initPid ${this.pid}`)

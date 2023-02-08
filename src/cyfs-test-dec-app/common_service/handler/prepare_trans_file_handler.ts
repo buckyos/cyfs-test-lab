@@ -100,6 +100,13 @@ export class PrePareTransFileHandler extends BaseHandler {
         // 创建文件传输任务
         let stack_manager = StackManager.createInstance();
         let local_tool = stack_manager.driver!.get_client(this.handler_info.local.peer_name).client!.get_util_tool();
+        let local_path_info = await local_tool.get_cache_path();
+        let save_path = local_path_info.cache_path!.file_download;
+        if(local_path_info.platform== "linux"){
+            save_path = save_path + "/" + param.file_name
+        }else{
+            save_path = path.join(save_path, param.file_name!)
+        }
         let download_begin = Date.now();
         let create_task = await this.stack.trans().create_task({
             common: {
@@ -109,7 +116,7 @@ export class PrePareTransFileHandler extends BaseHandler {
             },
             object_id: file_id,
             // 保存到的本地目录or文件
-            local_path: path.join((await local_tool.get_cache_path()).cache_path!.file_download, param.file_name!),
+            local_path:save_path,
             // 源设备(hub)列表
             device_list: [target_device_id],
             group: param!.group,

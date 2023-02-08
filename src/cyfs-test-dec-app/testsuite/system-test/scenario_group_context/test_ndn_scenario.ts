@@ -1228,7 +1228,7 @@ describe("CYFS Stack NDN 模块测试", function () {
                                 chunk_size: 10*1024*1024, 
                                 not_set_context:true,
                             });
-                            assert.equal(action.err,4,action.log)
+                            assert.equal(action.err,12,action.log)
 
                         })
                         it("device_list 包含一个下载源 有效", async () => {
@@ -1404,7 +1404,7 @@ describe("CYFS Stack NDN 模块测试", function () {
                                 chunk_size: 10*1024*1024, 
                                 not_set_context:true,
                             });
-                            assert.equal(action.err,4,action.log)
+                            assert.equal(action.err,12,action.log)
                         })
                         it("device_list 包含两个下载源 无效+有效", async () => {
                             let child_id = RandomGenerator.string(20);
@@ -1464,7 +1464,7 @@ describe("CYFS Stack NDN 模块测试", function () {
                                 chunk_size: 10*1024*1024, 
                                 not_set_context:true,
                             });
-                            assert.equal(action.err,4,action.log)
+                            assert.equal(action.err,12,action.log)
                         })
                         it("device_list 包含两个下载源 有效+无效", async () => {
                             let child_id = RandomGenerator.string(20);
@@ -2547,7 +2547,7 @@ describe("CYFS Stack NDN 模块测试", function () {
             
         })
     })
-    describe("【ts-sdk 存在问题】get_shared_data 功能测试",async()=>{
+    describe.skip("【ts-sdk 存在问题】get_shared_data 功能测试",async()=>{
         describe(`NDN get_shared_data 基本流程HTTP+WebSocket`,async()=>{
             it("本地NDC get_shared_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务

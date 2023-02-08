@@ -10,6 +10,11 @@ export class ProxyUtilTool implements UtilTool {
     private logger: Logger;
     private m_interface: TaskClientInterface;
     public tags: string;
+    private cache_kb?: Buffer;
+    private cache_mb?: Buffer;
+    private cache_100mb?: Buffer;
+    private cache_10mb?: Buffer;
+    private cahce_buff?: Buffer; //1000037 大素数
     constructor(_interface: TaskClientInterface, agentid: string, tags: string, peer_name: string) {
         this.m_agentid = agentid;
         this.tags = tags;
@@ -17,7 +22,39 @@ export class ProxyUtilTool implements UtilTool {
         this.logger = _interface.getLogger();
         this.peer_name = peer_name;
     }
+
+
+    async init_cache() {
+        if (!this.cache_mb) {
+            this.cache_mb = Buffer.from(this.string(999000));
+        }
+        this.cache_kb = Buffer.from(this.string(1037));
+        this.cahce_buff = Buffer.concat([this.cache_kb, this.cache_mb]);
+    }
+    async init_cache_10mb() {
+        this.cache_10mb = Buffer.from("");
+        let size = 9999991;
+        let mb_length = this.cache_mb!.length;
+        while (size > mb_length) {
+            this.cache_10mb = Buffer.concat([this.cache_10mb, this.cache_mb!]);
+            size = size - mb_length;
+        }
+        this.cache_10mb = Buffer.concat([this.cache_10mb, Buffer.from(this.string(size))]);
+    }
+
+    async init_cache_100mb() {
+        this.cache_100mb = Buffer.from("");
+        let size = 99999989;
+        let mb_length = this.cache_mb!.length;
+        while (size > mb_length) {
+            this.cache_100mb = Buffer.concat([this.cache_100mb, this.cache_mb!]);
+            size = size - mb_length;
+        }
+        this.cache_100mb = Buffer.concat([this.cache_100mb, Buffer.from(this.string(size))]);
+    }
+
     async create_file(file_size: number): Promise<{ err: ErrorCode, log?: string, file_name?: string, file_path?: string, md5?: string }> {
+        console.info(`proxy_util create_file`)
         let result = await this.m_interface.callApi('util_request', Buffer.from(''), {
             name: "create_file",
             peer_name: this.peer_name,
@@ -30,6 +67,7 @@ export class ProxyUtilTool implements UtilTool {
         err: ErrorCode, log?: string, dir_name?: string, dir_path?: string, file_list?: Array<{
             file_name: string, md5: string,
         }> }> {
+        console.info(`proxy_util create_dir`)
         let result = await this.m_interface.callApi('util_request', Buffer.from(''), {
             name: "create_dir",
             peer_name: this.peer_name,
@@ -42,6 +80,7 @@ export class ProxyUtilTool implements UtilTool {
         return result.value;
     }
     async md5_file(file_path: string): Promise<{ err: ErrorCode, md5?: string }> {
+        console.info(`proxy_util md5_file ${file_path}`)
         let result = await this.m_interface.callApi('util_request', Buffer.from(''), {
             name: "md5",
             peer_name: this.peer_name,
@@ -50,7 +89,8 @@ export class ProxyUtilTool implements UtilTool {
         this.logger.info(`${this.tags} md5File = ${JSON.stringify(result)}`)
         return result.value;
     }
-    async get_cache_path(): Promise<{ err: ErrorCode, cache_path?: { file_upload: string, file_download: string } }> {
+    async get_cache_path(): Promise<{ err: ErrorCode,platform?:string, cache_path?: { file_upload: string, file_download: string } }> {
+        console.info(`proxy_util get_cache_path`)
         let result = await this.m_interface.callApi('util_request', Buffer.from(''), {
             name: "get_cache_path",
             peer_name: this.peer_name,
@@ -78,10 +118,42 @@ export class ProxyUtilTool implements UtilTool {
     };
     async rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }> {
         this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
-        let chunk_data = string_to_Uint8Array(this.string(chunk_size));
-        this.logger.info(chunk_data);
-        let chunk_id = cyfs.ChunkId.calculate(chunk_data).unwrap();
-        return { err: ErrorCode.succ, chunk_data, chunk_id }
+
+        await this.init_cache();
+        let chunk_data: Buffer = Buffer.from("");
+        //let chunk_data =  string_to_Uint8Array(this.string(chunk_size));
+        if (chunk_size > 100 * 1024 * 1024) {
+            await this.init_cache_100mb();
+            let length = this.cache_100mb!.length;
+            while (chunk_size > length) {
+                console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
+                chunk_data = Buffer.concat([chunk_data, this.cache_100mb!]);
+                chunk_size = chunk_size - length;
+            }
+        }
+        if (chunk_size > 10 * 1024 * 1024) {
+            await this.init_cache_10mb();
+            let length = this.cache_10mb!.length;
+            while (chunk_size > length) {
+                console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
+                chunk_data = Buffer.concat([chunk_data, this.cache_10mb!]);
+                chunk_size = chunk_size - length;
+            }
+        }
+        let length = this.cahce_buff!.length;
+        while (chunk_size > length) {
+            chunk_data = Buffer.concat([chunk_data, this.cahce_buff!]);
+            chunk_size = chunk_size - length;
+            console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
+        }
+        chunk_data = Buffer.concat([chunk_data, Buffer.from(this.string(chunk_size))]);
+        console.info(`rand_cyfs_chunk_cache in memory success`)
+        let chunk_calculate = cyfs.ChunkId.calculate(chunk_data);
+        if (chunk_calculate.err) {
+            console.error(`rand_cyfs_chunk_cache error = ${chunk_calculate}`)
+            return { err: ErrorCode.fail, chunk_data, chunk_id: cyfs.ChunkId.default() }
+        }
+        return { err: ErrorCode.succ, chunk_data, chunk_id: chunk_calculate.unwrap() }
     }
 
     async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {

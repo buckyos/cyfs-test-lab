@@ -107,18 +107,30 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
                     c.write(msg_u8);
 
                 }, this.m_agentid!);
-                let seq = 0;
+                //let seq = 0;
                 c.on('data', async (buf) => {
-                    this.logger.info(` ${this.peer_name} TCP Client ${port} read data ${c.remoteAddress}:${c.remotePort} size = ${buf.byteLength}`);
-                    seq = seq + 1;
+                    //seq = seq + 1;
                     let param = {
-                        seq,
+                        //seq,
                         type,
                         remote_address: c.remoteAddress,
                         remote_port: c.remotePort
                     }
+                    //if()
                     let msg_u8 = buf as Uint8Array;
-                    let info = await this.m_interface.callApi('proxy_data', Buffer.from(Uint8Array_to_string(msg_u8)), param, this.m_agentid!, 0);
+                    let data =   Buffer.from(Uint8Array_to_string(msg_u8))
+                    this.logger.info(` ${this.peer_name} TCP Client ${port} read data ${c.remoteAddress}:${c.remotePort} size = ${data.length}`);
+                    if(data.length<30000){
+                        let info = await this.m_interface.callApi('proxy_data',data , param, this.m_agentid!, 0);
+                    }else{
+                        let data1 =  data.buffer.slice(0,30000)
+                        let data2 =  data.buffer.slice(30000)
+                        let info1 = await this.m_interface.callApi('proxy_data',Buffer.from(data1) , param, this.m_agentid!, 0);
+                        let info2 = await this.m_interface.callApi('proxy_data',Buffer.from(data2) , param, this.m_agentid!, 0);
+                    }
+                    //console.info(` ${this.peer_name} TCP Client ${port} read data ${c.remoteAddress}:${c.remotePort} size = ${data.length}`);
+                    //console.info(` ${this.peer_name} TCP Client data = ${data}`);
+                    
                 })
                 c.on("end", async () => {
                     let info = await this.m_interface.callApi('end_tunnel', Buffer.from(""), param, this.m_agentid!, 0);
