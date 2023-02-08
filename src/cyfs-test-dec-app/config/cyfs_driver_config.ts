@@ -8,10 +8,11 @@ export type CyfsStackClientConfig = {
     ws_port: number,
 }
 
-// enum CyfsDriverType {
-//     real_machine = "real_machine",
+// export enum CyfsDriverType {
+//     real_machine = "Real_machine",
 //     simulator = "Simulator",
-//     bdt_client = "bdt_client",
+//     bdt_client = "Bdt_client",
+//     other = "Other"
 // }
 export const DRIVER_TYPE = "Simulator";
 
@@ -77,6 +78,25 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
     },
 
 ]
+
+/**
+ * 额外游离单个特殊真机测试
+ * 
+ */
+
+ export const REAL_MACHINE_OTHER_LIST: Array<CyfsStackClientConfig> =[
+    {
+        peer_name: "zone4_ood",
+        zone_tag: "zone4",
+        stack_type: "ood",
+        bdt_port: 40010,
+        http_port: 41010,
+        ws_port: 41011
+    }
+]
+    
+
+
 
 /**
  * 模拟器代理配置

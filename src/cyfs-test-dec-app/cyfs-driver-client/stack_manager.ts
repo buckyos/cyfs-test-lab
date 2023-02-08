@@ -2,7 +2,7 @@
 
 import { CyfsDriverType, CyfsStackDriverManager } from "./driver_manager"
 import { CyfsStackDriver } from "./cyfs_driver"
-import { DRIVER_TYPE, REAL_MACHINE_LIST, SIMULATOR_LIST } from "../config/cyfs_driver_config"
+import { DRIVER_TYPE, REAL_MACHINE_LIST, SIMULATOR_LIST ,REAL_MACHINE_OTHER_LIST} from "../config/cyfs_driver_config"
 import * as cyfs from "../cyfs"
 import { ErrorCode, Logger } from "../base";
 var date = require("silly-datetime");
@@ -40,7 +40,9 @@ export class StackManager {
                 this.driver_type = CyfsDriverType.real_machine
             } else if (DRIVER_TYPE == CyfsDriverType.simulator.toString()) {
                 this.driver_type = CyfsDriverType.simulator
-            } else {
+            } else if(DRIVER_TYPE == CyfsDriverType.other.toString()){
+                this.driver_type = CyfsDriverType.other
+            }  else {
                 // 默认使用模拟器
                 this.driver_type = CyfsDriverType.simulator
             }
@@ -80,6 +82,8 @@ export class StackManager {
         if (this.driver_type == CyfsDriverType.real_machine) {
             await this.load_real_machine(requestor_type, dec_id)
         } else if (this.driver_type == CyfsDriverType.simulator) {
+            await this.load_simulator(requestor_type, dec_id)
+        } else if (this.driver_type == CyfsDriverType.other) {
             await this.load_simulator(requestor_type, dec_id)
         }
         return await this.check_stack_online();
@@ -138,6 +142,30 @@ export class StackManager {
             }
         }
     }
+
+    async load_other(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
+        for (let agent of REAL_MACHINE_OTHER_LIST) {
+            this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
+            let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
+            if (requestor_type == cyfs.CyfsStackRequestorType.WebSocket) {
+                let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
+                stack_param.requestor_config = ws_param
+            }
+            let stack_map = new Map();
+            if(this.peer_map.has(agent.peer_name)){
+                stack_map = this.peer_map.get(agent.peer_name)!
+            }else{
+                this.peer_map.set(agent.peer_name, stack_map);
+            }
+            let stack = cyfs.SharedCyfsStack.open(stack_param);
+            if (dec_id) {
+                stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
+            } else {
+                stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
+            }
+        }
+    }
+
     async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         for (let agent of SIMULATOR_LIST) {
             this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
@@ -160,7 +188,7 @@ export class StackManager {
             }
         }
     }
-
+    
     get_cyfs_satck(local: PeerInfo): { err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack } {
         if (!this.peer_map.has(local.peer_name)) {
             return { err: ErrorCode.notFound, log: `error peer name ${local.peer_name}` }
