@@ -9,3 +9,4 @@ src/cyfs-stack-test-typescript/TestSuite/unittest_object_map/mochawesome-report
 *.exe
 src/cyfs-test-dec-app/testsuite/smoke-test/unittest_stack_ndn/mochawesome-report/mochawesome.html
 src/cyfs-test-dec-app/testsuite/smoke-test/unittest_stack_ndn/mochawesome-report/mochawesome.html
+*.zip
