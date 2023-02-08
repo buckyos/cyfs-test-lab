@@ -1,7 +1,7 @@
 
 
-import { CyfsDriverType, CyfsStackDriverManager } from "./driver_manager"
-import { CyfsStackDriver } from "./cyfs_driver"
+import {  CyfsStackDriverManager } from "./driver_manager"
+import { CyfsStackDriver,CyfsDriverType } from "./cyfs_driver"
 import { DRIVER_TYPE, REAL_MACHINE_LIST, SIMULATOR_LIST ,REAL_MACHINE_OTHER_LIST} from "../config/cyfs_driver_config"
 import * as cyfs from "../cyfs"
 import { ErrorCode, Logger } from "../base";
@@ -84,7 +84,7 @@ export class StackManager {
         } else if (this.driver_type == CyfsDriverType.simulator) {
             await this.load_simulator(requestor_type, dec_id)
         } else if (this.driver_type == CyfsDriverType.other) {
-            await this.load_simulator(requestor_type, dec_id)
+            await this.load_other(requestor_type, dec_id)
         }
         return await this.check_stack_online();
     }

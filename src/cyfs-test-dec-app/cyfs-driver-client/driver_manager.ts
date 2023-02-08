@@ -1,4 +1,4 @@
-import { CyfsStackClient, CyfsStackDriver } from "./cyfs_driver";
+import { CyfsStackClient, CyfsStackDriver,CyfsDriverType } from "./cyfs_driver";
 import { CyfsStackProxyDriver } from "./proxy/proxy_driver";
 import { CyfsStackSimulatorDriver } from "./simulator/simulator_driver";
 import { BDTDriver } from "./bdt_client/bdt_driver";
@@ -7,12 +7,6 @@ import path from "path";
 import { DRIVER_TYPE } from "../config/cyfs_driver_config"
 var date = require("silly-datetime");
 
-export enum CyfsDriverType {
-    real_machine = "Real_machine",
-    simulator = "Simulator",
-    bdt_client = "Bdt_client",
-    other = "Other"
-}
 
 export class CyfsStackDriverManager {
     static manager?: CyfsStackDriverManager;
@@ -36,7 +30,7 @@ export class CyfsStackDriverManager {
     async create_driver(type: CyfsDriverType): Promise<{ err: ErrorCode, log: string, driver?: CyfsStackDriver }> {
         console.info(`create cyfs stack test driver,type = ${type}`);
         let driver: CyfsStackDriver;
-        if (type == CyfsDriverType.real_machine) {
+        if (type == CyfsDriverType.real_machine || type == CyfsDriverType.other) {
             driver = new CyfsStackProxyDriver(this.log_path);
         } else if (type == CyfsDriverType.simulator) {
             driver = new CyfsStackSimulatorDriver(this.log_path);
@@ -47,7 +41,7 @@ export class CyfsStackDriverManager {
         }
         await driver.init();
         await driver.start();
-        await driver.load_config();
+        await driver.load_config(type);
         return { err: ErrorCode.succ, log: "success", driver };
     }
 }
