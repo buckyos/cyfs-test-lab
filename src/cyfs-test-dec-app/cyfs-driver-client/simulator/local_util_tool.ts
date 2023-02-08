@@ -5,7 +5,7 @@ import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import path from 'path';
 import * as cyfs from "../../cyfs"
-import { md } from 'node-forge';
+
 const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';
 export class LocalUtilTool implements UtilTool {
     private cache_kb?: Buffer;
