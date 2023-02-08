@@ -39,7 +39,7 @@ export class Ready {
                 level: level,
                 flags: 0,
                 dec_id: source.dec_id,
-                target: target.local_device_id().object_id,
+                //target: target.local_device_id().object_id,
                 req_path: undefined,
                 referer_object: []
             },
@@ -52,7 +52,7 @@ export class Ready {
         console.info(`addDir publish_file 耗时：${publish_file_time}`)
         assert(!pubres.err, `publish_file 失败`)
 
-        let pub_resp: cyfs.TransAddFileResponse = pubres.unwrap();
+        let pub_resp = pubres.unwrap();
 
         let object_map_id = cyfs.ObjectMapId.try_from_object_id(pub_resp.file_id).unwrap()
 
@@ -170,7 +170,7 @@ export class Ready {
                     let resp = await source.ndn_service().get_data(rep2);
                     assert(!resp.err, `get_data 传输chunk失败`)
                     let respc = resp.unwrap()
-                    type = new cyfs.NONObjectInfo(respc.object_id, respc.data)
+                    type = new cyfs.NONObjectInfo(respc.object_id, respc.data!)
                 case "file":
                     type = respf.object;
                     break

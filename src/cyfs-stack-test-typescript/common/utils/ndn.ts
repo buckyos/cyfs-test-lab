@@ -38,7 +38,7 @@ export class NDNTestManager {
             return { err: true, log: "transChunks publish_file failed" }
         }
         //assert(!file_resp_0.err,`transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -142,7 +142,7 @@ export class NDNTestManager {
             return { err: true, log: "transChunks publish_file failed" }
         }
         //assert(!file_resp_0.err,`transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -236,7 +236,7 @@ export class NDNTestManager {
             dirs: []
         }));
         assert(!file_resp_0.err, `transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -319,7 +319,7 @@ export class NDNTestManager {
         if (file_resp_0.err) {
             return { err: file_resp_0.err, log: `transFile trans publish_file failed` }
         }
-        let file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        let file_resp = file_resp_0.unwrap();
 
         //assert(file_resp.file_id)
 
@@ -386,7 +386,7 @@ export class NDNTestManager {
                     task_id: create_task.task_id
                 })).unwrap();
                 console.log("get task status", resp.state);
-                if (resp.state === cyfs.TransTaskState.Finished) {
+                if (resp.state.state === cyfs.TransTaskState.Finished) {
                     time = Date.now() - start;
                     totalTime = Date.now() - begin;
                     console.log("download task finished")
@@ -436,7 +436,7 @@ export class NDNTestManager {
         if (dir_resp_0.err) {
             return { err: true, log: `transDir publish_file failed ` }
         }
-        let dir_resp: cyfs.TransAddFileResponse = dir_resp_0.unwrap();
+        let dir_resp = dir_resp_0.unwrap();
         //2. source 设备 使用NOC 获取dir对象
         const dir_obj_resp_0 = (await source.non_service().get_object({
             common: {
@@ -586,7 +586,7 @@ export class NDNTestManager {
             return { err: true, log: `transDir publish_file failed ` }
         }
         publish_file_time = Date.now() - publish_file_time;
-        let publish_file_info: cyfs.TransAddFileResponse = publish_file_resp.unwrap();
+        let publish_file_info = publish_file_resp.unwrap();
         console.info(`#transDir publish_file 耗时：${publish_file_time},file_id = ${publish_file_info.file_id}`)
 
         //2. source 设备 使用NOC 获取dir map
@@ -868,8 +868,8 @@ export class NDNTestManager {
                     })).unwrap();
 
                     console.log(`${taskList[i].object_id} get task status`, resp.state);
-                    taskList[i].state = resp.state
-                    if (resp.state === cyfs.TransTaskState.Finished) {
+                    taskList[i].state = resp.state.state
+                    if (resp.state.state === cyfs.TransTaskState.Finished) {
                         console.log("download task finished")
                         break;
                     }

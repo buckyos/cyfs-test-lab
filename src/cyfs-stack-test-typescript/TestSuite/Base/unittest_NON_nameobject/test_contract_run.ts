@@ -8,6 +8,7 @@ describe("测试Contract对象编解码", async function () {
     let packagevaluestr = "/test/contract/"+"12346sdsdad132323qwe12eqw121eqwwe2wasdadd";
     let hashvalue =crypto.createHash("sha256").update(packagevaluestr).digest("hex")
     let packagevalue = cyfs.HashValue.from_hex_string(hashvalue).unwrap()
+     
 
     let contractid: cyfs.ContractId
 

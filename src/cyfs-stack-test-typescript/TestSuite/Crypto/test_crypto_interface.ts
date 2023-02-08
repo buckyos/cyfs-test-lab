@@ -1,7 +1,11 @@
 import assert from 'assert';
 import * as cyfs from '../../cyfs_node';
 import { ZoneSimulator, get_len_buf, create_people, create_device } from "../../common/utils";
-import * as myHandler from "./handler"
+import * as myHandler from "../../common/utils/handler"
+import * as cry from "crypto"
+import * as fs from "fs-extra";
+import * as path from "path";
+import { RandomGenerator } from "../../common/utils/generator";
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -37,7 +41,7 @@ let sysdec: cyfs.ObjectId
 
 
 
-describe("SharedCyfsStack crypto相关接口测试", function () {
+describe("SharedCyfsStack crypto目录", function () {
     this.timeout(0);
     this.beforeAll(async function () {
 
@@ -69,7 +73,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
     })
 
 
-    describe("#crypto 相关接口冒烟", async () => {
+    describe("#crypto 相关接口", async () => {
         beforeEach(async function () {
             await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, zone1device1_dec_id).clear_access()
         })
@@ -78,7 +82,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             await handlerManager.clearAllHandler()
         })
         it("crypto 调用 sign_object系统授权、verify_object无需授权验证成功", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
 
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
@@ -104,8 +108,8 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -120,7 +124,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             }
         })
         it("crypto 调用跨Dec设备 sign_object未授权", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
 
 
@@ -149,7 +153,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
             let path = "/test_non/reqpath/"
@@ -192,8 +196,8 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
 
             //校验对象签名
@@ -217,7 +221,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
             let path = "/test_non/reqpath/"
@@ -260,8 +264,8 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
 
             //校验对象签名
@@ -285,7 +289,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
                 zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             zone1device1.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -303,8 +307,8 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             console.log('sign_object result:', resp);
             assert(resp.unwrap().result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.unwrap().object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             //校验对象签名
             {
                 const resp2 = (await crypto.verify_object({
@@ -318,7 +322,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             }
         })
         it("crypto 调用verify_object校验未被签名的对象", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -336,8 +340,8 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -355,7 +359,7 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
             let permission = cyfs.GlobalStatePathAccessItem.new("/.cyfs/api/crypto/sign_object/", cyfs.AccessString.full())
 
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -4128,7 +4132,6 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
 
         })
 
-
         //sign_and_push_named_object  sign_and_set_named_object
         it("crypto  sign_and_push_named_object重复叠加多个签名和覆盖5次 ", async () => {
 
@@ -4177,5 +4180,264 @@ describe("SharedCyfsStack crypto相关接口测试", function () {
 
 
         })
+    })
+    describe("HashValue 测试", async () => {
+        it("hash_value比较计算正确性", async () => {
+            let packagevaluestr = "/test/contract/" + "12346sdsdad132323qwe12eqw121eqwwe2wasdadd";
+            let buf = new Uint8Array().fromHex(packagevaluestr).unwrap()
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+
+        })
+        it("大数据hashData测试--50Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 50 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+
+        })
+        it("大数据hashData测试--100Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 100 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+        it("大数据hashData测试--150Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 150 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+        it("大数据hashData测试--200Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 200 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+        it("大数据hashData测试--300Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 300 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+        it("大数据hashData测试--400Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 400 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+        it("大数据hashData测试--500Mb", async () => {
+            //数据构造
+            let saveDir = path.join(__dirname, "../../test_cache_file/crypto")
+            let inner_path = `/file-${RandomGenerator.string(2, 2, 2)}.txt`
+            let local_path = path.join(saveDir, inner_path)
+            console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
+            { //清理缓存文件
+                let num = fs.readdirSync(saveDir).length
+                if (num > 5) {
+                    await fs.removeSync(saveDir)
+                    console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+                }
+            }
+            //(2)生成测试文件
+            await RandomGenerator.createRandomFile(saveDir, inner_path, 500 * 1024 * 1024);
+            let desc_buf = fs.readFileSync(local_path);
+            let buf = new Uint8Array(desc_buf);
+
+            //使用第三方库获得一串hash，字符串类型
+            let sha256value = cry.createHash("sha256").update(buf).digest("hex")
+            //耗时
+            let hashValueTime = Date.now();
+
+            //cyfs.HashValue使用同一buf创建HashValue对象
+            let packagevalue = cyfs.HashValue.hash_data(buf)
+            hashValueTime = Date.now() - hashValueTime;
+            console.info(`=======> hashValue 耗时：${hashValueTime}ms`)
+            let hashValue = packagevalue.to_hex_string() //将hashValue对象转成 hex_string类型
+
+            //检查
+            assert(sha256value === hashValue, `不匹配 buf: ${sha256value} buf2: ${hashValue}`)
+            console.log(`========> ${sha256value}`);
+            console.log(`========> ${hashValue}`);
+        })
+       
     })
 })

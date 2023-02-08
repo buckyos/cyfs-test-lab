@@ -514,7 +514,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                 // api级别
                 level: cyfs.NDNAPILevel.Router,
                 // targrt设备参数
-                target: stack_runtime.local_device_id().object_id,
+                //target: stack_runtime.local_device_id().object_id,
                 // 需要处理数据的关联对象，主要用以chunk/file等
                 referer_object: [],
                 flags: 1,
@@ -550,7 +550,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                 // api级别
                 level: cyfs.NDNAPILevel.NDN,
                 // targrt设备参数
-                target: stack_runtime.local_device_id().object_id,
+                //target: stack_runtime.local_device_id().object_id,
                 // 需要处理数据的关联对象，主要用以chunk/file等
                 referer_object: [],
                 flags: 1,
@@ -581,7 +581,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                 // api级别
                 level: cyfs.NDNAPILevel.Router,
                 // targrt设备参数
-                target: stack_runtime.local_device_id().object_id,
+                //target: stack_runtime.local_device_id().object_id,
                 // 需要处理数据的关联对象，主要用以chunk/file等
                 referer_object: [],
                 flags: 1,
@@ -617,7 +617,7 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
                 // api级别
                 level: cyfs.NDNAPILevel.NDN,
                 // targrt设备参数
-                target: stack_runtime.local_device_id().object_id,
+                //target: stack_runtime.local_device_id().object_id,
                 // 需要处理数据的关联对象，主要用以chunk/file等
                 referer_object: [],
                 flags: 1,

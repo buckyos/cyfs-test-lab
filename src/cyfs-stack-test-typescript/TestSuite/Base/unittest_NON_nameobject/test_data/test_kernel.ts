@@ -3,6 +3,7 @@ import * as path from 'path'
 
 
 import * as fs from 'fs-extra'
+import { FileId } from "../../../../cyfs_node";
 
 let proc_in: boolean | undefined = undefined;
 let ret = 0;
@@ -108,12 +109,24 @@ function get_big_str(obj: any, key: string) {
     return strdata
 }
 
+function compare_arrays_len(array1: any[], array2: any[]) {
+    if (array1.length !== array2.length) {
+        console.error(`两个数组长度不一致 array1: ${array1.length} array2: ${array2.length}`)
+    }
+}
 function save_path(nameobject: string, filename: string): string {
     let basepath = path.join(path.join(cyfs.get_temp_path(), "test_nameObject_ts"), nameobject)
     fs.ensureDirSync(basepath);
     let filepath = path.join(basepath, filename)
     return filepath;
 }
+
+//读取desc文件desc_buffer
+export function decoder(filepath: string): Uint8Array {
+    let desc_buf = fs.readFileSync(filepath);
+    let desc_buffer = new Uint8Array(desc_buf);
+    return desc_buffer
+};
 
 function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent, T extends cyfs.NamedObject<DC, BC>>
     (builder: cyfs.NamedObjectBuilder<DC, BC>, obj: any,
@@ -225,18 +238,17 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
 }
 
 function process_people(obj: any) {
-    let filepath = save_path("people", obj.file)
+    let filepath = save_path("zone", obj.file)
     if (proc_in) {
         if (!fs.existsSync(filepath)) {
             console.error(`endecode file ${filepath} is not exist！ please check json file`)
         }
         let people_r = new cyfs.PeopleDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
         if (people_r.err) {
-            console.error(`decode people from file ${obj.file} err ${people_r.val}`)
+            console.error(`decode zone from file ${obj.file} err ${people_r.val}`)
             ret = people_r.val.code
             return;
         }
-
         // 先检查通用数据部分
         let people = people_r.unwrap()
         if (check_common(people, obj)) {
@@ -302,9 +314,9 @@ function process_people(obj: any) {
         let name
         if (obj.name.split(":")[1] === "mb") { name = get_big_str(obj, "name") } else { name = obj.name }
         let builder = new cyfs.PeopleBuilder(new cyfs.PeopleDescContent(), new cyfs.PeopleBodyContent(ood_list, name, icon, ood_work_mode));
-        let people = process_common(builder, obj, cyfs.People);
+        let zone = process_common(builder, obj, cyfs.People);
 
-        fs.outputFileSync(filepath, people.to_vec().unwrap());
+        fs.outputFileSync(filepath, zone.to_vec().unwrap());
         console.log(`编码输出路径：${filepath}`)
     }
 }
@@ -666,12 +678,12 @@ function process_file(obj: any) {
                 }
                 chunk_list = new cyfs.ChunkList(chunk_in_list)
             }
-            else if (obj.chunk_list.file_id) {
+            if (obj.chunk_list.file_id) {
                 file_id = cyfs.FileId.from_base_58(obj.chunk_list.file_id).unwrap()
                 chunk_list = new cyfs.ChunkList(undefined, file_id)
 
             }
-            else if (obj.chunk_list.chunk_in_bundle) {
+            if (obj.chunk_list.chunk_in_bundle) {
                 let chunk_bundle_list: cyfs.ChunkId[] = []
                 for (let j of obj.chunk_list.chunk_in_bundle.chunk_list) {
                     chunk_bundle_list.push(cyfs.ChunkId.from_base_58(j).unwrap())
@@ -721,13 +733,24 @@ function process_dir(obj: any) {
                     output_check_err("hash", obj.hash, "undefined")
                     return;
                 }
-
-                if (dir.desc().content().obj_list().match({
-                    Chunk: (chunk_id: cyfs.ChunkId) => chunk_id.raw_measure().unwrap(),
-                    ObjList: (obj_list: cyfs.NDNObjectList) => obj_list.raw_measure().unwrap(),
-                })) {
-                    // output_check_err("obj_list", obj.obj_list, "obj_list属性不一致")
-                    // return;
+                if (obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id) {
+                    let desc_buffer = decoder(obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id)
+                    let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
+                    let fileId = target.desc().calculate_id()
+                    //获取Dir对象中file的id和chunkid
+                    let file_raw: any = dir.body_expect().content().match<Uint8Array | undefined>({
+                        Chunk: () => { return undefined },
+                        ObjList: (list) => {
+                            return list.get(fileId)?.buffer;
+                        }
+                    })!;
+                    let [file_target, unit]: [cyfs.File, Uint8Array] = new cyfs.FileDecoder().raw_decode(file_raw).unwrap()
+                    //let [chunkinlist_deco]: any = file_target.body_expect().content().chunk_list.chunk_in_list
+                    let FileId_deco = file_target.desc().calculate_id()
+                    if (FileId_deco.to_base_58() !== fileId.to_base_58()) {
+                        output_check_err("fileId不匹配", fileId.to_base_58(), FileId_deco.to_base_58())
+                        return;
+                    }
                 }
             }
             if (obj.body) {
@@ -735,118 +758,261 @@ function process_dir(obj: any) {
                     output_check_err("body", obj.body, "undefined")
                     return;
                 }
-                dir.body_expect().content().match({
-                    Chunk: (chunk) => {
-                        if (chunk.to_base_58() !== obj.body.chunck_id) {
-                            output_check_err("body.chunck_id", obj.body.chunck_id, chunk.to_base_58())
-                            return;
+                if (obj.body.chunck_id) { }
+                if (obj.body.obj_list) {
+                    let desc_buffer = decoder(obj.body.obj_list.fileid)
+                    let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
+                    let fileId = target.desc().calculate_id()
+                    //获取Dir对象中file的id和chunkid
+                    let file_raw: any = dir.body_expect().content().match<Uint8Array | undefined>({
+                        Chunk: () => { return undefined },
+                        ObjList: (list) => {
+                            return list.get(fileId)?.buffer;
                         }
-                    },
-                    ObjList: (list) => {
-                        for (let j of list.entries()) {
-                            if (j[0].to_base_58() !== obj.body.obj_list.fileid || j[1].size !== obj.body.obj_list.buckybuffer) {
-                                output_check_err("body.obj_list", obj.body.obj_list, j.toString())
-                                return;
-                            }
-                        }
-
+                    })!;
+                    let [file_target, unit]: [cyfs.File, Uint8Array] = new cyfs.FileDecoder().raw_decode(file_raw).unwrap()
+                    //let [chunkinlist_deco]: any = file_target.body_expect().content().chunk_list.chunk_in_list
+                    let FileId_deco = file_target.desc().calculate_id()
+                    if (FileId_deco.to_base_58() !== fileId.to_base_58()) {
+                        output_check_err("fileId不匹配", fileId.to_base_58(), FileId_deco.to_base_58())
+                        return;
                     }
-                })
+                    if (desc_buffer.toString() !== file_raw.toString()) {
+                        output_check_err("file buffer不匹配", desc_buffer.toString(), file_raw.toString())
+                        return;
+                    }
+                }
+
             }
             console.log(`解码成功 casename is (${obj.casename})`)
         }
     } else {
         // 从json创建对象
-        let attributes: cyfs.Attributes
-        if (obj.attributes) {
-            attributes = new cyfs.Attributes(obj.attributes)
-            console.log("-----------------------1/" + attributes)
+        //obj_list
+        let infochunkId: cyfs.ChunkId | undefined = undefined;
+        let infoobjList: cyfs.NDNObjectList | undefined = undefined;
+        if (obj.obj_list.info.chunck_id) {
+            infochunkId = cyfs.ChunkId.from_base_58("").unwrap()
         }
-        let obj_list: cyfs.NDNObjectInfo
-        if (obj.obj_list) {
-            let info = {}
-
-            if (obj.obj_list.info.chunck_id) {
-                let chunk_id = cyfs.ChunkId.from_base_58(obj.obj_list.info.chunck_id).unwrap()
-                info = { chunk_id }
-                console.log("-----------------------2/info.chunck_id" + info)
-
+        if (obj.obj_list.info.obj_list) {
+            let parent_chunk: cyfs.ChunkId | undefined = undefined
+            let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> | undefined = undefined
+            if (obj.obj_list.info.obj_list.parent_chunk) {
             }
-            else if (obj.obj_list.info.obj_list) {
-                let parent_chunk: cyfs.ChunkId | undefined
-                let object_map = new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo>()
-
-                if (obj.obj_list.info.obj_list.parent_chunk) {
-                    parent_chunk = cyfs.ChunkId.from_base_58(obj.obj_list.info.obj_list.parent_chunk).unwrap()
-                } else { parent_chunk = undefined }
-
-                if (obj.obj_list.info.obj_list.object_map) {
-                    let buckystring = new cyfs.BuckyString(obj.obj_list.info.obj_list.object_map.buckystring)
-                    let id = {}
-                    let jobject_id = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id
-                    let jchunk_id = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.chunk_id
-                    let jindex = obj.obj_list.info.obj_list.object_map.innernodeinfo.node.index
-                    if (jobject_id) {
-                        let fileid = cyfs.ObjectId.from_base_58(jobject_id).unwrap()
-                        id = {
-                            fileid
-                        }
-                        console.log("-----------------------6/objectmap.id" + id)
-
-                    }
-                    else if (jchunk_id) {
-                        let chunkid = cyfs.ChunkId.from_base_58(jchunk_id).unwrap()
-                        id = {
-                            chunkid
-                        }
-                        console.log("-----------------------7/objectmap.id" + id)
-                    }
-                    else if (jindex) {
-
-                        let index = { offset: jindex.offset, size: jindex.size }
-                        id = {
-                            index
-                        }
-                        console.log("-----------------------8/objectmap.id" + id)
-                    }
-                    else { console.error("-----------> json文件缺少InnerNode所必需的id对象参数！") }
-                    object_map.set(buckystring, new cyfs.InnerNodeInfo(new cyfs.Attributes(obj.obj_list.info.obj_list.object_map.innernodeinfo.attributes), new cyfs.InnerNode(id)))
+            if (obj.obj_list.info.obj_list.object_map) {
+                let fileId: cyfs.ObjectId | undefined = undefined
+                let node_chunkId: cyfs.ChunkId | undefined = undefined;
+                let Index: { offset: number, size: number } | undefined = undefined
+                if (obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id) {
+                    let desc_buffer = decoder(obj.obj_list.info.obj_list.object_map.innernodeinfo.node.object_id)
+                    let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
+                    fileId = target.desc().calculate_id()
                 }
-                let obj_list = new cyfs.NDNObjectList(
-                    parent_chunk,
-                    object_map
-                )
-                info = { obj_list }
-                console.log("-----------------------3/info.obj_list" + info)
-            }
-            obj_list = new cyfs.NDNObjectInfo(info)
-        }
-        let body = {}
-        if (obj.body) {
-            if (obj.body.chunck_id) {
-                let chunk_id = cyfs.ChunkId.from_base_58(obj.body.chunck_id).unwrap()
-                body = { chunk_id }
-                console.log("-----------------------4/body.chunck_id" + body)
-
-            }
-            else if (obj.body.obj_list) {
-                let obj_list = new cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer>()
-                obj_list.set(cyfs.ObjectId.from_base_58(obj.body.obj_list.fileid).unwrap(), new cyfs.BuckyBuffer(get_len_buf(obj.body.obj_list.buckybuffer)))
-                body = {
-                    obj_list
+                if (obj.obj_list.info.obj_list.object_map.innernodeinfo.node.chunck_id) {
+                    node_chunkId = cyfs.ChunkId.from_base_58(obj.obj_list.info.obj_list.object_map.innernodeinfo.node.chunck_id).unwrap()
                 }
-                console.log("-----------------------5/body.obj_list" + body)
+                if (obj.obj_list.info.obj_list.object_map.innernodeinfo.node.index) {
+                    Index = obj.obj_list.info.obj_list.object_map.innernodeinfo.index
+                }
+                console.log(`file_objectId ${fileId}`);
+                let id = {
+                    object_id: fileId,
+                    chunk_id: node_chunkId,
+                    index: Index
+                }
+                let attributes0 = new cyfs.Attributes(obj.obj_list.info.obj_list.object_map.innernodeinfo.attributes)
+                let node = new cyfs.InnerNode(id)
+                let k = new cyfs.BuckyString(obj.obj_list.info.obj_list.object_map.buckystring)
+                let v = new cyfs.InnerNodeInfo(attributes0, node)
+                object_map = new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo>()
+                object_map.set(k, v)
             }
-
+            infoobjList = new cyfs.NDNObjectList(
+                parent_chunk,
+                object_map
+            )
         }
+        let info = {
+            chunk_id: infochunkId,
+            obj_list: infoobjList
+        }
+        let obj_list = new cyfs.NDNObjectInfo(info)
 
-        let builder = new cyfs.DirBuilder(new cyfs.DirDescContent(attributes!, obj_list!), new cyfs.DirBodyContent(body));
+        //body
+        let bodychunkId: cyfs.ChunkId | undefined = undefined;
+        let bodyobjList: cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer> | undefined = undefined
+        if (obj.body.chunck_id) {
+            bodychunkId = cyfs.ChunkId.from_base_58(obj.body.chunck_id).unwrap()
+        }
+        if (obj.body.obj_list) {
+            let desc_buffer = decoder(obj.body.obj_list.fileid)
+            let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
+            let fileId = target.desc().calculate_id()
+            let buf = new cyfs.BuckyBuffer(desc_buffer)
+            bodyobjList = new cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer>()
+            bodyobjList.set(fileId, buf)
+        }
+        let body = {
+            chunk_id: bodychunkId,
+            obj_list: bodyobjList
+        }
+        let attributes = new cyfs.Attributes(obj.attributes)
+        let builder = new cyfs.DirBuilder(new cyfs.DirDescContent(attributes, obj_list), new cyfs.DirBodyContent(body));
         let dir = process_common(builder, obj, cyfs.Dir);
-
         fs.outputFileSync(filepath, dir.to_vec().unwrap());
         console.log(`编码输出路径：${filepath}`)
     }
 }
+
+function process_proofos(obj: any) {
+    let filepath = save_path("proofos", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let zone_r = new cyfs.ProofOfServiceDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (zone_r.err) {
+            console.error(`decode zone from file ${obj.file} err ${zone_r.val}`)
+            ret = zone_r.val.code
+            return;
+        }
+
+        // 先检查通用数据部分
+        let proofos = zone_r.unwrap()
+        if (check_common(proofos, obj)) {
+            // 再检测content数据
+            // if (obj.ood_list) {
+            //     let deoodlist = zone.body_expect().content().ood_list
+            //     // TODO: 自己填写检测逻辑
+            //     for (let i in deoodlist) {
+            //         if (deoodlist[i].to_base_58() !== obj.ood_list[i]) { output_check_err("ood_list", obj.ood_list, "oodlist属性解码后不一致") }
+            //     }
+            // }
+            // if (obj.icon) {
+            //     if (!zone.body_expect().content().icon) {
+            //         output_check_err("icon", obj.icon, "undefined")
+            //         return;
+            //     }
+
+            //     if (zone.body_expect().content().icon!.to_base_58() !== obj.icon) {
+            //         output_check_err("icon", obj.icon, zone.body_expect().content().icon!.to_base_58())
+            //         return;
+            //     }
+            // }
+            // if (obj.name) {
+            //     if (!zone.body_expect().content().name) {
+            //         output_check_err("name", obj.name, "undefined")
+            //         return;
+            //     }
+            //     if (obj.name.split(":")[1] === "mb") {
+            //         if (zone.body_expect().content().name !== fs.readFileSync(path.join(cyfs.get_temp_path(), "strfile.txt")).toString()) {
+            //             console.error(`大字符串解码后不一致: ${obj.name}`); return;
+            //         }
+
+            //     }
+            //     else if (zone.body_expect().content().name !== obj.name) {
+            //         output_check_err("name", obj.name, zone.body_expect().content().name!)
+            //         return;
+            //     }
+            // }
+            // if (obj.ood_work_mode) {
+            //     if (zone.body_expect().content().ood_work_mode() !== obj.ood_work_mode) {
+            //         output_check_err("ood_work_mode", obj.ood_work_mode, zone.body_expect().content().ood_work_mode())
+            //         return;
+            //     }
+            // }
+            // console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let proof_type: cyfs.ProofTypeCode
+        let data_0: cyfs.ProofData
+        let data_1: cyfs.ProofData
+
+        proof_type = new cyfs.ProofTypeCode();
+        let buf = get_len_buf(10)
+        data_0 = new cyfs.ProofData(buf)
+        let buf1 = get_len_buf(10)
+        data_1 = new cyfs.ProofData(buf1)
+
+        // 创建DescContent部分
+        let desc_content = new cyfs.ProofOfServiceDescContent(proof_type, data_0);
+
+        // 创建BodyContent部分
+        let body_content = new cyfs.ProofOfServiceBodyContent(data_1);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.ProofOfServiceBuilder(desc_content, body_content);
+        let proofos = process_common(builder, obj, cyfs.ProofOfService);
+        fs.outputFileSync(filepath, proofos.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_zone(obj: any) {
+    let filepath = save_path("zone", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let zone_r = new cyfs.ZoneDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (zone_r.err) {
+            console.error(`decode zone from file ${obj.file} err ${zone_r.val}`)
+            ret = zone_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let zone = zone_r.unwrap()
+        if (check_common(zone, obj)) {
+            // 再检测content数据
+            if (obj.ood_work_mode) {
+                if (zone.body_expect().content().ood_work_mode() !== obj.ood_work_mode) {
+                    output_check_err("ood_work_mode", obj.ood_work_mode, zone.body_expect().content().ood_work_mode())
+                    return;
+                }
+            }
+            if (obj.ood_list) {
+                let deoodlist = zone.body_expect().content().ood_list()
+                // TODO: 自己填写检测逻辑
+                console.log(`objList==== ${obj.ood_list}`);
+                for (let i in deoodlist) {
+                    compare_arrays_len(deoodlist, obj.ood_list)
+                    if (deoodlist[i].to_base_58() !== obj.ood_list[i]) { output_check_err("ood_list", obj.ood_list[i], deoodlist[i].to_base_58()); return; }
+                }
+            }
+            if (obj.known_device_list) {
+                let deknown_device_list = zone.body_expect().content().known_device_list()
+                // TODO: 自己填写检测逻辑
+                for (let i in deknown_device_list) {
+                    if (deknown_device_list[i].to_base_58() !== obj.known_device_list[i]) { output_check_err("known_device_list", obj.known_device_list[i], deknown_device_list[i].to_base_58()); return; }
+                }
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let owner = cyfs.ObjectId.from_base_58(obj.owner).unwrap()
+        let ood_work_mode = obj.ood_work_mode
+        let ood_list: cyfs.DeviceId[] = [];
+        for (const ood of obj.ood_list) {
+            ood_list.push(cyfs.DeviceId.from_base_58(ood).unwrap())
+        }
+        let known_device_list: cyfs.DeviceId[] = []
+        for (const device of obj.known_device_list) {
+            known_device_list.push(cyfs.DeviceId.from_base_58(device).unwrap())
+        }
+        // 创建DescContent部分
+        let desc_content = new cyfs.ZoneDescContent(owner);
+        // 创建BodyContent部分
+        let body_content = new cyfs.ZoneBodyContent(ood_work_mode, ood_list, known_device_list);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.ZoneBuilder(desc_content, body_content);
+        let zone = process_common(builder, obj, cyfs.Zone);
+        fs.outputFileSync(filepath, zone.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+
 
 function main() {
     let json_path = process_argv();
@@ -875,15 +1041,12 @@ function main() {
         case "simplegroup":
             process_simpleGroup(obj)
             break;
-        case "proofofservice": break;
-        case "snservice": break;
-        case "flowservice": break;
-        case "metatx": break;
-        case "minergroup": break;
-        case "tx": break;
-        case "block": break;
-
-        case "zone": break;
+        case "proofofservice":
+            process_proofos(obj)
+            break;
+        case "zone":
+            process_zone(obj);
+            break;
         case "decapp": break;
         case "nftlist": break;
         case "friendlist": break;
