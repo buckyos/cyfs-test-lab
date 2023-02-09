@@ -33,8 +33,10 @@ describe("CYFS Stack NDN 模块测试", function () {
         logger = stack_manager.logger!;
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
-        await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
+        let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
+        let dec_app_2_client = await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
+        assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
+        assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
         logger.info(`############用例执开始执行`);
     })
     this.afterAll(async () => {

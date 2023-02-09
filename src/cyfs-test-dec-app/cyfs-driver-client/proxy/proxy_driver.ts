@@ -39,7 +39,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         });
         this.local_storage = local_storage;
         // TODO 应该从配置文件中加载
-        this.namespace = { agentid: this.agentid!, serviceid: "678", taskid: "1" };
+        this.namespace = { agentid: this.agentid!, serviceid: "678", taskid: "2" };
         this.platform = os.platform();
     }
 
@@ -50,6 +50,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         this.agentid = info.value!;
         this.namespace.agentid = this.agentid;
         // 初始化测试框架服务
+        this.logger.info(`$$$$$$    LocalMaster : ${JSON.stringify(this.agentid)}`);
         let local_master: LocalMaster = new LocalMaster({
             agentid: this.agentid!,
             version: GlobalConfig.version,
@@ -78,6 +79,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         // 实例化一个 本地 Task Client
         let taskClientProxy = this.local_master!.newTaskClient(this.namespace, "1", true);
         // 运行本地Task 脚本连接测试节点，启动CYFS协议栈代理隧道
+        this.logger.info(`$$$$$$    TaskClient : ${JSON.stringify(this.namespace)}`);
         let task: TaskClient = new TaskClient({
             namespace: this.namespace,
             version: "1",
@@ -175,6 +177,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         }
         for (let run of run_list) {
             let result = await run;
+            console.info(result)
             if (result.err) {
                 return result;
             }

@@ -90,16 +90,19 @@ export class ProxyManager extends EventEmitter {
                     
                     client.on('data', async (buf) => {
                         r_seq = r_seq + 1;
-                        this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
+                        
                         let msg_u8 = buf as Uint8Array;
-                        let data =   Buffer.from(Uint8Array_to_string(msg_u8))
-                        if(data.length<30000){
-                            let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data.toString())
+                        //let data =   Buffer.from(Uint8Array_to_string(msg_u8))
+                        if(msg_u8.length<30000){
+                            this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort} length = ${msg_u8.length}`);
+                            let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, Uint8Array_to_string(msg_u8))
                         }else{
-                            let data1 =  data.buffer.slice(0,30000)
-                            let data2 =  data.buffer.slice(30000)
-                            let info1 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data1.toString())
-                            let info2 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data2.toString())
+                            let data1 = new Uint8Array(msg_u8.buffer.slice(0,30000))
+                            let data2 =  new Uint8Array(msg_u8.buffer.slice(30000))
+                            this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort} length = ${data1.length}`);
+                            let info1 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ,Uint8Array_to_string(data1))
+                            this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort} length = ${data2.length}`);
+                            let info2 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ,Uint8Array_to_string(data2))
                         }
                         
                     })

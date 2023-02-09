@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import net from "net";
 import { ProxyUtilTool } from "./proxy_util_tool"
 import * as cyfs from "../../cyfs"
+import { tgz } from "compressing";
 
 
 export function Uint8Array_to_string(fileData: Uint8Array) {
@@ -71,7 +72,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
         this.start_proxy("ws", this.ws_port);
         this.start_proxy("http", this.http_port);
         this.state = 2;
-        return { err: ErrorCode.succ, log: "启动成功" }
+        return { err: ErrorCode.succ, log: `${this.peer_name}启动成功` }
     }
 
     get_util_tool(): ProxyUtilTool {
@@ -81,6 +82,10 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
 
     async start_proxy(type: string, port: number): Promise<{ err: ErrorCode, log: string }> {
         return new Promise(async (V) => {
+            let timer =  setTimeout(()=>{
+                this.logger.error(` ${this.peer_name} TCP Client start timeout`);
+                V({ err: ErrorCode.timeout, log: `20s timeout` })
+            },20*1000)
             let tcpServer = net.createServer(async (c) => {
                 // 这个c 是上层业请求端
                 this.logger.info(` ${this.peer_name} TCP Client ${port} connect ${c.remoteAddress}:${c.remotePort}`);
@@ -91,18 +96,19 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
                     remote_port: c.remotePort
                 }
                 let info = await this.m_interface.callApi('build_tunnel', Buffer.from(""), param, this.m_agentid!, 0);
+                this.logger.info(`${this.peer_name} build_tunnel result = ${info}`)
                 if (info.err || info.value.err) {
                     this.logger.error(`${this.peer_name} build_tunnel err = ${JSON.stringify(info)}`)
+                    clearTimeout(timer); 
                     V({ err: info.value.err!, log: info.value.log! })
                 }
                 // 添加保活探针
-                c.setKeepAlive(true, 2000)
+                c.setKeepAlive(true, 20*1000)
                 // 监听测试框架事件，返回SDK 报文数据
                 let recv_r_req = 0;
-                let rnAccept = await this.m_interface.attachEvent(`${c.remoteAddress}_${c.remotePort}`, async (err: ErrorCode, namespace: Namespace, r_req: number, msg: string) => {
+                let rnAccept = await this.m_interface.attachEvent(`${c.remoteAddress}_${c.remotePort}`, async (err: ErrorCode, namespace: Namespace, msg: string) => {
                     this.logger.info(` ${this.peer_name} TCP Client ${port} write msg ${c.remoteAddress}:${c.remotePort}`);
                     // 实现序列化发送, 返回给SDK
-                    let recheck = 5;
                     let msg_u8 = string_to_Uint8Array(msg);
                     c.write(msg_u8);
 
@@ -144,6 +150,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
             });
             tcpServer.listen({ host: "127.0.0.1", port, }, () => {
                 this.logger.info(`${this.peer_name} TCP Server start`)
+                clearTimeout(timer); 
                 V({ err: ErrorCode.succ, log: `start proxy success` })
             });
 
