@@ -8,7 +8,7 @@ const HOME_PATH = os.homedir();
 
 const Config = {
     isDeveloping: false,
-    logLevel: 'debug',
+    logLevel: 'info',
     
     server: {
         port: 11080,

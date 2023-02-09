@@ -186,7 +186,7 @@ class PackageCodec {
         
         pkg.body = decodeResult.pkg;
 
-        base.blog.info('decode pkg:', JSON.stringify(pkg));
+        base.blog.debug('decode pkg:', JSON.stringify(pkg));
         
         return {err: ErrorCode.success, pkg, length: pkgBuffer.length};
     }

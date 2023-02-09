@@ -20,7 +20,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
     constructor(log_path: string) {
         this.stack_client_map = new Map();
         DirHelper.setRootDir(path.join(__dirname, "../../"));
-        Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+        Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
         Base.BX_EnableFileLog(log_path, `cyfs_stack_real_driver_${Date.now()}`, '.log');
         Base.blog.enableConsoleTarget(false);
         this.logger = new Logger(Base.blog.info, Base.blog.debug, Base.blog.error, log_path);

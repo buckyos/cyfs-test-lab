@@ -5,6 +5,7 @@ import { CyfsStackSimulatorClient } from "./simulator_client"
 import * as ChildProcess from 'child_process';
 import path from "path";
 import { SIMULATOR_LIST } from "../../config/cyfs_driver_config"
+import * as fs from "fs-extra";
 const Base = require('../../base/common/base.js');
 export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     private stack_client_map: Map<string, CyfsStackSimulatorClient>
@@ -44,6 +45,9 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
             await this.stop();
             return new Promise(async (v) => {
                 this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
+                if(!fs.pathExistsSync(this.simulator_path)){
+                    v({err:ErrorCode.succ,log:`${this.simulator_path} mot found, please run ./cyfs/build_zone_simulator.bat init Simulator`})
+                }
                 this.process =  ChildProcess.spawn(this.simulator_path, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(this.simulator_path) })
                 this.process.unref();
                 while (!this.pid) {

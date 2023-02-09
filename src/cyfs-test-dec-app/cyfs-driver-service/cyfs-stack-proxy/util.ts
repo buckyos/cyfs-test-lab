@@ -97,7 +97,7 @@ export class UtilTool {
         return md5;
     }
     async create_file(command: BdtLpcCommand): Promise<BdtLpcResp> {
-        if (!command.json.file_size) {
+        if (command.json.file_size == undefined) {
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }

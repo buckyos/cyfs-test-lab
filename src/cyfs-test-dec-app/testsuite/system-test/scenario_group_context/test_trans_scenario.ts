@@ -7272,7 +7272,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                             // zone1_ood post_object 到zone2_ood 通知设置context_path context 对象
                             let update_context_action = await new action_api.AddContextRequest({
                                 local: {
-                                    peer_name: "zone1_device1",
+                                    peer_name: "zone1_ood",
                                     dec_id: dec_app_1.to_base_58(),
                                     type: cyfs.CyfsStackRequestorType.Http
                                 },
@@ -7316,7 +7316,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                 expect: { err: 0 },
                             }, logger).start({
                                 req_path: `/req_path/${path_id}`,
-                                target: stack_manager.get_device_id({ peer_name: "zone1_device1", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
+                                target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
                                 group: `/group/${path_id}`,
                                 file_id: file_info!.file_id,
@@ -7669,7 +7669,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                                         type: cyfs.CyfsStackRequestorType.Http
                                     }).device_id!.object_id,
                                     stack_manager.get_device_id({
-                                        peer_name: "zone1_device1",
+                                        peer_name: "zone1_ood",
                                         dec_id: dec_app_1.to_base_58(),
                                         type: cyfs.CyfsStackRequestorType.Http
                                     }).device_id!.object_id,
