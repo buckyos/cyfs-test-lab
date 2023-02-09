@@ -92,7 +92,16 @@ export class ProxyManager extends EventEmitter {
                         r_seq = r_seq + 1;
                         this.log.info(` ${this.cache_name} TCP Client ${port} resp stack data ${client.remoteAddress}:${client.remotePort},r_seq = ${r_seq}`);
                         let msg_u8 = buf as Uint8Array;
-                        let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, Uint8Array_to_string(msg_u8))
+                        let data =   Buffer.from(Uint8Array_to_string(msg_u8))
+                        if(data.length<30000){
+                            let info = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data.toString())
+                        }else{
+                            let data1 =  data.buffer.slice(0,30000)
+                            let data2 =  data.buffer.slice(30000)
+                            let info1 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data1.toString())
+                            let info2 = await this.m_interface.fireEvent(`${remote_address}_${remote_port}`, ErrorCode.succ, r_seq, data2.toString())
+                        }
+                        
                     })
                     client.on("error",async(err)=>{
                         this.log.error(`net connect error ${err}`);

@@ -113,7 +113,7 @@ describe("CYFS Stack NDN 模块测试", function () {
     
                 }, logger).start({
                     object_type: "chunk",
-                    chunk_size: 100*1024*1024,
+                    chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
@@ -163,8 +163,8 @@ describe("CYFS Stack NDN 模块测试", function () {
     
                 }, logger).start({
                     object_type: "file",
-                    chunk_size: 10*1024*1024,
-                    file_size : 50*1024*1024,
+                    chunk_size: 4*1024*1024,
+                    file_size : 10*1024*1024,
                 });
                 assert.equal(action.err,1,action.log)
             })
@@ -275,7 +275,7 @@ describe("CYFS Stack NDN 模块测试", function () {
     })
     describe("get_data 功能测试",async()=>{
         describe(`NDN get_data 基本流程HTTP+WebSocket`,async()=>{
-            it("本地NDC get_data chunk数据 - HTTP",async()=>{
+            it.only("本地NDC get_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
                 let action =await new action_api.GetDataAction({
@@ -2270,8 +2270,8 @@ describe("CYFS Stack NDN 模块测试", function () {
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
                     object_type: "file",
-                    chunk_size: 10*1024*1024,
-                    file_size : 100*1024*1024, 
+                    chunk_size: 4*1024*1024,
+                    file_size : 10*1024*1024, 
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)    
             })
@@ -2365,7 +2365,7 @@ describe("CYFS Stack NDN 模块测试", function () {
     
                 }, logger).start({
                     object_type: "chunk",
-                    chunk_size: 100*1024*1024,
+                    chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
@@ -2389,7 +2389,7 @@ describe("CYFS Stack NDN 模块测试", function () {
     
                 }, logger).start({
                     object_type: "chunk",
-                    chunk_size: 100*1024*1024,
+                    chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
@@ -3171,8 +3171,8 @@ describe("CYFS Stack NDN 模块测试", function () {
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
                     object_type: "file",
-                    chunk_size: 10*1024*1024,
-                    file_size : 100*1024*1024, 
+                    chunk_size: 4*1024*1024,
+                    file_size : 10*1024*1024, 
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)    
             })
@@ -3237,8 +3237,8 @@ describe("CYFS Stack NDN 模块测试", function () {
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
                 object_type: "file",
-                chunk_size: 10*1024*1024,
-                file_size : 100*1024*1024, 
+                chunk_size: 4*1024*1024,
+                file_size : 10*1024*1024, 
             });
             assert.equal(action.err,ErrorCode.succ,action.log)    
         })

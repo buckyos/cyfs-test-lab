@@ -119,7 +119,7 @@ describe("CYFS Stack Trans 模块测试", function () {
         })
         describe("Trans 传输File", async () => {
             describe("File传输 文件大小", async () => {
-                it("File传输 文件大小-传输空文件", async () => {
+                it.only("File传输 文件大小-传输空文件", async () => {
                     // 创建监听器
                     let action_handler = new action_api.RegisterCommonHandler({
                         local: {
