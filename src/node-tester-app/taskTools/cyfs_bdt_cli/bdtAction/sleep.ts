@@ -5,7 +5,7 @@ import { BaseAction } from "./base_action"
 
 export class SleepAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
-
+        this.action.type = ActionType.sleep
         if (!this.action.set_time) {
             this.action.set_time = 30000
         }

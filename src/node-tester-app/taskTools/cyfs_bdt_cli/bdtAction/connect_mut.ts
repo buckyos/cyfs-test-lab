@@ -4,7 +4,7 @@ import {BaseAction} from "./base_action"
 
 export class ConnectMutAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
-
+        this.action.type = ActionType.connect_mult
         // (1) 检查测试bdt 客户端
         let LN = await this.agentManager!.getBdtCli(this.action.LN);
         let RN = await this.agentManager!.getBdtCli(this.action.RN!);

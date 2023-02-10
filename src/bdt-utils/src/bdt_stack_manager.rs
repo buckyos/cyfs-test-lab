@@ -13,7 +13,7 @@ use std::{
 use crate::bdt_client::*;
 use crate::bdt_stream::*;
 use crate::tool::*;
-use crate::{bdt_ndn::*,action_api::*};
+use crate::{action_api::*, bdt_ndn::*};
 
 pub struct BDTClientManager {
     BDTClient_map: HashMap<String, BDTClient>,
@@ -104,31 +104,41 @@ impl BDTClientManager {
                     "sn online timeout",
                 ))
             }
-            Ok(_) => {
-                log::info!("sn online success {}", device.desc().device_id());
-                let online_time =
-                    system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                log::info!(
-                    "device {} sn online success,time = {}",
-                    device.desc().device_id(),
-                    online_time
-                );
-                let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
-                    hash_map::Entry::Vacant(v) => {
-                        let client_path = self.temp_dir.clone().join(peer_name);
-                        let info =
-                            BDTClient::new(stack, acceptor, client_path, self.service_path.clone());
-                        v.insert(info);
-                        Ok(())
-                    }
-                    hash_map::Entry::Occupied(_) => {
-                        let msg = format!("bdt stack already exists: {}", peer_name,);
+            Ok(online_result) => match online_result {
+                Ok(state) => {
+                    if (state == SnStatus::Online) {
+                        let online_time =
+                            system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        log::info!(
+                            "device {} sn online success,time = {}",
+                            device.desc().device_id(),
+                            online_time
+                        );
+                        let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
+                            hash_map::Entry::Vacant(v) => {
+                                let client_path = self.temp_dir.clone().join(peer_name);
+                                let info = BDTClient::new(
+                                    stack,
+                                    acceptor,
+                                    client_path,
+                                    self.service_path.clone(),
+                                );
+                                v.insert(info);
+                                Ok(())
+                            }
+                            hash_map::Entry::Occupied(_) => {
+                                let msg = format!("bdt stack already exists: {}", peer_name,);
 
-                        Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                            }
+                        };
+                        Ok((device, key, online_time))
+                    } else {
+                        Err(BuckyError::new(BuckyErrorCode::Failed, "sn is Offline"))
                     }
-                };
-                Ok((device, key, online_time))
-            }
+                }
+                Err(err) => Err(err),
+            },
         }
     }
 
@@ -189,35 +199,40 @@ impl BDTClientManager {
                     "sn online timeout",
                 ))
             }
-            Ok(_) => {
-                log::info!("sn online success {}", device.desc().device_id());
-                let online_time =
-                    system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                log::info!(
-                    "device {} sn online success,time = {}",
-                    device.desc().device_id(),
-                    online_time
-                );
-                match self.BDTClient_map.entry(peer_name.to_owned()) {
-                    hash_map::Entry::Vacant(v) => {
-                        log::info!("insert bdt client {} into stack manager success", peer_name);
-                        let client_path = self.temp_dir.clone().join(peer_name);
-                        let info = BDTClient::new(
-                            stack.clone(),
-                            acceptor,
-                            client_path,
-                            self.service_path.clone(),
+            Ok(online_result) => match online_result {
+                Ok(state) => {
+                    if (state == SnStatus::Online) {
+                        let online_time =
+                            system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        log::info!(
+                            "device {} sn online success,time = {}",
+                            device.desc().device_id(),
+                            online_time
                         );
-                        v.insert(info);
-                        Ok((stack, online_time))
-                    }
-                    hash_map::Entry::Occupied(_) => {
-                        let msg = format!("bdt stack already exists: {}", peer_name,);
-                        log::error!("{:?}", msg.clone());
-                        Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                        match self.BDTClient_map.entry(peer_name.to_owned()) {
+                            hash_map::Entry::Vacant(v) => {
+                                let client_path = self.temp_dir.clone().join(peer_name);
+                                let info = BDTClient::new(
+                                    stack.clone(),
+                                    acceptor,
+                                    client_path,
+                                    self.service_path.clone(),
+                                );
+                                v.insert(info);
+                                Ok((stack, online_time))
+                            }
+                            hash_map::Entry::Occupied(_) => {
+                                let msg = format!("bdt stack already exists: {}", peer_name,);
+                                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                            }
+                        }
+                    } else {
+                        log::info!("device {} not set sn list", device.desc().device_id());
+                        Ok((stack, 0))
                     }
                 }
-            }
+                Err(err) => Err(err),
+            },
         }
     }
 
@@ -255,12 +270,7 @@ impl BDTClientManager {
                 },
                 Some(local),
             ));
-            //return Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
         }
-        // let mut port: u16 = match req.bdt_port {
-        //     Some(n) => n as u16,
-        //     None => self.increase_bdt_port_index(),
-        // };
         let mut eps = Vec::new();
         for addr in req.addrs.iter() {
             let ep = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
@@ -294,14 +304,10 @@ impl BDTClientManager {
             //(3)解析BDT Stack 启动结果
             Ok((stack, online_time)) => {
                 let mut local = stack.sn_client().ping().default_local();
-                let online_sn_id = stack
-                    .sn_client()
-                    .ping()
-                    .default_client()
-                    .unwrap()
-                    .sn()
-                    .object_id()
-                    .to_string();
+                let online_sn_id = match stack.sn_client().ping().default_client() {
+                    Some(ping_client) => ping_client.sn().object_id().to_string(),
+                    None => "None".to_string(),
+                };
                 let ep_info = local.mut_connect_info().mut_endpoints().clone();
                 // 设置返回Device 对象 ep 类型用于测试
                 let _ = match req.ep_type.clone() {
@@ -378,64 +384,51 @@ impl BDTClientManager {
         Ok((resp, local))
     }
 
-    pub async fn reset_client(&mut self, req: &ResetStackReq)->ResetStackResp {
-
+    pub async fn reset_client(&mut self, req: &ResetStackReq) -> ResetStackResp {
         // 更新endpoint 端口
         let endpoints = match &req.endpoints {
-            Some(addrs)=>{
+            Some(addrs) => {
                 let mut eps = Vec::new();
                 for addr in addrs.iter() {
                     let ep_str = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
                     log::debug!("ep={} on create", &ep_str);
                     let ep = Endpoint::from_str(ep_str.as_str())
-                    .map_err(|e| {
-                        log::error!("parse ep failed, s={}, e={}", ep_str, &e);
-                        e
-                    })
-                    .unwrap();
+                        .map_err(|e| {
+                            log::error!("parse ep failed, s={}, e={}", ep_str, &e);
+                            e
+                        })
+                        .unwrap();
                     eps.push(ep);
                 }
                 Some(eps)
-            },
-            None=> None
+            }
+            None => None,
         };
         // 加载本地sn_list
-        let sn_list = match &req.sn_list  {
-            Some(sns)=>{
+        let sn_list = match &req.sn_list {
+            Some(sns) => {
                 let sn_devices = load_desc_list(self.service_path.clone(), &sns).await;
                 Some(sn_devices)
-            },
-            None => None
+            }
+            None => None,
         };
         match self.BDTClient_map.get(req.peer_name.as_str()) {
-            Some(mut client) => {
-                match client.clone().reset_stack(sn_list,endpoints).await {
-                    Ok(result)=>{
-                        ResetStackResp{
-                            result : 0,
-                            msg : result
-                        }
-                    },
-                    Err(err)=>{
-                        ResetStackResp{
-                            result : err.code().as_u16(),
-                            msg : err.msg().to_string()
-                        }
-                    }    
-                } 
-            }
-            None => {
-                ResetStackResp{
-                    result : 1,
-                    msg : "bdt client not found".to_string()
-                }
-            }
+            Some(mut client) => match client.clone().reset_stack(sn_list, endpoints).await {
+                Ok(result) => ResetStackResp {
+                    result: 0,
+                    msg: result,
+                },
+                Err(err) => ResetStackResp {
+                    result: err.code().as_u16(),
+                    msg: err.msg().to_string(),
+                },
+            },
+            None => ResetStackResp {
+                result: 1,
+                msg: "bdt client not found".to_string(),
+            },
         }
-        
     }
-
-
-
 
     pub fn destory_client(&mut self, peer_name: &str) -> BuckyResult<()> {
         let _ = match self.BDTClient_map.get(peer_name) {

@@ -23,6 +23,7 @@ async fn main() -> Result<(), BuckyError> {
     #[cfg(not(debug_assertions))]
     let log_default_level = "debug";
     let url = "https://oapi.dingtalk.com/robot/send?access_token=336c5b9e11d6450539b3ac4b765f4559caac2bd3bda6abd67b0a1970ec7376c8";
+   
     cyfs_debug::CyfsLoggerBuilder::new_app("bdt-cli")
         .level(log_default_level)
         .console("warn")
@@ -35,7 +36,7 @@ async fn main() -> Result<(), BuckyError> {
     cyfs_debug::PanicBuilder::new("bdt-cli", "bdt-cli")
         .log_dir(log_dir)
         .exit_on_panic(true)
-        .http_bug_report(url)
+        .dingtalk_bug_report(url)
         .build()
         .start();
     let address = format!("127.0.0.1:{}",port);

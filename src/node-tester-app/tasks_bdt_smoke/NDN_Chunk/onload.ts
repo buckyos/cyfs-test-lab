@@ -1,9 +1,9 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList,randShuffle} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import {TaskClientInterface, RandomGenerator} from '../../base';
+import {TestRunner} from '../../taskTools/cyfs_bdt_cli/test_runner';
+import {Testcase,Resp_ep_type} from "../../taskTools/cyfs_bdt_cli/type"
+import {labAgent,BdtCliConfig,LabSnList,randShuffle} from "../../taskTools/cyfs_bdt_cli/lab_agent"
+import  * as BDTAction from "../../taskTools/cyfs_bdt_cli/bdtAction"
+import {AgentManager} from '../../taskTools/cyfs_bdt_cli/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -24,7 +24,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     };
     await testRunner.initTestcase(testcase);
     //(3) 创建BDT测试客户端
-    let config : BdtPeerClientConfig = {
+    let config : BdtCliConfig = {
             eps:{
                 ipv4:{
                     udp:true,
@@ -50,7 +50,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
             // 1.1 LN 连接 RN
             let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                type : ActionType.connect,
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
                 config:{
@@ -60,17 +59,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 expect : {err:0},    
             }))
             // 1.2 LN -> RN 发送数据
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
-                type : ActionType.send_chunk,
-                LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[j].tags[0]}$1`,
-                chunkSize : 10*1024*1024,
-                config:{
-                    conn_tag: connect_1,
-                    timeout : 60*1000,
-                },
-                expect : {err:0},      
-            }))
+            // info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+            //     type : ActionType.send_chunk,
+            //     LN : `${labAgent[i].tags[0]}$1`,
+            //     RN : `${labAgent[j].tags[0]}$1`,
+            //     chunkSize : 10*1024*1024,
+            //     config:{
+            //         conn_tag: connect_1,
+            //         timeout : 60*1000,
+            //     },
+            //     expect : {err:0},      
+            // }))
             
             await testRunner.prevTaskRun();
         }

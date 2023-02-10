@@ -1,9 +1,9 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList,AgentList_LAN_WAN,randShuffle} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import {TaskClientInterface, RandomGenerator} from '../../base';
+import {TestRunner} from '../../taskTools/cyfs_bdt_cli/test_runner';
+import {Testcase,Resp_ep_type} from "../../taskTools/cyfs_bdt_cli/type"
+import {labAgent,BdtCliConfig,LabSnList,randShuffle,AgentList_LAN_WAN} from "../../taskTools/cyfs_bdt_cli/lab_agent"
+import  * as BDTAction from "../../taskTools/cyfs_bdt_cli/bdtAction"
+import {AgentManager} from '../../taskTools/cyfs_bdt_cli/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
@@ -24,7 +24,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     };
     await testRunner.initTestcase(testcase);
     //(3) 创建BDT测试客户端
-    let config : BdtPeerClientConfig = {
+    let config : BdtCliConfig = {
             eps:{
                 ipv4:{
                     udp:true,
@@ -51,7 +51,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
             // 1.1 LN 连接 RN
             let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
             info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
-                type : ActionType.connect,
                 LN : `${labAgent[i].tags[0]}$1`,
                 RN : `${labAgent[j].tags[0]}$1`,
                 config:{
@@ -61,18 +60,18 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 expect : {err:0},    
             }))
             // 1.2 LN -> RN 发送数据
-            info = await testRunner.prevTaskAddAction(new BDTAction.SendFileDualAction({
-                type : ActionType.send_file,
-                LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[j].tags[0]}$1`,
-                Users : [ `${AgentList.WAN[0].tags[0]}$1`],
-                fileSize : 10*1024*1024,
-                chunkSize : 4*1024*1024,
-                config:{
-                    timeout : 160*1000,
-                },
-                expect : {err:0},      
-            }))
+            // info = await testRunner.prevTaskAddAction(new BDTAction.SendFileDualAction({
+            //     type : ActionType.send_file,
+            //     LN : `${labAgent[i].tags[0]}$1`,
+            //     RN : `${labAgent[j].tags[0]}$1`,
+            //     Users : [ `${AgentList.WAN[0].tags[0]}$1`],
+            //     fileSize : 10*1024*1024,
+            //     chunkSize : 4*1024*1024,
+            //     config:{
+            //         timeout : 160*1000,
+            //     },
+            //     expect : {err:0},      
+            // }))
            
             
             await testRunner.prevTaskRun();

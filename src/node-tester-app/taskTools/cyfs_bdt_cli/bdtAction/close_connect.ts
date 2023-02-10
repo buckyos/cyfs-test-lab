@@ -4,7 +4,7 @@ import { BDTERROR, ActionType, Agent, Testcase, Task, Action, ActionAbstract } f
 import {BaseAction} from "./base_action"
 export class CloseConnectAction extends BaseAction implements ActionAbstract {
     async run(): Promise<{ err: number, log: string }> {
-
+        this.action.type = ActionType.close_connect
         // (1) 检查测试bdt 客户端
         let LN = await this.agentManager!.getBdtCli(this.action.LN);
         if (LN.err) {
