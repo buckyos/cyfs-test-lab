@@ -6,8 +6,8 @@ use crate::tool::*;
 use async_std::prelude::*;
 use async_std::{future, stream::StreamExt, sync::Arc, task};
 use cyfs_base::*;
-use cyfs_bdt::*;
 use cyfs_bdt::pn::client;
+use cyfs_bdt::*;
 use std::{
     collections::{hash_map, HashMap},
     path::PathBuf,
@@ -18,9 +18,9 @@ pub struct BDTClientImpl {
     pub stack: Arc<Mutex<StackGuard>>,
     pub acceptor: Arc<Mutex<StreamListenerGuard>>,
     pub stream_tasks: Arc<Mutex<StreamMap>>,
-    pub lpc : Arc<Mutex<Option<Lpc>>> , 
-    pub temp_dir: PathBuf, //工作目录
-    pub  service_path : PathBuf,// 服务所在目录 
+    pub lpc: Arc<Mutex<Option<Lpc>>>,
+    pub temp_dir: PathBuf,     //工作目录
+    pub service_path: PathBuf, // 服务所在目录
     pub file_tasks: Arc<Mutex<FileTaskMap>>,
     //pub  dir_tasks: Arc<Mutex<DirTaskMap>>,
     pub answer_size: Mutex<u64>,
@@ -29,7 +29,12 @@ pub struct BDTClientImpl {
 #[derive(Clone)]
 pub struct BDTClient(Arc<BDTClientImpl>);
 impl BDTClient {
-    pub fn new(stack: StackGuard, acceptor: StreamListenerGuard, temp_dir: PathBuf, service_path: PathBuf) -> Self {
+    pub fn new(
+        stack: StackGuard,
+        acceptor: StreamListenerGuard,
+        temp_dir: PathBuf,
+        service_path: PathBuf,
+    ) -> Self {
         let file_task_map = FileTaskMap::new();
         //let dir_task_map = DirTaskMap::new();
         //dir_tasks : Arc::new(Mutex::new(dir_task_map)),
@@ -38,7 +43,7 @@ impl BDTClient {
             stack: Arc::new(Mutex::new(stack)),
             acceptor: Arc::new(Mutex::new(acceptor)),
             stream_tasks: Arc::new(Mutex::new(stream_task_map)),
-            lpc : Arc::new(Mutex::new(None)),
+            lpc: Arc::new(Mutex::new(None)),
             temp_dir: temp_dir,
             service_path: service_path,
             file_tasks: Arc::new(Mutex::new(file_task_map)),
@@ -46,13 +51,12 @@ impl BDTClient {
             question_size: Mutex::new(0),
         }))
     }
-    pub fn get_lpc(&self)->Option<Lpc>{
-        self.0.lpc.lock().unwrap().clone() 
+    pub fn get_lpc(&self) -> Option<Lpc> {
+        self.0.lpc.lock().unwrap().clone()
     }
-    pub fn set_lpc(&self,lpc_new:Lpc){
+    pub fn set_lpc(&self, lpc_new: Lpc) {
         let mut lpc_self = self.0.lpc.lock().unwrap();
         *lpc_self = Some(lpc_new);
-        
     }
     pub fn get_acceptor(&self) -> StreamListenerGuard {
         self.0.acceptor.lock().unwrap().clone()
@@ -63,7 +67,7 @@ impl BDTClient {
     pub fn get_stream(&self, stream_name: &str) -> BDTConnection {
         self.0.stream_tasks.lock().unwrap().get_task(stream_name)
     }
-    pub fn find_stream(&self, stream_id: &str) -> Option<BDTConnection>  {
+    pub fn find_stream(&self, stream_id: &str) -> Option<BDTConnection> {
         self.0.stream_tasks.lock().unwrap().find_task(stream_id)
     }
     pub fn add_stream(&self, stream: StreamGuard) -> BDTConnection {
@@ -265,29 +269,18 @@ impl BDTClient {
         let question_size = req.question_size as usize;
         let peer_name = req.peer_name.clone().clone();
         let remote_sn = match &req.remote_sn.len() {
-            0 =>{
-                None
-            },
-            _ =>{
-                Some(string_to_deviceid_list(&req.remote_sn))
-            }
-        }; 
-        
-        let remote_device = match req.driect {
-            true =>{
-                Some(remote.clone())
-            },
-            false=>{
-                None
-            } 
+            0 => None,
+            _ => Some(string_to_deviceid_list(&req.remote_sn)),
         };
-       
-        
+        let remote_device = match req.driect {
+            true => Some(remote.clone()),
+            false => None,
+        };
         // （1）解析请求参数
         let param = BuildTunnelParams {
             remote_const: remote.desc().clone(),
             remote_sn,
-            remote_desc:remote_device,
+            remote_desc: remote_device,
         };
         // 构造FastQA 请求数据
         // FastQA 最大answer为 25KB
@@ -295,6 +288,7 @@ impl BDTClient {
         let mut answer = [0; 25 * 1024];
         let mut question = Vec::new();
         if question_size > 0 {
+            log::info!("random question data ,len = {}", question_size);
             random_data(question[0..question_size].as_mut());
         }
         let send_hash = hash_data(&question);
@@ -450,7 +444,7 @@ impl BDTClient {
         }
     }
 
-    pub async fn recv_stream(&mut self, req: &RecvStreamReq) -> BuckyResult<RecvStreamResp>{
+    pub async fn recv_stream(&mut self, req: &RecvStreamReq) -> BuckyResult<RecvStreamResp> {
         let mut conn = self.get_stream(req.stream_name.as_str());
         let resp = match conn.recv_stream().await {
             Err(e) => {
@@ -477,93 +471,86 @@ impl BDTClient {
             }
         };
         Ok(resp)
-    } 
+    }
 
-    pub fn shutdown(&mut self, req: &ShutdownReq) -> BuckyResult<ShutdownResp>{
+    pub fn shutdown(&mut self, req: &ShutdownReq) -> BuckyResult<ShutdownResp> {
         let mut conn = self.get_stream(req.stream_name.as_str());
         let resp = match conn.shutdown(req.shutdown_type.as_str()) {
-            Ok(_)=>{
-                log::info!("{} shutdown success",req.stream_name);
-                ShutdownResp{
-                    result : 0,
-                    msg : "success".to_string()
+            Ok(_) => {
+                log::info!("{} shutdown success", req.stream_name);
+                ShutdownResp {
+                    result: 0,
+                    msg: "success".to_string(),
                 }
-            },
-            Err(err)=>{
-                log::info!("{} shutdown fail,error = {}",req.stream_name,err);
-                ShutdownResp{
-                    result : 1,
-                    msg : err.to_string()
+            }
+            Err(err) => {
+                log::error!("{} shutdown fail,error = {}", req.stream_name, err);
+                ShutdownResp {
+                    result: 0,
+                    msg: err.to_string(),
                 }
             }
         };
-        Ok(resp) 
+        Ok(resp)
     }
 
-   
-    pub async fn reset_endpoints(&mut self,endpoints:Vec<Endpoint>)->BuckyResult<String>{
+    pub async fn reset_endpoints(&mut self, endpoints: Vec<Endpoint>) -> BuckyResult<String> {
         let ping_client = self.get_stack().reset_endpoints(&endpoints).await;
-        match future::timeout(
-            Duration::from_secs(20),
-            ping_client.wait_online(),
-        ).await{
-            Ok(state)=>{
-                Ok(state.unwrap().to_string())
-            },
-            Err(err)=>{
-                log::error!("reset_endpoints err ={}",err);
+        match future::timeout(Duration::from_secs(20), ping_client.wait_online()).await {
+            Ok(state) => Ok(state.unwrap().to_string()),
+            Err(err) => {
+                log::error!("reset_endpoints err ={}", err);
                 Err(BuckyError::new(
                     BuckyErrorCode::Timeout,
                     "reset_endpoints wait online timeout",
                 ))
             }
-        }  
+        }
     }
-    pub async fn reset_sn_list(&mut self,sn_list:Vec<Device>)->BuckyResult<String>{
+    pub async fn reset_sn_list(&mut self, sn_list: Vec<Device>) -> BuckyResult<String> {
         match future::timeout(
             Duration::from_secs(20),
             self.get_stack().reset_sn_list(sn_list).wait_online(),
-        ).await{
-            Ok(state)=>{
-                Ok(state.unwrap().to_string())
-            },
-            Err(err)=>{
-                log::error!("reset_sn_list err ={}",err);
+        )
+        .await
+        {
+            Ok(state) => Ok(state.unwrap().to_string()),
+            Err(err) => {
+                log::error!("reset_sn_list err ={}", err);
                 Err(BuckyError::new(
                     BuckyErrorCode::Timeout,
                     "reset_sn_list wait online timeout",
                 ))
             }
         }
-        
     }
-    pub async fn reset_stack(&mut self,sn_list:Option<Vec<Device>>,endpoints:Option<Vec<Endpoint>>)->BuckyResult<String>{
+    pub async fn reset_stack(
+        &mut self,
+        sn_list: Option<Vec<Device>>,
+        endpoints: Option<Vec<Endpoint>>,
+    ) -> BuckyResult<String> {
         let _ = match sn_list {
-            Some(sns)=>{
-                let _ = match self.reset_sn_list(sns).await{
-                    Ok(_)=>{
+            Some(sns) => {
+                let _ = match self.reset_sn_list(sns).await {
+                    Ok(_) => {
                         log::info!("reset_sn_list run success");
-                    },
-                    Err(err)=>{
-                        return  Err(err)
                     }
+                    Err(err) => return Err(err),
                 };
-            },
-            None=>{}
+            }
+            None => {}
         };
         let _ = match endpoints {
-            Some(eps)=>{
-                let _ = match self.reset_endpoints(eps).await{
-                    Ok(_)=>{
+            Some(eps) => {
+                let _ = match self.reset_endpoints(eps).await {
+                    Ok(_) => {
                         log::info!("reset_endpoints run success");
-                    },
-                    Err(err)=>{
-                        return  Err(err)
                     }
+                    Err(err) => return Err(err),
                 };
-            },
-            None=>{}
+            }
+            None => {}
         };
-        Ok("success".to_string()) 
+        Ok("success".to_string())
     }
 }

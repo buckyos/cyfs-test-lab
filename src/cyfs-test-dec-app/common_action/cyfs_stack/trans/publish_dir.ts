@@ -95,7 +95,7 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
             },
             owner: this.action.local!.device_id!,
             local_path: dir_path,
-            chunk_size: this.action.input.chunk_size!,
+            chunk_size: req.chunk_size!,
             access : cyfs.AccessString.full()
         });
         this.action.output!.total_time = Date.now() - begin_time; 

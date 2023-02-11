@@ -84,6 +84,7 @@ class Runner {
             let respBuffer = Buffer.allocUnsafe(Buffer.poolSize);
             let recvSize = 0;
             const request = Http.request({host: this.m_updateHost, port: this.m_updatePort, path: '/system/query/', method: 'POST'}, (resp: any) => {
+                
                 if (resp.statusCode === 200) {
                     resp.setTimeout(10000);
                     resp.on('data', (chunk: any) => {

@@ -102,7 +102,7 @@ impl BDTConnection {
         log::info!("########## hash {}", hash);
         let begin_send = system_time_to_bucky_time(&std::time::SystemTime::now());
         loop {
-            log::info!("bdt tool send data piece size = {}", gen_count);
+            log::info!("bdt tool {} send data piece size = {}" ,self.get_name(), gen_count);
             let result_err = self
                 .stream
                 .write_all(&send_buffer[0..gen_count])
@@ -166,10 +166,10 @@ impl BDTConnection {
                 .read(recv_buffer[piece_recv..].as_mut())
                 .await
                 .map_err(|e| {
-                    log::error!("recv failed, e={}", &e);
+                    log::error!("{} recv failed, e={}" ,self.get_name(), &e);
                     e
                 })?;
-            log::info!("bdt tool recv data piece size = {}", len);
+            log::info!("{} bdt tool recv data piece size = {}" ,self.get_name(), len);
             if len == 0 {
                 log::error!("remote close");
                 return Err(BuckyError::new(
@@ -188,7 +188,7 @@ impl BDTConnection {
                 b.copy_from_slice(&recv_buffer[0..FILE_SIZE_LEN]);
                 file_size = u64::from_be_bytes(b);
                 log::info!(
-                    "=====================================pre recv stream,file_size={}",
+                    "===================================== {} pre recv stream,file_size={}" ,self.get_name(),
                     file_size
                 );
                 if file_size > 100 * 1024 * 1024 * 1024 {
@@ -205,9 +205,8 @@ impl BDTConnection {
                 }
 
                 if total_recv == file_size {
-                    log::info!("=====================================recv finish");
-                    let recv_time =
-                        system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
+                    log::info!(" =====================================recv finish{}",self.get_name());
+                    let recv_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_recv;
                     break recv_time;
                 }
             }

@@ -14,7 +14,7 @@ export type CyfsStackClientConfig = {
 //     bdt_client = "Bdt_client",
 //     other = "Other"
 // }
-export const DRIVER_TYPE = "Real_machine";
+export const DRIVER_TYPE = "Simulator";
 
 /**
  * 真机代理配置

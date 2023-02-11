@@ -106,35 +106,34 @@ impl BDTClientManager {
             }
             Ok(online_result) => match online_result {
                 Ok(state) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                     if (state == SnStatus::Online) {
-                        let online_time =
-                            system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                         log::info!(
                             "device {} sn online success,time = {}",
                             device.desc().device_id(),
                             online_time
                         );
-                        let _ = match self.BDTClient_map.entry(peer_name.to_owned()) {
-                            hash_map::Entry::Vacant(v) => {
-                                let client_path = self.temp_dir.clone().join(peer_name);
-                                let info = BDTClient::new(
-                                    stack,
-                                    acceptor,
-                                    client_path,
-                                    self.service_path.clone(),
-                                );
-                                v.insert(info);
-                                Ok(())
-                            }
-                            hash_map::Entry::Occupied(_) => {
-                                let msg = format!("bdt stack already exists: {}", peer_name,);
-
-                                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
-                            }
-                        };
-                        Ok((device, key, online_time))
+                        
                     } else {
-                        Err(BuckyError::new(BuckyErrorCode::Failed, "sn is Offline"))
+                        log::error!("device {} not set sn list", device.desc().device_id());
+                    }
+                    match self.BDTClient_map.entry(peer_name.to_owned()) {
+                        hash_map::Entry::Vacant(v) => {
+                            let client_path = self.temp_dir.clone().join(peer_name);
+                            let info = BDTClient::new(
+                                stack,
+                                acceptor,
+                                client_path,
+                                self.service_path.clone(),
+                            );
+                            v.insert(info);
+                            Ok((device, key, online_time))
+                        }
+                        hash_map::Entry::Occupied(_) => {
+                            let msg = format!("bdt stack already exists: {}", peer_name,);
+
+                            Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                        }
                     }
                 }
                 Err(err) => Err(err),
@@ -201,34 +200,33 @@ impl BDTClientManager {
             }
             Ok(online_result) => match online_result {
                 Ok(state) => {
+                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                     if (state == SnStatus::Online) {
-                        let online_time =
-                            system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                         log::info!(
                             "device {} sn online success,time = {}",
                             device.desc().device_id(),
                             online_time
                         );
-                        match self.BDTClient_map.entry(peer_name.to_owned()) {
-                            hash_map::Entry::Vacant(v) => {
-                                let client_path = self.temp_dir.clone().join(peer_name);
-                                let info = BDTClient::new(
-                                    stack.clone(),
-                                    acceptor,
-                                    client_path,
-                                    self.service_path.clone(),
-                                );
-                                v.insert(info);
-                                Ok((stack, online_time))
-                            }
-                            hash_map::Entry::Occupied(_) => {
-                                let msg = format!("bdt stack already exists: {}", peer_name,);
-                                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
-                            }
-                        }
+                        
                     } else {
-                        log::info!("device {} not set sn list", device.desc().device_id());
-                        Ok((stack, 0))
+                        log::error!("device {} not set sn list", device.desc().device_id());
+                    }
+                    match self.BDTClient_map.entry(peer_name.to_owned()) {
+                        hash_map::Entry::Vacant(v) => {
+                            let client_path = self.temp_dir.clone().join(peer_name);
+                            let info = BDTClient::new(
+                                stack.clone(),
+                                acceptor,
+                                client_path,
+                                self.service_path.clone(),
+                            );
+                            v.insert(info);
+                            Ok((stack, online_time))
+                        }
+                        hash_map::Entry::Occupied(_) => {
+                            let msg = format!("bdt stack already exists: {}", peer_name,);
+                            Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                        }
                     }
                 }
                 Err(err) => Err(err),
