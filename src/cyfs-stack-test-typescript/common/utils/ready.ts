@@ -28,7 +28,7 @@ export class Ready {
         await RandomGenerator.createRandomFile(saveDir, inner_path, fileSize);
 
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const pubres = (await source.trans().publish_file({
             common: {
