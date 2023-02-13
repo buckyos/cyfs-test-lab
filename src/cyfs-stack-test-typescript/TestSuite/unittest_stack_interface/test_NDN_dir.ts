@@ -123,7 +123,6 @@ describe("SharedCyfsStack NDN相关接口测试", function () {
             console.info(`${resp}`)
             assert(!resp.err, `get_data 传输chunk失败`)
 
-
         })
         it("getData chunk目标对象 —— reqPath 获取成功", async () => {
             let { file_id, dir_id, inner_path, chunkIdList, req_path } = await Ready.addDir(zone1device1, zone1device1, 1 * 1024 * 1024, 1024 * 512, cyfs.NDNAPILevel.Router).then()

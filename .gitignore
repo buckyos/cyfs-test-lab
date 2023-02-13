@@ -6,5 +6,10 @@ src/cyfs-tools/target/
 /.history/
 src/cyfs-stack-test-typescript/TestSuite/unittest_object_map/mochawesome-report
 
-src/cyfs-stack-test-typescript/mochawesome-report/mochawesome.html
-src/cyfs-stack-test-typescript/mochawesome-report/mochawesome.json
+*.exe
+src/cyfs-test-dec-app/testsuite/smoke-test/unittest_stack_ndn/mochawesome-report/mochawesome.html
+src/cyfs-test-dec-app/testsuite/smoke-test/unittest_stack_ndn/mochawesome-report/mochawesome.html
+*.zip
+src/cyfs-test-dec-app/cyfs/cyfs_node.d.ts
+src/cyfs-test-dec-app/cyfs/cyfs_node.js
+src/cyfs-test-dec-app/cyfs/cyfs_node.js.map

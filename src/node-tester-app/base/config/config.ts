@@ -7,7 +7,7 @@ export class GlobalConfig {
     static heartbeatIntervalTime: number = 60*1000;   
     static version: string = '2.12';
     static ip: string = host;
-    static port: number = 11080;
+    static port: number = 11070;
     static updateServer: {host: string, port: number} = {
         host: host,
         port: 9012,

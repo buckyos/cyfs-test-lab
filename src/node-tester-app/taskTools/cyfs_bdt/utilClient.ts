@@ -88,5 +88,16 @@ export class UtilClient {
             return {err:ErrorCode.exception}
         }
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
+    }
+    async ping():Promise<{err:ErrorCode}>{
+        let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
+            name : "ping",
+            peerName: this.peerName,
+        }, this.m_agentid!, 10*1000);
+        this.logger.info(`${this.tags} send ping ,pong = ${JSON.stringify(result)}`)
+        if(result.err ){  
+            return {err:ErrorCode.exception}
+        }
+        return {err:ErrorCode.succ}
     }  
 }

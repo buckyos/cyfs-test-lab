@@ -84,6 +84,7 @@ class Runner {
             let respBuffer = Buffer.allocUnsafe(Buffer.poolSize);
             let recvSize = 0;
             const request = Http.request({host: this.m_updateHost, port: this.m_updatePort, path: '/system/query/', method: 'POST'}, (resp: any) => {
+                
                 if (resp.statusCode === 200) {
                     resp.setTimeout(10000);
                     resp.on('data', (chunk: any) => {
@@ -195,7 +196,8 @@ class Runner {
         if (fs.existsSync(filePath)) {
             await this._stopLocalMaster();
 
-            await compressing.zip.uncompress(filePath, DirHelper.getRootDir());
+            let result  = await compressing.zip.uncompress(filePath, DirHelper.getRootDir());
+            Base.blog.info(`compressing zip result = ${result}`);
             process.exit(0);
         }
 
@@ -273,7 +275,7 @@ async function main() {
         DirHelper.clearExpired(DirHelper.getUpdateDir(), 60);
     }, 24 * 3600 * 1000);
 
-    Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+    Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
     Base.BX_EnableFileLog(logFolder, `${path.basename((require.main as any).filename, '.js')}`, '.log');
     Base.blog.enableConsoleTarget(false);
     Base.blog.info(`current dir=${process.cwd()}, rootdir=${DirHelper.getRootDir()}`);

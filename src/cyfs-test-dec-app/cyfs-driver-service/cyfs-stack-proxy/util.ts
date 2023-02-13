@@ -97,11 +97,11 @@ export class UtilTool {
         return md5;
     }
     async create_file(command: BdtLpcCommand): Promise<BdtLpcResp> {
-        if (!command.json.file_size) {
+        if (command.json.file_size == undefined) {
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
-
+       
         let file_name = `${this.string(10)}.txt`
         let file_size: number = command.json.file_size!;
         let file_path = path.join(this.cache_path.file_upload, `${file_name}`)
@@ -125,9 +125,11 @@ export class UtilTool {
     }
 
     async get_cache_path(command: BdtLpcCommand): Promise<BdtLpcResp> {
+        
         return {
             err: ErrorCode.succ, resp: {
                 json: {
+                    platform : this.m_interface.getPlatform(),
                     cache_path: this.cache_path,
                 },
                 bytes: Buffer.from("")

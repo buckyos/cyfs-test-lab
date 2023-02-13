@@ -236,7 +236,7 @@ class AgentMgr {
     }
 
     handle(pkg, fromConnection) {
-        base.blog.info('recv: cmd: ', JSON.stringify(pkg));
+        base.blog.debug('recv: cmd: ', JSON.stringify(pkg));
 
         fromConnection.__agentInfo.lastTime = Date.now();
         const redirectHandle = (pkg, fromConnection) => this._handleRedirectPkg(pkg, fromConnection);
@@ -673,7 +673,7 @@ class AgentMgr {
     }
 
     _sendPkg(pkg, connection) {
-        base.blog.info('send: cmd: ', JSON.stringify(pkg), "target agent: ", connection.__agentInfo.agent.agentId);
+        base.blog.debug('send: cmd: ', JSON.stringify(pkg), "target agent: ", connection.__agentInfo.agent.agentId);
         return connection.send(pkg);        
     }
 

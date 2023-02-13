@@ -2128,7 +2128,7 @@ function BLogModule(logObj) {
 const blog = BLogModule(BLogGetDefaultLog());
 const BLOG_LEVEL_ALL = BLogLevel.ALL;
 const BLOG_LEVEL_TRACE = BLogLevel.TRACE;
-const BLOG_LEVEL_DEBUG = BLogLevel.DEBUG;
+const BLOG_LEVEL_DEBUG = BLogLevel.INFO;
 const BLOG_LEVEL_INFO = BLogLevel.INFO;
 const BLOG_LEVEL_WARN = BLogLevel.WARN;
 const BLOG_LEVEL_ERROR = BLogLevel.ERROR;

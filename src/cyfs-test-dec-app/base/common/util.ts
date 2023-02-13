@@ -1,4 +1,4 @@
-import {ErrorCode} from './errcode';
+import { ErrorCode } from './errcode';
 import * as process from 'process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -13,7 +13,7 @@ import * as net from 'net';
 
 export class DirHelper {
     public static m_rootDir: string = '';
-    static  getTaskDir(task: string): string {
+    static getTaskDir(task: string): string {
         let dir: string = path.join(DirHelper.getRootDir(), 'tasks');
         DirHelper.ensureDirExist(dir);
         dir = path.join(dir, task);
@@ -64,7 +64,7 @@ export class DirHelper {
                     fs.rmdirSync(dir);
                 }
             }
-        } catch(err) {
+        } catch (err) {
 
         }
     }
@@ -108,7 +108,7 @@ export class DirHelper {
         };
         try {
             await doClear(filePath);
-        } catch(err) {
+        } catch (err) {
 
         }
     }
@@ -146,16 +146,16 @@ export async function sleep(time: number) {
     });
 }
 
-export function getFileMd5(filePath: string): {err: ErrorCode, md5?: string} {
+export function getFileMd5(filePath: string): { err: ErrorCode, md5?: string } {
     try {
         let fileContent: Buffer = fs.readFileSync(filePath);
         let md5 = Crypto.createHash('md5');
         md5.update(fileContent);
         let md5Hash = md5.digest();
-        return {err: ErrorCode.succ, md5: md5Hash.toString('hex')};
+        return { err: ErrorCode.succ, md5: md5Hash.toString('hex') };
     } catch (e) {
         console.log(`[util] get file md5 exception, err=${e}`);
-        return {err: ErrorCode.exception};
+        return { err: ErrorCode.exception };
     }
 }
 
@@ -184,11 +184,11 @@ export class HttpDownloader {
                         let md5Info = getFileMd5(filePath);
                         if (md5Info.err) {
                             v(md5Info.err);
-                            return ;
+                            return;
                         }
                         if (md5Info.md5! !== md5) {
                             v(ErrorCode.md5NotMatch);
-                            return ;
+                            return;
                         }
                         v(ErrorCode.succ);
                     });
@@ -237,7 +237,7 @@ export class HttpDownloader {
             const schema = packageAddress.schema || 'http';
             const port = packageAddress.port || (schema === 'https' ? 443 : 80);
             let httpX: any = (schema === 'https' ? Https : Http);
-            const request = httpX.request(({host: packageAddress.host, port, path: packageAddress.path} as Http.RequestOptions), (resp: Http.IncomingMessage) => {
+            const request = httpX.request(({ host: packageAddress.host, port, path: packageAddress.path } as Http.RequestOptions), (resp: Http.IncomingMessage) => {
                 if (resp.statusCode === 200) {
                     let fd = fs.openSync(filePath, 'w');
                     resp.on('data', (chunk) => {
@@ -259,7 +259,7 @@ export class HttpDownloader {
                     resolve(null);
                 }
             });
-    
+
             request.once('error', (err: any) => {
                 console.log(`download failed(${JSON.stringify(err)}): url:${packageAddress}, filePath:${filePath}, md5:${fileMD5}, found local`);
                 resolve(null);
@@ -271,28 +271,28 @@ export class HttpDownloader {
 
 export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
-    static CHAR_SET:string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
+    static CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
 
-    static  string(length: number = 32) {
+    static string(length: number = 32) {
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
-        if(Buffer.byteLength(result)<length){
+        if (Buffer.byteLength(result) < length) {
             let accurate_len = length - Buffer.byteLength(result);
             result += RandomGenerator.accurateString(accurate_len);
         }
         return result;
     };
-    
-    static accurateString(length: number = 32){
+
+    static accurateString(length: number = 32) {
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
-        while(Buffer.byteLength(result)<length){
+        while (Buffer.byteLength(result) < length) {
             result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
         }
         return result;
@@ -304,6 +304,23 @@ export class RandomGenerator {
             result = max;
         }
         return result;
+    }
+    static createRandomFile(pathDir: string, name: string, size: number) {
+        if (!fs.pathExistsSync(pathDir)) {
+            fs.mkdirpSync(pathDir)
+        }
+        let file = path.join(pathDir, name)
+        const strRandom = RandomGenerator.string(1024 * 1024 * 2);
+        let len = Buffer.byteLength(strRandom, 'utf-8');
+        while (size > len) {
+            let err = fs.appendFileSync(file, strRandom);
+            size = size - len;
+        }
+        fs.appendFileSync(file, RandomGenerator.string(size));
+        if (!fs.pathExistsSync(file)) {
+            console.error(`创建文件${file} 失败`)
+        }
+        return;
     }
 };
 
@@ -369,3 +386,4 @@ export class NetHelper {
         return NetHelper.getLocalIPs(withInternal).filter(ip => net.isIPv4(ip))
     }
 }
+

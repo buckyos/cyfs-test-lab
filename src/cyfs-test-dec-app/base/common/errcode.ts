@@ -18,4 +18,5 @@ export enum ErrorCode {
     break = 16,
     connectProxyClientFailed =1000,
     cyfsStackOnlineTimeout = 10001,
+    cyfsStackOnlineFailed = 10002,
 }

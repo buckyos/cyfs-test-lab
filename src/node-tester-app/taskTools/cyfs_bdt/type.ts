@@ -79,6 +79,7 @@ export const enum  ActionType {
     send_file_range = "send-file-range" ,
     send_file_object = "send-file-object" ,
     send_dir_object = "send-dir-object" ,
+    sleep = "sleep",
     Always_Run_IM = "Always_Run_IM" ,
     Always_Run_Web = "Always_Run_Web" ,
     Always_Run_NFT = "Always_Run_NFT" ,

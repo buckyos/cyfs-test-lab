@@ -181,9 +181,8 @@ export class Rpc extends EventEmitter {
             }
             let length = this.m_recvCache!.readUInt32LE(decodeOffset);
             decodeOffset += 4;
-            //this.m_logger.info(`will send data ,length = ${this.m_recvCache!.length},readUInt32LE length = ${length},decodeOffset = ${decodeOffset}`)
             if (this.m_recvCache!.length < length + decodeOffset) {
-                this.m_logger.info(this.m_recvCache!.toString())
+                this.m_logger.debug(this.m_recvCache!.toString())
                 this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}<${length + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
@@ -209,7 +208,6 @@ export class Rpc extends EventEmitter {
         try {
             let buffer: Buffer = Buffer.allocUnsafe(2 + 4);
             buffer.writeUInt16LE(rpcMsg.version, 0);
-
             let writer: BufferWriter = new BufferWriter();
             let err = encodeCommand(rpcMsg.command, writer);
             if (err) {
@@ -218,7 +216,6 @@ export class Rpc extends EventEmitter {
             let body: Buffer = writer.render();
             buffer.writeUInt32LE(body.length, 2);
             buffer = Buffer.concat([rpcMsg.magic.slice(0, 2), buffer, body]);
-
             return { err: ErrorCode.succ, buffer };
         } catch (e) {
             this.m_logger.error(`[rpc] encode msg exception, e=${e}`);

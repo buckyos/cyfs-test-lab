@@ -183,7 +183,7 @@ export class Rpc extends EventEmitter {
             decodeOffset += 4;
             //this.m_logger.info(`will send data ,length = ${this.m_recvCache!.length},readUInt32LE length = ${length},decodeOffset = ${decodeOffset}`)
             if (this.m_recvCache!.length < length + decodeOffset) {
-                this.m_logger.info(this.m_recvCache!.toString())
+                this.m_logger.debug(this.m_recvCache!.toString())
                 this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}<${length + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }

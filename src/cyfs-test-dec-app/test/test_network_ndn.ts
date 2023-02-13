@@ -1,0 +1,39 @@
+import {CyfsStackDriverManager,CyfsDriverType,BdtPeerClient} from "../cyfs-driver-client"
+import assert = require('assert');
+import * as cyfs from '../cyfs'
+import {StackManager} from "../cyfs-driver-client/stack_manager"
+import * as action_api from "../common_action"
+import { ErrorCode, RandomGenerator, sleep,Logger } from '../base';
+const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
+const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
+async function main() {
+    const stack_manager = StackManager.createInstance();
+    await stack_manager.init();
+    await cyfs.sleep(5000);
+    await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
+    await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
+    let action =await new action_api.PutDataAction({
+        local: {
+            peer_name: "zone1_device1",
+            dec_id: dec_app_2.to_base_58(),
+            type: cyfs.CyfsStackRequestorType.WebSocket
+        },
+        remote: {
+            peer_name: "zone1_ood",
+            dec_id: dec_app_2.to_base_58(),
+            type: cyfs.CyfsStackRequestorType.WebSocket
+        },
+        input: {
+            timeout: 200 * 1000,
+        },
+        expect: { err: 0 },
+
+    }, stack_manager.logger!).start({
+        object_type: "chunk",
+        chunk_size: 1*1024*1024,
+    });
+    assert.equal(action.err,ErrorCode.succ,action.log)
+}
+main().finally(()=>{
+   process.exit();
+})

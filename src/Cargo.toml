@@ -4,11 +4,16 @@ resolver = "2"
 members=[
     "bdt-tools",
     "bdt-unittest",
+    "bdt-cli",
+    "bdt-utils",
     "perf-report-tool",
     "cyfs-tools",
     "cyfs-stack-test-rust/unittest_nameobject",
     "cyfs-stack-test-rust/profile",
-    "stack-tool",
+    "stack-tool", 
+    "ndn-demos/sync-lib",
+    "ndn-demos/sync-src",
+    "ndn-demos/sync-dst",
 ]
 
 [profile.release]

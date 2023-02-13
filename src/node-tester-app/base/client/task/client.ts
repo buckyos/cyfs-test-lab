@@ -290,6 +290,7 @@ export class TaskClient extends ClientStack implements TaskClientInterface{
             bytes,
             param,
         };
+        this.logger.info(`send callApi ${JSON.stringify(c.apiname)} ${JSON.stringify(c.param)}`);
         this.channelWithMaster.send(c);
         let resp = await this.waitCommand(SysCommandName.sys_userapi_resp, c.seq, timeout);
         if (resp.err) {

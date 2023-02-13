@@ -28,11 +28,13 @@ export class CyfsStackSimulatorClient implements CyfsStackClient {
     }
 
     get_util_tool(): LocalUtilTool {
+        this.logger.info(`CyfsStackSimulatorClient ${this.peer_name} get_util_tool`)
         return this.m_util_tool!
     }
     async init(): Promise<{ err: ErrorCode, log: string }> {
         if(fs.pathExistsSync(this.cache_path)){
-            fs.removeSync(this.cache_path)
+            this.logger.info(`CyfsStackSimulatorClient ${this.peer_name} remove cache data`)
+            //fs.removeSync(this.cache_path)
         }
         fs.mkdirpSync(this.cache_path)
         this.m_util_tool.init();

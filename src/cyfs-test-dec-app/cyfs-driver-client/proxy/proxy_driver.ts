@@ -1,9 +1,9 @@
 
-import { CyfsStackDriver } from "../cyfs_driver"
+import { CyfsStackDriver,CyfsDriverType } from "../cyfs_driver"
 import { ErrorCode, Logger, TaskClient, LocalStorageJson, DirHelper, RandomGenerator, GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode } from "../../base"
 import { CyfsStackProxyClient } from "./proxy_client"
 import * as os from 'os';
-import { REAL_MACHINE_LIST } from "../../config/cyfs_driver_config"
+import { REAL_MACHINE_LIST ,REAL_MACHINE_OTHER_LIST} from "../../config/cyfs_driver_config"
 const Base = require('../../base/common/base.js');
 import path from "path";
 import fs from "fs-extra";
@@ -20,7 +20,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
     constructor(log_path: string) {
         this.stack_client_map = new Map();
         DirHelper.setRootDir(path.join(__dirname, "../../"));
-        Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+        Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
         Base.BX_EnableFileLog(log_path, `cyfs_stack_real_driver_${Date.now()}`, '.log');
         Base.blog.enableConsoleTarget(false);
         this.logger = new Logger(Base.blog.info, Base.blog.debug, Base.blog.error, log_path);
@@ -39,7 +39,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         });
         this.local_storage = local_storage;
         // TODO 应该从配置文件中加载
-        this.namespace = { agentid: this.agentid!, serviceid: "678", taskid: "1" };
+        this.namespace = { agentid: this.agentid!, serviceid: "678", taskid: "2" };
         this.platform = os.platform();
     }
 
@@ -50,11 +50,12 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         this.agentid = info.value!;
         this.namespace.agentid = this.agentid;
         // 初始化测试框架服务
+        this.logger.info(`$$$$$$    LocalMaster : ${JSON.stringify(this.agentid)}`);
         let local_master: LocalMaster = new LocalMaster({
             agentid: this.agentid!,
             version: GlobalConfig.version,
             heartbeatIntervalTime: GlobalConfig.heartbeatIntervalTime,
-            logger: this.logger!,
+            logger:this.logger,
             storage: this.local_storage,
             platform: this.platform,
         });
@@ -78,6 +79,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         // 实例化一个 本地 Task Client
         let taskClientProxy = this.local_master!.newTaskClient(this.namespace, "1", true);
         // 运行本地Task 脚本连接测试节点，启动CYFS协议栈代理隧道
+        this.logger.info(`$$$$$$    TaskClient : ${JSON.stringify(this.namespace)}`);
         let task: TaskClient = new TaskClient({
             namespace: this.namespace,
             version: "1",
@@ -114,7 +116,14 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         await this.stop();
         return await this.start();
     }
-    async load_config(): Promise<{ err: ErrorCode, log: string }> {
+    async load_config(type?:string): Promise<{ err: ErrorCode, log: string }>{
+        if(type == CyfsDriverType.other){
+            return await this.load_config_other();
+        }else{
+            return await this.load_config_real_machine();
+        }
+    }
+    async load_config_real_machine(): Promise<{ err: ErrorCode, log: string }> {
         let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
         for (let agent of REAL_MACHINE_LIST) {
             run_list.push(new Promise(async (V) => {
@@ -144,14 +153,49 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         }
         return { err: ErrorCode.succ, log: "init success" }
     }
+    async load_config_other(): Promise<{ err: ErrorCode, log: string }> {
+        let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
+        for (let agent of REAL_MACHINE_OTHER_LIST) {
+            run_list.push(new Promise(async (V) => {
+                let client = new CyfsStackProxyClient({
+                    _interface: this.interface!,
+                    peer_name: agent.peer_name,
+                    stack_type: agent.stack_type,
+                    timeout: 60 * 1000,
+                    ws_port: agent.ws_port,
+                    http_port: agent.http_port,
+                })
+                let result = await client.init();
+                if (result.err) {
+                    this.logger.error(`${agent.peer_name} start CyfsStackProxyClient fialed `)
+                    V(result);
+                }
+                this.stack_client_map.set(agent.peer_name, client)
+                V(result);
+            }))
+
+        }
+        for (let run of run_list) {
+            let result = await run;
+            console.info(result)
+            if (result.err) {
+                return result;
+            }
+        }
+        return { err: ErrorCode.succ, log: "init success" }
+    }
+
+
+
     get_client(name: string): { err: ErrorCode, log: string, client?: CyfsStackProxyClient } {
         if (!this.stack_client_map.has(name)) {
             return { err: ErrorCode.notFound, log: "cleint not found" }
         }
+        this.logger.info(`CyfsStackProxyDriver get_client ${name} success`)
         return { err: ErrorCode.succ, log: "init success", client: this.stack_client_map.get(name)! }
     }
     add_client(name: string, client: CyfsStackProxyClient): { err: ErrorCode, log: string } {
-        if (!this.stack_client_map.has(name)) {
+        if (this.stack_client_map.has(name)) {
             return { err: ErrorCode.invalidState, log: "cleint is exist" }
         }
         this.stack_client_map.set(name, client);

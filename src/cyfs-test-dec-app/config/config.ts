@@ -7,6 +7,7 @@ export class GlobalConfig {
     static heartbeatIntervalTime: number = 60*1000;   
     static version: string = '2.12';
     static ip: string = host;
+    // 公司内网100网段支持三个端口 11070（lizhihong） 11080(lixiang)  11090 (未使用)
     static port: number = 11080;
     static updateServer: {host: string, port: number} = {
         host: host,

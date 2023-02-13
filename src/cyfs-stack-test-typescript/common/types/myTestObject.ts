@@ -86,7 +86,7 @@ export class MyTestDescContentDecoder extends DescContentDecoder<MyTestDescConte
             if (r.err) {
                 return r;
             }
-            [name] = r.unwrap();
+            [name,buf] = r.unwrap();
         }
         const self = new MyTestDescContent(name);
         const ret:[MyTestDescContent, Uint8Array] = [self, buf];

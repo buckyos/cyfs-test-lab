@@ -21,7 +21,7 @@ async function main() {
 
     DirHelper.setRootDir(param.root);
 
-    Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
+    Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
     Base.BX_EnableFileLog(param.logPath, `${path.basename(process.argv[1], '.js')}`, '.log');
     Base.blog.enableConsoleTarget(false);
     Base.blog.info(`current dir=${process.cwd()}, rootdir=${DirHelper.getRootDir()}`);

@@ -19,7 +19,7 @@ function main() {
 
     let logFolder = `${workFolder}/blog/`;
     crashListener.enableFileLog(logFolder);
-    base.BX_SetLogLevel(Config.logLevel || 'debug');
+    base.BX_SetLogLevel(Config.logLevel || 'info');
     base.BX_EnableFileLog(logFolder, 'agent_master', '.log');
     base.blog.enableConsoleTarget(false);
 

@@ -4,7 +4,7 @@ use cyfs_base::{RawDecode, RawEncode, *};
 use std::convert::TryFrom;
 use std::{collections::BTreeSet, ops::Range, path::PathBuf};
 
-use cyfs_bdt::DownloadTaskState;
+use cyfs_bdt::NdnTaskState;
 use serde::Serialize;
 use std::io::Read;
 use std::str::FromStr;
@@ -1650,7 +1650,7 @@ impl TryFrom<LpcCommand> for CheckChunkListCommandReq {
 }
 pub struct CheckChunkListCommandResp {
     pub seq: u32,
-    pub state: BuckyResult<DownloadTaskState>,
+    pub state: BuckyResult<NdnTaskState>,
 }
 
 impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
@@ -1661,11 +1661,10 @@ impl TryFrom<CheckChunkListCommandResp> for LpcCommand {
                 "name": "check-chunk-list-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    DownloadTaskState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    // DownloadTaskState::Finished(speed) => format!("Finished({})", speed),
-                    DownloadTaskState::Finished => format!("Finished"),
-                    DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(error_code)=>format!("Err({})", error_code),
+                    NdnTaskState::Running => format!("Downloading"),
+                    NdnTaskState::Finished => format!("Finished"),
+                    NdnTaskState::Paused => String::from("Paused"),
+                    NdnTaskState::Error(error_code) => format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -1730,7 +1729,7 @@ impl TryFrom<GetSystemInfoLpcCommandResp> for LpcCommand {
 pub struct UploadSystemInfoLpcCommandReq {
     pub seq: u32,
     pub agent_name: String,
-    pub test_case_id: String,
+    pub testcase_id: String,
     pub interval: u64,
 }
 impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
@@ -1754,7 +1753,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
             },
             _ => Err(BuckyError::new(BuckyErrorCode::NotFound, "name lost")),
         }?;
-        let test_case_id = match json.get("testcaseId") {
+        let testcase_id = match json.get("testcaseId") {
             Some(v) => match v {
                 serde_json::Value::String(s) => Ok(s.clone()),
                 _ => Err(BuckyError::new(
@@ -1767,7 +1766,7 @@ impl TryFrom<LpcCommand> for UploadSystemInfoLpcCommandReq {
         Ok(Self {
             seq: value.seq(),
             agent_name,
-            test_case_id,
+            testcase_id,
             interval,
         })
     }
@@ -2062,7 +2061,7 @@ impl TryFrom<LpcCommand> for GetTransSessionStateCommandReq {
 
 pub struct GetTransSessionStateCommandResp {
     pub seq: u32,
-    pub state: BuckyResult<DownloadTaskState>,
+    pub state: BuckyResult<NdnTaskState>,
 }
 
 impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
@@ -2073,9 +2072,9 @@ impl TryFrom<GetTransSessionStateCommandResp> for LpcCommand {
                 "name": "get-trans-session-state-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    DownloadTaskState::Downloading(speed,progress) => format!("OnAir({},{})", speed,progress),
-                    DownloadTaskState::Finished => String::from("Ready"),
-                    DownloadTaskState::Paused => String::from("Pending"),
+                    NdnTaskState::Running => format!("OnAir"),
+                    NdnTaskState::Finished => String::from("Ready"),
+                    NdnTaskState::Paused => String::from("Pending"),
                     _ => String::from("unkown"),
                 }
             }),
@@ -2623,7 +2622,7 @@ impl TryFrom<LpcCommand> for DownloadFileStateCommandReq {
 }
 pub struct DownloadFileStateCommandResp {
     pub seq: u32,
-    pub state: BuckyResult<DownloadTaskState>,
+    pub state: BuckyResult<NdnTaskState>,
 }
 
 impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
@@ -2634,11 +2633,10 @@ impl TryFrom<DownloadFileStateCommandResp> for LpcCommand {
                 "name": "download-file-state-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    DownloadTaskState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    //DownloadTaskState::Finished(speed) => format!("Finished({})",speed),
-                    DownloadTaskState::Finished => format!("Finished"),
-                    DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(error_code) => format!("Err({})", error_code),
+                    NdnTaskState::Running => format!("Downloading"),
+                    NdnTaskState::Finished => format!("Finished"),
+                    NdnTaskState::Paused => String::from("Paused"),
+                    NdnTaskState::Error(error_code) => format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({
@@ -3122,7 +3120,7 @@ impl TryFrom<LpcCommand> for DownloadDirStateCommandReq {
 
 pub struct DownloadDirStateCommandResp {
     pub seq: u32,
-    pub state: BuckyResult<DownloadTaskState>,
+    pub state: BuckyResult<NdnTaskState>,
 }
 
 impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
@@ -3133,11 +3131,10 @@ impl TryFrom<DownloadDirStateCommandResp> for LpcCommand {
                 "name": "download-dir-state-resp",
                 "result": BuckyErrorCode::Ok.as_u16(),
                 "state": match state {
-                    DownloadTaskState::Downloading(speed,progress) => format!("Downloading({},{})", speed,progress),
-                    //DownloadTaskState::Finished(speed) => format!("Finished({})", speed),
-                    DownloadTaskState::Finished => format!("Finished"),
-                    DownloadTaskState::Paused => String::from("Paused"),
-                    DownloadTaskState::Error(error_code) => format!("Err({})", error_code),
+                    NdnTaskState::Running => format!("Downloading"),
+                    NdnTaskState::Finished => format!("Finished"),
+                    NdnTaskState::Paused => String::from("Paused"),
+                    NdnTaskState::Error(error_code) => format!("Err({})", error_code),
                 }
             }),
             Err(err) => serde_json::json!({

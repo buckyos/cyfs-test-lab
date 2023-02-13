@@ -40,7 +40,7 @@ module.exports = {
 
         blog.init({
             service: 'gct_account',
-            level: Config.logLevel || 'debug'
+            level: Config.logLevel || 'info'
         });
 
         require('./mysqlclient.js').init();
