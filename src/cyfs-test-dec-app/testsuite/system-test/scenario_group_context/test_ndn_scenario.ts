@@ -277,7 +277,7 @@ describe("CYFS Stack NDN 模块测试", function () {
     })
     describe("get_data 功能测试",async()=>{
         describe(`NDN get_data 基本流程HTTP+WebSocket`,async()=>{
-            it.only("本地NDC get_data chunk数据 - HTTP",async()=>{
+            it("本地NDC get_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
                 let action =await new action_api.GetDataAction({
