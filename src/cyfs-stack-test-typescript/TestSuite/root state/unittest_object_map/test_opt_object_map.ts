@@ -1,6 +1,6 @@
 import assert  from 'assert';
-import * as cyfs from '../../cyfs_node';
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo } from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo } from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 //初始化日志
@@ -42,7 +42,7 @@ describe("#op-env 操作object_map", function () {
             let insert_path = `/qaTest/path/A`
             describe("#### insert_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let result = await op_env.insert_with_key(insert_path, insert_key, obj_id)
                     console.info(JSON.stringify(result))
@@ -52,9 +52,9 @@ describe("#op-env 操作object_map", function () {
             let set_path = "/qaTest/pathsds"
             describe("#### set_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `B${RandomGenerator.string(10)}`, `B${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `B${RandomGenerator.string(10)}`, `B${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id2 = obj2.desc().object_id();
                     let path = set_path
                     let key = `dsa${RandomGenerator.string(10)}`
@@ -67,7 +67,7 @@ describe("#op-env 操作object_map", function () {
             let remove_path = "/qaTest/path/"
             describe("#### remove_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let insert_key = `abc${RandomGenerator.string(10)}`
                     let insert_path = "/qaTest/path/" + RandomGenerator.string(10);
@@ -135,7 +135,7 @@ describe("#op-env 操作object_map", function () {
             let insert_obj: cyfs.ObjectId
             describe("#### insert 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     insert_obj = obj_id1;
                     let result = await op_env.insert(set_path, obj_id1);
@@ -145,7 +145,7 @@ describe("#op-env 操作object_map", function () {
             })
             describe("#### remove 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result = await op_env.insert(set_path, obj_id1);
                     console.info(JSON.stringify(result));
@@ -222,7 +222,7 @@ describe("#op-env 操作object_map", function () {
             let insert_path = `/qaTest/pathopt${RandomGenerator.string(10)}`
             describe("#### insert_with_path 接口", async () => {
                 it("正常流程", async () => {
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let result = await op_env.insert_with_path(insert_path, obj_id);
                     console.info(JSON.stringify(result))
@@ -233,7 +233,7 @@ describe("#op-env 操作object_map", function () {
             describe("#### set_with_path 接口", async () => {
                 it("正常流程", async () => {
                     let set_path = `/qaTest/pathoptsa${RandomGenerator.string(10)}`
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let result = await op_env.insert_with_path(set_path, obj_id);
                     console.info(JSON.stringify(result))
@@ -247,7 +247,7 @@ describe("#op-env 操作object_map", function () {
             describe("#### remove_with_path 接口", async () => {
                 it("正常流程", async () => {
                     let set_path = `/qaTest/pathopfstsa${RandomGenerator.string(10)}`
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let result = await op_env.insert_with_path(set_path, obj_id);
                     console.info(JSON.stringify(result))
@@ -300,7 +300,7 @@ describe("#op-env 操作object_map", function () {
             let insert_key = `ABC${RandomGenerator.string(10)}`
             describe("#### insert_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let result = await op_env.insert_with_key(insert_key, obj_id)
                     console.info(JSON.stringify(result))
@@ -309,9 +309,9 @@ describe("#op-env 操作object_map", function () {
             })
             describe("#### set_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `B${RandomGenerator.string(10)}`, `B${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `B${RandomGenerator.string(10)}`, `B${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id2 = obj2.desc().object_id();
 
                     let key = `dsa${RandomGenerator.string(10)}`
@@ -323,7 +323,7 @@ describe("#op-env 操作object_map", function () {
             let remove_path = "/qaTest/path/"
             describe("#### remove_with_key 接口", async () => {
                 it("正常流程", async () => {
-                    let obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id = obj.desc().object_id();
                     let key = `abc${RandomGenerator.string(10)}`
                     let result = await op_env.insert_with_key(key, obj_id)
@@ -375,7 +375,7 @@ describe("#op-env 操作object_map", function () {
             let insert_obj: cyfs.ObjectId
             describe("#### insert 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     insert_obj = obj_id1;
                     let result = await op_env.insert(obj_id1);
@@ -385,7 +385,7 @@ describe("#op-env 操作object_map", function () {
             })
             describe("#### remove 接口", async () => {
                 it("正常流程", async () => {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result));
@@ -427,7 +427,7 @@ describe("#op-env 操作object_map", function () {
                 op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
 
                 let result1 = await op_env.insert(obj_id1);
@@ -475,7 +475,7 @@ describe("#op-env 操作object_map", function () {
                 op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
 
                 let result1 = await op_env.insert(obj_id1);
@@ -510,7 +510,7 @@ describe("#op-env 操作object_map", function () {
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
                 for (let i = 0; i < 10; i++) {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -541,7 +541,7 @@ describe("#op-env 操作object_map", function () {
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
                 for (let i = 0; i < 10; i++) {
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -570,7 +570,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -588,7 +588,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -605,7 +605,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -622,7 +622,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -639,7 +639,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -656,7 +656,7 @@ describe("#op-env 操作object_map", function () {
                 let op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 let result1 = await op_env.insert(obj_id1);
                 console.info(JSON.stringify(result1))
@@ -676,7 +676,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -693,7 +693,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -710,7 +710,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -727,7 +727,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -744,7 +744,7 @@ describe("#op-env 操作object_map", function () {
                     // let op_env = result.unwrap();
                     // let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     // assert.ok(!create.err);
-                    // let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    // let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     // let obj_id1 = obj1.desc().object_id();
                     // let result1 = await op_env.insert(obj_id1);
                     // console.info(JSON.stringify(result1))
@@ -764,7 +764,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -782,7 +782,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -799,7 +799,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -816,7 +816,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -833,7 +833,7 @@ describe("#op-env 操作object_map", function () {
                     // let op_env = result.unwrap();
                     // let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     // assert.ok(!create.err);
-                    // let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    // let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     // let obj_id1 = obj1.desc().object_id();
                     // let result1 = await op_env.insert(obj_id1);
                     // console.info(JSON.stringify(result1))
@@ -853,7 +853,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -871,7 +871,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -888,7 +888,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -905,7 +905,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -922,7 +922,7 @@ describe("#op-env 操作object_map", function () {
                     let op_env = result.unwrap();
                     let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                     assert.ok(!create.err);
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
@@ -941,7 +941,7 @@ describe("#op-env 操作object_map", function () {
 
             it("基本业务流程", async () => {
                 let obj_id1: cyfs.ObjectId
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 obj_id1 = obj1.desc().object_id();
                 let process1 = new Promise(async (V) => {
                     let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_single_op_env();
@@ -971,7 +971,7 @@ describe("#op-env 操作object_map", function () {
         describe("### commit后object_map 数据校验", async () => {
             it("基本业务流程", async () => {
                 let obj_id1: cyfs.ObjectId
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 obj_id1 = obj1.desc().object_id();
                 let path = `/qatest/${RandomGenerator.string(15)}`;
                 let key = RandomGenerator.string(15)
@@ -1004,7 +1004,7 @@ describe("#op-env 操作object_map", function () {
         describe("### abort后object_map 数据校验", async () => {
             it("基本业务流程", async () => {
                 let obj_id1: cyfs.ObjectId
-                let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                 obj_id1 = obj1.desc().object_id();
                 let process1 = new Promise(async (V) => {
                     let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_single_op_env();
@@ -1049,7 +1049,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1081,7 +1081,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1137,7 +1137,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1169,7 +1169,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1225,7 +1225,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1257,7 +1257,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1313,7 +1313,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1345,7 +1345,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1404,7 +1404,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1436,7 +1436,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1484,7 +1484,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1516,7 +1516,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1564,7 +1564,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1596,7 +1596,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1644,7 +1644,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
@@ -1676,7 +1676,7 @@ describe("#op-env 操作object_map", function () {
                         try {
                             let key = RandomGenerator.string(10);
                             let obj_id1: cyfs.ObjectId
-                            let obj1 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
+                            let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(), `A${RandomGenerator.string(10)}`, `A${RandomGenerator.string(10)}`, `${RandomGenerator.string(10)}`)
                             obj_id1 = obj1.desc().object_id();
                             // 初始化 op_env
                             let result = await ZoneSimulator.zone1_ood_stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();

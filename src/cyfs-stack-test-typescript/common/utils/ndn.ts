@@ -72,7 +72,7 @@ export class NDNTestManager {
         }
         //assert(!put_file_object.err,`source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list.inner_chunk_list()
 
         let chunkRecvPromise: Array<any> = []
 
@@ -81,7 +81,7 @@ export class NDNTestManager {
                 setTimeout(() => {
                     v({ err: true, log: `ndn_service get_data timeout` })
                 }, timeout)
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let chunkId = chunkIdList![i];
                 console.info(`开始传输chunk：${chunkId}`)
                 let req: cyfs.NDNGetDataOutputRequest = {
                     common: {
@@ -173,12 +173,12 @@ export class NDNTestManager {
         }
         //assert(!put_file_object.err,`source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list!.inner_chunk_list();
 
         let chunkRecvPromise: Array<any> = []
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let  chunkId = chunkIdList![i]
                 let req: cyfs.NDNPutDataOutputRequest = {
                     common: {
                         // api级别
@@ -191,7 +191,7 @@ export class NDNTestManager {
                     // 目前只支持ChunkId/FileId/DirId
                     object_id: chunkId.calculate_id(),
                     length: 1024,
-                    data: buff,
+                    data: buf,
 
                 }
                 let begin = Date.now();
@@ -261,13 +261,13 @@ export class NDNTestManager {
         }))
         assert(!put_file_object.err, `source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list!.inner_chunk_list()!;
 
         let chunkRecvPromise: Array<any> = []
         let download = []
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let chunkId = chunkIdList[i]
                 let req: cyfs.NDNGetDataOutputRequest = {
                     common: {
                         // api级别

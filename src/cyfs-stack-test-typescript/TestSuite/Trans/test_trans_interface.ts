@@ -339,7 +339,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
                 })
                 console.info(JSON.stringify(task));
                 let state = task.unwrap().state;
-                if(state==4){
+                if(state.state==4){
                     break;
                 }
                 assert.ok(!task.err,"control_task 失败");

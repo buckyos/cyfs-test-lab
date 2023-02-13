@@ -1,8 +1,8 @@
 import assert from "assert";
 import { access } from "fs";
-import * as cyfs from '../../cyfs_node';
-import { NONAPILevel, NONObjectInfo, Some } from '../../cyfs_node';
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo} from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import { NONAPILevel, NONObjectInfo, } from '../../../cyfs_node';
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo} from "../../../common";
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -79,7 +79,7 @@ describe("#op-env 初始化方式", function () {
 
         let gen_obj = async () => {
             return cyfs.TextObject.create(
-                cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                 `A${RandomGenerator.string(10)}`,
                 `A${RandomGenerator.string(10)}`,
                 `A${RandomGenerator.string(10)}`)
@@ -888,8 +888,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -941,8 +941,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -994,8 +994,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1048,8 +1048,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1102,8 +1102,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1158,8 +1158,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1216,8 +1216,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1271,8 +1271,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1327,8 +1327,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1377,8 +1377,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1427,8 +1427,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1477,8 +1477,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1527,8 +1527,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1580,8 +1580,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1632,8 +1632,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -1683,8 +1683,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2498,8 +2498,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2550,8 +2550,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2602,8 +2602,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2654,8 +2654,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2706,8 +2706,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2760,8 +2760,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2815,8 +2815,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2869,8 +2869,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2923,8 +2923,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -2972,8 +2972,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3021,8 +3021,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3070,8 +3070,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3119,8 +3119,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3170,8 +3170,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3221,8 +3221,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
            
@@ -3271,8 +3271,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = ood2.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = ood2.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 
@@ -3634,8 +3634,8 @@ describe("#op-env 初始化方式", function () {
             let obj_id2:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();        
             let key1 = RandomGenerator.string(10);                
             let path1 = `/qatest/${key1}/${obj_id1}`
-            const owner_id = stack_a.local_device().desc().owner()!.unwrap();
-            const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+            const owner_id = stack_a.local_device().desc().owner()!;
+            const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
             const object_id: cyfs.ObjectId = obj.desc().calculate_id();
             const object_raw = obj.to_vec().unwrap();
 

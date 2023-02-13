@@ -82,7 +82,7 @@ export class Ready {
         //根据objectmap 获取dirid
         let dresp
         {
-            let req: cyfs.UtilBuildDirFromObjectMapOutputRequest = {
+            let req = {
                 common: {
                     flags: 0
                 },

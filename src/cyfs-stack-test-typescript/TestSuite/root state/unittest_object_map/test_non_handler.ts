@@ -1,6 +1,6 @@
 import assert from 'assert';
-import * as cyfs from '../../cyfs_node';
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo } from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo } from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 
@@ -15,7 +15,7 @@ class PostObjectHandler implements cyfs.RouterHandlerPostObjectRoutine {
         console.info(`put_object text_object: id=${text.id}, header=${text.header}, body=${text.body}`);
 
         if (text.id === 'request') {
-            const obj = cyfs.TextObject.create(cyfs.None, 'response', "test_header", "hello!");
+            const obj = cyfs.TextObject.create(undefined, 'response', "test_header", "hello!");
             const object_id = obj.desc().calculate_id();
             console.info(`will response put_object: ${param.request.object.object_id} ---> ${object_id}`);
 
@@ -77,8 +77,8 @@ describe("#test 初始化方式", function () {
                 let device12 = ZoneSimulator.zone1_device2_stack;
                 await device12.root_state_meta_stub().clear_access()
 
-                const owner_id = device11.local_device().desc().owner()!.unwrap();
-                const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question', "test_header", "hello!");
+                const owner_id = device11.local_device().desc().owner()!;
+                const obj = cyfs.TextObject.create(owner_id, 'question', "test_header", "hello!");
                 const object_id: cyfs.ObjectId = obj.desc().calculate_id();
                 const object_raw = obj.to_vec().unwrap();
             

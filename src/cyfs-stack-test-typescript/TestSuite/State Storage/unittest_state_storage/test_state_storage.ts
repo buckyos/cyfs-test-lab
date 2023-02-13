@@ -1,6 +1,6 @@
 import assert  from 'assert'; 
-import * as cyfs from '../../cyfs_node';
-import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo} from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo} from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 import { PassThrough } from 'stream';
@@ -48,8 +48,7 @@ describe("#state_storage 测试执行",function(){
         after(async() => {})
         describe("#function storage",async()=>{
             it("storage_Map_RootState 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -73,8 +72,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
             it("storage_Map_LocalCache 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -98,8 +96,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
             it("storage_Set_RootState 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -123,8 +120,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageMap(new cyfs.StateStorageMap(new cyfs.StateStorageMap(storage).storage()).storage()).storage());
             })
             it("storage_Set_LocalCache 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -153,8 +149,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Map_RootState 正常调用,多次save",async()=>{
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -192,8 +187,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Map_LocalCache 正常调用,多次save",async()=>{
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -232,8 +226,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Set_RootState 正常调用,多次save",async()=>{
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -272,8 +265,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Set_LocalCache 正常调用,多次save",async()=>{
                 //storage.op_data = (await storage.load()).unwrap();
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -312,8 +304,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function abort",async()=>{
             it("abort_Map_RootState  正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -337,8 +328,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -366,8 +356,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Map_LocalCache 正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -391,8 +380,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -419,8 +407,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Set_RootState  正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -444,8 +431,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -473,8 +459,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Set_LocalCache  正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -498,8 +483,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -529,8 +513,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function get",async()=>{
             it("get_Map_RootState 正常调用,set后进行get",async()=>{                
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -571,8 +554,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("get_Map_LocalCache 正常调用,set后进行get",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -613,8 +595,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("get_Set_RootState 正常调用,set后进行get",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -655,8 +636,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("get_Set_LocalCache 正常调用,set后进行get",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`,
                         `${RandomGenerator.string(10)}`)
@@ -699,8 +679,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function set",async()=>{
             it("set_Map_RootState 正常调用,多次set",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -724,8 +703,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -753,8 +731,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("set_Map_LocalCache 正常调用,多次set",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -778,8 +755,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -807,8 +783,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("set_Set_RootState 正常调用,多次set",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -832,8 +807,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -861,8 +835,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("set_Set_LocalCache 正常调用,多次set",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -886,8 +859,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -917,8 +889,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function set_ex",async()=>{
             it("set_ex_Map_RootState正常调用,多次set_ex",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -942,16 +913,14 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -973,8 +942,7 @@ describe("#state_storage 测试执行",function(){
             })                
             it("set_ex_Map_LocalCache正常调用,多次set_ex",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -998,16 +966,14 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1029,8 +995,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("set_ex_Set_RootState正常调用,多次set_ex",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1054,16 +1019,14 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1085,8 +1048,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("set_ex_Set_LocalCache正常调用,多次set_ex",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1110,16 +1072,14 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1143,8 +1103,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function insert",async()=>{
             it("insert_Map_RootState 正常调用,取消插入后重复插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1168,8 +1127,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1197,8 +1155,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Map_LocalCache 正常调用,取消插入后重复插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1222,8 +1179,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1251,8 +1207,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Set_RootState 正常调用,取消插入后重复插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1276,8 +1231,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1305,8 +1259,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Set_LocalCache 正常调用,取消插入后重复插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1330,8 +1283,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1361,8 +1313,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function remove",async()=>{
             it("remove_Map_RootState正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1386,8 +1337,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1409,8 +1359,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Map_LocalCache正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1434,8 +1383,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1457,8 +1405,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Set_RootState正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1482,8 +1429,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1505,8 +1451,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Set_LocalCache正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1530,8 +1475,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let map = new cyfs.StateStorageMap(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1554,8 +1498,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function next",async()=>{
             it("next_Map_RootState正常调用,查找多次插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1579,24 +1522,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1629,8 +1569,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("next_Map_LocalCache正常调用,查找多次插入结果",async()=>{    
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1654,24 +1593,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1704,8 +1640,7 @@ describe("#state_storage 测试执行",function(){
                 }            
             })
             it("next_Set_RootState正常调用,查找多次插入结果",async()=>{   
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1729,24 +1664,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1779,8 +1711,7 @@ describe("#state_storage 测试执行",function(){
                 }            
             })
             it("next_Set_LocalCache正常调用,查找多次插入结果",async()=>{    
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1804,24 +1735,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1856,8 +1784,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function reset",async()=>{
             it("reset_Map_RootState正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1881,24 +1808,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -1938,8 +1862,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("reset_Map_LocalCache正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -1963,24 +1886,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2022,8 +1942,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("reset_Set_RootState正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2047,24 +1966,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2106,8 +2022,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("reset_Set_LocalCache正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2131,24 +2046,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2192,8 +2104,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function list",async()=>{
             it("list_Map_RootState正常调用,查找所有插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2217,24 +2128,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2267,8 +2175,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("list_Map_LocalCache正常调用,查找所有插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2292,24 +2199,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2341,8 +2245,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result1)}`)
             })
             it("list_Set_RootState正常调用,查找所有插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2366,24 +2269,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2415,8 +2315,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result1)}`)
             })
             it("list_Set_LocalCache正常调用,查找所有插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2440,24 +2339,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2491,8 +2387,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function convert_list",async()=>{
             it("convert_list_Map_RootState正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2516,24 +2411,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2570,8 +2462,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("convert_list_Map_LocalCache正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2595,24 +2486,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2648,8 +2536,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
             it("convert_list_Set_RootState正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2673,24 +2560,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2726,8 +2610,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
             it("convert_list_Set_LocalCache正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -2751,24 +2634,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageMap(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2808,8 +2688,7 @@ describe("#state_storage 测试执行",function(){
  
     describe("##StateStorageSet 接口测试",async()=>{
         before(async() => {
-            let obj0 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`)
@@ -2835,8 +2714,7 @@ describe("#state_storage 测试执行",function(){
         after(async() => {})
         describe.only("#function storage",async()=>{
             it("storage_Map_RootState 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -2860,8 +2738,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
             it("storage_Map_LocalCache 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -2885,8 +2762,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
             it("storage_Set_RootState 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -2910,8 +2786,7 @@ describe("#state_storage 测试执行",function(){
                 assert.strictEqual(storage,new cyfs.StateStorageSet(new cyfs.StateStorageSet(new cyfs.StateStorageSet(storage).storage()).storage()).storage());
             })
             it("storage_Set_LocalCache 正常调用,返回storage对象",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`,
                     `${RandomGenerator.string(10)}`)
@@ -2939,8 +2814,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Map_RootState 正常调用, 多次save",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -2978,8 +2852,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Map_LocalCache 正常调用,多次save",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3017,8 +2890,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Set_RootState 正常调用,多次save",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3056,8 +2928,7 @@ describe("#state_storage 测试执行",function(){
             it("save_Set_LocalCache 正常调用,多次save",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3096,8 +2967,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function abort",async()=>{
             it("abort_Map_RootState  正常调用,多次abort后插入", async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3121,8 +2991,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3150,8 +3019,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Map_LocalCache 正常调用,多次abort后插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3175,8 +3043,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3204,8 +3071,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Set_RootState  正常调用,多次abort后插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3229,8 +3095,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3258,8 +3123,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("abort_Set_LocalCache  正常调用,多次abort后插入",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3283,8 +3147,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3315,8 +3178,8 @@ describe("#state_storage 测试执行",function(){
             it("contains_Map_RootState 正常调用,多次插入及移除及取消后contains",async()=>{
                     let set = new cyfs.StateStorageSet(storage)
                     for(let i=0 ; i<= 99;i++){
-                        let obj0 = cyfs.TextObject.create(cyfs.Some(
-                            cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                        let obj0 = cyfs.TextObject.create(
+                            cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                             `${RandomGenerator.string(1000)}`,
                             `${RandomGenerator.string(1000)}`,
                             `${RandomGenerator.string(1000)}`)
@@ -3357,8 +3220,7 @@ describe("#state_storage 测试执行",function(){
             it("contains_Map_LocalCache 正常调用,多次插入及移除及取消后contains",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3399,8 +3261,7 @@ describe("#state_storage 测试执行",function(){
             it("contains_Set_RootState 正常调用,多次插入及移除及取消后contains",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3441,8 +3302,7 @@ describe("#state_storage 测试执行",function(){
             it("contains_Set_LocalCache 正常调用,多次插入及移除及取消后contains",async()=>{
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3484,8 +3344,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function insert", async()=>{
             it("insert_Map_RootState 正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3509,8 +3368,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3538,8 +3396,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Map_LocalCache 正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3563,8 +3420,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3592,8 +3448,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Set_RootState 正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3617,8 +3472,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3646,8 +3500,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("insert_Set_LocalCache 正常调用,多次abort后insert",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3671,8 +3524,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3702,8 +3554,7 @@ describe("#state_storage 测试执行",function(){
         describe("#function remove",async()=>{
             it("remove_Map_RootState正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3727,8 +3578,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3750,8 +3600,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Map_LocalCache正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3775,8 +3624,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3798,8 +3646,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Set_RootState正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3823,8 +3670,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3846,8 +3692,7 @@ describe("#state_storage 测试执行",function(){
             })
             it("remove_Set_LocalCache正常调用,插入后移除",async()=>{
                 for(let i=0 ; i<= 99;i++){
-                    let obj0 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3871,8 +3716,7 @@ describe("#state_storage 测试执行",function(){
                     (await storage.init()).unwrap();
                     //storage.op_data = (await storage.load()).unwrap();
                     let set = new cyfs.StateStorageSet(storage)
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3895,8 +3739,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function next",async()=>{
             it("next_Map_RootState 正常调用,查找多次插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -3920,24 +3763,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -3969,8 +3809,7 @@ describe("#state_storage 测试执行",function(){
                     }
             })
             it("next_Map_LocalCache 正常调用,查找多次插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -3994,24 +3833,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4043,8 +3879,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("next_Set_RootState 正常调用,查找多次插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4068,24 +3903,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4117,8 +3949,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("next_Set_LocalCache 正常调用,查找多次插入结果",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4142,24 +3973,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4193,8 +4021,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function reset",async()=>{
             it("reset_Map_RootState 正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4218,24 +4045,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4275,8 +4099,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("reset_Map_LocalCache 正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4300,24 +4123,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4357,8 +4177,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("reset_Set_RootState 正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4382,24 +4201,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4439,8 +4255,7 @@ describe("#state_storage 测试执行",function(){
                 }
             })
             it("reset_Set_LocalCache 正常调用,反复reset后多次插入",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4464,24 +4279,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4523,8 +4335,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function list",async()=>{
             it("list_Map_RootState正常调用,多次插入后查看列表",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4548,24 +4359,21 @@ describe("#state_storage 测试执行",function(){
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4598,8 +4406,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("list_Map_LocalCache正常调用,多次插入后查看列表",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4622,24 +4429,21 @@ describe("#state_storage 测试执行",function(){
                 (await storage.init()).unwrap();
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){                 
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4667,8 +4471,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result0)}`)
             })
             it("list_Set_RootState正常调用,多次插入后查看列表",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4691,24 +4494,21 @@ describe("#state_storage 测试执行",function(){
                 (await storage.init()).unwrap();
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){                 
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4736,8 +4536,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`save_result1 ${JSON.stringify(list_result0)}`)
             })
             it("list_Set_LocalCache正常调用,多次插入后查看列表",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4760,24 +4559,21 @@ describe("#state_storage 测试执行",function(){
                 (await storage.init()).unwrap();
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){                 
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4811,8 +4607,7 @@ describe("#state_storage 测试执行",function(){
         })
         describe("#function convert_list",async()=>{
             it("convert_list_Map_RootState正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4836,24 +4631,21 @@ describe("#state_storage 测试执行",function(){
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4890,8 +4682,7 @@ describe("#state_storage 测试执行",function(){
 
             })
             it("convert_list_Map_LocalCache正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4915,24 +4706,21 @@ describe("#state_storage 测试执行",function(){
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -4968,8 +4756,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
             it("convert_list_Set_RootState正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -4993,24 +4780,21 @@ describe("#state_storage 测试执行",function(){
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -5046,8 +4830,7 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
             })
             it("convert_list_Set_LocalCache正常调用,多次插入后进行列表转换",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -5071,24 +4854,21 @@ describe("#state_storage 测试执行",function(){
                 let set = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
 
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
 
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -5127,8 +4907,7 @@ describe("#state_storage 测试执行",function(){
     })   
     describe("##StateStorageMap 接口流程",async()=>{
         it("#state_storageMap 测试接口执行,多个object_id插入后移除并重置",async()=>{
-            let obj0 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`)
@@ -5152,24 +4931,21 @@ describe("#state_storage 测试执行",function(){
             let map = new cyfs.StateStorageMap(storage)
             for(let i=0 ; i<= 99;i++){
                 //storage.op_data = (await storage.load()).unwrap();                   
-                let obj1 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj1_id = obj1.desc().object_id()
 
-                let obj2 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj2_id = obj1.desc().object_id() 
 
-                let obj3 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -5216,20 +4992,17 @@ describe("#state_storage 测试执行",function(){
             console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
         })
         it("#state_storageMap 测试接口执行,多级path",async()=>{
-            let obj0 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`)
             
-            let obj01 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj01 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(100)}`,
                 `${RandomGenerator.string(100)}`,
                 `${RandomGenerator.string(100)}`)
 
-            let obj02 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj02 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`)
@@ -5256,24 +5029,21 @@ describe("#state_storage 测试执行",function(){
             let map = new cyfs.StateStorageMap(storage)
             for(let i=0 ; i<= 99;i++){
                 //storage.op_data = (await storage.load()).unwrap();                   
-                let obj1 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj1_id = obj1.desc().object_id()
 
-                let obj2 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj2_id = obj1.desc().object_id() 
 
-                let obj3 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -5313,8 +5083,7 @@ describe("#state_storage 测试执行",function(){
             console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
         })
         it("#state_storageMap 测试接口执行,remove_ex多次多个关联objid",async()=>{
-            let obj0 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`)
@@ -5338,24 +5107,21 @@ describe("#state_storage 测试执行",function(){
             let map = new cyfs.StateStorageMap(storage)
             for(let i=0 ; i<= 99;i++){
                 //storage.op_data = (await storage.load()).unwrap();                   
-                let obj1 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj1_id = obj1.desc().object_id()
 
-                let obj2 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj2_id = obj1.desc().object_id() 
 
-                let obj3 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -5405,8 +5171,7 @@ describe("#state_storage 测试执行",function(){
     })
     describe("##StateStorageSet 接口流程",async()=>{
         it("#state_storageMap 测试接口执行,多个object_id插入后移除并重置",async()=>{
-                let obj0 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
@@ -5430,24 +5195,21 @@ describe("#state_storage 测试执行",function(){
                 let map = new cyfs.StateStorageSet(storage)
                 for(let i=0 ; i<= 99;i++){
                     //storage.op_data = (await storage.load()).unwrap();                   
-                    let obj1 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj1_id = obj1.desc().object_id()
     
-                    let obj2 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
     
                     let obj2_id = obj1.desc().object_id() 
     
-                    let obj3 = cyfs.TextObject.create(cyfs.Some(
-                        cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                    let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`,
                         `${RandomGenerator.string(1000)}`)
@@ -5492,20 +5254,17 @@ describe("#state_storage 测试执行",function(){
                 console.info(`convert_list_result0 ${JSON.stringify(convert_list_result0)}`)
         })
         it("#state_storageSet 测试接口执行,多级path",async()=>{
-            let obj0 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`,
                 `${RandomGenerator.string(1000)}`)
             
-            let obj01 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj01 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(100)}`,
                 `${RandomGenerator.string(100)}`,
                 `${RandomGenerator.string(100)}`)
 
-            let obj02 = cyfs.TextObject.create(cyfs.Some(
-                cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+            let obj02 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`,
                 `${RandomGenerator.string(10)}`)
@@ -5532,24 +5291,21 @@ describe("#state_storage 测试执行",function(){
             let map = new cyfs.StateStorageSet(storage)
             for(let i=0 ; i<= 99;i++){
                 //storage.op_data = (await storage.load()).unwrap();                   
-                let obj1 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj1 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj1_id = obj1.desc().object_id()
 
-                let obj2 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj2 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)
 
                 let obj2_id = obj1.desc().object_id() 
 
-                let obj3 = cyfs.TextObject.create(cyfs.Some(
-                    cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                let obj3 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`,
                     `${RandomGenerator.string(1000)}`)

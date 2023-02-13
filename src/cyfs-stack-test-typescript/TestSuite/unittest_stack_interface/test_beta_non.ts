@@ -18,7 +18,7 @@ cyfs.clog.enable_file_log({
 async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, access?: cyfs.AccessString, req_path?: string) {
     // peerId stack_runtime.local_device_id().to_base_58()
     const saveobjectOwner = cyfs.ObjectId.from_base_58(peerId).unwrap()
-    const saveobject = cyfs.TextObject.create(cyfs.Some(saveobjectOwner), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+    const saveobject = cyfs.TextObject.create(saveobjectOwner, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const saveObjectId = saveobject.desc().calculate_id();
     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
     const object_raw = saveobject.to_vec().unwrap();
@@ -98,7 +98,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
     describe("#access权限", async () => {
         it("default权限-当前设备的put、get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -153,7 +153,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-zone内其他设备的put、get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -208,7 +208,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-ood到zone内device的put、get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -323,7 +323,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-zone1device从不填默认target的put、get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -378,7 +378,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-zone1device从不填target和decid的get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -433,7 +433,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-putObject目标不同zone，请求失败", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -460,7 +460,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-deleteObject目标不同zone，请求失败", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -521,7 +521,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("default权限-zone内发起请求指定了sourceDec与put时dec不同，能请求成功", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -607,7 +607,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("access不填权限为默认值zone内访问成功put、get、delete", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -736,7 +736,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("Full权限-跨zone二次操作put失败，zone2device从zone1device", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -763,7 +763,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("Full权限-zone内put、get、delete都成功", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -818,7 +818,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("Full_except_write权限-zone外不能写入，可以get操作", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -874,7 +874,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("Full_except_write权限-zone内二次put、get、delete正常", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -929,7 +929,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备由full到none", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -986,7 +986,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备由full到callonly", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1043,7 +1043,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备由full到writeonly", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1101,7 +1101,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         //待添加call请求
         it("设置组合权限-当前设备由full到writeAndCall", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1159,7 +1159,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备由full到readOnly", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1217,7 +1217,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         //待添加call
         it("设置组合权限-当前设备由full到readAndCall", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1275,7 +1275,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备由full到readAndWrite", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1332,7 +1332,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!delete_ret.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
         it("设置组合权限-当前设备重复设置为full", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1390,7 +1390,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前设备none权限设置为full", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1450,7 +1450,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("设置组合权限-当前zone权限为full", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1510,7 +1510,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("多个分组设置组合权限-当前zone和OwnerDec权限为full", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1572,7 +1572,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("多个分组设置组合权限-当前zone为full和OwnerDec权限为None", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1633,7 +1633,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(delete_ret1.err, `delete object failed ,err : ${JSON.stringify(delete_ret)}`)
         })
         it("多个分组设置组合权限-otherZone和OtherDec权限为full", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1700,7 +1700,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(delete_ret2.err, `delete object failed ,err : ${JSON.stringify(delete_ret2)}`)
         })
         it("多个分组设置组合权限-otherZone和OtherDec权限为none", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1768,7 +1768,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("多个分组设置组合权限-重复设置同组不同权限", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1838,7 +1838,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("多个分组设置组合权限-重复设置同组多组相同权限", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1908,7 +1908,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("回收当前设备的读写权限其他zone的读权限", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -1978,7 +1978,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
 
         it("回收othersZone和othersDec权限", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.log(object_id)
@@ -2098,7 +2098,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("zone内不同dec，put后不授权、get失败", async () => {
 
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -2162,7 +2162,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("zone内不同dec，put后去掉权限、get失败", async () => {
 
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -2337,7 +2337,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         })
         // it("path已授权默认权限zone内不同dec，put、get、delete成功", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -2545,7 +2545,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it.skip("NONRequestor调用 globalroot path", async () => {
 
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
@@ -2622,7 +2622,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it.skip("NONRequestor调用 decroot path", async () => {
 
-            const obj = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const obj = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             console.info(`will put_object: id=${object_id},object value = ${obj.value} `);
@@ -2693,7 +2693,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         })
         it("NONRequestor调用post_object默认同dec同设备", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -2741,7 +2741,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!handlerResult.err)
         })
         it("NONRequestor调用post_object同zone不同dec设备没授权请求失败", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -2787,7 +2787,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(handlerResult.err)
         })
         // it("NONRequestor调用post_object同zone不同dec设备授权后请求成功", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -2839,7 +2839,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         //     assert(!handlerResult.err)
         // })
         // it("NONRequestor调用post_object同zone不同dec相同设备授权后请求成功", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -2892,7 +2892,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // })
         it("NONRequestor调用post_object跨zone同Dec不同设备不授权请求失败", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -2940,7 +2940,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(handlerResult.err)
         })
         // it("NONRequestor调用post_object跨zone同Dec不同设备授权后请求成功", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -2992,7 +2992,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         //     assert(!handlerResult.err)
         // })
         it("NONRequestor调用post_object跨zone不同Dec设备不授权请求失败", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -3040,7 +3040,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(handlerResult.err)
         })
         // it("NONRequestor调用post_object跨zone不同Dec设备授权后请求成功", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -3093,7 +3093,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // it("req_path put_object zone内不同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3147,7 +3147,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path get_object zone内不同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3215,7 +3215,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path post_object zone内不同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -3268,7 +3268,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path delete_object zone内不同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3339,7 +3339,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // it("req_path put_object zone内同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3393,7 +3393,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path get_object zone内同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3461,7 +3461,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path post_object zone内同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -3514,7 +3514,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path delete_object zone内同设备跨dec level=non", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3583,7 +3583,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // it("req_path put_object zone内同设备跨dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3635,7 +3635,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path get_object zone内同设备跨dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3704,7 +3704,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // })
         // it("req_path post_object zone内同设备跨dec level=noc", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -3758,7 +3758,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path delete_object zone内同设备跨dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3826,7 +3826,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // it("req_path put_object zone内同设备同dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3878,7 +3878,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path get_object zone内同设备同dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -3947,7 +3947,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
 
         // })
         // it("req_path post_object zone内同设备同dec level=noc", async () => {
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     const object_raw = saveobject.to_vec().unwrap();
@@ -4001,7 +4001,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         // })
         // it("req_path delete_object zone内同设备同dec level=noc", async () => {
 
-        //     const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+        //     const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
         //         'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
         //     const saveObjectId = saveobject.desc().calculate_id();
         //     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
@@ -4810,8 +4810,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -4867,8 +4867,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -4924,8 +4924,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -5564,8 +5564,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -5618,8 +5618,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -5634,7 +5634,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             }
         })
         it("普通handler同zone同dec设备未授权请求成功", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -5682,7 +5682,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!handlerResult.err)
         })
         it("普通handler同zone不同dec授权后请求成功", async () => {
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -5735,7 +5735,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             assert(!handlerResult.err)
         })
         it("普通handler同zone不同dec设备未授权请求失败", async () => {  //申请失败也报OK无法断言
-            const saveobject = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap()),
+            const saveobject = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_device1_peerId).unwrap(),
                 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const saveObjectId = saveobject.desc().calculate_id();
             const object_raw = saveobject.to_vec().unwrap();
@@ -5797,7 +5797,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             await handlerManager.clearAllHandler()
         })
         it("crypto 调用 sign_object系统授权、verify_object无需授权验证成功", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
 
             let permission = cyfs.GlobalStatePathAccessItem.new_group("/.cyfs/api/crypto/sign_object/",
@@ -5823,8 +5823,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -5839,7 +5839,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             }
         })
         it("crypto 调用跨Dec设备 sign_object未授权", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
 
 
@@ -5869,7 +5869,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
             let path = "/test_non/reqpath/"
@@ -5912,8 +5912,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
 
             //校验对象签名
@@ -5937,7 +5937,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
             let path = "/test_non/reqpath/"
@@ -5980,8 +5980,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
 
             //校验对象签名
@@ -6005,7 +6005,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 zone1device1.local_device_id().object_id, cyfs.DeviceZoneCategory.CurrentZone, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             zone1device1.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(permission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -6023,8 +6023,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log('sign_object result:', resp);
             assert(resp.unwrap().result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.unwrap().object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             //校验对象签名
             {
                 const resp2 = (await crypto.verify_object({
@@ -6038,7 +6038,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             }
         })
         it("crypto 调用verify_object校验未被签名的对象", async () => {
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -6056,8 +6056,8 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             console.log(resp)
             assert(resp.result === cyfs.SignObjectResult.Signed, "check sign result failed");
             const signed_obj = new cyfs.TextObjectDecoder().from_raw(resp.object!.object_raw).unwrap();
-            assert(signed_obj.signs().desc_signs().unwrap().length === 1, "check desc signs failed");
-            assert(signed_obj.signs().body_signs().unwrap().length === 1, "check body signs failed");
+            assert(signed_obj.signs().desc_signs()!.length === 1, "check desc signs failed");
+            assert(signed_obj.signs().body_signs()!.length === 1, "check body signs failed");
             console.log("test sign object success");
             //校验对象签名
             {
@@ -6076,7 +6076,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
             let sdec = cyfs.get_system_dec_app().object_id
             let sstack = zone1device2.fork_with_new_dec(sdec)
             await sstack.root_state_meta_stub(sstack.local_device_id().object_id, sdec).add_access(permission)
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 对对象进行签名
             console.info(`will sign object: id=${object_id},object value = ${obj.value} `);
@@ -6131,7 +6131,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、decrypt_data EncryptData", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6170,7 +6170,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data,数据长度最大117bytes", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6209,7 +6209,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data,数据长度1bytes", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6248,7 +6248,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、解密type不一致", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6287,7 +6287,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、数据不能为空", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6309,7 +6309,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、解密type不一致", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6400,7 +6400,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto ood调用 encrypt_data、decrypt_data EncryptData", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6482,7 +6482,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、decrypt_data EncryptData", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6533,7 +6533,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
                 undefined, undefined, zone1device1_dec_id, cyfs.AccessPermissions.Full)
             await system_stack.root_state_meta_stub(system_stack.local_device_id().object_id, sysdec).add_access(hpermission)
 
-            const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             const object_id = obj.desc().calculate_id();
             // 添加req_path       
             let path = "/test_non/reqpath/"
@@ -6609,7 +6609,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 
@@ -6687,7 +6687,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
         })
         it("crypto调用 encrypt_data、decrypt_data EncryptData handler", async () => {
 
-            // const obj = cyfs.TextObject.create(cyfs.Some(zone1device1.local_device_id().object_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+            // const obj = cyfs.TextObject.create(zone1device1.local_device_id().object_id, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
             // const object_id = obj.desc().calculate_id();
             // const ob = obj.to_vec().unwrap()
 

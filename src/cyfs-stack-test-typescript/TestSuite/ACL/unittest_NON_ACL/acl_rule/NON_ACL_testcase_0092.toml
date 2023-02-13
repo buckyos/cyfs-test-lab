@@ -1,2 +1,0 @@
-relation1 = { action = "in-*", group = { location = "inner", relation = "my-zone-object"  }, access = "reject" }
-in = { action = "out-*", group = { location = "inner"},access = "accept" }

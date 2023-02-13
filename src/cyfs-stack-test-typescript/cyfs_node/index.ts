@@ -1,1 +1,1 @@
-export * from '../cyfs_node/cyfs_node';
+export * from '../../../cyfs-ts-sdk/src/sdk';

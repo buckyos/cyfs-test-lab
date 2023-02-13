@@ -1,6 +1,6 @@
 import assert  from 'assert'; 
-import * as cyfs from '../../cyfs_node';
-import {ZoneSimulator,stringToUint8Array,RandomGenerator,testLanguage,ESC_char,encodeType,stackInfo,AclManager} from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import {ZoneSimulator,stringToUint8Array,RandomGenerator,testLanguage,ESC_char,encodeType,stackInfo,AclManager} from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 let encoding = require('encoding');
@@ -54,7 +54,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -74,14 +74,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -95,7 +107,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -112,14 +124,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -146,7 +170,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
                         console.info(`##测试字符集my_path：${my_path}`)
                         for(let i=0;i<1;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let key = RandomGenerator.encode(10,encodeType[i])
                             console.info(`${key}`)
@@ -167,14 +191,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -188,7 +224,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -205,14 +241,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -237,7 +285,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<1;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,ESC_char[i].char,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -256,14 +304,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -277,7 +337,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -294,14 +354,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -327,7 +399,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -346,14 +418,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -370,7 +454,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<1;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,charList[i],obj_id1);
                             console.info(JSON.stringify(result1))
@@ -389,14 +473,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -412,7 +508,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -429,14 +525,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -462,7 +570,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let key = RandomGenerator.unicode(1);
                             let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
@@ -482,14 +590,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -503,7 +623,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -520,14 +640,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -553,7 +685,7 @@ describe("#字符兼容测试",function(){
                         op_env = result.unwrap();
             
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let key = RandomGenerator.accii(1);
                             let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
@@ -573,14 +705,26 @@ describe("#字符兼容测试",function(){
                     
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.root_state_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
@@ -594,7 +738,7 @@ describe("#字符兼容测试",function(){
                         assert.ok(!result.err);
                         op_env = result.unwrap();
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert(my_path,obj_id1);
                             console.info(JSON.stringify(result1))
@@ -611,14 +755,26 @@ describe("#字符兼容测试",function(){
                     })
                     describe("#### get_object_by_path 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                            let result= await stack.root_state_accessor().get_object_by_path({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path: my_path,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })
                     })
                     describe("#### list 接口",async()=>{
                         it("接口调用正常流程",async()=>{
-                            let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                            let result= await stack.root_state_accessor().list({
+                                common: {
+                                    flags : 0,
+                                },
+                                inner_path : my_path,
+                                page_index : 0,
+                                page_size : 5,
+                            });
                             console.info(JSON.stringify(result))
                             assert.ok(!result.err)
                         })

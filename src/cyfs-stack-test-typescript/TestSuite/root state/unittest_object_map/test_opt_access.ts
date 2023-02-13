@@ -1,6 +1,6 @@
 import assert  from 'assert'; 
-import * as cyfs from '../../cyfs_node';
-import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo,AclManager} from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo,AclManager} from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 let encoding = require('encoding');
@@ -37,7 +37,7 @@ describe("#op-env access 获取object_map",function(){
                 op_env = result.unwrap();
 
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                     console.info(JSON.stringify(result1))
@@ -56,13 +56,13 @@ describe("#op-env access 获取object_map",function(){
                 
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.root_state_access().get_category();
+                    let  result= await stack.root_state().get_category();
                     console.info(JSON.stringify(result))
                 })
             })
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.root_state_access().get_dec_id();
+                    let  result= await stack.root_state_accessor().get_dec_id();
                     console.info(JSON.stringify(result))
                     assert.ok(result == ZoneSimulator.APPID)
                 })
@@ -70,7 +70,7 @@ describe("#op-env access 获取object_map",function(){
             describe("#### get_object_by_path 接口",async()=>{
                 
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.root_state_access().get_object_by_path({
+                    let  result= await stack.root_state_accessor().get_object_by_path({
                         common: {
                             dec_id: ZoneSimulator.APPID,
                             flags: 1,
@@ -85,7 +85,7 @@ describe("#op-env access 获取object_map",function(){
             })
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.root_state_access().list({
+                    let result= await stack.root_state_accessor().list({
                         common: {
                             dec_id: ZoneSimulator.APPID,
                             flags: 1,
@@ -101,7 +101,7 @@ describe("#op-env access 获取object_map",function(){
             })
             
         })
-        describe("### root_state_access_stub",async()=>{
+        describe("### root_state_accessor_stub",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
             before(async()=>{
@@ -110,7 +110,7 @@ describe("#op-env access 获取object_map",function(){
                 op_env = result.unwrap();
 
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                     console.info(JSON.stringify(result1))
@@ -128,20 +128,20 @@ describe("#op-env access 获取object_map",function(){
             })
             describe("#### get_object_by_path 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.root_state_access_stub().get_object_by_path(my_path);
+                    let result= await stack.root_state_accessor_stub().get_object_by_path(my_path);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
             })
             describe("#### get_object_by_path 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.root_state_access_stub().list(my_path,0,5);
+                    let result= await stack.root_state_accessor_stub().list(my_path,0,5);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
             })
         })
-        describe("### local_cache_access",async()=>{
+        describe("### local_cache_accessor",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
             before(async()=>{
@@ -150,7 +150,7 @@ describe("#op-env access 获取object_map",function(){
                 op_env = result.unwrap();
 
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                     console.info(JSON.stringify(result1))
@@ -169,13 +169,13 @@ describe("#op-env access 获取object_map",function(){
                 
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.local_cache_access().get_category();
+                    let  result= await stack.local_cache_accessor().get_category();
                     console.info(JSON.stringify(result))
                 })
             })
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.local_cache_access().get_dec_id();
+                    let  result= await stack.local_cache_accessor().get_dec_id();
                     console.info(JSON.stringify(result))
                     assert.ok(result == ZoneSimulator.APPID)
                 })
@@ -183,7 +183,7 @@ describe("#op-env access 获取object_map",function(){
             describe("#### get_object_by_path 接口",async()=>{
                 
                 it("接口调用正常流程",async()=>{
-                    let  result= await stack.local_cache_access().get_object_by_path({
+                    let  result= await stack.local_cache_accessor().get_object_by_path({
                         common: {
                             dec_id: ZoneSimulator.APPID,
                             flags: 1,
@@ -198,7 +198,7 @@ describe("#op-env access 获取object_map",function(){
             })
             describe("#### get_category接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access().list({
+                    let result= await stack.local_cache_accessor().list({
                         common: {
                             dec_id: ZoneSimulator.APPID,
                             flags: 1,
@@ -214,7 +214,7 @@ describe("#op-env access 获取object_map",function(){
             })
          
         })
-        describe("### local_cache_access_stub",async()=>{
+        describe("### local_cache_accessor_stub",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
             before(async()=>{
@@ -223,7 +223,7 @@ describe("#op-env access 获取object_map",function(){
                 op_env = result.unwrap();
 
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                     console.info(JSON.stringify(result1))
@@ -241,14 +241,14 @@ describe("#op-env access 获取object_map",function(){
             })
             describe("#### get_object_by_path 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                    let result= await stack.local_cache_accessor_stub().get_object_by_path(my_path);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
             })
             describe("#### list 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                    let result= await stack.local_cache_accessor_stub().list(my_path,0,5);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
@@ -265,7 +265,7 @@ describe("#op-env access 获取object_map",function(){
                 op_env = result.unwrap();
 
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                     console.info(JSON.stringify(result1))
@@ -284,14 +284,14 @@ describe("#op-env access 获取object_map",function(){
             
             describe("#### get_object_by_path 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                    let result= await stack.local_cache_accessor_stub().get_object_by_path(my_path);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
             })
             describe("#### list 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                    let result= await stack.local_cache_accessor_stub().list(my_path,0,5);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
@@ -305,7 +305,7 @@ describe("#op-env access 获取object_map",function(){
                 assert.ok(!result.err);
                 op_env = result.unwrap();
                 for(let i=0;i<10;i++){
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let result1 = await op_env.insert(my_path,obj_id1);
                     console.info(JSON.stringify(result1))
@@ -322,14 +322,14 @@ describe("#op-env access 获取object_map",function(){
             })
             describe("#### get_object_by_path 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().get_object_by_path(my_path);
+                    let result= await stack.local_cache_accessor_stub().get_object_by_path(my_path);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
             })
             describe("#### list 接口",async()=>{
                 it("接口调用正常流程",async()=>{
-                    let result= await stack.local_cache_access_stub().list(my_path,0,5);
+                    let result= await stack.local_cache_accessor_stub().list(my_path,0,5);
                     console.info(JSON.stringify(result))
                     assert.ok(!result.err)
                 })
@@ -360,7 +360,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -375,12 +375,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
@@ -401,7 +401,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -416,12 +416,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
@@ -445,7 +445,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -460,12 +460,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
@@ -486,7 +486,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -501,12 +501,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_device1_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_device1_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
@@ -534,7 +534,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -549,12 +549,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
@@ -575,7 +575,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -590,12 +590,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_ood_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
@@ -619,7 +619,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -634,12 +634,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(!result.err)
                     })
@@ -660,7 +660,7 @@ describe("#op-env access 获取object_map",function(){
                         op_env = result.unwrap();
         
                         for(let i=0;i<10;i++){
-                            let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                            let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone2_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                             let obj_id1 = obj1.desc().object_id();
                             let result1 = await op_env.insert_with_key(my_path,RandomGenerator.string(10),obj_id1);
                             console.info(JSON.stringify(result1))
@@ -675,12 +675,12 @@ describe("#op-env access 获取object_map",function(){
                         assert.ok(!save.err);
                     })
                     it("get_object_by_path接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).get_object_by_path(my_path);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })
                     it("list接口调用正常流程",async()=>{
-                        let result= await ZoneSimulator.zone1_ood_stack.root_state_access_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
+                        let result= await ZoneSimulator.zone1_ood_stack.root_state_accessor_stub(ZoneSimulator.zone2_device1_stack.local_device_id().object_id).list(my_path,0,5);
                         console.info(JSON.stringify(result))
                         assert.ok(result.err)
                     })

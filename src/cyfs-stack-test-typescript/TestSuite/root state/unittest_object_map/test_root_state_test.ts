@@ -1,6 +1,6 @@
 import assert  from 'assert';
-import * as cyfs from '../../cyfs_node';
-import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo, stack } from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo, stack } from "../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 import JSBI from 'jsbi';
@@ -48,7 +48,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -132,7 +132,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -212,7 +212,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -293,7 +293,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -380,7 +380,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -464,7 +464,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -544,7 +544,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -625,7 +625,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -712,7 +712,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -796,7 +796,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -876,7 +876,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -957,7 +957,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1044,7 +1044,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1128,7 +1128,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1208,7 +1208,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1289,7 +1289,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1376,7 +1376,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1460,7 +1460,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1540,7 +1540,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1621,7 +1621,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1709,7 +1709,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1793,7 +1793,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1873,7 +1873,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -1954,7 +1954,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2041,7 +2041,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2125,7 +2125,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2205,7 +2205,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2285,7 +2285,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2372,7 +2372,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2456,7 +2456,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2536,7 +2536,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2616,7 +2616,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2705,7 +2705,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2793,7 +2793,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2879,7 +2879,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -2965,7 +2965,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3038,111 +3038,111 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.set_group_permission()权限组设定",async() => {})
                 it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.set_group_permissions()权限组设定",async() => {})
                 it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.make()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.constructor()权限组初始化",async() => {
-                    console.info(`Access_params.AccessStringp['length'],${Access_params.AccessStringp.OthersDec['length']}`)
-                    for (let i in Access_params.AccessStringp){
-                        console.info(`Access_params0 ${i}`)
-                    for(let j=0; j <= Access_params.AccessStringp[i]['length']-1 ; j++){
-                     //await ZoneSimulator.init();
-                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
-                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
-                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
-                     param_a.requestor_config = cyfs.SharedCyfsStackParam.default_requestor_config();
-                     const stack_a = cyfs.SharedCyfsStack.open(param_a);
-                     console.info("decidb",stack_a.dec_id)
-                     await stack_a.online()
+                // it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-None-AccessString.constructor()权限组初始化",async() => {
+                //     console.info(`Access_params.AccessStringp['length'],${Access_params.AccessStringp.OthersDec['length']}`)
+                //     for (let i in Access_params.AccessStringp){
+                //         console.info(`Access_params0 ${i}`)
+                //     for(let j=0; j <= Access_params.AccessStringp[i]['length']-1 ; j++){
+                //      //await ZoneSimulator.init();
+                //      const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
+                //      const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
+                //      const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
+                //      param_a.requestor_config = cyfs.SharedCyfsStackParam.default_requestor_config();
+                //      const stack_a = cyfs.SharedCyfsStack.open(param_a);
+                //      console.info("decidb",stack_a.dec_id)
+                //      await stack_a.online()
      
-                     const param_b = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21004, 21005, decid_b).unwrap(); 
-                     //let stack_b = stack_a.fork_with_new_dec(decid_b);
-                     param_b.requestor_config = cyfs.SharedCyfsStackParam.default_requestor_config();
-                     //console.info("decidb",stack_b.dec_id)
-                     const stack_b = cyfs.SharedCyfsStack.open(param_b);
-                     console.info("decidb",stack_b.dec_id) 
-                     await stack_b.online()
-                     let gen_obj = async () => {
-                         return cyfs.TextObject.create(
-                             cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
-                             //cyfs.Some(cyfs.ObjectId.from_base_58( ZoneSimulator.zone1_people).unwrap()),
-                             `A${RandomGenerator.string(10)}`,
-                             `A${RandomGenerator.string(10)}`,
-                             `A${RandomGenerator.string(10)}`)
-                         }
-                     let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
-                     let key1 = RandomGenerator.string(10);                
-                     let path1 = `/qatest/${key1}/${obj_id1}`
-                     //let path1 = '/test/bug/7126'                          
-                     let path2 = `/qatest/${path1}/${(await gen_obj()).desc().object_id()}`
-                     let path3 = `/qatest/${path2}/${(await gen_obj()).desc().object_id()}`
-                     let path4 = `/qatest/${path3}/${(await gen_obj()).desc().object_id()}`
-                     let path5 = `/qatest/${path4}/${(await gen_obj()).desc().object_id()}`
-                     let path6 = `/qatest/${path5}/${(await gen_obj()).desc().object_id()}`
-                     //console.info("zone1_ood_stack_dec_id",stack_a.dec_id)
-                     //console.info("zone1_device1_dec_id",ZoneSimulator.zone1_device1_stack.dec_id)
-                     //console.info("zone1_device2_dec_id",ZoneSimulator.zone1_device2_stack.dec_id)
-                     console.info(`Access_params1 ${i}`)
-                     let acc:cyfs.AccessString = (new cyfs.AccessString(Access_params.AccessStringp.OthersDec[j]))
-                     console.info(`acc_${acc}`)
-                     //acc.set_group_permission(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermission.Write)
-                     //acc.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.Full)
+                //      const param_b = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21004, 21005, decid_b).unwrap(); 
+                //      //let stack_b = stack_a.fork_with_new_dec(decid_b);
+                //      param_b.requestor_config = cyfs.SharedCyfsStackParam.default_requestor_config();
+                //      //console.info("decidb",stack_b.dec_id)
+                //      const stack_b = cyfs.SharedCyfsStack.open(param_b);
+                //      console.info("decidb",stack_b.dec_id) 
+                //      await stack_b.online()
+                //      let gen_obj = async () => {
+                //          return cyfs.TextObject.create(
+                //              cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
+                //              //cyfs.Some(cyfs.ObjectId.from_base_58( ZoneSimulator.zone1_people).unwrap()),
+                //              `A${RandomGenerator.string(10)}`,
+                //              `A${RandomGenerator.string(10)}`,
+                //              `A${RandomGenerator.string(10)}`)
+                //          }
+                //      let obj_id1:cyfs.ObjectId  =  (await gen_obj()).desc().object_id();               
+                //      let key1 = RandomGenerator.string(10);                
+                //      let path1 = `/qatest/${key1}/${obj_id1}`
+                //      //let path1 = '/test/bug/7126'                          
+                //      let path2 = `/qatest/${path1}/${(await gen_obj()).desc().object_id()}`
+                //      let path3 = `/qatest/${path2}/${(await gen_obj()).desc().object_id()}`
+                //      let path4 = `/qatest/${path3}/${(await gen_obj()).desc().object_id()}`
+                //      let path5 = `/qatest/${path4}/${(await gen_obj()).desc().object_id()}`
+                //      let path6 = `/qatest/${path5}/${(await gen_obj()).desc().object_id()}`
+                //      //console.info("zone1_ood_stack_dec_id",stack_a.dec_id)
+                //      //console.info("zone1_device1_dec_id",ZoneSimulator.zone1_device1_stack.dec_id)
+                //      //console.info("zone1_device2_dec_id",ZoneSimulator.zone1_device2_stack.dec_id)
+                //      console.info(`Access_params1 ${i}`)
+                //      let acc:cyfs.AccessString = (new cyfs.AccessString(Access_params.AccessStringp.OthersDec[j]))
+                //      console.info(`acc_${acc}`)
+                //      //acc.set_group_permission(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermission.Write)
+                //      //acc.set_group_permissions(cyfs.AccessGroup.CurrentDevice,cyfs.AccessPermissions.Full)
                     
-                     let stub_a_access = await stack_a.root_state_meta_stub().add_access(cyfs.GlobalStatePathAccessItem.new(path1,acc))
+                //      let stub_a_access = await stack_a.root_state_meta_stub().add_access(cyfs.GlobalStatePathAccessItem.new(path1,acc))
      
-                     let stub_b_access = await stack_b.root_state_meta_stub().add_access(cyfs.GlobalStatePathAccessItem.new(path1,acc))
+                //      let stub_b_access = await stack_b.root_state_meta_stub().add_access(cyfs.GlobalStatePathAccessItem.new(path1,acc))
      
-                     let b_a_stub  = stack_b.root_state_stub(stack_a.local_device_id().object_id,decid_a)
+                //      let b_a_stub  = stack_b.root_state_stub(stack_a.local_device_id().object_id,decid_a)
      
      
-                     console.info("stub_a_access",stub_a_access)
+                //      console.info("stub_a_access",stub_a_access)
      
-                     console.info("stub_b_access",stub_b_access)
+                //      console.info("stub_b_access",stub_b_access)
      
-                     //console.info("cyfs.GlobalStatePathAccessItem.new(path,cyfs.AccessString.full())",JSON.stringify(cyfs.GlobalStatePathAccessItem.new(path,cyfs.AccessString.full()).access))
-                     /*let gstub_access = gstub.add_access(cyfs.GlobalStatePathAccessItem.new_group(path,
-                         (await (ZoneSimulator.zone1_ood_stack.util().get_zone({ common: { flags: 0 } }))).unwrap().zone_id.object_id,
-                         cyfs.DeviceZoneCategory.CurrentDevice,
-                         ZoneSimulator.zone1_device2_stack.local_device_id().object_id,
-                         0))*/
-                     let access: cyfs.RootStateOpEnvAccess = {
-                         path: path1,
-                         access: cyfs.AccessPermissions.Full
-                     }
+                //      //console.info("cyfs.GlobalStatePathAccessItem.new(path,cyfs.AccessString.full())",JSON.stringify(cyfs.GlobalStatePathAccessItem.new(path,cyfs.AccessString.full()).access))
+                //      /*let gstub_access = gstub.add_access(cyfs.GlobalStatePathAccessItem.new_group(path,
+                //          (await (ZoneSimulator.zone1_ood_stack.util().get_zone({ common: { flags: 0 } }))).unwrap().zone_id.object_id,
+                //          cyfs.DeviceZoneCategory.CurrentDevice,
+                //          ZoneSimulator.zone1_device2_stack.local_device_id().object_id,
+                //          0))*/
+                //      let access: cyfs.RootStateOpEnvAccess = {
+                //          path: path1,
+                //          access: cyfs.AccessPermissions.Full
+                //      }
      
                      
-                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
-                     //assert.ok(!op_result.err)
-                     //console.info(`op_result ${JSON.stringify(op_result)}`)    
+                //      let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
+                //      //assert.ok(!op_result.err)
+                //      //console.info(`op_result ${JSON.stringify(op_result)}`)    
                      
-                     //console.info("GlobalStateStub dec_root",(await stub.get_dec_root()).unwrap().dec_root)
+                //      //console.info("GlobalStateStub dec_root",(await stub.get_dec_root()).unwrap().dec_root)
      
-                     console.info("insert_key",key1)
-                     let insert_result0 = await op_env.insert_with_key(path1, RandomGenerator.string(10), (await gen_obj()).desc().object_id())
-                     assert.ok(!insert_result0.err)
-                     console.info(`####insert_result0 ${JSON.stringify(insert_result0)}`)
+                //      console.info("insert_key",key1)
+                //      let insert_result0 = await op_env.insert_with_key(path1, RandomGenerator.string(10), (await gen_obj()).desc().object_id())
+                //      assert.ok(!insert_result0.err)
+                //      console.info(`####insert_result0 ${JSON.stringify(insert_result0)}`)
                      
-                     let set_result0 = await op_env.set_with_key(path2, RandomGenerator.string(10), (await gen_obj()).desc().object_id())
-                     console.info(`####set_result0 ${JSON.stringify(set_result0)}`)
+                //      let set_result0 = await op_env.set_with_key(path2, RandomGenerator.string(10), (await gen_obj()).desc().object_id())
+                //      console.info(`####set_result0 ${JSON.stringify(set_result0)}`)
      
      
-                     let create_result0 = await op_env.create_new_with_path(path3,cyfs.ObjectMapSimpleContentType.Map)
-                     console.info(`####create_result0 ${JSON.stringify(create_result0)}`)
+                //      let create_result0 = await op_env.create_new_with_path(path3,cyfs.ObjectMapSimpleContentType.Map)
+                //      console.info(`####create_result0 ${JSON.stringify(create_result0)}`)
      
-                     let insert_result1 = await op_env.insert_with_path(path4,(await gen_obj()).desc().object_id())
-                     console.info(`####create_result0 ${JSON.stringify(insert_result1)}`)
+                //      let insert_result1 = await op_env.insert_with_path(path4,(await gen_obj()).desc().object_id())
+                //      console.info(`####create_result0 ${JSON.stringify(insert_result1)}`)
      
-                     let set_result1 = await op_env.set_with_path(path5,(await gen_obj()).desc().object_id())
-                     console.info(`####create_result0 ${JSON.stringify(set_result1)}`)
+                //      let set_result1 = await op_env.set_with_path(path5,(await gen_obj()).desc().object_id())
+                //      console.info(`####create_result0 ${JSON.stringify(set_result1)}`)
      
-                     let insert_result2 = await op_env.insert(path6,(await gen_obj()).desc().object_id())
-                     console.info(`####create_result0 ${JSON.stringify(insert_result2)}`)
+                //      let insert_result2 = await op_env.insert(path6,(await gen_obj()).desc().object_id())
+                //      console.info(`####create_result0 ${JSON.stringify(insert_result2)}`)
        
-                     let update_result0 = await op_env.update()
-                     assert.ok(!update_result0.err)
-                     console.info(`####update_result2 ${JSON.stringify(update_result0)}`)
+                //      let update_result0 = await op_env.update()
+                //      assert.ok(!update_result0.err)
+                //      console.info(`####update_result2 ${JSON.stringify(update_result0)}`)
      
-                     let commit_result0 = await op_env.commit();
-                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
-                     assert.ok(!commit_result0 .err)
-                }}})
+                //      let commit_result0 = await op_env.commit();
+                //      console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
+                //      assert.ok(!commit_result0 .err)
+                // }}})
                 
             })
             describe("正常流程AccessPermissions-CallOnly", async () => {
@@ -3162,7 +3162,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3250,7 +3250,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3335,7 +3335,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3420,7 +3420,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3512,7 +3512,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3595,7 +3595,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3677,7 +3677,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3759,7 +3759,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3847,7 +3847,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -3930,7 +3930,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4010,7 +4010,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4091,7 +4091,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4184,7 +4184,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4276,7 +4276,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4361,7 +4361,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4445,7 +4445,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4536,7 +4536,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4624,7 +4624,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4709,7 +4709,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4794,7 +4794,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4889,7 +4889,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -4973,7 +4973,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5054,7 +5054,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5134,7 +5134,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5225,7 +5225,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5309,7 +5309,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5389,7 +5389,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5469,7 +5469,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5561,7 +5561,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 await stack_b.online()
                 let gen_obj = async () => {
                     return cyfs.TextObject.create(
-                        cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                        cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                         `A${RandomGenerator.string(10)}`,
                         `A${RandomGenerator.string(10)}`,
                         `A${RandomGenerator.string(10)}`)
@@ -5642,7 +5642,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -5723,7 +5723,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                         await stack_b.online()
                         let gen_obj = async () => {
                             return cyfs.TextObject.create(
-                                cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                                cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                                 `A${RandomGenerator.string(10)}`,
                                 `A${RandomGenerator.string(10)}`,
                                 `A${RandomGenerator.string(10)}`)
@@ -5804,7 +5804,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                             await stack_b.online()
                             let gen_obj = async () => {
                                 return cyfs.TextObject.create(
-                                    cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                                    cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                                     `A${RandomGenerator.string(10)}`,
                                     `A${RandomGenerator.string(10)}`,
                                     `A${RandomGenerator.string(10)}`)
@@ -5965,7 +5965,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 await stack_b.online()
                 let gen_obj = async () => {
                     return cyfs.TextObject.create(
-                        cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                        cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                         `A${RandomGenerator.string(10)}`,
                         `A${RandomGenerator.string(10)}`,
                         `A${RandomGenerator.string(10)}`)
@@ -6046,7 +6046,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     await stack_b.online()
                     let gen_obj = async () => {
                         return cyfs.TextObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                            cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`,
                             `A${RandomGenerator.string(10)}`)
@@ -6127,7 +6127,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                         await stack_b.online()
                         let gen_obj = async () => {
                             return cyfs.TextObject.create(
-                                cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                                cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                                 `A${RandomGenerator.string(10)}`,
                                 `A${RandomGenerator.string(10)}`,
                                 `A${RandomGenerator.string(10)}`)
@@ -6208,7 +6208,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                             await stack_b.online()
                             let gen_obj = async () => {
                                 return cyfs.TextObject.create(
-                                    cyfs.Some(cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap()),
+                                    cyfs.ObjectId.from_base_58("5bnZHzYHCUJFRxXBAPDw8727uHdS95yhFnBmoNrwm7CP").unwrap(),
                                     `A${RandomGenerator.string(10)}`,
                                     `A${RandomGenerator.string(10)}`,
                                     `A${RandomGenerator.string(10)}`)

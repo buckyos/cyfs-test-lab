@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import assert = require('assert');
-import * as cyfs from '../../cyfs_node/cyfs_node'
+import * as cyfs from '../../cyfs_node'
 import { ZoneSimulator, stringToUint8Array, RandomGenerator, stackInfo, stack } from "../../common";
 import * as path from 'path';
 import * as gen_Dir from "../../common/utils/generator"
@@ -405,7 +405,7 @@ async function trans_chunk_for_getdata(stack:cyfs.SharedCyfsStack[], filePath: s
     console.info("filePath",filePath)
     console.info("inner_path",inner_path)
     //1. source 设备 publish_file 将文件存放到本地NDC 
-    let owner = stack[0].local_device().desc().owner()!.unwrap()
+    let owner = stack[0].local_device().desc().owner()!
     const file_resp_0 = (await stack[0].trans().publish_file({
         common: {
             level: level[0],
@@ -500,7 +500,7 @@ async function trans_file_for_task(stack:cyfs.SharedCyfsStack[], filePath: strin
     console.info("filePath",filePath)
     console.info("inner_path",inner_path)
     //1. source 设备 publish_file 将文件存放到本地NDC 
-    let owner = stack[0].local_device().desc().owner()!.unwrap()
+    let owner = stack[0].local_device().desc().owner()!
     const add_file = (await stack[0].trans().publish_file({
         common: {
             level: level[0],
@@ -631,7 +631,7 @@ async function tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefer
                     task_id: create_task.task_id
                 })).unwrap();
                 console.log("get task status", JSON.stringify(resp.state));
-                if (resp.state === cyfs.TransTaskState.Finished) {
+                if (resp.state.state === cyfs.TransTaskState.Finished) {
                     console.log("download task finished")
                     break;
                 }
@@ -719,7 +719,7 @@ async function clean_test_data(source:cyfs.SharedCyfsStack,target:cyfs.SharedCyf
 
 async function insert_object_map(type:string,path:string,key:any,PathOpEnv:cyfs.PathOpEnvStub){
     //将对象id挂在objet_map上 &&
-    let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+    let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
     let obj_id = obj.desc().object_id();
     switch(type){
         case "Map":   

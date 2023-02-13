@@ -121,6 +121,7 @@ export class StackManager {
     }
 
     async load_real_machine(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
+        
         for (let agent of REAL_MACHINE_LIST) {
             this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
@@ -188,6 +189,7 @@ export class StackManager {
             }
         }
     }
+   
     
     get_cyfs_satck(local: PeerInfo): { err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack } {
         if (!this.peer_map.has(local.peer_name)) {

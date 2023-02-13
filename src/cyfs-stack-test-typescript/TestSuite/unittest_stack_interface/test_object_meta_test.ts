@@ -811,7 +811,7 @@ async function tarns_task(stack:cyfs.SharedCyfsStack[],referer:cyfs.NDNDataRefer
                     task_id: create_task.task_id
                 })).unwrap();
                 console.log("get task status", JSON.stringify(resp.state));
-                if (resp.state === cyfs.TransTaskState.Finished) {
+                if (resp.state.state === cyfs.TransTaskState.Finished) {
                     console.log("download task finished")
                     break;
                 }

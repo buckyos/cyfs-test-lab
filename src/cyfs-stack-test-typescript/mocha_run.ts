@@ -4,7 +4,7 @@ import * as SysProcess from 'process';
 var date = require("silly-datetime");
 import * as mocha from "mocha"
 import * as fs from "fs-extra"
-import { sleep } from '../../cyfs_node';
+import { sleep } from './cyfs_node';
 import { cwd } from 'process';
 
 async function main() {

@@ -1,8 +1,8 @@
 import assert  from 'assert'; 
-import * as cyfs from '../../cyfs_node';
-import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo} from "../../common";
+import * as cyfs from '../../../cyfs_node';
+import {ZoneSimulator,stringToUint8Array,RandomGenerator,stackInfo} from "../../../common";
 import * as path from 'path';
-import {TestcaseObject,MyTest} from "../../common/types"
+import {TestcaseObject,MyTest} from "../../../common/types"
 import { before } from 'mocha';
 import child_process from 'child_process';
 import fs from 'fs';
@@ -52,7 +52,7 @@ async function createEnv(stack:cyfs.SharedCyfsStack, env_type:string): Promise <
 function createPeople(): [cyfs.People, cyfs.PrivateKey] {
     let pk = cyfs.PrivateKey.generate_rsa(1024).unwrap();
     let public_key = pk.public();
-    let people = cyfs.People.create(cyfs.None, [], public_key, cyfs.None);
+    let people = cyfs.People.create(undefined, [], public_key, undefined);
     return [people, pk];
 }
 
@@ -66,7 +66,7 @@ async function createProcess(n:number,op_env:any,obj_list:Array<cyfs.ObjectId>){
         let child = child_process.fork("node -version" , [], {silent: true});
             child.on("insert path", async function(){
                 let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
-                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                 let obj_id1 = obj1.desc().object_id();
                 obj_list.push(obj_id1);
                 let save = await stack.non_service().put_object({
@@ -113,14 +113,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
     describe("#主从OOD数据同步业务流程冒烟测试",async()=>{
         it("#业务流程测试",async()=>{
             // (1) 主 OOD root_state 插入数据commit
-            let insert_list = [];
+            let insert_list : Array<Promise<{revision:cyfs.JSBI,obj_id:cyfs.ObjectId,async_time?:number}>> = [];
             for(let i = 0;i<10;i++){
                 insert_list.push(new Promise<{revision:cyfs.JSBI,obj_id:cyfs.ObjectId,async_time?:number}>(async(V)=>{
                     let result= await stack.root_state_stub(ZoneSimulator.zone1_ood_stack.local_device_id().object_id).create_path_op_env();
                     assert.ok(!result.err);
                     let op_env = result.unwrap();
-                    let insert_path = `/qaTest/pathopt${RandomGenerator.string(10)}`
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let insert_path = `/qaTest/pathopt${RandomGenerator.string(10)}`;
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     let save = await stack.non_service().put_object({
                         common: {
@@ -182,7 +182,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                 let obj_list:Array<cyfs.ObjectId> = [];
                 for(let i=0;i<10;i++){
                     let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     obj_list.push(obj_id1);
                     let save = await stack.non_service().put_object({
@@ -249,7 +249,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     for(let i=0;i<10;i++){
                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
                         let key = RandomGenerator.string(10);
-                        let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -317,7 +317,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         let insert_path = obj_path_list_map[i].path
                         let key = obj_path_list_map[i].key
                         let prev = obj_path_list_map[i].value
-                        let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -444,7 +444,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     for(let i=0;i<10;i++){
                         
                         let key = RandomGenerator.string(10);
-                        let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -508,7 +508,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     for(let i=0;i<10;i++){
                         
                         let key = RandomGenerator.string(10);
-                        let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -623,7 +623,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                 for(let i=0;i<10;i++){
                     let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
                     let key = RandomGenerator.string(10);
-                    let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                    let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                     let obj_id1 = obj1.desc().object_id();
                     obj_list.push(obj_id1);
                     let save = await stack.non_service().put_object({
@@ -811,11 +811,11 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     for(let i=0;i<10;i++){
                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
                         let key = RandomGenerator.string(10);
-                        //let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        //let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let pk = cyfs.PrivateKey.generate_rsa(1024).unwrap();
                         let public_key = pk.public();
                         let unique = cyfs.UniqueId.copy_from_slice(stringToUint8Array(Date.now().toString()))
-                        let obj1 = cyfs.Device.create(cyfs.None, unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
+                        let obj1 = cyfs.Device.create(undefined, unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -873,7 +873,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     for(let i=0;i<10;i++){
                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
                         let key = RandomGenerator.string(10);
-                        let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                        let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(obj_id1);
                         let save = await stack.non_service().put_object({
@@ -932,7 +932,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
                         let key = RandomGenerator.string(10);
                         let obj1 =TestcaseObject.create(
-                            cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),
+                            cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),
                             RandomGenerator.string(10),
                             RandomGenerator.string(10),
                             RandomGenerator.string(10),
@@ -1023,7 +1023,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             assert.ok(!save_1.err)
 
-                            let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let obj_id1 = obj1.desc().object_id();
                             obj_list.push(owner.desc().calculate_id());
                             obj_list.push(obj_id1);
@@ -1097,7 +1097,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             assert.ok(!save_1.err)
 
-                            let obj1 = MyTest.create(cyfs.None,cyfs.Some(author.calculate_id()),cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let obj1 = MyTest.create(undefined,author.calculate_id(),undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let obj_id1 = obj1.desc().object_id();
                             obj_list.push(author.calculate_id());
                             obj_list.push(obj_id1);
@@ -1171,7 +1171,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             assert.ok(!save_1.err)
 
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.Some(prev.calculate_id()),cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let obj1 = MyTest.create(undefined,undefined,prev.calculate_id(),undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let obj_id1 = obj1.desc().object_id();
                             obj_list.push(prev.calculate_id());
                             obj_list.push(obj_id1);
@@ -1257,8 +1257,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_1_2.err)
-                            let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(prev.calculate_id(),cyfs.None),new cyfs.ObjectLink(prev2.calculate_id(),cyfs.None)]))
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let ref_objects : cyfs.Vec<cyfs.ObjectLink> | undefined = new cyfs.Vec([ new cyfs.ObjectLink(prev.calculate_id(),undefined),new cyfs.ObjectLink(prev2.calculate_id(),undefined)]);
+                            let obj1 = MyTest.create(undefined,undefined,undefined,ref_objects,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let obj_id1 = obj1.desc().object_id();
                             obj_list.push(prev.calculate_id());
                             obj_list.push(prev2.calculate_id());
@@ -1331,8 +1331,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             
 
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
-                            cyfs.sign_and_set_named_object(people_pk,obj1,new cyfs.SignatureObject( new cyfs.ObjectLink(people.desc().calculate_id(),cyfs.Some(people.desc().calculate_id()))))
+                            let obj1 = MyTest.create(undefined,undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
+                            cyfs.sign_and_set_named_object(people_pk,obj1,new cyfs.SignatureObject( new cyfs.ObjectLink(people.desc().calculate_id(),people.desc().calculate_id())))
                             let obj_id1 = obj1.desc().object_id();
 
                             obj_list.push(obj_id1);
@@ -1418,7 +1418,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //调用接口
                             let resp =  await stack.ndn_service().put_data(rep);
                             console.info(`${resp}`)
-                            let obj1 = MyTest.create(cyfs.Some(chunkId1.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));                            
+                            let obj1 = MyTest.create(chunkId1.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));                            
                             let save = await stack.non_service().put_object({
                                 common: {
                                     dec_id:ZoneSimulator.APPID,
@@ -1511,7 +1511,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //调用接口
                             let resp =  await stack.ndn_service().put_data(rep);
                             console.info(`${resp}`)
-                            let obj1 = MyTest.create(cyfs.None,cyfs.Some(chunkId1.calculate_id()),cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let obj1 = MyTest.create(undefined,chunkId1.calculate_id(),undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
 
                             let save = await stack.non_service().put_object({
                                 common: {
@@ -1606,7 +1606,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //调用接口
                             let resp =  await stack.ndn_service().put_data(rep);
                             console.info(`${resp}`)
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.Some(chunkId1.calculate_id()),cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let obj1 = MyTest.create(undefined,undefined,chunkId1.calculate_id(),undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             
                             let save = await stack.non_service().put_object({
                                 common: {
@@ -1701,8 +1701,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //调用接口
                             let resp =  await stack.ndn_service().put_data(rep);
                             console.info(`${resp}`)
-                            let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),cyfs.None)]))
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let ref_objects : cyfs.Vec<cyfs.ObjectLink> | undefined = new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),undefined)])
+                            let obj1 = MyTest.create(undefined,undefined,undefined,ref_objects,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
 
                             let save = await stack.non_service().put_object({
                                 common: {
@@ -1795,9 +1795,9 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         //调用接口
                         let resp =  await stack.ndn_service().put_data(rep);
                         console.info("rep",JSON.stringify(rep))
-                        let obj1 = MyTest.create(cyfs.Some(chunkId1.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                        let obj1 = MyTest.create(chunkId1.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                         let [people,people_pk] = createPeople();
-                        cyfs.sign_and_set_named_object(people_pk,obj1,new cyfs.SignatureObject( new cyfs.ObjectLink(people.desc().calculate_id(),cyfs.Some(people.desc().calculate_id()))))
+                        cyfs.sign_and_set_named_object(people_pk,obj1,new cyfs.SignatureObject( new cyfs.ObjectLink(people.desc().calculate_id(),people.desc().calculate_id())))
                         console.info("obj1",obj1.calculate_id())
                         let save = await stack.non_service().put_object({
                             common: {
@@ -1901,13 +1901,13 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             console.info(`# 从OOD  当前 revision : ${JSON.stringify(standby_ood_revision)}`)
                             await cyfs.sleep(2000)
                         }
-                        let check = (await stack.root_state_access_stub().list(insert_path)).unwrap()
+                        let check = (await stack.root_state_accessor_stub().list(insert_path)).unwrap()
                         console.info(`主OOD ${insert_path}当前 Map `)
                         for(let i in check){
                             console.info(JSON.stringify(check[i]));
                         }
                         console.info(`从OOD ${insert_path}当前 Map `)
-                        let check2 = (await stack_standby_ood.root_state_access_stub().list(insert_path)).unwrap()
+                        let check2 = (await stack_standby_ood.root_state_accessor_stub().list(insert_path)).unwrap()
                         for(let i in check2){
                             console.info(JSON.stringify(check2[i]));
                         }
@@ -2051,7 +2051,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             console.info(JSON.stringify(task));
                             let state = task.unwrap().state;
-                            if(state==4){
+                            if(state.state!==cyfs.TransTaskState.Finished){
                                 break;
                             }
                             assert.ok(!task.err,"control_task 失败");
@@ -2211,7 +2211,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                         })
                                         console.info(JSON.stringify(task));
                                         let state = task.unwrap().state;
-                                        if(state==4){
+                                        if(state.state==4){
                                             break;
                                         }
                                         assert.ok(!task.err,"control_task 失败");
@@ -2290,8 +2290,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 access: cyfs.AccessString.full()
                             })
                             assert.ok(!save_4.err)
-                            let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(obj4.calculate_id(),cyfs.None)]))
-                            let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.Some(obj2.calculate_id()),cyfs.Some(obj3.calculate_id()),ref_objects,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let ref_objects : cyfs.Vec<cyfs.ObjectLink> = new cyfs.Vec([ new cyfs.ObjectLink(obj4.calculate_id(),undefined)])
+                            let obj1 = MyTest.create(owner.calculate_id(),obj2.calculate_id(),obj3.calculate_id(),ref_objects,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let obj_id1 = obj1.desc().object_id();
                             obj_list.push(owner.desc().calculate_id());
                             obj_list.push(obj_id1);
@@ -2408,8 +2408,8 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             //调用接口
                             resp =  await stack.ndn_service().put_data(rep);
                             console.info(`${resp}`)
-                            let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),cyfs.None)]))
-                            let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                            let ref_objects : cyfs.Vec<cyfs.ObjectLink> = new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),undefined)])
+                            let obj1 = MyTest.create(undefined,undefined,undefined,ref_objects,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                             let create = await op_env.insert_with_key(insert_path,key,obj1.calculate_id());
                             assert.ok(!create.err);
                         }
@@ -2492,12 +2492,12 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                     let resp =  await stack.ndn_service().put_data(rep);
                                     console.info(`${resp}`)
 
-                                    let ref_objects : cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),cyfs.None)]))
-                                    let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10))
-                                    let ref_objects1:cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(obj1.calculate_id(),cyfs.None)]))
-                                    let obj2 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects1,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10))
-                                    let ref_objects2:cyfs.Option<cyfs.Vec<cyfs.ObjectLink>> = cyfs.Some(new cyfs.Vec([ new cyfs.ObjectLink(obj2.calculate_id(),cyfs.None)]))
-                                    let obj3 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,ref_objects2,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10))
+                                    let ref_objects : cyfs.Vec<cyfs.ObjectLink> =new cyfs.Vec([ new cyfs.ObjectLink(chunkId1.calculate_id(),undefined)])
+                                    let obj1 = MyTest.create(undefined,undefined,undefined,ref_objects,undefined,RandomGenerator.string(10),RandomGenerator.string(10))
+                                    let ref_objects1:cyfs.Vec<cyfs.ObjectLink> = new cyfs.Vec([ new cyfs.ObjectLink(obj1.calculate_id(),undefined)])
+                                    let obj2 = MyTest.create(undefined,undefined,undefined,ref_objects1,undefined,RandomGenerator.string(10),RandomGenerator.string(10))
+                                    let ref_objects2:cyfs.Vec<cyfs.ObjectLink> = new cyfs.Vec([ new cyfs.ObjectLink(obj2.calculate_id(),undefined)])
+                                    let obj3 = MyTest.create(undefined,undefined,undefined,ref_objects2,undefined,RandomGenerator.string(10),RandomGenerator.string(10))
                                     let save1 = await stack.non_service().put_object({
                                         common: {
                                             dec_id:ZoneSimulator.APPID,
@@ -2605,7 +2605,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         assert.ok(!save_1.err)
 
-                        let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                        let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(owner.desc().calculate_id());
                         obj_list.push(obj_id1);
@@ -2680,7 +2680,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         assert.ok(!save_1.err)
 
-                        let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                        let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(owner.desc().calculate_id());
                         obj_list.push(obj_id1);
@@ -2753,7 +2753,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         assert.ok(!save_1.err)
 
-                        let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                        let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(owner.desc().calculate_id());
                         obj_list.push(obj_id1);
@@ -2828,7 +2828,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         assert.ok(!save_1.err)
 
-                        let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                        let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                         let obj_id1 = obj1.desc().object_id();
                         obj_list.push(owner.desc().calculate_id());
                         obj_list.push(obj_id1);
@@ -2904,7 +2904,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     assert.ok(!save_1.err)*/
 
 
-                    let obj1 = MyTest.create(cyfs.Some(owner.calculate_id()),cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                    let obj1 = MyTest.create(owner.calculate_id(),undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                     let obj_id1 = obj1.desc().object_id();
                     obj_list.push(owner.desc().calculate_id());
                     obj_list.push(obj_id1);
@@ -2982,7 +2982,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     })
                     assert.ok(!save_1.err)
 
-                    let obj1 = MyTest.create(cyfs.None,cyfs.None,cyfs.None,cyfs.None,cyfs.None,RandomGenerator.string(10),RandomGenerator.string(10));
+                    let obj1 = MyTest.create(undefined,undefined,undefined,undefined,undefined,RandomGenerator.string(10),RandomGenerator.string(10));
                     let obj_id1 = obj1.desc().object_id();
                     obj_list.push(owner.desc().calculate_id());
                     obj_list.push(obj_id1);
@@ -3052,7 +3052,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     describe("##主OOD操作",async()=>{
                         describe("主OOD修改为read",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()!; 
                                 op_env = await createEnv(stack,"op_env")
                                 //let op_env_result= await stack.root_state_stub().create_path_op_env();
                                 //assert.ok(!op_env_result.err);
@@ -3062,7 +3062,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let key = RandomGenerator.string(10)
                                 
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -3107,7 +3107,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             it("进行写入操作_20221031",async()=>{
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 //修改为write
                                 let cmd:cyfs.AdminCommand =(new cyfs.AdminCommand((cyfs.AdminCommandCode.GlobalStateAccessMode),(new cyfs.AdminGlobalStateAccessModeData(data.category.RootState,data.AccessMode.Write))))          
                                 let target = stack.local_device_id()
@@ -3134,7 +3134,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                           
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -3175,7 +3175,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj1.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info(JSON.stringify(result2))
@@ -3191,7 +3191,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let data = {
                                     category:cyfs.GlobalStateCategory,
                                     AccessMode:cyfs.GlobalStateAccessMode
@@ -3234,14 +3234,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行读取操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 op_env = await createEnv(stack,"op_env")
 
                                 //读取前插入操作
                                 
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await op_env.insert_with_key(my_path,key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -3291,7 +3291,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行写入操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                
@@ -3321,7 +3321,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let result =  (await stack.non_service().post_object(req)).unwrap();   
                 
                                 //修改后写入
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path,key,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -3356,7 +3356,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id1);
                                 console.info("result3",JSON.stringify(result3))
@@ -3372,14 +3372,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         describe("主OOD修改为Write",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                                         
                                 op_env = await createEnv(stack,"op_env")
 
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -3424,7 +3424,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -3455,7 +3455,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 //写入操作
                                 
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -3495,7 +3495,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info(JSON.stringify(result3))
@@ -3511,7 +3511,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let op_env_result= await stack.root_state_stub().create_path_op_env();
                                 assert.ok(!op_env_result.err);
                                 op_env = op_env_result.unwrap();
@@ -3549,7 +3549,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(res2 =="write")
                             })
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -3557,7 +3557,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
 
                                 //读取前插入操作                           
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await op_env.insert_with_key(my_path,key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -3604,7 +3604,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -3663,7 +3663,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path1,key1,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -3682,7 +3682,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         describe("从OOD修改为read",async()=>{
                             it("进行读取操作",async()=>{
     
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 
                                 op_env_stack_standby_ood = await createEnv(stack_standby_ood,"op_env")
 
@@ -3690,7 +3690,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let key = RandomGenerator.string(10)
                                 
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -3727,7 +3727,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //插入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info("result3",JSON.stringify(result2))
@@ -3749,7 +3749,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             it("进行写入操作",async()=>{
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
 
                                 //修改为write
                                 let cmd:cyfs.AdminCommand =(new cyfs.AdminCommand((cyfs.AdminCommandCode.GlobalStateAccessMode),(new cyfs.AdminGlobalStateAccessModeData(data.category.RootState,data.AccessMode.Write))))          
@@ -3777,7 +3777,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                           
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -3818,7 +3818,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj1.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info(JSON.stringify(result2))
@@ -3834,7 +3834,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
 
                                 //修改为Write
                                 let cmd:cyfs.AdminCommand =(new cyfs.AdminCommand((cyfs.AdminCommandCode.GlobalStateAccessMode),(new cyfs.AdminGlobalStateAccessModeData(data.category.RootState,data.AccessMode.Write))))          
@@ -3869,7 +3869,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(res2 =="read")
                             })
                             it("进行读取操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 op_env_stack_standby_ood = await createEnv(stack_standby_ood,"op_env")
@@ -3900,7 +3900,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let result =  (await stack_standby_ood.non_service().post_object(req)).unwrap();
 
                                 //读取前插入操作
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id);
                                 console.info("result1",JSON.stringify(result1))
@@ -3945,7 +3945,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行写入操作",async()=>{
 
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 
@@ -3978,7 +3978,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 console.info("stack_standby_ood_standby_ood device_static_info",JSON.stringify((await stack_standby_ood.util().get_device_static_info({common:{flags:0}})).unwrap().info))
                 
                                 //修改后写入
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await op_env.insert_with_key(my_path,key,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -4013,7 +4013,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id1);
                                 console.info("result3",JSON.stringify(result3))
@@ -4029,7 +4029,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         describe("从OOD修改为Write",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                                         
@@ -4067,7 +4067,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 }
 
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -4110,7 +4110,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //插入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info("result1",JSON.stringify(result3))
@@ -4132,7 +4132,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -4172,7 +4172,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 //写入操作
                                 
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -4215,7 +4215,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info(JSON.stringify(result3))
@@ -4231,7 +4231,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -4276,7 +4276,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(res2 =="read")
                             })
                             it("进行读取操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                                         
@@ -4314,7 +4314,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 }
 
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -4357,7 +4357,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //插入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info("result1",JSON.stringify(result3))
@@ -4376,7 +4376,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(!save1.err);
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
 
@@ -4416,7 +4416,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 //写入操作
                                 
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await op_env.insert_with_key(my_path,key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -4459,7 +4459,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await op_env.insert_with_key(my_path1,key1,obj_id2);
                                 console.info(JSON.stringify(result3))
@@ -4480,11 +4480,11 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     describe("##主OOD操作",async()=>{
                         describe("主OOD修改为read",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let key = RandomGenerator.string(10)
                                 single_op_env  = await createEnv(stack,"single_op_env")
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env.insert_with_key(key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -4530,7 +4530,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
         
                                 let single_op_env_result= await stack.root_state_stub().create_single_op_env();
                                 assert.ok(!single_op_env_result.err);
@@ -4569,7 +4569,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                           
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env.insert_with_key(key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -4608,7 +4608,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                                 //写入操作
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result2 = await single_op_env.insert_with_key(key1,obj_id2);
                                 console.info(JSON.stringify(result2))
@@ -4624,7 +4624,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 single_op_env  = await createEnv(stack,"single_op_env")
         
 
@@ -4662,14 +4662,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行读取操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 single_op_env  = await createEnv(stack,"single_op_env")
         
                                 //读取前插入操作
                                 
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await single_op_env.insert_with_key(key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -4718,7 +4718,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行写入操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
         
@@ -4750,7 +4750,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             
                 
                                 //修改后写入
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await single_op_env.insert_with_key(key,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -4785,7 +4785,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result3 = await single_op_env.insert_with_key(key1,obj_id1);
                                 console.info("result3",JSON.stringify(result3))
@@ -4801,14 +4801,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         })
                         describe("主OOD修改为Write",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                                 single_op_env  = await createEnv(stack,"single_op_env")                     
 
         
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env.insert_with_key(key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -4850,7 +4850,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
 
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                
@@ -4880,7 +4880,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                       
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env.insert_with_key(key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -4921,7 +4921,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await single_op_env.insert_with_key(key1,obj_id2);
                                 console.info(JSON.stringify(result3))
@@ -4938,7 +4938,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行重启模拟器",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
         
@@ -4982,14 +4982,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行读取操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
                
                                 single_op_env  = await createEnv(stack,"single_op_env")
 
                                 //读取前插入操作                           
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await single_op_env.insert_with_key(key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -5032,7 +5032,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行写入操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
         
@@ -5089,7 +5089,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await single_op_env.insert_with_key(key1,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -5106,13 +5106,13 @@ describe("# 主从OOD 数据同步功能测试",function(){
                     describe("##从OOD操作",async()=>{
                         describe("从OOD修改为read",async()=>{
                             it("进行读取操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap()                                              
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;                                             
                                 let key = RandomGenerator.string(10)
                                 single_op_env_stack_standby_ood= await createEnv(stack_standby_ood,"single_op_env")
                                 let [people_desc,people_sec] = loadDescandSec("C:\\cyfs\\etc\\zone-simulator\\user1\\people")
                                 
                                 //插入操作
-                                let obj0 = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj0 = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id0 = obj0.desc().object_id();
                                 let result0 = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id0);
                                 assert.ok(!result0.err)
@@ -5149,7 +5149,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                             })
                             it("进行写入操作",async()=>{
                                 let key = RandomGenerator.string(10)
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
               
                                 //修改为write
                                 let cmd:cyfs.AdminCommand =(new cyfs.AdminCommand((cyfs.AdminCommandCode.GlobalStateAccessMode),(new cyfs.AdminGlobalStateAccessModeData(data.category.RootState,data.AccessMode.Write))))          
@@ -5177,7 +5177,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                           
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -5214,7 +5214,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 //写入操作
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result2 = await single_op_env_stack_standby_ood.insert_with_key(key1,obj_id2);
                                 console.info(JSON.stringify(result2))
@@ -5230,7 +5230,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
 
                                 //修改为Read
                                 let cmd:cyfs.AdminCommand =(new cyfs.AdminCommand((cyfs.AdminCommandCode.GlobalStateAccessMode),(new cyfs.AdminGlobalStateAccessModeData(data.category.RootState,data.AccessMode.Read))))          
@@ -5266,14 +5266,14 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                
                             it("进行读取操作",async()=>{
                                 single_op_env_stack_standby_ood= await createEnv(stack_standby_ood,"single_op_env")
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
         
         
                                 //读取前插入操作
                                 
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -5324,7 +5324,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let key = RandomGenerator.string(10)
         
                                 
@@ -5354,7 +5354,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 let result =  (await stack_standby_ood.non_service().post_object(req)).unwrap();
                             
                                 //修改后写入
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -5389,7 +5389,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result3 = await single_op_env_stack_standby_ood.insert_with_key(key1,obj_id1);
                                 console.info("result3",JSON.stringify(result3))
@@ -5406,12 +5406,12 @@ describe("# 主从OOD 数据同步功能测试",function(){
                         describe("从OOD修改为Write",async()=>{
                             it("进行读取操作",async()=>{
                                 let stack_standby_ood = ZoneSimulator.zone1_standby_ood_stack!;
-                                let people_id = stack_standby_ood.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack_standby_ood.local_device().desc().owner()!;
                                 let key = RandomGenerator.string(10)
                                 single_op_env_stack_standby_ood= await createEnv(stack_standby_ood,"single_op_env")
                                  
                                 //插入操作
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id1);
                                 console.info("result1",JSON.stringify(result1))
@@ -5453,7 +5453,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let key = RandomGenerator.string(10)
           
                                 //修改为Read
@@ -5482,7 +5482,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 
                                 
                                 //写入操作                       
-                                let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id1 = obj1.desc().object_id();
                                 let result1 = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id1);
                                 console.info(JSON.stringify(result1))
@@ -5522,7 +5522,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //写入操作
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj2  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj2  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id2 = obj2.desc().object_id();
                                 let result3 = await single_op_env_stack_standby_ood.insert_with_key(key1,obj_id2);
                                 console.info(JSON.stringify(result3))
@@ -5538,7 +5538,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                             })
                             it("进行重启模拟器",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let key = RandomGenerator.string(10)
           
                                 //修改为Write
@@ -5572,13 +5572,13 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 assert.ok(res2 =="read")  
                             })
                             it("进行读取操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let key = RandomGenerator.string(10)
                                 single_op_env_stack_standby_ood= await createEnv(stack_standby_ood,"single_op_env")
         
         
                                 //读取前插入操作                           
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result = await single_op_env_stack_standby_ood.insert_with_key(key,obj_id);
                                 console.info("result1",JSON.stringify(result))
@@ -5621,7 +5621,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
         
                             })
                             it("进行写入操作",async()=>{
-                                let people_id = stack.local_device().desc().owner()?.unwrap() 
+                                let people_id = stack.local_device().desc().owner()! 
                                 let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
                                 let key = RandomGenerator.string(10)
         
@@ -5681,7 +5681,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
                                 //修改后写入
                                 let my_path1 = `/qaTest/access/${RandomGenerator.string(9)}`
                                 let key1 = RandomGenerator.string(9)
-                                let obj  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+                                let obj  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
                                 let obj_id = obj.desc().object_id();
                                 let result2 = await single_op_env_stack_standby_ood.insert_with_key(key1,obj_id);
                                 console.info("result2",JSON.stringify(result2))
@@ -5712,7 +5712,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
     //                     let obj_list:Array<cyfs.ObjectId> = [];
     //                     for(let i=0;i<100000;i++){
     //                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
-    //                         let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+    //                         let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
     //                         let obj_id1 = obj1.desc().object_id();
     //                         obj_list.push(obj_id1);
     //                         let save = await stack.non_service().put_object({
@@ -5811,7 +5811,7 @@ describe("# 主从OOD 数据同步功能测试",function(){
     //                     let obj_list:Array<cyfs.ObjectId> = [];
     //                     for(let i=0;i<100000;i++){
     //                         let insert_path = `/qaTest/${RandomGenerator.string(10)}/${RandomGenerator.string(10)}`
-    //                         let obj1  = cyfs.TextObject.create(cyfs.Some(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap()),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
+    //                         let obj1  = cyfs.TextObject.create(cyfs.ObjectId.from_base_58(ZoneSimulator.zone1_people).unwrap(),`A${RandomGenerator.string(10)}`,`A${RandomGenerator.string(10)}`,`${RandomGenerator.string(10)}`)
     //                         let obj_id1 = obj1.desc().object_id();
     //                         obj_list.push(obj_id1);
     //                         let save = await stack.non_service().put_object({

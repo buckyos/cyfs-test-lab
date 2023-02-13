@@ -273,7 +273,7 @@ export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
     static CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
 
-    static string(length: number = 32) {
+    static string(length: number = 32, cn: number = 0, symbol: number = 0) {
         let maxPos = RandomGenerator.CHAR_SET.length;
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -304,6 +304,18 @@ export class RandomGenerator {
             result = max;
         }
         return result;
+    }
+    static get_len_buf(len: number) {
+        let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
+        const arr: number[] = []
+        let maxnum = basestr.length
+        for (let i = 0; i < len; i++) {
+            arr.push(basestr.charCodeAt(Math.floor(Math.random() * (maxnum - 0)) + 0))
+        }
+        let buf = new Uint8Array(arr)
+        console.log(buf.byteLength)
+        // console.log(buf)
+        return buf
     }
     static createRandomFile(pathDir: string, name: string, size: number) {
         if (!fs.pathExistsSync(pathDir)) {

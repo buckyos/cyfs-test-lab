@@ -393,7 +393,7 @@ describe("SharedCyfsStack util相关接口测试",function(){
             })
             console.info("download get_task_state",JSON.stringify(task));
             let state = task.unwrap().state;
-            if(state==4){
+            if(state.state==4){
                 break;
             }
             console.info("state",JSON.stringify(state));

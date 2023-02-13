@@ -7,7 +7,27 @@ import fetch from 'node-fetch'
 
 
 
-function create_people(mnemonic: string): [cyfs.People, cyfs.PrivateKey] {
+export function get_key(keyType: string, size: number = 1024) {
+    let pvk: cyfs.PrivateKey
+    switch (keyType) {
+        case 'rsa':
+            pvk = cyfs.PrivateKey.generate_rsa(size).unwrap();
+            break;
+        case 'secp256k1':
+            pvk = cyfs.PrivateKey.generate_secp256k1().unwrap();
+        default:
+            pvk = cyfs.PrivateKey.generate_rsa(1024).unwrap();
+    }
+    return pvk
+}
+export function create_people_random(): [cyfs.People, cyfs.PrivateKey] {
+    let pk = get_key("rsa")
+    let public_key = pk.public();
+    let people = cyfs.People.create(undefined, [], public_key, cyfs.Area.from_str("00:00:0000:00").unwrap());
+    return [people, pk];
+}
+
+export function create_people(mnemonic: string): [cyfs.People, cyfs.PrivateKey] {
     const gen = cyfs.CyfsSeedKeyBip.from_mnemonic(mnemonic).unwrap();
 
     const bip_path = cyfs.CyfsChainBipPath.new_people(
@@ -49,8 +69,7 @@ function _calcIndex(uniqueStr: string): number {
 
     return index
 }
-
-function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, category: cyfs.DeviceCategory, unique_id: string, nick_name?: string): [cyfs.Device, cyfs.PrivateKey, number] {
+export function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, category: cyfs.DeviceCategory, unique_id: string, nick_name?: string): [cyfs.Device, cyfs.PrivateKey, number] {
     const gen = cyfs.CyfsSeedKeyBip.from_private_key(pk.to_vec().unwrap().toHex(), owner.to_base_58());
     const address_index = _calcIndex(unique_id)
     const path = cyfs.CyfsChainBipPath.new_device(

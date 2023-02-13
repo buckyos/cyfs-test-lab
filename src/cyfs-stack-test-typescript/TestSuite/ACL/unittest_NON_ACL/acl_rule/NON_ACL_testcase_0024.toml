@@ -1,2 +1,0 @@
-in2 = { action = "in-post-object", group = { location = "outer" }, access = "accept" }
-out2 = { action = "out-post-object", group = { location = "outer" }, access = "accept" }

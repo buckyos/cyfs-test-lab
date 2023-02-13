@@ -1,2 +1,0 @@
-relation1 = { action = "in-*", group = { location = "outer", relation = "source-friend-device"  }, access = "accept" }
-in = { action = "out-*", group = { location = "outer"},access = "accept" }
