@@ -40,9 +40,6 @@ let zone1device2: cyfs.SharedCyfsStack;
 let system_stack: cyfs.SharedCyfsStack
 
 
-
-
-
 describe("SharedCyfsStack NON相关接口测试", function () {
     this.timeout(0);
     this.timeout(0);

@@ -693,7 +693,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     }
                 }
                 //(2)生成测试文件
-                await RandomGenerator.createRandomFile(saveDir, inner_path, 1 * 1024 * 1024);
+                await RandomGenerator.create_random_file(saveDir, inner_path, 1 * 1024 * 1024);
 
                 let owner = zone1_device1_stack.local_device().desc().owner()!
                 let publish_file_time = Date.now();
@@ -731,7 +731,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     }
                 }
                 //(2)生成测试文件
-                await RandomGenerator.createRandomFile(saveDir, inner_path, 1 * 1024 * 1024);
+                await RandomGenerator.create_random_file(saveDir, inner_path, 1 * 1024 * 1024);
 
                 let owner = zone1_device1_stack.local_device().desc().owner()!
                 let publish_file_time = Date.now();
@@ -773,7 +773,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     }
                 }
                 //(2)生成测试文件
-                await RandomGenerator.createRandomFile(saveDir, inner_path, 1 * 1024 * 1024);
+                await RandomGenerator.create_random_file(saveDir, inner_path, 1 * 1024 * 1024);
 
                 let owner = zone1_device1_stack.local_device().desc().owner()!
                 let publish_file_time = Date.now();
@@ -815,7 +815,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     }
                 }
                 //(2)生成测试文件
-                await RandomGenerator.createRandomFile(saveDir, inner_path, 1 * 1024 * 1024);
+                await RandomGenerator.create_random_file(saveDir, inner_path, 1 * 1024 * 1024);
 
                 let file_id = cyfs.File
                 let owner = zone1_device1_stack.local_device().desc().owner()!

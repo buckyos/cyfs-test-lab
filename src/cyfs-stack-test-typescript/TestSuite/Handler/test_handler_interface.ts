@@ -1,7 +1,7 @@
 import assert  from 'assert';
 import * as cyfs from '../../cyfs_node';
 import { ZoneSimulator, get_len_buf } from "../../common/utils";
-import * as myHandler from "./handler"
+import * as myHandler from "../../common/utils/handler"
 
 //初始化日志
 cyfs.clog.enable_file_log({
@@ -10,11 +10,11 @@ cyfs.clog.enable_file_log({
     file_max_size: 1024 * 1024 * 10,
     file_max_count: 10,
 });
-``
+
 async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, access?: cyfs.AccessString, req_path?: string) {
     // peerId stack_runtime.local_device_id().to_base_58()
     const saveobjectOwner = cyfs.ObjectId.from_base_58(peerId).unwrap()
-    const saveobject = cyfs.TextObject.create(cyfs.Some(saveobjectOwner), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
+    const saveobject = cyfs.TextObject.create(saveobjectOwner, 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
     const saveObjectId = saveobject.desc().calculate_id();
     console.info(`will put_object: id=${saveObjectId},object value = ${saveobject.value} `);
     const object_raw = saveobject.to_vec().unwrap();

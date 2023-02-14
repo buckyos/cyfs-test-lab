@@ -1,71 +1,78 @@
 import assert  from 'assert';
-import * as cyfs from '../../cyfs_node';
-import {simulator} from '../../config/zoneData'
-import JSBI from 'jsbi';
-import * as myHandler from '../../common/utils/handler'
+import * as cyfs from '../../../../cyfs';
+import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import * as myHandler from "../../../../common_base/tool/handler"
+import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../base';
+import * as addContext from "mochawesome/addContext"
+import * as action_api from "../../../../common_action"
 
 
-// const zone1_device1_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port).unwrap());
-// const owner_id = cyfs.ObjectId.from_base_58(simulator.zone1.peopleId).unwrap();
-// const dec_id = cyfs.ObjectId.from_base_58(simulator.zone1.device1.peerId).unwrap();
-// const obj = cyfs.TextObject.create(cyfs.Some(owner_id), 'question_saveAndResponse', `test_header, time = ${Date.now()}`, `hello! time = ${Date.now()}`);
-// const object_id = obj.desc().calculate_id();
-
-// const testList = [    
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '合法字符集（数字）' },  
-//     { filter: `dec_id == ${dec_id}`, type: '合法字符集（字母）' }, 
-//     { filter: `obj_type == 41`, type: '整数常量十进制' },    
-//     { filter: `obj_type == 0b101001`, type: '整数常量二进制(0b)' },
-//     { filter: `obj_type == 0B101001`, type: '整数常量二进制(0B)' },        
-//     { filter: `obj_type == 0o51`, type: '整数常量八进制(0o)' },
-//     { filter: `obj_type == 0O51`, type: '整数常量八进制(0O)' },
-//     { filter: `obj_type == 0x29`, type: '整数常量十六进制(0x)' },
-//     { filter: `obj_type == 0X29`, type: '整数常量十六进制(0X)' },
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && true`, type: '布尔常量true' },
-//     { filter: `!(obj_type == ${cyfs.CoreObjectType.Text} && false)`, type: '布尔常量false' },
-//     { filter: `(obj_type == ${cyfs.CoreObjectType.Text} && 1)`, type: '布尔常量1' },
-//     { filter: `!(obj_type == ${cyfs.CoreObjectType.Text} && 0)`, type: '布尔常量0' },
-//     { filter: `*`, type: '特殊表达式*' },
-//     { filter: `obj_type != $none`, type: '数据类型None' },    
-//     { filter: `dec_id == ${dec_id}`, type: '数据类型string' }, 
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && dec_id == ${dec_id}`, type: '数据类型bool' },
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '数据类型U16' },  
-//     { filter: `obj_type <= ${cyfs.CoreObjectType.Text}`, type: '运算类型<=' },
-//     { filter: `obj_type < ${cyfs.CoreObjectType.FriendList}`, type: '运算类型<' },
-//     { filter: `obj_type >= ${cyfs.CoreObjectType.Storage}`, type: '运算类型>=' },
-//     { filter: `obj_type > ${cyfs.CoreObjectType.Storage}`, type: '运算类型>' },
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '运算类型==' },
-//     { filter: `obj_type != ${cyfs.CoreObjectType.Text} || true`, type: '运算类型||' },
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && true`, type: '运算类型&&' },    
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(obj_type&0)`, type: '运算类型&' }, 
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(!(obj_type|0))`, type: '运算类型|' }, 
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && (obj_type^10)`, type: '运算类型^' }, 
-//     { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(obj_type != ${cyfs.CoreObjectType.Text})`, type: '运算类型!' }, 
-//     { filter: `!(obj_type != ${cyfs.CoreObjectType.Text})`, type: '括号使用' } 
-// ]
+// TO_FIX : filter 表达式测试用例长期未维护 
 
 
-// let handlerManager = new myHandler.handlerManager(); 
+const handlerManager = new myHandler.HandlerManager(); //用来回收handler 和监听校验handler触发
+const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
+const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
+let dec_id = dec_app_1.to_base_58();
+let zone1device1: cyfs.SharedCyfsStack;
+let zone1device2: cyfs.SharedCyfsStack;
+let system_stack: cyfs.SharedCyfsStack
 
-// describe('cyfs sdk router handler filter测试',function(){
-//     before(async function(){
-//         //用例执行的前置操作
+const testList = [    
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '合法字符集（数字）' },  
+    { filter: `dec_id == ${dec_id}`, type: '合法字符集（字母）' }, 
+    { filter: `obj_type == 41`, type: '整数常量十进制' },    
+    { filter: `obj_type == 0b101001`, type: '整数常量二进制(0b)' },
+    { filter: `obj_type == 0B101001`, type: '整数常量二进制(0B)' },        
+    { filter: `obj_type == 0o51`, type: '整数常量八进制(0o)' },
+    { filter: `obj_type == 0O51`, type: '整数常量八进制(0O)' },
+    { filter: `obj_type == 0x29`, type: '整数常量十六进制(0x)' },
+    { filter: `obj_type == 0X29`, type: '整数常量十六进制(0X)' },
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && true`, type: '布尔常量true' },
+    { filter: `!(obj_type == ${cyfs.CoreObjectType.Text} && false)`, type: '布尔常量false' },
+    { filter: `(obj_type == ${cyfs.CoreObjectType.Text} && 1)`, type: '布尔常量1' },
+    { filter: `!(obj_type == ${cyfs.CoreObjectType.Text} && 0)`, type: '布尔常量0' },
+    { filter: `*`, type: '特殊表达式*' },
+    { filter: `obj_type != $none`, type: '数据类型None' },    
+    { filter: `dec_id == ${dec_id}`, type: '数据类型string' }, 
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && dec_id == ${dec_id}`, type: '数据类型bool' },
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '数据类型U16' },  
+    { filter: `obj_type <= ${cyfs.CoreObjectType.Text}`, type: '运算类型<=' },
+    { filter: `obj_type < ${cyfs.CoreObjectType.FriendOption}`, type: '运算类型<' },
+    { filter: `obj_type >= ${cyfs.CoreObjectType.Storage}`, type: '运算类型>=' },
+    { filter: `obj_type > ${cyfs.CoreObjectType.Storage}`, type: '运算类型>' },
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text}`, type: '运算类型==' },
+    { filter: `obj_type != ${cyfs.CoreObjectType.Text} || true`, type: '运算类型||' },
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && true`, type: '运算类型&&' },    
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(obj_type&0)`, type: '运算类型&' }, 
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(!(obj_type|0))`, type: '运算类型|' }, 
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && (obj_type^10)`, type: '运算类型^' }, 
+    { filter: `obj_type == ${cyfs.CoreObjectType.Text} && !(obj_type != ${cyfs.CoreObjectType.Text})`, type: '运算类型!' }, 
+    { filter: `!(obj_type != ${cyfs.CoreObjectType.Text})`, type: '括号使用' } 
+]
+
+
+
+
+describe('cyfs sdk router handler filter测试',function(){
+    before(async function(){
+        //用例执行的前置操作
         
-//     })
-//     after(async function(){
-//         //用例执行的数据回收操作
+    })
+    after(async function(){
+        //用例执行的数据回收操作
         
-//     })    
+    })    
 
-//     describe('运算符类型测试',function(){
-//         let handlerList : Array<{chain: cyfs.RouterHandlerChain,stack:cyfs.SharedCyfsStack,type:cyfs.RouterHandlerCategory,id:string}> = []//用来临时缓存每个用例的handler 列表便于回收所有handler
-//         for(const ff of testList.slice(0 ,)){
-//             it(`${ff.type} (用例：${ff.filter})`,async function(){
-//                 await test(ff.filter, ff.type, 10)
-//             })                    
-//         }                                                                                                                                                                                                                                                                                              
-//     })
-// })
+    describe('运算符类型测试',function(){
+        let handlerList : Array<{chain: cyfs.RouterHandlerChain,stack:cyfs.SharedCyfsStack,type:cyfs.RouterHandlerCategory,id:string}> = []//用来临时缓存每个用例的handler 列表便于回收所有handler
+        for(const ff of testList.slice(0 ,)){
+            it(`${ff.type} (用例：${ff.filter})`,async function(){
+                //await test(ff.filter, ff.type, 10)
+            })                    
+        }                                                                                                                                                                                                                                                                                              
+    })
+})
 
 
 // async function test(filter: string, type: string, index: number){

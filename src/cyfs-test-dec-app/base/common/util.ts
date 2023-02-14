@@ -269,72 +269,7 @@ export class HttpDownloader {
     }
 }
 
-export class RandomGenerator {
-    // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
-    static CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
 
-    static string(length: number = 32, cn: number = 0, symbol: number = 0) {
-        let maxPos = RandomGenerator.CHAR_SET.length;
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
-        }
-        if (Buffer.byteLength(result) < length) {
-            let accurate_len = length - Buffer.byteLength(result);
-            result += RandomGenerator.accurateString(accurate_len);
-        }
-        return result;
-    };
-
-    static accurateString(length: number = 32) {
-        let maxPos = RandomGenerator.CHAR_SET.length;
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
-        }
-        while (Buffer.byteLength(result) < length) {
-            result += RandomGenerator.CHAR_SET.charAt(RandomGenerator.integer(maxPos));
-        }
-        return result;
-    }
-
-    static integer(max: number, min: number = 0) {
-        let result = Math.round(Math.random() * (max - min)) + min;
-        if (result > max) {
-            result = max;
-        }
-        return result;
-    }
-    static get_len_buf(len: number) {
-        let basestr = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789/测试汉字厸厶厽孓宀巛巜彳廴彡彐彳忄扌攵 氵灬 爫犭疒癶礻糹有一个菇凉他有些任性还有些嚣张/##$&@æ。？！.《》……&（)+-=/*"
-        const arr: number[] = []
-        let maxnum = basestr.length
-        for (let i = 0; i < len; i++) {
-            arr.push(basestr.charCodeAt(Math.floor(Math.random() * (maxnum - 0)) + 0))
-        }
-        let buf = new Uint8Array(arr)
-        console.log(buf.byteLength)
-        // console.log(buf)
-        return buf
-    }
-    static createRandomFile(pathDir: string, name: string, size: number) {
-        if (!fs.pathExistsSync(pathDir)) {
-            fs.mkdirpSync(pathDir)
-        }
-        let file = path.join(pathDir, name)
-        const strRandom = RandomGenerator.string(1024 * 1024 * 2);
-        let len = Buffer.byteLength(strRandom, 'utf-8');
-        while (size > len) {
-            let err = fs.appendFileSync(file, strRandom);
-            size = size - len;
-        }
-        fs.appendFileSync(file, RandomGenerator.string(size));
-        if (!fs.pathExistsSync(file)) {
-            console.error(`创建文件${file} 失败`)
-        }
-        return;
-    }
-};
 
 export class FormatDateHelper {
     static now(fmt: string): string {

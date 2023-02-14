@@ -2,7 +2,7 @@ import path from "path";
 import * as fs from 'fs-extra';
 import * as cyfs from '../../cyfs';
 import JSBI from 'jsbi';
-import { Command } from "commander";
+
 import fetch from 'node-fetch'
 
 
@@ -43,7 +43,7 @@ export function create_people(mnemonic: string): [cyfs.People, cyfs.PrivateKey] 
 }
 
 // 计算哈希
-function _hashCode(strValue: string): number {
+export function _hashCode(strValue: string): number {
     let hash = 0;
     for (let i = 0; i < strValue.length; i++) {
         const chr = strValue.charCodeAt(i);
@@ -57,7 +57,7 @@ function _hashCode(strValue: string): number {
 }
 
 // 通过uniqueStr计算当前device索引
-function _calcIndex(uniqueStr: string): number {
+export function _calcIndex(uniqueStr: string): number {
 
     // 示例用了cyfs sdk依赖的node-forge库进行计算
     const md5 = cyfs.forge.md.md5.create();
@@ -104,7 +104,7 @@ export function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, categor
     return [device, private_key, address_index]
 }
 
-function check_desc_file(desc_path: string) {
+export function check_desc_file(desc_path: string) {
     if (fs.existsSync(desc_path)) {
         console.error(`he identity profile already exists in ${path.dirname(desc_path)}`);
         console.error(`  * If you need to overwrite please delete manually, pay attention to backup!`);
@@ -113,7 +113,7 @@ function check_desc_file(desc_path: string) {
     }
 }
 
-async function check_people_on_meta(meta_client: cyfs.MetaClient, people_id: cyfs.ObjectId): Promise<[cyfs.People | undefined, boolean]> {
+export async function check_people_on_meta(meta_client: cyfs.MetaClient, people_id: cyfs.ObjectId): Promise<[cyfs.People | undefined, boolean]> {
     let people: cyfs.People | undefined = undefined, is_bind = false
     const people_r = await meta_client.getDesc(people_id);
     if (people_r.ok) {
@@ -198,12 +198,12 @@ export async function run(option: {
                 if (meta_people) {
                     await meta_client.update_desc(people, cyfs.SavedMetaObject.try_from(people).unwrap(), undefined, undefined, people_pk);
                 } else {
-                    await meta_client.create_desc(people, cyfs.SavedMetaObject.try_from(people).unwrap(), JSBI.BigInt(0), 0, 0, people_pk);
+                    await meta_client.create_desc(people, cyfs.SavedMetaObject.try_from(people).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk);
                 }
 
                 // OOD 上链
-                await meta_client.create_desc(ood, cyfs.SavedMetaObject.try_from(ood).unwrap(), JSBI.BigInt(0), 0, 0, ood_pk);
-                await meta_client.create_desc(standby_ood, cyfs.SavedMetaObject.try_from(standby_ood).unwrap(), JSBI.BigInt(0), 0, 0, standby_ood_pk);
+                await meta_client.create_desc(ood, cyfs.SavedMetaObject.try_from(ood).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, ood_pk);
+                await meta_client.create_desc(standby_ood, cyfs.SavedMetaObject.try_from(standby_ood).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, standby_ood_pk);
 
                 people_desc_path = path.join(workspace, 'people.desc');
                 people_sec_path = path.join(workspace, 'people.sec');

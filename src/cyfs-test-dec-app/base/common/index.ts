@@ -7,3 +7,4 @@ export * from './log';
 export * from './local_storage';
 export * from './upload';
 export * from './interval_action';
+export * from './random';

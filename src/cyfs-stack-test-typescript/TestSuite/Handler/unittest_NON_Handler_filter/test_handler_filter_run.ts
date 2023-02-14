@@ -1,8 +1,8 @@
-import assert  from 'assert';
-import * as cyfs from '../../cyfs_node';
-import {simulator} from '../../config/zoneData'
-import JSBI from 'jsbi';
-import * as myHandler from '../../common/utils/handler'
+// import assert  from 'assert';
+// import * as cyfs from '../../cyfs_node';
+// import {simulator} from '../../config/zoneData'
+// import JSBI from 'jsbi';
+// import * as myHandler from '../../common/utils/handler'
 
 
 // const zone1_device1_stack = cyfs.SharedCyfsStack.open(cyfs.SharedCyfsStackParam.new_with_ws_event_ports(simulator.zone1.device1.http_port, simulator.zone1.device1.ws_port).unwrap());

@@ -1,5 +1,4 @@
 import assert  from 'assert'; 
-import JSBI from 'jsbi';
 import * as cyfs from '../../../../cyfs';
 import * as meta_config from './meta_config';
 //import { stack,stackInfo}from "../../common/utils/stack";
@@ -269,7 +268,7 @@ describe("TS meta_client 接口测试",function(){
             })
             describe.skip("MetaClient 类 getBlock 接口",async()=>{
                 // it("getBlock 接口",async()=>{
-                //     let info =await meta_client_nightly.getBlock(JSBI.BigInt(1186827))
+                //     let info =await meta_client_nightly.getBlock(cyfs.JSBI.BigInt(1186827))
                 //     console.info(JSON.stringify(info))
                 //     assert.ok(info.ok)
                 // }) 
@@ -318,7 +317,7 @@ describe("TS meta_client 接口测试",function(){
                     let [people,people_pk] = create_people();
                     //let [desc,sec] = save_desc_and_sec(people,people_pk,"E:\\githubSpace\\cyfs_stack_test\\TestSuite\\unittest_meta\\my");
                     console.info(`创建people并且上链,people id:${people.calculate_id()}`)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), JSBI.BigInt(10*10000*10000), 0,0, people_pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), cyfs.JSBI.BigInt(10*10000*10000), 0,0, people_pk)
                     console.info("create desc 返回结果",JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().object_id.to_base_58())
@@ -333,8 +332,8 @@ describe("TS meta_client 接口测试",function(){
                     let unique = cyfs.UniqueId.copy_from_slice(stringToUint8Array(Date.now().toString()))
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     cyfs.sign_and_push_named_object(people_pk, device, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -350,8 +349,8 @@ describe("TS meta_client 接口测试",function(){
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     let group = cyfs.SimpleGroup.create(0,[public_key],[device.desc().calculate_id()],cyfs.OODWorkMode.ActiveStandby, [device.device_id()],new cyfs.Area(1,1,1,1))
                     cyfs.sign_and_push_named_object(people_pk, group, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(group).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(group).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -364,8 +363,8 @@ describe("TS meta_client 接口测试",function(){
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
                     let unionAccount = cyfs.UnionAccount.create(people.calculate_id(),ood.calculate_id(),1)
                     cyfs.sign_and_push_named_object(people_pk, unionAccount, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(unionAccount).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(unionAccount).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -377,12 +376,12 @@ describe("TS meta_client 接口测试",function(){
                     let [people,people_pk] = load_desc_and_sec(path.join(__dirname,'./people'))
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
                     let text = cyfs.TextObject.create(people.calculate_id(),`${Date.now()}`,`${Date.now()}`,`${Date.now()}`)
-                    let member =new cyfs.OrgMember(people.calculate_id(),1,JSBI.BigInt(22222))
+                    let member =new cyfs.OrgMember(people.calculate_id(),1,cyfs.JSBI.BigInt(22222))
                     let doc = new cyfs.Director(people.calculate_id(),1)
                     let data =cyfs.Org.create([member],[doc],1) //(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Org(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Org(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -399,8 +398,8 @@ describe("TS meta_client 接口测试",function(){
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     let data =cyfs.MinerGroup.create([device.desc()]) //(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap() snservice
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.MinerGroup(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.MinerGroup(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -410,8 +409,8 @@ describe("TS meta_client 接口测试",function(){
                 it("create_desc 接口 上链 snservice 对象",async()=>{
                     let [people,people_pk] = load_desc_and_sec(path.join(__dirname,'./people'))
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
-                    let data = cyfs.SNService.create(people.calculate_id(),1,JSBI.BigInt(10));
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.SNService(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    let data = cyfs.SNService.create(people.calculate_id(),1,cyfs.JSBI.BigInt(10));
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.SNService(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -427,7 +426,7 @@ describe("TS meta_client 接口测试",function(){
                     let file_content = stringToUint8Array("9po8eBzh4Gb5ut48qEyQxipPUbjzBS329po8eBzh4Gb5ut48qEyQxipPUbjzBS32hsfjashfjahfj")
                     let hash = cyfs.HashValue.hash_data(file_content);
                     let data = cyfs.Contract.create(hash);
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Contract(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Contract(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -442,8 +441,8 @@ describe("TS meta_client 接口测试",function(){
                     let text = cyfs.TextObject.create(people.calculate_id(),`${Date.now()}`,`${Date.now()}`,`${Date.now()}`)
                     let data =new cyfs.Data(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Data(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_nightly.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.Data(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -458,12 +457,12 @@ describe("TS meta_client 接口测试",function(){
                     let hash = cyfs.HashValue.hash_data(file_content);
                     let chunk = cyfs.ChunkId.calculate(file_content).unwrap();
                     let ChunkList = new cyfs.ChunkList([chunk])
-                    let file =  cyfs.File.create(people.calculate_id(),JSBI.BigInt(file_content.byteLength),hash,ChunkList)
+                    let file =  cyfs.File.create(people.calculate_id(),cyfs.JSBI.BigInt(file_content.byteLength),hash,ChunkList)
                     cyfs.sign_and_push_named_object(people_pk, file, new cyfs.SignatureRefIndex(254)).unwrap()
                     console.info(`file id : ${file.calculate_id()}`)
                     console.info(`file owner : ${file.desc()!.owner()!.to_base_58()}`)
                     // 上链失败，114签名校验失败
-                    let info = await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(file).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    let info = await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(file).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     assert.ok(info.ok)
                     console.info("上链返回TX id",JSON.stringify(info))
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -485,7 +484,7 @@ describe("TS meta_client 接口测试",function(){
                     let [people,people_pk] = create_people();
                     //let [desc,sec] = save_desc_and_sec(people,people_pk,"E:\\githubSpace\\cyfs_stack_test\\TestSuite\\unittest_meta\\my");
                     console.info(`创建people并且上链,people id:${people.calculate_id()}`)
-                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), JSBI.BigInt(10*10000*10000), 0,0, people_pk)
+                    let info =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), cyfs.JSBI.BigInt(10*10000*10000), 0,0, people_pk)
                     console.info("create desc 返回结果",JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().object_id.to_base_58())
@@ -497,7 +496,7 @@ describe("TS meta_client 接口测试",function(){
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.OOD);
                     people.body_expect().content().ood_list = [device.device_id()];
                     console.info(`people ood list ${JSON.stringify(people.body_expect().content().ood_list)}`)
-                    //let info2 =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), JSBI.BigInt(10*10000*10000), 0,0, people_pk)
+                    //let info2 =await meta_client_nightly.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), cyfs.JSBI.BigInt(10*10000*10000), 0,0, people_pk)
                     
                     let info2 =await meta_client_nightly.update_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), 0, 0, people_pk)  
                     let  check2 = await checkReceipt(info2.unwrap().object_id.to_base_58())
@@ -512,7 +511,7 @@ describe("TS meta_client 接口测试",function(){
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap();  
                     console.info(people)
                     console.info(people_pk)
-                    let info =await meta_client_nightly.trans_balance(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), JSBI.BigInt(1000000000), 0,  people_pk)
+                    let info =await meta_client_nightly.trans_balance(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), cyfs.JSBI.BigInt(1000000000), 0,  people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 })
@@ -523,13 +522,13 @@ describe("TS meta_client 接口测试",function(){
                             console.info(`获取1000ECC`)
                             let [people1,people_pk1] = create_people();
                             console.info(`创建people并且上链${people1.calculate_id()}`)
-                            let info =await meta_client_nightly.create_desc(people1,cyfs.SavedMetaObject.try_from(people1).unwrap(), JSBI.BigInt(1000*10000*10000), 0, 0, people_pk1)
+                            let info =await meta_client_nightly.create_desc(people1,cyfs.SavedMetaObject.try_from(people1).unwrap(), cyfs.JSBI.BigInt(1000*10000*10000), 0, 0, people_pk1)
                             console.info("create desc 返回结果",info.unwrap().object_id.to_base_58())
                             assert.ok(info.ok)
                             let  check = await checkReceipt(info.unwrap().object_id.to_base_58())
                             assert(!check.err,`${info.unwrap().to_base_58()} 检查是否上链超时`)
                             assert(check.receipt!.result == 0,`${info.unwrap().to_base_58()} 上链失败，返回错误 ${check.receipt}`)
-                            let info2 =await meta_client_nightly.trans_balance(people1,cyfs.ObjectId.from_base_58("5r4MYfFecaGVxS6ynLBEfhEAkUSch2BPSzfs9E29tRLt").unwrap(), JSBI.BigInt(199*10000*10000), 0,  people_pk1)
+                            let info2 =await meta_client_nightly.trans_balance(people1,cyfs.ObjectId.from_base_58("5r4MYfFecaGVxS6ynLBEfhEAkUSch2BPSzfs9E29tRLt").unwrap(), cyfs.JSBI.BigInt(199*10000*10000), 0,  people_pk1)
                             console.info(JSON.stringify(info2))
                             assert.ok(info2.ok)
                             v("")
@@ -548,7 +547,7 @@ describe("TS meta_client 接口测试",function(){
                     //获取people数据
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap();  
-                    let info =await meta_client_nightly.withdraw_from_file(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), JSBI.BigInt(1000000000), 0, people_pk)
+                    let info =await meta_client_nightly.withdraw_from_file(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), cyfs.JSBI.BigInt(1000000000), 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 }) 
@@ -557,7 +556,7 @@ describe("TS meta_client 接口测试",function(){
                 it("create_contract 接口",async()=>{
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap(); 
-                    let info =await meta_client_nightly.create_contract(people,people_pk,JSBI.BigInt(10000000),stringToUint8Array("contract"),0,0)
+                    let info =await meta_client_nightly.create_contract(people,people_pk,cyfs.JSBI.BigInt(10000000),stringToUint8Array("contract"),0,0)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 }) 
@@ -566,7 +565,7 @@ describe("TS meta_client 接口测试",function(){
                 it("call_contract 接口",async()=>{
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap(); 
-                    let info = await meta_client_nightly.call_contract(people,people_pk,cyfs.ObjectId.from_base_58("8YCfQUGfNLtkjATZKA5VjCafUv61xmYAvSouV9keW1ky").unwrap(),JSBI.BigInt(0),stringToUint8Array("contract"),0,0)
+                    let info = await meta_client_nightly.call_contract(people,people_pk,cyfs.ObjectId.from_base_58("8YCfQUGfNLtkjATZKA5VjCafUv61xmYAvSouV9keW1ky").unwrap(),cyfs.JSBI.BigInt(0),stringToUint8Array("contract"),0,0)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let check = await checkReceipt(info.unwrap().object_id.to_base_58())
@@ -733,7 +732,7 @@ describe("TS meta_client 接口测试",function(){
             })
             describe.skip("MetaClient 类 getBlock 接口",async()=>{
                 // it("getBlock 接口",async()=>{
-                //     let info =await meta_client_beta.getBlock(JSBI.BigInt(1186827))
+                //     let info =await meta_client_beta.getBlock(cyfs.JSBI.BigInt(1186827))
                 //     console.info(JSON.stringify(info))
                 //     assert.ok(info.ok)
                 // }) 
@@ -781,7 +780,7 @@ describe("TS meta_client 接口测试",function(){
                 it("create_desc 接口 上链 People对象",async()=>{
                     let [people,people_pk] = create_people();
                     console.info(`创建people并且上链${people.calculate_id()}`)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), JSBI.BigInt(1000*10000*10000), 0, 0, people_pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(people).unwrap(), cyfs.JSBI.BigInt(1000*10000*10000), 0, 0, people_pk)
                     console.info("create desc 返回结果",info.unwrap().object_id.to_base_58())
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().object_id.to_base_58())
@@ -796,8 +795,8 @@ describe("TS meta_client 接口测试",function(){
                     let unique = cyfs.UniqueId.copy_from_slice(stringToUint8Array(Date.now().toString()))
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     cyfs.sign_and_push_named_object(people_pk, device, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -813,8 +812,8 @@ describe("TS meta_client 接口测试",function(){
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     let group = cyfs.SimpleGroup.create(0,[public_key],[device.desc().calculate_id()],cyfs.OODWorkMode.ActiveStandby,[device.device_id()],new cyfs.Area(1,1,1,1))
                     cyfs.sign_and_push_named_object(people_pk, group, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(group).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(group).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -827,8 +826,8 @@ describe("TS meta_client 接口测试",function(){
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
                     let unionAccount = cyfs.UnionAccount.create(people.calculate_id(),ood.calculate_id(),1)
                     cyfs.sign_and_push_named_object(people_pk, unionAccount, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(unionAccount).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(unionAccount).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -840,12 +839,12 @@ describe("TS meta_client 接口测试",function(){
                     let [people,people_pk] = load_desc_and_sec(path.join(__dirname,'./people'))
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
                     let text = cyfs.TextObject.create(people.calculate_id(),`${Date.now()}`,`${Date.now()}`,`${Date.now()}`)
-                    let member =new cyfs.OrgMember(people.calculate_id(),1,JSBI.BigInt(22222))
+                    let member =new cyfs.OrgMember(people.calculate_id(),1,cyfs.JSBI.BigInt(22222))
                     let doc = new cyfs.Director(people.calculate_id(),1)
                     let data =cyfs.Org.create([member],[doc],1) //(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Org(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Org(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -862,8 +861,8 @@ describe("TS meta_client 接口测试",function(){
                     let device = cyfs.Device.create(people.calculate_id(), unique, [], [], [], public_key, cyfs.Area.default(), cyfs.DeviceCategory.PC);
                     let data =cyfs.MinerGroup.create([device.desc()]) //(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap() snservice
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.MinerGroup(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.MinerGroup(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -873,8 +872,8 @@ describe("TS meta_client 接口测试",function(){
                 it("create_desc 接口 上链 snservice 对象",async()=>{
                     let [people,people_pk] = load_desc_and_sec(path.join(__dirname,'./people'))
                     let [ood,ood_pk] = load_desc_and_sec(path.join(__dirname,'./ood'))
-                    let data = cyfs.SNService.create(people.calculate_id(),1,JSBI.BigInt(10));
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.SNService(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    let data = cyfs.SNService.create(people.calculate_id(),1,cyfs.JSBI.BigInt(10));
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.SNService(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -890,7 +889,7 @@ describe("TS meta_client 接口测试",function(){
                     let file_content = stringToUint8Array("9po8eBzh4Gb5ut48qEyQxipPUbjzBS329po8eBzh4Gb5ut48qEyQxipPUbjzBS32hsfjashfjahfj")
                     let hash = cyfs.HashValue.hash_data(file_content);
                     let data = cyfs.Contract.create(hash);
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Contract(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Contract(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -905,8 +904,8 @@ describe("TS meta_client 接口测试",function(){
                     let text = cyfs.TextObject.create(people.calculate_id(),`${Date.now()}`,`${Date.now()}`,`${Date.now()}`)
                     let data =new cyfs.Data(text.calculate_id(),text.to_vec().unwrap())
                     //cyfs.sign_and_push_named_object(people_pk, data, new cyfs.SignatureRefIndex(254)).unwrap()
-                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), JSBI.BigInt(0), 0, 0, pk)
-                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Data(data), JSBI.BigInt(0), 0, 0, people_pk)
+                    //let info =await meta_client_beta.create_desc(device,cyfs.SavedMetaObject.try_from(device).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, pk)
+                    let info =await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.Data(data), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -921,12 +920,12 @@ describe("TS meta_client 接口测试",function(){
                     let hash = cyfs.HashValue.hash_data(file_content);
                     let chunk = cyfs.ChunkId.calculate(file_content).unwrap();
                     let ChunkList = new cyfs.ChunkList([chunk])
-                    let file =  cyfs.File.create(people.calculate_id(),JSBI.BigInt(file_content.byteLength),hash,ChunkList)
+                    let file =  cyfs.File.create(people.calculate_id(),cyfs.JSBI.BigInt(file_content.byteLength),hash,ChunkList)
                     cyfs.sign_and_push_named_object(people_pk, file, new cyfs.SignatureRefIndex(254)).unwrap()
                     console.info(`file id : ${file.calculate_id()}`)
                     console.info(`file owner : ${file.desc()!.owner()!.to_base_58()}`)
                     // 上链失败，114签名校验失败
-                    let info = await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(file).unwrap(), JSBI.BigInt(0), 0, 0, people_pk)
+                    let info = await meta_client_beta.create_desc(people,cyfs.SavedMetaObject.try_from(file).unwrap(), cyfs.JSBI.BigInt(0), 0, 0, people_pk)
                     assert.ok(info.ok)
                     console.info("上链返回TX id",JSON.stringify(info))
                     let  check = await checkReceipt(info.unwrap().to_base_58())
@@ -951,7 +950,7 @@ describe("TS meta_client 接口测试",function(){
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap();  
                     console.info(people)
                     console.info(people_pk)
-                    let info =await meta_client_beta.trans_balance(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), JSBI.BigInt(1000000000), 0,  people_pk)
+                    let info =await meta_client_beta.trans_balance(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), cyfs.JSBI.BigInt(1000000000), 0,  people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 })
@@ -962,13 +961,13 @@ describe("TS meta_client 接口测试",function(){
                             console.info(`获取1000ECC`)
                             let [people1,people_pk1] = create_people();
                             console.info(`创建people并且上链${people1.calculate_id()}`)
-                            let info =await meta_client_beta.create_desc(people1,cyfs.SavedMetaObject.try_from(people1).unwrap(), JSBI.BigInt(1000*10000*10000), 0, 0, people_pk1)
+                            let info =await meta_client_beta.create_desc(people1,cyfs.SavedMetaObject.try_from(people1).unwrap(), cyfs.JSBI.BigInt(1000*10000*10000), 0, 0, people_pk1)
                             console.info("create desc 返回结果",info.unwrap().object_id.to_base_58())
                             assert.ok(info.ok)
                             let  check = await checkReceipt(info.unwrap().object_id.to_base_58())
                             assert(!check.err,`${info.unwrap().to_base_58()} 检查是否上链超时`)
                             assert(check.receipt!.result == 0,`${info.unwrap().to_base_58()} 上链失败，返回错误 ${check.receipt}`)
-                            let info2 =await meta_client_beta.trans_balance(people1,cyfs.ObjectId.from_base_58("5r4MYfFDKtnH8jhN4kEHgDN7NMdG1oA99wtttXp1fGqx").unwrap(), JSBI.BigInt(1000*10000*10000), 0,  people_pk1)
+                            let info2 =await meta_client_beta.trans_balance(people1,cyfs.ObjectId.from_base_58("5r4MYfFDKtnH8jhN4kEHgDN7NMdG1oA99wtttXp1fGqx").unwrap(), cyfs.JSBI.BigInt(1000*10000*10000), 0,  people_pk1)
                             console.info(JSON.stringify(info2))
                             assert.ok(info2.ok)
                             v("")
@@ -988,7 +987,7 @@ describe("TS meta_client 接口测试",function(){
                     //获取people数据
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap();  
-                    let info =await meta_client_beta.withdraw_from_file(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), JSBI.BigInt(1000000000), 0, people_pk)
+                    let info =await meta_client_beta.withdraw_from_file(people,cyfs.ObjectId.from_base_58("8YCfQUGY18Sj1eGNkL79fuZhJwnSGg7pn88QtufnUVAu").unwrap(), cyfs.JSBI.BigInt(1000000000), 0, people_pk)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 }) 
@@ -997,7 +996,7 @@ describe("TS meta_client 接口测试",function(){
                 it("create_contract 接口",async()=>{
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap(); 
-                    let info =await meta_client_beta.create_contract(people,people_pk,JSBI.BigInt(10000000),stringToUint8Array("contract"),0,0)
+                    let info =await meta_client_beta.create_contract(people,people_pk,cyfs.JSBI.BigInt(10000000),stringToUint8Array("contract"),0,0)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                 }) 
@@ -1006,7 +1005,7 @@ describe("TS meta_client 接口测试",function(){
                 it("call_contract 接口",async()=>{
                     let [people] = new cyfs.PeopleDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.desc')))).unwrap();  
                     let [people_pk] = new cyfs.PrivatekeyDecoder().raw_decode(new  Uint8Array(fs.readFileSync(path.join(__dirname,'./people.sec')))).unwrap(); 
-                    let info = await meta_client_beta.call_contract(people,people_pk,cyfs.ObjectId.from_base_58("8YCfQUGfNLtkjATZKA5VjCafUv61xmYAvSouV9keW1ky").unwrap(),JSBI.BigInt(0),stringToUint8Array("contract"),0,0)
+                    let info = await meta_client_beta.call_contract(people,people_pk,cyfs.ObjectId.from_base_58("8YCfQUGfNLtkjATZKA5VjCafUv61xmYAvSouV9keW1ky").unwrap(),cyfs.JSBI.BigInt(0),stringToUint8Array("contract"),0,0)
                     console.info(JSON.stringify(info))
                     assert.ok(info.ok)
                     let check = await checkReceipt(info.unwrap().object_id.to_base_58())

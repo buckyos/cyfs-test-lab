@@ -42,7 +42,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 50 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 50 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -77,7 +77,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 100 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 100 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -111,7 +111,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 150 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 150 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -145,7 +145,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 200 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 200 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -179,7 +179,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 300 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 300 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -213,7 +213,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 400 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 400 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
@@ -247,7 +247,7 @@ describe("SharedCyfsStack crypto目录", function () {
                 }
             }
             //(2)生成测试文件
-            await RandomGenerator.createRandomFile(saveDir, inner_path, 500 * 1024 * 1024);
+            await RandomGenerator.create_random_file(saveDir, inner_path, 500 * 1024 * 1024);
             let desc_buf = fs.readFileSync(local_path);
             let buf = new Uint8Array(desc_buf);
 
