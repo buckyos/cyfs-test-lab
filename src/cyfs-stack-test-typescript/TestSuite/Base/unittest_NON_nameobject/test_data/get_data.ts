@@ -9,22 +9,24 @@ import { dir } from "console";
 
 
 //读取json 测试数据
-export function get_path() {
+export function get_path(testlist: string) {
+    
     let allfile: string[] = []
-    let object_path = path.join(__dirname)
-    let allpath = fs.readdirSync(object_path)
-
-    for (let file of allpath) {
-        let filepath = path.join(object_path, file)
+    let allpath = fs.readdirSync(testlist)
+    for (let filedir of allpath) {
+        let filepath = path.join(testlist,filedir) 
         let stats = fs.statSync(filepath)
+        if (stats.isFile()){
+            let fileinner = path.join(testlist, filedir)
+                allfile!.push(fileinner)
+        }
         if (stats.isDirectory()) {
-            let file = fs.readdirSync(filepath)
-            for (let f of file) {
+            let files = fs.readdirSync(filepath)
+            for (let f of files) {
                 let filename = f;
                 let fileinner = path.join(filepath, filename)
                 allfile!.push(fileinner)
             }
-
         }
     };
     return allfile
@@ -51,5 +53,5 @@ export function get_big_str(size: number) {
 
 
 export function create_fileObject() {
-    
+
 }

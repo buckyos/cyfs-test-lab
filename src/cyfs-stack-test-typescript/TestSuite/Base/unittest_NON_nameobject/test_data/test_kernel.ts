@@ -8,11 +8,11 @@ import { FileId } from "../../../../cyfs_node";
 let proc_in: boolean | undefined = undefined;
 let ret = 0;
 
-function print_usage() {
+ function print_usage() {
     console.log("usage: ts-node test_kernel.ts [--in|--out] <json file path>")
 }
 
-function process_argv(): string | undefined {
+export function process_argv(): string | undefined {
     if (process.argv.length < 4) {
         print_usage()
     }
@@ -1047,8 +1047,10 @@ function main() {
         case "zone":
             process_zone(obj);
             break;
-        case "decapp": break;
-        case "nftlist": break;
+
+
+        case "applist": break;
+        case "app": break;
         case "friendlist": break;
         case "storage": break;
         case "msg": break;

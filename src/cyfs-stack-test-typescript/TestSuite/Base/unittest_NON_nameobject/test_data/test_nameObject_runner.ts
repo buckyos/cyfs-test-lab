@@ -1,9 +1,8 @@
-import assert  from 'assert';
 import * as cyfs from '../../../../cyfs_node';
-import { RandomGenerator, NDNTestManager, InputInfo, ResultInfo } from '../../../../common'
+import * as ChildProcess from 'child_process';
 import * as fs from "fs-extra"
 import * as path from "path"
-import * as testdatas from "./get_data"
+import * as getdata from "./get_data"
 //初始化日志
 cyfs.clog.enable_file_log({
     name: "test_main",
@@ -12,87 +11,45 @@ cyfs.clog.enable_file_log({
     file_max_count: 10,
 });
 
-
-//命令行接收参数，进程管理
-let proc_in: boolean | undefined = undefined;
-let ret = 0;
-
-function print_usage() {
-    console.log("usage: node desc_test.js [--in|--out] <json file path>")
-}
-
-function process_argv(): string | undefined {
-    if (process.argv.length < 4) {
-        print_usage()
-    }
-
-    if (process.argv[2] === "--in") {
-        proc_in = true;
-        return process.argv[3]
-    } else if (process.argv[2] === "--out") {
-        proc_in = false;
-        return process.argv[3]
-    } else {
-        print_usage()
-    }
-}
-
 describe("协议栈Nameobject测试", async function () {
     this.timeout(0);
+    let testpath = path.join(__dirname, "/dir")
+    let alljson = getdata.get_path(testpath)
+    console.log("-=-=-=-=-=-=" + alljson);
 
-    let alljson = testdatas.get_path()
-    for (let j in alljson) {
+    let sourcepath = path.resolve(__dirname, '../../')
+    let outpath = path.join(sourcepath, "/output")
+    let logpath = path.join(outpath, "/log")
+    fs.ensureDirSync(logpath);
+    let currenttime =  new Date().toLocaleString();
+    currenttime = currenttime.replace(/\D/g,"_");
 
-        let testdatas = fs.readJSONSync(j, "utf8");
+    for (let j of alljson) {
+        let testjson = JSON.parse(fs.readFileSync(j, { encoding: 'utf-8' }));
+        console.log(testjson);
 
-        describe(`${testdatas.testObject}`, async () => {
-            before(async function () {
-                //每条case的前置处理
+        describe(`测试模块-${testjson.type}`, async () => {
+            it.only(`测试用例-${testjson.casename}`, async () => {
+                console.info(`###### 运行: ts-node test_kernel.ts --out ${testjson} `)
+                let run = ChildProcess.exec(`ts-node test_kernel.ts --out ${testjson} `)
+                run.stdout!.on("data", (data) => {
+                    console.info(data)
+                })
+                // let save = new Promise(async(V)=>{
+                //     // while(true){
+                //     //     if(fs.pathExistsSync(report_path)){
+                //     //         await sleep(5*1000)
+                //     //         fs.copySync(report_path,`${reportpath}/report_${currenttime}`)
+                //     //         await fs.removeSync(report_path)
+                //     //         break;
+                //     //     }
+                //     //     await sleep(5*1000)
 
+                //     // }
+                //     V("run finished")
+                // },)
+                // await save;
 
-                let json_path = process_argv();
-                if (!json_path) {
-                    console.error("未指定json filepath")
-                    return
-                }
-
-
-
-
-            })
-            after(async function () {
-                //数据清理
-
-
-            })
-            it(`${testdatas.testcaseList[j].name}`, async () => {
-                // 异常用例阻塞暂时跳过
-                console.info(`开始执行测试用例：${testdatas.testcaseList[j].name}`)
-                if (inputData.skip) {
-                    assert(false, "测试用例异常，暂时标记不执行")
-                }
-                //运行超时处理机制
-                let run = true;
-                let timeout = 120 * 1000
-                if (inputData.timeout) {
-                    timeout = inputData.timeout
-                }
-                setTimeout(() => {
-                    if (run) {
-                        console.error(false, "测试用例运行超时")
-                    }
-                }, timeout)
-                //运行测试用例
-
-                switch (obj.type) {
-                    case "people":
-                        //process_people(obj)
-                        break;
-                    default:
-                        console.error(`unsupport type`, obj.type)
-                        break;
-                }
-                run = false;
             })
 
         })
