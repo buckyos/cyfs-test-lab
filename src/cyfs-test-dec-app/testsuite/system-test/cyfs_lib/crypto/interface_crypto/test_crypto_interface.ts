@@ -7,11 +7,14 @@ import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../base';
 import * as addContext from "mochawesome/addContext"
 import * as action_api from "../../../../../common_action"
 
-
+//  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
 const handlerManager = new myHandler.HandlerManager(); 
-
+let zone1device1 : cyfs.SharedCyfsStack
+let zone1ood : cyfs.SharedCyfsStack
+let system_stack : cyfs.SharedCyfsStack
+let zone1device2 : cyfs.SharedCyfsStack
 
 describe("SharedCyfsStack crypto目录", function () {
     this.timeout(0);
@@ -31,6 +34,26 @@ describe("SharedCyfsStack crypto目录", function () {
         assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
         assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
         logger.info(`############用例执开始执行`);
+        zone1device1 = stack_manager.get_cyfs_satck({
+            peer_name : "zone1_device1",
+            type : cyfs.CyfsStackRequestorType.Http,
+            dec_id : dec_app_1.to_base_58() 
+        }).stack!; 
+        zone1ood = stack_manager.get_cyfs_satck({
+            peer_name : "zone1_ood",
+            type : cyfs.CyfsStackRequestorType.Http,
+            dec_id : dec_app_1.to_base_58() 
+        }).stack!; 
+        system_stack =stack_manager.get_cyfs_satck({
+            peer_name : "zone1_device1",
+            type : cyfs.CyfsStackRequestorType.Http,
+            dec_id :cyfs.get_system_dec_app().object_id.to_base_58()
+        }).stack!; 
+        zone1device2 = stack_manager.get_cyfs_satck({
+            peer_name : "zone1_device2",
+            type : cyfs.CyfsStackRequestorType.Http,
+            dec_id : dec_app_1.to_base_58() 
+        }).stack!;
     })
     this.afterAll(async () => {
         // 停止测试模拟器
@@ -64,26 +87,7 @@ describe("SharedCyfsStack crypto目录", function () {
 
 
     describe("#crypto 相关接口", async () => {
-        const zone1device1 = stack_manager.get_cyfs_satck({
-            peer_name : "zone1_device1",
-            type : cyfs.CyfsStackRequestorType.Http,
-            dec_id : dec_app_1.to_base_58() 
-        }).stack!; 
-        const zone1ood = stack_manager.get_cyfs_satck({
-            peer_name : "zone1_ood",
-            type : cyfs.CyfsStackRequestorType.Http,
-            dec_id : dec_app_1.to_base_58() 
-        }).stack!; 
-        const system_stack =stack_manager.get_cyfs_satck({
-            peer_name : "zone1_device1",
-            type : cyfs.CyfsStackRequestorType.Http,
-            dec_id :cyfs.get_system_dec_app().object_id.to_base_58()
-        }).stack!; 
-        const zone1device2 = stack_manager.get_cyfs_satck({
-            peer_name : "zone1_device2",
-            type : cyfs.CyfsStackRequestorType.Http,
-            dec_id : dec_app_1.to_base_58() 
-        }).stack!;
+        
         beforeEach(async function () {
             await zone1device1.root_state_meta_stub(zone1device1.local_device_id().object_id, dec_app_1).clear_access()
         })

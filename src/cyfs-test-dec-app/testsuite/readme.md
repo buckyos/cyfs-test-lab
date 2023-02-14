@@ -63,23 +63,14 @@
     + 例如 对象编解码的性能
 
 + regression-test : 回归测试用例
-    - cyfs_base
-    - ACL
-    - crypto
-    - non
-    - ndn
-    - rmeta
-    - root_state
-    - router_handler
-    - trans
-    - util
-    - sync
-    - front
-+ smoke-test : 冒烟测试用例
-  
-+ system-test : 功能测试
 
++ smoke-test : 冒烟测试用例
+
++ system-test : 功能测试
+  + 对sdk 接口api 的正确性进行测试
+  + 对接口使用场景功能进行测试
 + unit-test : 单元测试
+  + ts-sdk 中目前只有cyfs_base 需要进行单元测试
 
 
 
