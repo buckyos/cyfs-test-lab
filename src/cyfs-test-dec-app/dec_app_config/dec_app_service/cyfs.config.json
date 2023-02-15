@@ -1,0 +1,34 @@
+{
+  "config_version": 1,
+  "app_name": "dec_app_service",
+  "version": "1.0.0",
+  "description": "",
+  "icon": "",
+  "service": {
+    "pack": [],
+    "type": "node",
+    "dist_targets": [
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ],
+    "app_config": {
+      "default": "service_package.cfg"
+    },
+    "app_dependent_config": {
+      "default": "dependent.cfg"
+    },
+    "app_acl_config": {
+      "default": "acl.cfg"
+    }
+  },
+  "web": {
+    "folder": "",
+    "entry": "index.html"
+  },
+  "dist": "dist",
+  "owner_config": ".cyfs\\owner.json",
+  "ext_info": {
+    "medias": []
+  },
+  "app_id": "9tGpLNnUxFFXh3XxzZrJJ6UuekyzF7LJ7t7ZTtJjsPMH"
+}

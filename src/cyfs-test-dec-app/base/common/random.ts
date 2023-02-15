@@ -3,7 +3,7 @@ let encoding = require('encoding');
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from 'crypto';
-import sharp from "sharp";
+// import sharp from "sharp";
 import {ErrorCode} from "./"
 
 /**
@@ -218,20 +218,20 @@ export const IMGURL = [
  * @param source 
  * @param target 
  */
-export async function crop_image(source: string, target: string) {
-    let width = RandomGenerator.integer(1200, 600);
-    let height = RandomGenerator.integer(1200, 600);
-    try {
-        await sharp(source)
-            .resize({
-                width: width,
-                height: height
-            })
-            .toFile(target);
-    } catch (error) {
-        console.log(error);
-    }
-}
+// export async function crop_image(source: string, target: string) {
+//     let width = RandomGenerator.integer(1200, 600);
+//     let height = RandomGenerator.integer(1200, 600);
+//     try {
+//         await sharp(source)
+//             .resize({
+//                 width: width,
+//                 height: height
+//             })
+//             .toFile(target);
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 export class RandomGenerator {
     // 默认去掉了容易混淆的字符oOLl,9gq,resolvev,Uu,I1
@@ -512,7 +512,7 @@ export class RandomGenerator {
         // 修改图片
         let source = path.join(img_path, rand_str);
         let target = path.join(img_path, name);
-        await crop_image(source, target)
+        //await crop_image(source, target)
         //删除原始图片
         fs.rmSync(source);
     }

@@ -36,14 +36,16 @@ async fn main() {
                 .short("n")
                 .long("name")
                 .takes_value(true)
-                .help("the agent name"),
+                .help("the agent name")
+                .default_value("agent name"),
         )
         .arg(
             Arg::with_name("testcaseId")
                 .short("t")
                 .long("testcaseId")
                 .takes_value(true)
-                .help("testcase id"),
+                .help("testcase id")
+                .default_value("testcase id"),
         )
         .arg(
             Arg::with_name("interval")
@@ -51,7 +53,7 @@ async fn main() {
                 .long("interval")
                 .takes_value(true)
                 .help("interval time")
-                .default_value("2000"),
+                .default_value("60000"),
         );
 
     let matches = app.get_matches();
@@ -64,7 +66,7 @@ async fn main() {
         let ret =  SYSTEM_INFO_MANAGER.get_system_info().await;
         let sysInfo = BDTTestSystemInfo {
             name : name.clone(),
-            test_case_id : test_case_id.clone(),
+            testcase_id : test_case_id.clone(),
             cpu_usage: ret.cpu_usage,
             total_memory: ret.total_memory,
             used_memory: ret.used_memory,
@@ -77,7 +79,7 @@ async fn main() {
         };
         let json_body = serde_json::to_vec(&sysInfo).unwrap();
         //log::info!("start upload_system_info to server {:#?} ",json_body.clone());
-        let get_json = request_json_post(url.clone(),Body::from(json_body)).await.unwrap();
+        let get_json = request_json_post(url.clone(),Body::from(json_body)).await;
         log::info!("report bdt agent perf result = {:#?}", get_json);
         async_std::task::sleep(Duration::from_millis(interval.clone())).await; 
     }

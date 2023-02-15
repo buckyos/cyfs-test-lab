@@ -61,7 +61,7 @@ pub struct Headers {
 #[derive(Serialize, Deserialize)]
 pub struct BDTTestSystemInfo {
     pub name : String,
-    pub test_case_id : String,
+    pub testcase_id : String,
     pub cpu_usage: f32,
     pub total_memory: u64,
     pub used_memory: u64,
