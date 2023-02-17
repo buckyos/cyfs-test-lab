@@ -20,12 +20,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_tcp_keep_10000"
+    let testcaseName = "perf_stream_connect_original_tcp_keep_10000"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用TCP连接 
+        + LN RN 只使用原生TCP
         ## 操作步骤
         + (1) LN RN 之间串行建立10000个连接
         + (2) 维持连接2 min
@@ -55,6 +55,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
+    await agentManager.allAgentStartTcpServer();
     await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 20; i++) {
@@ -66,8 +67,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         })
         for (let x = 0; x < 500; x++) {
             let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
-                type: ActionType.connect,
+            info = await testRunner.prevTaskAddAction(new BDTAction.TcpConnectAction({
                 LN: `${LN}$1$0`,
                 RN: `${RN}$1$0`,
                 config: {

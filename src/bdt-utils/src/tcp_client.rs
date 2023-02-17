@@ -112,13 +112,21 @@ impl TcpClient {
                 //stream.set_nodelay(nodelay);
                 log::info!("recv tcp connection {}", stream_name.clone());
                 cli.add_stream(stream_name.clone(), &stream).await;
-
+                let sequence_id = match cli.recv_stream(stream_name.clone()).await{
+                    Ok((file_size, recv_time, hash, sequence_id))=>{
+                        sequence_id
+                    },
+                    Err(err)=>{
+                        0
+                    }
+                };
                 let _ = match cli.get_lpc().await{
                     Some(lpc) => {
                         let resp = ListenerTcpConnectEvent {
                             result: 0,
                             msg: "success".to_string(),
                             stream_name,
+                            sequence_id : sequence_id.to_string(),
                         };
                         let mut lpc = lpc;
                         let _ = lpc
@@ -136,7 +144,7 @@ impl TcpClient {
             });
         }
     }
-    pub async fn connect(&mut self, remote: String) -> BuckyResult<(String, u64)> {
+    pub async fn connect(&mut self, remote: String) -> BuckyResult<(String, u64,u64)> {
         log::info!("tcp connect to remote {}", remote.clone());
         let addr = SocketAddr::from_str(remote.as_str()).unwrap();
         let begin_connect = system_time_to_bucky_time(&std::time::SystemTime::now());
@@ -150,7 +158,15 @@ impl TcpClient {
                     stream.peer_addr().unwrap()
                 );
                 self.add_stream(stream_name.clone(), &stream).await;
-                Ok((stream_name, connect_time))
+                let sequence_id = match self.send_stream(stream_name.clone(),100).await{
+                    Ok((hash, send_time, sequence_id))=>{
+                        sequence_id
+                    },
+                    Err(err)=>{
+                        0
+                    }
+                };
+                Ok((stream_name, connect_time,sequence_id))
             }
             Err(err) => Err(BuckyError::new(
                 BuckyErrorCode::Failed,
@@ -235,7 +251,7 @@ impl TcpClient {
         }
         let hash = hash_data(total_hash.as_slice());
 
-        log::info!("send file finish, size ={} ,hash={:?}", size, &hash);
+        log::info!("send file finish, size ={} ,hash={:?},sequence_id = {}", size, &hash,sequence_id);
 
         Ok((hash, send_time, sequence_id))
     }
@@ -339,7 +355,7 @@ impl TcpClient {
                         stream_name,
                         file_size,
                         hash,
-                        sequence_id,
+                        sequence_id : sequence_id.to_string(),
                         recv_time,
                     },
                     Err(err) => TcpStreamListenerEvent {
@@ -348,7 +364,7 @@ impl TcpClient {
                         stream_name,
                         file_size: 0,
                         hash: HashValue::default(),
-                        sequence_id: 0,
+                        sequence_id: 0.to_string(),
                         recv_time: 0,
                     },
                 };
@@ -399,7 +415,7 @@ async fn test_tcp() {
     let mut client1 = manager.get_client("lizhihong1");
     let mut client2 = manager.get_client("lizhihong2");
     let _ = match client1.connect(remote.clone()).await {
-        Ok((stream_name, connect_time)) => {
+        Ok((stream_name, connect_time,sequence_id)) => {
             println!("connect result = {} {}", stream_name.clone(), connect_time);
             let stream_name_test = stream_name.clone();
             async_std::task::spawn(async move {

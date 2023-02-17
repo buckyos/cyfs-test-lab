@@ -233,6 +233,7 @@ export type ListenerTcpConnectEvent = {
     result: number,
     msg: string,
     stream_name: string,
+    sequence_id : string
 }
 
 
@@ -246,7 +247,9 @@ export type TcpConnectResp = {
     stream_name: string,
     result: number,
     msg: string,
-    connect_time: number
+    connect_time: number,
+    sequence_id : string
+    
 }
 
 
@@ -262,7 +265,7 @@ export type TcpStreamSendResp = {
     msg: string,
     send_time: number,
     hash: string,
-    sequence_id: number,
+    sequence_id: string,
 }
 
 
@@ -282,7 +285,7 @@ export type TcpStreamListenerEvent = {
     stream_name: string,
     file_size: number,
     hash: string,
-    sequence_id: number,
+    sequence_id: string,
     recv_time: number,
 }
 export type DestoryStackReq = {
@@ -315,6 +318,135 @@ export type ResetStackResp = {
     result: number,
     msg: string,
 }
+
+
+export type DownloadFileStateReq ={
+    peer_name: string,
+    session: string,
+}
+
+
+export type DownloadFileStateResp = {
+    peer_name: string,
+    result: number,
+    msg: string,
+    state: string,
+    cur_speed : number,
+    transfered: number,
+}
+
+
+export type DownloadFileReq = {
+    peer_name: string,
+    remotes: Array<string>,
+    group?: string,
+    referer: string,
+    path: string,
+}
+
+
+export type DownloadFileResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    session: string,
+}
+
+
+export type PublishFileReq={
+    peer_name: string,
+    path: string,
+    chunk_size: number,
+}
+
+export type PublishFileResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    file_id : string,
+    set_time: number,
+    calculate_time: number,
+}
+
+
+
+export type CheckChunkReq={
+    peer_name: string,
+    chunk_id: string,
+}
+
+export type CheckChunkResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    state: number,
+}
+
+
+export type InterestChunkReq={
+    peer_name: string,
+    chunk_id: string,
+}
+
+
+export type InterestChunkResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+}
+
+
+export type TrackChunkReq={
+    peer_name: string,
+    path: string,
+    chunk_size: number,
+}
+
+
+export type TrackChunkResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    chunk_id: string,
+    calculate_time: number,
+    set_time: number,
+}
+
+
+
+export type CalculateChunkReq={
+    peer_name: string,
+    path: string,
+    chunk_size: number,
+}
+
+
+export type CalculateChunkResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    chunk_id: string,
+    calculate_time: number,
+}
+
+
+export type SetChunkReq={
+    peer_name: string,
+    path: string,
+    chunk_id: string,
+    chunk_size: number,
+}
+
+
+export type SetChunkResp={
+    peer_name: string,
+    result: number,
+    msg: string,
+    chunk_id: string,
+    set_time: number,
+}
+
+
 
 export interface LpcActionApi {
     client_name?: string,
@@ -351,6 +483,23 @@ export interface LpcActionApi {
     ConnectSendStreamResp?: ConnectSendStreamResp,
     ResetStackReq?:ResetStackReq,
     ResetStackResp?:ResetStackResp,
+    // NDN 测试
+    CalculateChunkReq?:CalculateChunkReq,
+    CalculateChunkResp?:CalculateChunkResp,
+    SetChunkReq?:SetChunkReq,
+    SetChunkResp?:SetChunkResp,
+    TrackChunkReq?:TrackChunkReq,
+    TrackChunkResp?:TrackChunkResp,
+    InterestChunkReq?:InterestChunkReq,
+    InterestChunkResp?:InterestChunkResp,
+    CheckChunkReq?:CheckChunkReq,
+    CheckChunkResp?:CheckChunkResp,
+    PublishFileReq?:PublishFileReq,
+    PublishFileResp?:PublishFileResp,
+    DownloadFileReq?:DownloadFileReq,
+    DownloadFileResp?:DownloadFileResp,
+    DownloadFileStateReq?:DownloadFileStateReq,
+    DownloadFileStateResp?:DownloadFileStateResp,
     // TCP
     CreateTcpServerReq?: CreateTcpServerReq,
     CreateTcpServerResp?: CreateTcpServerResp,

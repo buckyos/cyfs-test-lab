@@ -10,7 +10,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agentManager = AgentManager.createInstance(_interface);
     // 选指定连个节点进行测试
     let testAgent = [];
-    const LN = "PC_0006";
+    const LN = "PC_0013";
     const RN = "PC_0018";
     for (let agent of labAgent) {
         if (agent.tags[0] == LN || agent.tags[0] == RN) {

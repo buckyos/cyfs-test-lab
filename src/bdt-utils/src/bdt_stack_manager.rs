@@ -1,5 +1,5 @@
 use async_std::{future, stream::StreamExt, sync::Arc, task};
-
+use cyfs_util::cache::{NamedDataCache, TrackerCache};
 use cyfs_base::*;
 use cyfs_bdt::*;
 use std::{
@@ -45,11 +45,12 @@ impl BDTClientManager {
         peer_name: &str,
         stack: StackGuard,
         acceptor: StreamListenerGuard,
+        chunk_store : TrackedChunkStore,
     ) -> BuckyResult<()> {
         match self.BDTClient_map.entry(peer_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
                 let client_path = self.temp_dir.clone().join(peer_name);
-                let info = BDTClient::new(stack, acceptor, client_path, self.service_path.clone());
+                let info = BDTClient::new(stack, acceptor,chunk_store, client_path, self.service_path.clone());
                 v.insert(info);
                 Ok(())
             }
@@ -77,11 +78,13 @@ impl BDTClientManager {
         peer_name: &str,
         cache_path: &PathBuf,
         bdt_params: StackOpenParams,
+        chunk_store:TrackedChunkStore,
     ) -> BuckyResult<(Device, PrivateKey, u64)> {
         let (device, key) = load_device(cache_path, peer_name).await;
         let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
         let stack = Stack::open(device.clone(), key.clone(), params).await;
+        
         if let Err(e) = stack.clone() {
             log::error!("init bdt stack error: {}", e);
         }
@@ -123,6 +126,7 @@ impl BDTClientManager {
                             let info = BDTClient::new(
                                 stack,
                                 acceptor,
+                                chunk_store,
                                 client_path,
                                 self.service_path.clone(),
                             );
@@ -151,6 +155,7 @@ impl BDTClientManager {
         active_pn_list: &Vec<Device>,
         save_path: Option<PathBuf>,
         udp_sn_only: bool,
+        chunk_cache:&str 
     ) -> BuckyResult<(StackGuard, u64)> {
         // 加载配置中的SN中的配置
 
@@ -174,6 +179,24 @@ impl BDTClientManager {
         bdt_params.passive_pn = Some(passive_pn_list.clone());
         bdt_params.config.interface.udp.sn_only = udp_sn_only;
         bdt_params.tcp_port_mapping = None;
+        let chunk_store = match chunk_cache{
+            "file" => {
+                let tracker = MemTracker::new();
+                TrackedChunkStore::new(
+                    NamedDataCache::clone(&tracker),
+                    TrackerCache::clone(&tracker),
+                )
+            }
+            "mem" => {
+                let tracker = MemTracker::new();
+                TrackedChunkStore::new(
+                    NamedDataCache::clone(&tracker),
+                    TrackerCache::clone(&tracker),
+                )
+            }
+            _ => unreachable!(),
+        };
+        bdt_params.chunk_store = Some(chunk_store.clone_as_reader());
         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
         let stack = Stack::open(device.clone(), private_key.clone(), bdt_params).await;
         if let Err(e) = stack.clone() {
@@ -217,6 +240,7 @@ impl BDTClientManager {
                             let info = BDTClient::new(
                                 stack.clone(),
                                 acceptor,
+                                chunk_store,
                                 client_path,
                                 self.service_path.clone(),
                             );
@@ -296,6 +320,7 @@ impl BDTClientManager {
                 &active_pn_list,
                 None,
                 req.sn_only.clone(),
+                req.chunk_cache.as_str()
             )
             .await
         {

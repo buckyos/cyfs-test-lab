@@ -1,7 +1,5 @@
 use cyfs_base::*;
-use cyfs_bdt::*;
 use serde::{Deserialize, Serialize};
-use std::io::Read;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum LpcActionApi {
@@ -17,7 +15,7 @@ pub enum LpcActionApi {
     UploadSystemInfoResp(UploadSystemInfoResp),
     Exit(Exit),
     Unkonwn(Unkonwn),
-    // BDT
+    // BDT Stream
     CreateStackReq(CreateStackReq),
     CreateStackResp(CreateStackResp),
     DestoryStackReq(DestoryStackReq),
@@ -42,6 +40,23 @@ pub enum LpcActionApi {
     ListenerStreamEvent(ListenerStreamEvent),
     ConnectSendStreamReq(ConnectSendStreamReq),
     ConnectSendStreamResp(ConnectSendStreamResp),
+    //BDT NDN
+    CalculateChunkReq(CalculateChunkReq),
+    CalculateChunkResp(CalculateChunkResp),
+    SetChunkReq(SetChunkReq),
+    SetChunkResp(SetChunkResp),
+    TrackChunkReq(TrackChunkReq),
+    TrackChunkResp(TrackChunkResp),
+    InterestChunkReq(InterestChunkReq),
+    InterestChunkResp(InterestChunkResp),
+    CheckChunkReq(CheckChunkReq),
+    CheckChunkResp(CheckChunkResp),
+    PublishFileReq(PublishFileReq),
+    PublishFileResp(PublishFileResp),
+    DownloadFileReq(DownloadFileReq),
+    DownloadFileResp(DownloadFileResp),
+    DownloadFileStateReq(DownloadFileStateReq),
+    DownloadFileStateResp(DownloadFileStateResp),
     //TCP
     CreateTcpServerReq(CreateTcpServerReq),
     CreateTcpServerResp(CreateTcpServerResp),
@@ -53,6 +68,136 @@ pub enum LpcActionApi {
     TcpStreamListenerReq(TcpStreamListenerReq),
     TcpStreamListenerResp(TcpStreamListenerResp),
     TcpStreamListenerEvent(TcpStreamListenerEvent),
+    
+
+
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DownloadFileStateReq {
+    pub peer_name: String,
+    pub session: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DownloadFileStateResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub state: String,
+    pub cur_speed : u32,
+    pub transfered: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DownloadFileReq {
+    pub peer_name: String,
+    pub remotes: Vec<DeviceId>,
+    pub group: Option<String>,
+    pub referer: Option<String>,
+    pub path: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DownloadFileResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub session: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PublishFileReq {
+    pub peer_name: String,
+    pub path: String,
+    pub chunk_size: usize,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PublishFileResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub file_id : FileId,
+    pub set_time: u32,
+    pub calculate_time: u32,
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CheckChunkReq {
+    pub peer_name: String,
+    pub chunk_id: ChunkId,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CheckChunkResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub state: ChunkState,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct InterestChunkReq {
+    pub peer_name: String,
+    pub chunk_id: ChunkId,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct InterestChunkResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TrackChunkReq {
+    pub peer_name: String,
+    pub path: String,
+    pub chunk_size: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TrackChunkResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub chunk_id: ChunkId,
+    pub calculate_time: u32,
+    pub set_time: u32,
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CalculateChunkReq {
+    pub peer_name: String,
+    pub path: String,
+    pub chunk_size: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CalculateChunkResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub chunk_id: ChunkId,
+    pub calculate_time: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SetChunkReq {
+    pub peer_name: String,
+    pub path: String,
+    pub chunk_id: ChunkId,
+    pub chunk_size: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SetChunkResp {
+    pub peer_name: String,
+    pub result: u16,
+    pub msg: String,
+    pub chunk_id: ChunkId,
+    pub set_time: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -324,6 +469,7 @@ pub struct ListenerTcpConnectEvent {
     pub result: u16,
     pub msg: String,
     pub stream_name: String,
+    pub sequence_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -338,6 +484,7 @@ pub struct TcpConnectResp {
     pub result: u16,
     pub msg: String,
     pub connect_time: u64,
+    pub sequence_id : String
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -353,7 +500,7 @@ pub struct TcpStreamSendResp {
     pub msg: String,
     pub send_time: u64,
     pub hash: HashValue,
-    pub sequence_id: u64,
+    pub sequence_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -374,7 +521,7 @@ pub struct TcpStreamListenerEvent {
     pub stream_name: String,
     pub file_size: u64,
     pub hash: HashValue,
-    pub sequence_id: u64,
+    pub sequence_id: String,
     pub recv_time: u64,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -1,5 +1,3 @@
-
-
 import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator } from '../../base';
 import { EventEmitter } from 'events';
 import { Agent, Peer, BDTERROR } from './type'
@@ -70,20 +68,22 @@ export class TcpStack extends EventEmitter {
             let rnAccept = await this.m_interface.attachEvent(`tcpAccept_${this.peer_name}`,async (err: ErrorCode, namespace: Namespace, json: string) => {
                 let eventIfo: api.LpcActionApi = JSON.parse(json);
                 if (eventIfo.ListenerTcpConnectEvent) {
-                    this.logger.info(`${this.tags} ${this.client_name} 触发 tcp accept conn = ${eventIfo}`);
+                    this.logger.info(`${this.tags} ${this.client_name} 触发 tcp accept conn = ${JSON.stringify(eventIfo)}`);
+                    
                     let tcp_stream = new TcpStream({
                         agentid: this.m_agentid,
                         client_name: this.client_name!,
                         peer_name: this.peer_name!,
                         _interface: this.m_interface,
                         timeout: this.m_timeout,
-                        stream_name: eventIfo.ListenerTcpConnectEvent.stream_name
+                        stream_name: eventIfo.ListenerTcpConnectEvent.stream_name,
+                        sequence_id : eventIfo.ListenerTcpConnectEvent.sequence_id,
                     });
-                    this.m_conns.set(eventIfo.ListenerTcpConnectEvent.stream_name, tcp_stream);
                     // tcp stream 监听数据接收事件
                     if(listener_recv){
-                        let listener = await tcp_stream.listener_recv();
+                        let listener = await tcp_stream.listener_recv(); 
                     }
+                    this.m_conns.set(eventIfo.ListenerTcpConnectEvent.stream_name, tcp_stream);
                     
                 }
             }, this.m_agentid, this.m_timeout);
@@ -93,7 +93,7 @@ export class TcpStack extends EventEmitter {
         return result.CreateTcpServerResp!
     }
 
-    async tcp_connect(address: string, conn_tag: string,listener_recv:boolean=false): Promise<api.TcpConnectResp> {
+    async tcp_connect(address: string, conn_tag: string,listener_recv:boolean=false): Promise<{resp:api.TcpConnectResp,tcp_stream?:TcpStream}> {
         let action: api.LpcActionApi = {
             TcpConnectReq: {
                 name: this.peer_name!,
@@ -108,7 +108,7 @@ export class TcpStack extends EventEmitter {
         let result: api.LpcActionApi = info.value;
         if (!result.TcpConnectResp || result.TcpConnectResp.result) {
             this.logger.error(`${this.client_name} ${this.peer_name} connect failed,err =${JSON.stringify(result)}`)
-            return result.TcpConnectResp!
+            return {resp:result.TcpConnectResp!}
         }
         let tcp_stream = new TcpStream({
             agentid: this.m_agentid,
@@ -118,21 +118,27 @@ export class TcpStack extends EventEmitter {
             timeout: this.m_timeout,
             stream_name: result.TcpConnectResp!.stream_name!,
             conn_tag,
+            sequence_id : result.TcpConnectResp!.sequence_id!,
         });
         this.m_conns.set(result.TcpConnectResp!.stream_name!, tcp_stream);
         if(listener_recv){
             let listener = await tcp_stream.listener_recv();
         }
-        return result.TcpConnectResp!;
+        return {resp:result.TcpConnectResp!,tcp_stream}
     }
 
-    async check_connect(address: string, conn_tag: string): Promise<{ err: ErrorCode, tcp_stream?: TcpStream }> {
-        for (let tcp_stream of this.m_conns.values()) {
-            if (!tcp_stream.conn_tag) {
-                tcp_stream.conn_tag = conn_tag;
-                return { err: ErrorCode.succ, tcp_stream }
+    async check_connect(sequence_id: string, conn_tag: string): Promise<{ err: ErrorCode, tcp_stream?: TcpStream }> {
+        let check_sum = 10;
+        while(check_sum>0){
+            for (let tcp_stream of this.m_conns.values()) {
+                if (tcp_stream.frist_sequence_id == sequence_id) {
+                    tcp_stream.conn_tag = conn_tag;
+                    return { err: ErrorCode.succ, tcp_stream }
+                }
             }
+            await sleep(1000)
         }
+        
         return { err: ErrorCode.notFound }
     }
     async get_tcp_stream(conn_tag: string): Promise<{ err: ErrorCode, tcp_stream?: TcpStream }> {
@@ -150,14 +156,15 @@ export class TcpStream extends EventEmitter {
     private m_agentid: string;
     private client_name: string;
     public stream_name: string;
-    public frist_sequence_id? : number; //tcp 连接socket四元组可能不一样，通过frist_sequence_id 来做标记
+    public frist_sequence_id? : string; //tcp 连接socket四元组可能不一样，通过frist_sequence_id 来做标记
     public peer_name: string;  // 客户端名称
     public conn_tag?: string;
     private m_interface: TaskClientInterface;
     private timeout: number;
     private logger: Logger;
     private m_listener_recv_cookie?: number;
-    public recv_cookie : Map<number,api.TcpStreamListenerEvent>
+
+    public recv_cookie : Map<string,api.TcpStreamListenerEvent>
     constructor(options: {
         agentid: string;
         client_name: string;
@@ -166,6 +173,7 @@ export class TcpStream extends EventEmitter {
         _interface: TaskClientInterface;
         timeout: number;
         conn_tag?: string;
+        sequence_id?:string;
     }) {
         super();
         this.m_agentid = options.agentid;
@@ -177,9 +185,11 @@ export class TcpStream extends EventEmitter {
         this.timeout = options.timeout;
         this.conn_tag = options.conn_tag;
         this.recv_cookie = new Map();
+        this.frist_sequence_id = options.sequence_id;
     }
-    set_frist_sequence_id(sequence_id:number){
+    set_frist_sequence_id(sequence_id:string){
         if(!this.frist_sequence_id){
+            this.logger.info(`${this.stream_name} set sequence_id ${sequence_id} `)
             this.frist_sequence_id = sequence_id;
         }
     } 
@@ -196,7 +206,7 @@ export class TcpStream extends EventEmitter {
             action,
         }, this.m_agentid, 0);
         let result: api.LpcActionApi = info.value;
-        this.logger.debug(`callApi tcp send BuckyResult result = ${result}`)
+        this.logger.info(`callApi tcp send result = ${JSON.stringify(result)}`)
         if (!result.TcpStreamSendResp || result.TcpStreamSendResp.result) {
             this.logger.error(`${this.client_name} ${this.stream_name} send failed,err =${JSON.stringify(result)}`)
         }
@@ -217,7 +227,7 @@ export class TcpStream extends EventEmitter {
             }
 
         }, this.m_agentid!, 10 * 1000);
-        this.logger.debug(`callApi createBdtLpcListener result = ${info.value.result},msg = ${info.value.msg}`)
+        this.logger.info(`callApi createBdtLpcListener result = ${info.value.result},msg = ${info.value.msg}`)
         let result: api.LpcActionApi = info.value;
         if (!result.TcpStreamListenerResp || result.TcpStreamListenerResp.result) {
             this.logger.error(`${this.client_name} TcpStreamListener failed,err =${info.err} ,info =${JSON.stringify(info.value)}`);
@@ -229,7 +239,7 @@ export class TcpStream extends EventEmitter {
                 let eventIfo: api.LpcActionApi = JSON.parse(json);
                 if (eventIfo.TcpStreamListenerEvent) {
                     this.logger.info(`${this.client_name} ${this.stream_name} recv tcp stream data ${JSON.stringify(eventIfo.TcpStreamListenerEvent)}`);
-                    this.set_frist_sequence_id(result.TcpStreamSendResp!.sequence_id);
+                    this.set_frist_sequence_id(eventIfo.TcpStreamListenerEvent!.sequence_id);
                     this.recv_cookie.set(eventIfo.TcpStreamListenerEvent.sequence_id,eventIfo.TcpStreamListenerEvent);  
                 }
             }, this.m_agentid, this.timeout);

@@ -69,8 +69,6 @@ export class BdtStack extends EventEmitter {
         return { err: BDTERROR.NotFound }
 
     }
-
-
     async remark_accpet_conn_name(TempSeq: string, remote: string, conn_tag?: string): Promise<{ err: number, conn?: BdtConnection }> {
         for (let conn of this.m_conns.values()) {
             if (conn.TempSeq == TempSeq && conn.remote == remote && !conn.conn_tag) {
@@ -81,7 +79,6 @@ export class BdtStack extends EventEmitter {
         return { err: BDTERROR.RNCheckConnFailed }
     }
     async destory(): Promise<ErrorCode> {
-
         if (this.m_acceptCookie) {
             await this.m_interface.detachEvent('accept', this.m_acceptCookie!, this.m_timeout);
             delete this.m_acceptCookie;
@@ -118,7 +115,6 @@ export class BdtStack extends EventEmitter {
     }
     // BDT 相关操作
     async connect(remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectResp,conn?:BdtConnection}> {
-        
         let action :api.LpcActionApi = {
             ConnectReq :{
                 peer_name: this.peer_name,
@@ -166,8 +162,7 @@ export class BdtStack extends EventEmitter {
         return {resp:result.ConnectResp,conn};
     }
 
-    async connect_mut(conn_sum:number,remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectMutResp}> {
-        
+    async connect_mut(conn_sum:number,remote: Buffer, question_size: number, known_eps: number, accept_answer: number, conn_tag: string, remote_sn?: string,): Promise<{resp:api.ConnectMutResp}> {   
         let action :api.LpcActionApi = {
             ConnectMutReq :{
                 conn_sum,
@@ -250,6 +245,103 @@ export class BdtStack extends EventEmitter {
         }
         return info.err;
     }
+    async track_chunk(path: string,chunk_size: number,): Promise<{resp?:api.TrackChunkResp}>{
+        let action :api.LpcActionApi = {
+            TrackChunkReq :{
+                peer_name: this.peer_name,
+                chunk_size,
+                path,
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi track_chunk result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.TrackChunkResp!};
+    }
+    async interest_chunk(chunk_id: string,): Promise<{resp?:api.InterestChunkResp}>{
+        let action :api.LpcActionApi = {
+            InterestChunkReq :{
+                peer_name: this.peer_name,
+                chunk_id,
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi interest_chunk result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.InterestChunkResp!};
+    }
+    async check_chunk(chunk_id: string,): Promise<{resp?:api.CheckChunkResp}>{
+        let action :api.LpcActionApi = {
+            CheckChunkReq :{
+                peer_name: this.peer_name,
+                chunk_id,
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi check_chunk result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.CheckChunkResp!};
+    }
+    async publish_file(path: string,chunk_size: number,): Promise<{resp?:api.PublishFileResp,file?:Buffer}>{
+        let action :api.LpcActionApi = {
+            PublishFileReq :{
+                peer_name: this.peer_name,
+                path,
+                chunk_size
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi publish_file result = ${JSON.stringify(info.value)}`)
+        let file = info.bytes;
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.PublishFileResp!,file};
+    }
+    async download_file(file : Buffer,remotes: Array<string>,path: string,group: string ="",referer: string=""): Promise<{resp?:api.DownloadFileResp}>{
+        let action :api.LpcActionApi = {
+            DownloadFileReq :{
+                peer_name: this.peer_name,
+                remotes,
+                path,
+                group,
+                referer
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', file, {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi download_file result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.DownloadFileResp!};
+    }
+    async download_file_state(session: string): Promise<{resp?:api.DownloadFileStateResp}>{
+        let action :api.LpcActionApi = {
+            DownloadFileStateReq :{
+                peer_name: this.peer_name,
+                session,
+            }
+        };
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+            client_name: this.client_name,
+            action
+        }, this.m_agentid, 0);
+        this.logger.info(`callApi download_file_state result = ${JSON.stringify(info.value)}`)
+        let result : api.LpcActionApi  = info.value;
+        return {resp:result.DownloadFileStateResp!};
+    }
+
 }
 
 export type FastQAInfo = {

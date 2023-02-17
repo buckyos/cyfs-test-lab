@@ -81,7 +81,7 @@ impl BDTConnection {
         format!("{}", self.stream)
     }
     pub async fn send_stream(&mut self, size: u64) -> Result<(HashValue, u64), BuckyError> {
-        if (size < 8) {
+        if size < 8 {
             log::warn!("bdt tool send data piece size = {},must be more than 8 bytes", size);
         }
         let mut hashs = Vec::<HashValue>::new();
