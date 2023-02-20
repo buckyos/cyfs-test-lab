@@ -55,7 +55,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 10; i++) {
         let info = await testRunner.createPrevTask({

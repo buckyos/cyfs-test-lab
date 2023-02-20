@@ -20,14 +20,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_tcp_keep_10000"
+    let testcaseName = "perf_ndn_file_bdt_tcp_1channel_10_100MBdata"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用TCP连接 
+        + LN RN 只使用BDT TCP连接 
         ## 操作步骤
-        + (1) LN RN 之间串行建立10000个连接
+        + (1) LN RN 之间NDN串行发送10 * 100MB file数据
         + (2) 维持连接2 min
         ## 性能监控
         + LN/RN 内存、CPU、网络带宽  `,
@@ -57,28 +57,37 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.allAgentStartBdtPeer(config)
     await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     //(4) 测试用例执行器添加测试任务
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 1; i++) {
         let info = await testRunner.createPrevTask({
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 500; x++) {
-            let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
-                type: ActionType.connect,
-                LN: `${LN}$1$0`,
+        let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
+        info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
+            LN: `${LN}$1$0`,
+            RN: `${RN}$1$0`,
+            config: {
+                conn_tag: connect_1,
+                timeout: 200 * 1000,
+            },
+            expect: { err: 0 },
+        }))
+        for (let x = 0; x < 10; x++) {
+            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTransFileAction({
+                LN: `${LN}$1$${i+1}`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
                     timeout: 200 * 1000,
                 },
+                chunkSize : 10*1024*1024,
+                fileSize : 100*1024*1024,
                 expect: { err: 0 },
-            }))
+            }))    
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
-            type: ActionType.sleep,
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             config: {

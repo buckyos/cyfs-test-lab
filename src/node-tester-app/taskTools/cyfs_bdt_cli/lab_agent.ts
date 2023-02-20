@@ -96,7 +96,7 @@ export let labAgentData = [
     },
     {
         tags: ["PC_0013"],
-        area : "67:5:20:1",
+        area : "226:5:20:1",
         OS: "CentOS8.5",
         NAT: NAT_Type.PortRestrictedCone,
         ipv4: ['192.168.10.171','192.168.1.182'], // 

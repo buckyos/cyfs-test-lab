@@ -20,10 +20,10 @@ export class BdtTransFileAction extends BaseAction implements ActionAbstract {
         }
         // (2) LN 生成随机文件
         let create_file = await (await this.agentManager!.get_bdt_peer_client(this.action.LN)).client!.util_client!.createFile(this.action.fileSize!);
-        let rn_cache_path = (await this.agentManager!.get_bdt_peer_client(this.action.LN)).client!.util_client!.cachePath;
+        let rn_cache_path = (await this.agentManager!.get_bdt_peer_client(this.action.RN!)).client!.util_client!.cachePath;
         // (3) LN 上传文件到 BDT
         let publish_result = await LN.bdt_stack!.publish_file(create_file.filePath!,this.action.chunkSize!);
-        if(!publish_result.resp || !publish_result.resp.result){
+        if(!publish_result.resp || publish_result.resp.result){
             return { err: publish_result.resp!.result!, log: publish_result.resp!.msg!}
         }
         this.action.calculate_time = publish_result.resp.calculate_time;
@@ -32,7 +32,7 @@ export class BdtTransFileAction extends BaseAction implements ActionAbstract {
         let remotes = [LN.bdt_stack!.peerid];
         let save_path = path.join(rn_cache_path!.file_download,create_file.fileName!);
         let create_task_result = await RN.bdt_stack!.download_file(publish_result.file!,remotes,save_path);
-        if(!create_task_result.resp || !create_task_result.resp.result){
+        if(!create_task_result.resp || create_task_result.resp.result){
             return { err: create_task_result.resp!.result!, log: create_task_result.resp!.msg!}
         }
         // (5) RN 检查chunk 下载完成
@@ -52,9 +52,9 @@ export class BdtTransFileAction extends BaseAction implements ActionAbstract {
                 format!("Error({:?})",err.msg()) 
             }
          */
-        while(Date.now()>(begin + this.action.fileSize!/1000)){
+        while(Date.now()<(begin + this.action.fileSize!/1000)){
             let check_state = await RN.bdt_stack!.download_file_state(create_task_result.resp!.session);
-            if(!check_state.resp || !check_state.resp.result){
+            if(!check_state.resp || check_state.resp.result){
                 return { err: check_state.resp!.result!, log: check_state.resp!.msg!}
             }
             if(check_state.resp!.state  == "Finished"){

@@ -261,14 +261,15 @@ export class BdtStack extends EventEmitter {
         let result : api.LpcActionApi  = info.value;
         return {resp:result.TrackChunkResp!};
     }
-    async interest_chunk(chunk_id: string,): Promise<{resp?:api.InterestChunkResp}>{
+    async interest_chunk(remote:Buffer,chunk_id: string,save_path?:string): Promise<{resp?:api.InterestChunkResp}>{
         let action :api.LpcActionApi = {
             InterestChunkReq :{
                 peer_name: this.peer_name,
                 chunk_id,
+                save_path
             }
         };
-        let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
+        let info = await this.m_interface.callApi('sendBdtLpcCommand', remote, {
             client_name: this.client_name,
             action
         }, this.m_agentid, 0);

@@ -379,12 +379,13 @@ export type CheckChunkResp={
     peer_name: string,
     result: number,
     msg: string,
-    state: number,
+    state: string,
 }
 
 
 export type InterestChunkReq={
     peer_name: string,
+    save_path? : string,
     chunk_id: string,
 }
 

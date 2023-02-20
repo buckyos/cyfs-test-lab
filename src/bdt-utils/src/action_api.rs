@@ -139,6 +139,7 @@ pub struct CheckChunkResp {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InterestChunkReq {
     pub peer_name: String,
+    pub save_path: Option<String>, 
     pub chunk_id: ChunkId,
 }
 

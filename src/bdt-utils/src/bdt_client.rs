@@ -650,10 +650,16 @@ impl BDTClient {
         let chunk_store = self.get_chunk_store();
         let remote_id = remote.desc().device_id();
         stack.device_cache().add(&remote_id,&remote);
-        let dir = cyfs_util::get_named_data_root(
-            stack.local_device_id().to_string().as_str(),
-        );
-        let path = dir.join(req.chunk_id.to_string().as_str());
+        // 设置chunk 保存目录        
+        let save_path = match req.save_path.clone() {
+            Some(path_str)=>{
+                PathBuf::from_str(path_str.as_str()).unwrap()
+            },
+            None =>{
+                cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str())
+            }
+        };
+        let path = save_path.join(req.chunk_id.to_string().as_str());
         let context = SampleDownloadContext::desc_streams("".to_string(),vec![remote.desc().clone()],);
         let resp = match download_chunk(&stack,req.chunk_id.clone(),None,context).await{
             Ok((_, reader)) => {

@@ -20,14 +20,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_ndn_data_original_tcp_10connect_10_100MBdata"
+    let testcaseName = "perf_ndn_file_bdt_udp_10connect_10_100MBdata"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用 原生TC 
+        + LN RN 只使用UDP连接 
         ## 操作步骤
-        + (1) LN RN 之间并行行建立10个连接 ，每个连接串行发送10 * 100MB数据
+        + (1) 10个LN 与 RN 之间并行 发送10 * 100MB file数据
         + (2) 维持连接2 min
         ## 性能监控
         + LN/RN 内存、CPU、网络带宽  `,
@@ -40,23 +40,19 @@ export async function TaskMain(_interface: TaskClientInterface) {
         eps: {
             ipv4: {
                 udp: true,
-                tcp: true,
             },
             ipv6: {
                 udp: true,
-                tcp: true,
             }
         },
         logType: "info",
-        udp_sn_only: true,
         SN: LabSnList,
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
     }
-    // 每台机器运行一个bdt 客户端 20 * 1000
+    // 每台机器运行一个bdt 客户端
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.allAgentStartTcpServer();
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 10; i++) {
         let info = await testRunner.createPrevTask({
@@ -66,7 +62,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
             action: []
         })
         let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-        info = await testRunner.prevTaskAddAction(new BDTAction.TcpConnectAction({
+        info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
+            type: ActionType.connect,
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             config: {
@@ -76,16 +73,17 @@ export async function TaskMain(_interface: TaskClientInterface) {
             expect: { err: 0 },
         }))
         for (let x = 0; x < 10; x++) {
-            info = await testRunner.prevTaskAddAction(new BDTAction.TcpSendStreamAction({
-                LN: `${LN}$1$0`,
+            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTransFileAction({
+                LN: `${LN}$1$${i+1}`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
                     timeout: 200 * 1000,
                 },
-                fileSize : 100 * 1024 * 1024,
+                fileSize : 10*1024*1024,
+                chunkSize  : 100*1024*1024,
                 expect: { err: 0 },
-            }))
+            }))     
         }
         await testRunner.prevTaskAddAction(new BDTAction.SleepAction({
             type: ActionType.sleep,

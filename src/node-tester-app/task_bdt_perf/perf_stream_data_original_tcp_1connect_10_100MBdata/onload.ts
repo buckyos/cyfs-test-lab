@@ -20,14 +20,14 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agentManager.initAgentList(testAgent);
     //(2) 创建测试用例执行器 TestRunner
     let testRunner = new TestRunner(_interface);
-    let testcaseName = "perf_stream_connect_tcp_keep_10000"
+    let testcaseName = "perf_stream_data_original_tcp_1connect_10_100MBdata"
     let testcase: Testcase = {
         TestcaseName: testcaseName,
         testcaseId: `${testcaseName}_${Date.now()}`,
         remark: `## 测试环境
-        + LN RN 只使用TCP连接 
+        + LN RN 只使用 原生TC 
         ## 操作步骤
-        + (1) LN RN 之间串行建立10000个连接
+        + (1) LN RN 之间并行行建立1个连接 ，每个连接串行发送10 * 100MB数据
         + (2) 维持连接2 min
         ## 性能监控
         + LN/RN 内存、CPU、网络带宽  `,
@@ -52,28 +52,38 @@ export async function TaskMain(_interface: TaskClientInterface) {
         SN: LabSnList,
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
     }
-    // 每台机器运行一个bdt 客户端
+    // 每台机器运行一个bdt 客户端 20 * 1000
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
+    await agentManager.allAgentStartTcpServer();
     await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     //(4) 测试用例执行器添加测试任务
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 1; i++) {
         let info = await testRunner.createPrevTask({
             LN: `${LN}$1$0`,
             RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
         })
-        for (let x = 0; x < 500; x++) {
-            let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
-                type: ActionType.connect,
+        let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
+        info = await testRunner.prevTaskAddAction(new BDTAction.TcpConnectAction({
+            LN: `${LN}$1$0`,
+            RN: `${RN}$1$0`,
+            config: {
+                conn_tag: connect_1,
+                timeout: 200 * 1000,
+            },
+            expect: { err: 0 },
+        }))
+        for (let x = 0; x < 10; x++) {
+            info = await testRunner.prevTaskAddAction(new BDTAction.TcpSendStreamAction({
                 LN: `${LN}$1$0`,
                 RN: `${RN}$1$0`,
                 config: {
                     conn_tag: connect_1,
                     timeout: 200 * 1000,
                 },
+                fileSize : 100 * 1024 * 1024,
                 expect: { err: 0 },
             }))
         }

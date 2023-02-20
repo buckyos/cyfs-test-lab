@@ -56,7 +56,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
     await agentManager.allAgentStartTcpServer();
-    await agentManager.uploadSystemInfo(testcase.testcaseId, 5000);
+    await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 20; i++) {
