@@ -145,9 +145,16 @@ export class BdtCli extends EventEmitter {
 
     }
     
-    async create_tcp_server(address:string,port:number=22223):Promise<{tcp_stack:TcpStack,result:api.CreateTcpServerResp}>{
+    async create_tcp_server(address:string,port:number=22223,listener_recv: boolean,answer_size:number=0):Promise<{tcp_stack:TcpStack,result:api.CreateTcpServerResp}>{
         let tcp_stack = new TcpStack(this.m_interface,this.m_agentid,this.tags,this.client_name!);
-        let result = await tcp_stack.create_tcp_server(address,true,port);
+        if(answer_size==undefined){
+            answer_size = this.cache_peer_info.answer_size
+            if(answer_size){
+                listener_recv = true;
+            }
+        }
+        
+        let result = await tcp_stack.create_tcp_server(address,listener_recv,port,answer_size);
         if(result.result==0){
             this.tcp_server.set(port.toString(),tcp_stack)
         }

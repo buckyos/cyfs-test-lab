@@ -45,7 +45,7 @@ export class BdtTransChunkAction extends BaseAction implements ActionAbstract {
             }
             if(check_state.resp!.state == "Ready"){
                 let send_time = Date.now() - begin;
-                this.action.send_time = send_time;
+                this.action.send_time = send_time*1000;
                 return { err: BDTERROR.success, log: "BdtTransChunkAction run success" }
             }
             await sleep(1000);

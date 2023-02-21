@@ -59,7 +59,7 @@ export class BdtTransFileAction extends BaseAction implements ActionAbstract {
             }
             if(check_state.resp!.state  == "Finished"){
                 let send_time = Date.now() - begin;
-                this.action.send_time = send_time;
+                this.action.send_time = send_time*1000;
                 return { err: BDTERROR.success, log: "BdtTransFileAction run success" }
             }else if(check_state.resp!.state  == "Running"){
                 await sleep(1000);

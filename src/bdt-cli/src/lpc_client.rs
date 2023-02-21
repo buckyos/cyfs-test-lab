@@ -590,7 +590,7 @@ impl BDTCli {
                     let mut client = cli.get_tcp_client(req.name.clone()).await;
                     let lpc1 = lpc.clone();
                     task::spawn(async move {
-                        client.start_listener(Some(lpc1), Some(seq)).await;
+                        client.start_listener(Some(lpc1), Some(seq),req.answer_size).await;
                     });
                     CreateTcpServerResp {
                         result: 0,
@@ -623,7 +623,7 @@ impl BDTCli {
         let mut lpc = lpc;
         task::spawn(async move {
             let mut client = cli.get_tcp_client(req.name).await;
-            let resp = match client.connect(req.address).await {
+            let resp = match client.connect(req.address,req.question_size).await {
                 Ok((stream_name, connect_time,sequence_id)) => TcpConnectResp {
                     result: 0,
                     msg: "success".to_string(),

@@ -211,10 +211,14 @@ export class AgentClient {
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
         return {err:result.err,log:result.log,bdtClient}
     }
-    async startTcpServer(port:number=22223){
+    async startTcpServer(port:number=22223,answer_size:number=0){
         for(let client of this.bdtPeerMap.values()){
             this.m_interface.getLogger().info(`${this.tags} ${client.client_name} start tcp server ${port}`)
-            await client.create_tcp_server(this.agentInfo.ipv4[0],port)
+            let recv_data = false;
+            if(answer_size){
+                recv_data = true;
+            }
+            await client.create_tcp_server(this.agentInfo.ipv4[0],port,recv_data,answer_size)
             port = port + 1;
         }
     }

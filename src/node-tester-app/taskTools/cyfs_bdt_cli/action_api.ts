@@ -219,6 +219,7 @@ export type CreateTcpServerReq = {
     name: string,
     port: number,
     address: string,
+    answer_size : number,
 }
 
 
@@ -240,6 +241,7 @@ export type ListenerTcpConnectEvent = {
 export type TcpConnectReq = {
     name: string,
     address: string,
+    question_size : number,
 }
 
 

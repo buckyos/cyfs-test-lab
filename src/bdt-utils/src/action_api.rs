@@ -456,6 +456,7 @@ pub struct CreateTcpServerReq {
     pub name: String,
     pub address: String,
     pub port: u64,
+    pub answer_size : u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -477,6 +478,7 @@ pub struct ListenerTcpConnectEvent {
 pub struct TcpConnectReq {
     pub name: String,
     pub address: String,
+    pub question_size : u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

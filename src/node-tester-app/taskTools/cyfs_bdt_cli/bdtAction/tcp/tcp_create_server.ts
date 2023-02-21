@@ -16,8 +16,15 @@ export class TcpCreateServerAction extends BaseAction implements ActionAbstract 
                 log : "success"
             }
         }
+        let answer_size = 0;
+        let listener_recv =false;
+        if(this.action.config.firstQA_answer){
+            this.logger!.info(`${this.action.LN} tcp client set answer_size = ${this.action.config.firstQA_answer},listener_recv = ${listener_recv}`);
+            answer_size = this.action.config.firstQA_answer
+            listener_recv = true;
+        }
         // (2) 创建tcp server
-        let result1 = await LN.client!.create_tcp_server(this.action.config.address!,this.action.config.port);        
+        let result1 = await LN.client!.create_tcp_server(this.action.config.address!,this.action.config.port,listener_recv,answer_size);        
         return {
             err : result1.result.result,
             log : result1.result.msg

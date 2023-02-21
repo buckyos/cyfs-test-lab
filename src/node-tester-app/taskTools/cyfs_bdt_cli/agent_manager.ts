@@ -172,12 +172,12 @@ export class AgentManager {
             await taskList[i]
         }
     }
-    async allAgentStartTcpServer(port:number=22223){
+    async allAgentStartTcpServer(port:number=22223,answer_size:number=0){
         let taskList = []
         for(let agent of this.agentMap.values()){
             taskList.push(new Promise(async(V)=>{
                 this.m_interface.getLogger().info(`### ${agent.tags} start tcp server ${port}`)
-                let start = await agent.startTcpServer(port)
+                let start = await agent.startTcpServer(port,answer_size)
                 V("run finished")
             }))
             

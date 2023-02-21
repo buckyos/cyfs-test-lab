@@ -51,11 +51,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
         udp_sn_only: true,
         SN: LabSnList,
         resp_ep_type: Resp_ep_type.effectiveEP_WAN,
+        answer_size : 100, 
     }
     // 每台机器运行一个bdt 客户端 20 * 1000
     let agent_list = await AgentList_LAN_WAN(labAgent);
     await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.allAgentStartTcpServer();
+    await agentManager.allAgentStartTcpServer(22223,100);
     await agentManager.uploadSystemInfo(testcase.testcaseId, 2000);
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 1; i++) {
@@ -72,6 +73,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
             config: {
                 conn_tag: connect_1,
                 timeout: 200 * 1000,
+                firstQA_question : 100,
             },
             expect: { err: 0 },
         }))

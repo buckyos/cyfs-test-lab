@@ -41,7 +41,7 @@ export class TcpStack extends EventEmitter {
         this.m_timeout = 60 * 1000;
 
     }
-    async create_tcp_server(address: string, listener_recv:boolean = false,port: number = 22223): Promise<api.CreateTcpServerResp> {
+    async create_tcp_server(address: string, listener_recv:boolean,port: number = 22223,answer_size:number=0): Promise<api.CreateTcpServerResp> {
         this.peer_name = `${this.tags}_${port}`;
         // 创建一个TCP server ,监听连接请求
         let info = await this.m_interface.callApi('createBdtLpcListener', Buffer.from(''), {
@@ -52,7 +52,8 @@ export class TcpStack extends EventEmitter {
                 CreateTcpServerReq: {
                     name: this.peer_name,
                     port,
-                    address
+                    address,
+                    answer_size
                 }
             }
 
@@ -93,11 +94,12 @@ export class TcpStack extends EventEmitter {
         return result.CreateTcpServerResp!
     }
 
-    async tcp_connect(address: string, conn_tag: string,listener_recv:boolean=false): Promise<{resp:api.TcpConnectResp,tcp_stream?:TcpStream}> {
+    async tcp_connect(address: string, conn_tag: string,listener_recv:boolean=false,question_size:number=0): Promise<{resp:api.TcpConnectResp,tcp_stream?:TcpStream}> {
         let action: api.LpcActionApi = {
             TcpConnectReq: {
                 name: this.peer_name!,
                 address,
+                question_size,
             }
         }
         let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""), {
@@ -121,7 +123,7 @@ export class TcpStack extends EventEmitter {
             sequence_id : result.TcpConnectResp!.sequence_id!,
         });
         this.m_conns.set(result.TcpConnectResp!.stream_name!, tcp_stream);
-        if(listener_recv){
+        if(listener_recv == true){
             let listener = await tcp_stream.listener_recv();
         }
         return {resp:result.TcpConnectResp!,tcp_stream}

@@ -110,15 +110,16 @@ impl BDTClientManager {
             Ok(online_result) => match online_result {
                 Ok(state) => {
                     let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                    if (state == SnStatus::Online) {
+                    if state == SnStatus::Online {
                         log::info!(
                             "device {} sn online success,time = {}",
                             device.desc().device_id(),
                             online_time
                         );
                         
-                    } else {
-                        log::error!("device {} not set sn list", device.desc().device_id());
+                    }else{
+                        log::error!("device {} sn online fail state = {}", device.desc().device_id(),state);
+                        return  Err(BuckyError::new(BuckyErrorCode::Failed, "sn online fail")) ;
                     }
                     match self.BDTClient_map.entry(peer_name.to_owned()) {
                         hash_map::Entry::Vacant(v) => {

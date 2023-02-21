@@ -94,7 +94,7 @@ impl TcpClient {
             .clone()
     }
 
-    pub async fn start_listener(&mut self, lpc: Option<Lpc>, seq: Option<u32>) {
+    pub async fn start_listener(&mut self, lpc: Option<Lpc>, seq: Option<u32>,answer_size:u64) {
         let listener = self.0.listener.lock().await;
         let mut incoming = listener.incoming();
        
@@ -112,14 +112,18 @@ impl TcpClient {
                 //stream.set_nodelay(nodelay);
                 log::info!("recv tcp connection {}", stream_name.clone());
                 cli.add_stream(stream_name.clone(), &stream).await;
-                let sequence_id = match cli.recv_stream(stream_name.clone()).await{
-                    Ok((file_size, recv_time, hash, sequence_id))=>{
-                        sequence_id
-                    },
-                    Err(err)=>{
-                        0
-                    }
-                };
+                let mut sequence_id = 0;
+                if(answer_size>0){
+                    sequence_id = match cli.recv_stream(stream_name.clone()).await{
+                        Ok((file_size, recv_time, hash, sequence_id))=>{
+                            sequence_id
+                        },
+                        Err(err)=>{
+                            0
+                        }
+                    };
+                }
+                
                 let _ = match cli.get_lpc().await{
                     Some(lpc) => {
                         let resp = ListenerTcpConnectEvent {
@@ -144,7 +148,7 @@ impl TcpClient {
             });
         }
     }
-    pub async fn connect(&mut self, remote: String) -> BuckyResult<(String, u64,u64)> {
+    pub async fn connect(&mut self, remote: String,question_size:u64) -> BuckyResult<(String, u64,u64)> {
         log::info!("tcp connect to remote {}", remote.clone());
         let addr = SocketAddr::from_str(remote.as_str()).unwrap();
         let begin_connect = system_time_to_bucky_time(&std::time::SystemTime::now());
@@ -158,15 +162,22 @@ impl TcpClient {
                     stream.peer_addr().unwrap()
                 );
                 self.add_stream(stream_name.clone(), &stream).await;
-                let sequence_id = match self.send_stream(stream_name.clone(),100).await{
-                    Ok((hash, send_time, sequence_id))=>{
-                        sequence_id
-                    },
-                    Err(err)=>{
-                        0
-                    }
-                };
-                Ok((stream_name, connect_time,sequence_id))
+         
+                if(question_size>0){
+                    let sequence_id = match self.send_stream(stream_name.clone(),question_size).await{
+                        Ok((hash, send_time, sequence_id))=>{
+                            sequence_id
+                        },
+                        Err(err)=>{
+                            0
+                        }
+                    };
+                    Ok((stream_name, connect_time,sequence_id))
+                }else{
+                    Ok((stream_name, connect_time,0))
+                }
+                
+                
             }
             Err(err) => Err(BuckyError::new(
                 BuckyErrorCode::Failed,
@@ -406,15 +417,15 @@ async fn test_tcp() {
     async_std::task::spawn(async move {
         let mut client1 = client1.clone();
         let mut client2 = client2.clone();
-        let run = client1.start_listener(None, None).await;
-        let run = client2.start_listener(None, None).await;
+        let run = client1.start_listener(None, None,0).await;
+        let run = client2.start_listener(None, None,0).await;
     });
 
     sleep(5).await;
     let remote = "192.168.100.74:22224".to_string();
     let mut client1 = manager.get_client("lizhihong1");
     let mut client2 = manager.get_client("lizhihong2");
-    let _ = match client1.connect(remote.clone()).await {
+    let _ = match client1.connect(remote.clone(),0).await {
         Ok((stream_name, connect_time,sequence_id)) => {
             println!("connect result = {} {}", stream_name.clone(), connect_time);
             let stream_name_test = stream_name.clone();
