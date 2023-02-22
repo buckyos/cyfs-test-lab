@@ -464,11 +464,15 @@ impl BDTCli {
                     };
                     let json_body = serde_json::to_vec(&sys_info).unwrap();
                     //log::info!("start upload_system_info to server {:#?} ",json_body.clone());
-                    let get_json = request_json_post(url.clone(), Body::from(json_body))
-                        .await
-                        .unwrap();
-                    log::trace!("report bdt agent perf result = {:#?}", get_json.data);
-                    async_std::task::sleep(Duration::from_millis(req.interval.clone())).await;
+                    let _ = match request_json_post(url.clone(), Body::from(json_body)).await  {
+                        Ok(get_json) =>{
+                            log::trace!("report bdt agent perf result = {:#?}", get_json.data);
+                            async_std::task::sleep(Duration::from_millis(req.interval.clone())).await;
+                        }
+                        Err(err)=>{
+                            log::error!("report bdt agent perf err = {:#?}", err);
+                        }
+                    }; 
                 }
                 log::info!("stop report bdt agent perf");
             });
