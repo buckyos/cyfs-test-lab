@@ -27,6 +27,7 @@ export class ProxyManager extends EventEmitter {
     private m_interface: ServiceClientInterface;
     private stack_http_port?: number;
     private stack_ws_port?: number;
+    private ood_daemon_http_port?:number;
     private util_tool: UtilTool;
     //本地socket 代理池 seq : SDK 到 协议栈序列号 , r_seq 协议栈到SDK序列号
     private socket_list: Array<{ socket: net.Socket, type: string, remote_address: string, remote_port: number, seq?: number, r_seq?: number }>;
@@ -61,6 +62,7 @@ export class ProxyManager extends EventEmitter {
         } else if (stack_type == "ood") {
             this.stack_http_port = 1318;
             this.stack_ws_port = 1319;
+            this.ood_daemon_http_port = 1330;
         }
         this.util_tool.init_cache();
         return { err: ErrorCode.succ, log: "start success", cache_name: this.cache_name }
@@ -72,6 +74,8 @@ export class ProxyManager extends EventEmitter {
             port = this.stack_http_port!
         } else if (type == "ws") {
             port = this.stack_ws_port!
+        }else if (type == "ood-daemon-status") {
+            port = this.ood_daemon_http_port!
         }
         return new Promise(async(resolve)=>{
             try {

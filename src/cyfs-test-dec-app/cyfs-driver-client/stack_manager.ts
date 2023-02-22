@@ -1,7 +1,7 @@
 
 
 import {  CyfsStackDriverManager } from "./driver_manager"
-import { CyfsStackDriver,CyfsDriverType } from "./cyfs_driver"
+import { CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig } from "./cyfs_driver"
 import { DRIVER_TYPE, REAL_MACHINE_LIST, SIMULATOR_LIST ,REAL_MACHINE_OTHER_LIST} from "../config/cyfs_driver_config"
 import * as cyfs from "../cyfs"
 import { ErrorCode, Logger } from "../base";
@@ -23,31 +23,37 @@ export class StackManager {
     // stack_map规则 ：{ `${peer_name}` : {`system`:SharedCyfsStack,`${}_${dec_id}`}}
     public peer_map: Map<string, Map<string, cyfs.SharedCyfsStack | undefined>>;
     private driver_manager?: CyfsStackDriverManager;
+    public agent_list?: Array<CyfsStackClientConfig>;
     public driver?: CyfsStackDriver
     public logger?: Logger;
     //单例模式
-    static createInstance(driver_type?: CyfsDriverType): StackManager {
+    static createInstance(driver_type?: CyfsDriverType,agent_list?:Array<CyfsStackClientConfig>): StackManager {
         if (!StackManager.manager) {
-            StackManager.manager = new StackManager(driver_type);
+            StackManager.manager = new StackManager(driver_type,agent_list);
         }
         return StackManager.manager;
     }
-    constructor(driver_type?: CyfsDriverType) {
+    constructor(driver_type?: CyfsDriverType,agent_list?:Array<CyfsStackClientConfig>) {
         this.peer_map = new Map();
         if (!driver_type) {
             // 不指定使用配置文件
             if (DRIVER_TYPE == CyfsDriverType.real_machine.toString()) {
                 this.driver_type = CyfsDriverType.real_machine
+                this.agent_list = REAL_MACHINE_LIST
             } else if (DRIVER_TYPE == CyfsDriverType.simulator.toString()) {
                 this.driver_type = CyfsDriverType.simulator
+                this.agent_list = SIMULATOR_LIST
             } else if(DRIVER_TYPE == CyfsDriverType.other.toString()){
                 this.driver_type = CyfsDriverType.other
+                this.agent_list = agent_list;
             }  else {
                 // 默认使用模拟器
                 this.driver_type = CyfsDriverType.simulator
+                this.agent_list = SIMULATOR_LIST
             }
         } else {
             this.driver_type = driver_type;
+            this.agent_list = agent_list;
         }
     }
     get_logger() {
@@ -69,7 +75,7 @@ export class StackManager {
         this.logger = new Logger(cyfs.clog.info, cyfs.clog.debug, cyfs.clog.error, log_dir)
         this.logger.info(`init cyfs stack manager log success`);
         this.driver_manager = CyfsStackDriverManager.createInstance();
-        let result = await this.driver_manager.create_driver(this.driver_type);
+        let result = await this.driver_manager.create_driver(this.driver_type,this.agent_list!);
         if (result.err) {
             this.logger!.info(`${this.driver_type} create error,result = ${result}`)
             return result;
@@ -84,7 +90,7 @@ export class StackManager {
         } else if (this.driver_type == CyfsDriverType.simulator) {
             await this.load_simulator(requestor_type, dec_id)
         } else if (this.driver_type == CyfsDriverType.other) {
-            await this.load_other(requestor_type, dec_id)
+            await this.load_driver_manager(requestor_type, dec_id)
         }
         return await this.check_stack_online();
     }
@@ -144,8 +150,8 @@ export class StackManager {
         }
     }
 
-    async load_other(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
-        for (let agent of REAL_MACHINE_OTHER_LIST) {
+    async load_driver_manager(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
+        for (let agent of this.driver_manager!.stack_port_map) {
             this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
             if (requestor_type == cyfs.CyfsStackRequestorType.WebSocket) {
