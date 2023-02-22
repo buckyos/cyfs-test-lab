@@ -31,6 +31,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
     private m_agentid?: string;
     private ws_port: number;
     private http_port: number;
+    private ood_daemon_status_port?:number;
     private timeout: number;
     private logger: Logger;
     private m_interface: TaskClientInterface;
@@ -41,6 +42,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
         timeout: number;
         ws_port: number;
         http_port: number;
+        ood_daemon_status_port?:number;
     }) {
         super();
         this.peer_name = options.peer_name;
@@ -51,9 +53,11 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
         this.state = 0;
         this.ws_port = options.ws_port;
         this.http_port = options.http_port;
+        this.ood_daemon_status_port = options.ood_daemon_status_port;
     }
     async init(): Promise<{ err: ErrorCode, log: string }> {
         // 连接测试节点
+        this.logger.info(`init driver client  ${this.peer_name} ${this.stack_type},ws =${this.ws_port} http =${this.http_port} ood_daemon_status_port = ${this.ood_daemon_status_port}`)
         this.state = 1;
         let agent = await this.m_interface.getAgent({} as any, [this.peer_name], [], [], this.timeout);
         if (agent.err || agent.agentid == undefined) {
@@ -71,6 +75,10 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
         this.m_util_tool = new ProxyUtilTool(this.m_interface, this.m_agentid, this.peer_name, info.value.cacheName);
         this.start_proxy("ws", this.ws_port);
         this.start_proxy("http", this.http_port);
+        
+        if(this.stack_type=="ood" && this.ood_daemon_status_port){
+            this.start_proxy("ood-daemon-status", this.ood_daemon_status_port);
+        }
         this.state = 2;
         return { err: ErrorCode.succ, log: `${this.peer_name}启动成功` }
     }
@@ -81,6 +89,7 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
     }
 
     async start_proxy(type: string, port: number): Promise<{ err: ErrorCode, log: string }> {
+        this.logger.info(` ${this.peer_name} create proxy ${type} ${port}`);
         return new Promise(async (V) => {
             let timer =  setTimeout(()=>{
                 this.logger.error(` ${this.peer_name} TCP Client start timeout`);

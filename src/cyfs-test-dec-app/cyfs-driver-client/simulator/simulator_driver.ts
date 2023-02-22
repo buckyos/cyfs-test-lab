@@ -1,5 +1,5 @@
 
-import { CyfsStackClient, CyfsStackDriver } from "../cyfs_driver"
+import { CyfsStackClient, CyfsStackDriver ,CyfsStackClientConfig} from "../cyfs_driver"
 import { ErrorCode, Namespace, Logger,DirHelper, sleep,  } from "../../base"
 import { CyfsStackSimulatorClient } from "./simulator_client"
 import * as ChildProcess from 'child_process';
@@ -115,9 +115,9 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
         result = await this.start();
         return result
     }
-    async load_config(): Promise<{ err: ErrorCode, log: string }> {
+    async load_config(agent_list : Array<CyfsStackClientConfig>): Promise<{ err: ErrorCode, log: string }> {
         let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
-        for (let agent of SIMULATOR_LIST) {
+        for (let agent of agent_list) {
             run_list.push(new Promise(async (V) => {
                 this.logger.info(`load CyfsStackSimulatorClient ${agent.peer_name}`)
                 let client = new CyfsStackSimulatorClient(agent,this.logger,this.cache_path)

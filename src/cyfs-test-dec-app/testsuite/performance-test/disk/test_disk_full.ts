@@ -200,13 +200,21 @@ async function addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack
 
 describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
     this.timeout(0);
-    const stack_manager = StackManager.createInstance(CyfsDriverType.other);
+    const stack_manager = StackManager.createInstance(CyfsDriverType.other,[{
+        peer_name: "zone4_ood",
+        zone_tag: "zone1",
+        stack_type: "ood",
+        bdt_port: 30001,
+        http_port: 31000,
+        ws_port: 31001,
+        ood_daemon_status_port : 32001,
+    }]);
 
     let logger: Logger;
     const data_manager = action_api.ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
-        await stack_manager.init();
+        let make_dirver = await stack_manager.init();
         logger = stack_manager.logger!;
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
