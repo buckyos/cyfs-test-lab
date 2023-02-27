@@ -3,12 +3,12 @@ import * as path from 'path'
 
 
 import * as fs from 'fs-extra'
-import { FileId } from "../../../../cyfs_node";
+import { FileId, Msg } from "../../../../cyfs_node";
 
 let proc_in: boolean | undefined = undefined;
 let ret = 0;
 
- function print_usage() {
+function print_usage() {
     console.log("usage: ts-node test_kernel.ts [--in|--out] <json file path>")
 }
 
@@ -162,6 +162,11 @@ function process_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent
         builder = builder.mn_key(new cyfs.MNPublicKey(obj.threshold, new cyfs.Vec(public_key_list(obj.owners))))
     }
 
+    if (obj.option_dec_id) {
+        let decid = cyfs.ObjectId.from_base_58(obj.option_dec_id).unwrap()
+        builder = builder.option_dec_id(decid)
+    }
+
 
     return builder.build(constructor)
 }
@@ -232,7 +237,6 @@ function check_common<DC extends cyfs.DescContent, BC extends cyfs.BodyContent>(
             return false;
         }
     }
-
 
     return true;
 }
@@ -929,7 +933,7 @@ function process_proofos(obj: any) {
         let data_0: cyfs.ProofData
         let data_1: cyfs.ProofData
 
-        proof_type = new cyfs.ProofTypeCode();
+        proof_type = cyfs.ProofTypeCode.DSGStorage();
         let buf = get_len_buf(10)
         data_0 = new cyfs.ProofData(buf)
         let buf1 = get_len_buf(10)
@@ -1012,7 +1016,818 @@ function process_zone(obj: any) {
         console.log(`编码输出路径：${filepath}`)
     }
 }
+function process_appList(obj: any) {
+    let filepath = save_path("applist", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let applist_r = new cyfs.AppListDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (applist_r.err) {
+            console.error(`decode applist from file ${obj.file} err ${applist_r.val}`)
+            ret = applist_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let applist = applist_r.unwrap()
+        if (check_common(applist, obj)) {
+            // 再检测content数据
 
+            if (applist.desc().content().id !== obj.id) {
+                output_check_err("id", obj.id, applist.desc().content().id)
+                return;
+            }
+            if (applist.desc().content().category !== obj.category) {
+                output_check_err("category", obj.category, applist.desc().content().category)
+                return;
+            }
+
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        let category = obj.category
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppListDescContent(id, category);
+        // 创建BodyContent部分
+        let body_content = new cyfs.AppListBodyContent(new cyfs.BuckyHashMap());
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppListBuilder(desc_content, body_content);
+        let applist = process_common(builder, obj, cyfs.AppList);
+        fs.outputFileSync(filepath, applist.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appLocalStatus(obj: any) {
+    let filepath = save_path("applocalstatus", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppLocalStatusDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode applocallist from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id.to_base_58() !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id.to_base_58())
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppLocalStatusDesc(id, cyfs.AppLocalStatusCode.Init, new cyfs.BuckyHashMap(), new cyfs.AppQuota(cyfs.JSBI.BigInt(0), cyfs.JSBI.BigInt(0), cyfs.JSBI.BigInt(0)));
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppLocalStatusBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppLocalStatus);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_decApp(obj: any) {
+    let filepath = save_path("decapp", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.DecAppDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode decapp from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        // 创建DescContent部分
+        let desc_content = new cyfs.DecAppDescContent(id);
+        // 创建BodyContent部分
+        let body_content = new cyfs.DecAppBodyContent(new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.ObjectId>(), undefined, undefined, new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>(), new cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.BuckyString>());
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.DecAppBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.DecApp);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appStatus(obj: any) {
+    let filepath = save_path("appstatus", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppStatusDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode decapp from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id.to_base_58() !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id.to_base_58())
+                return;
+            }
+            if (deobject.body_expect().content().status !== obj.status) {
+                output_check_err("status", obj.status, deobject.body_expect().content().status.toString())
+                return;
+            }
+            if (deobject.body_expect().content().version !== obj.version) {
+                output_check_err("version", obj.version, deobject.body_expect().content().version)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = cyfs.DecAppId.from_base_58(obj.id).unwrap()
+        let version = obj.version
+        let status = obj.status
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppStatusDescContent(id);
+        // 创建BodyContent部分
+        let body_content = new cyfs.AppStatusBodyContent(version, status);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppStatusBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppStatus);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_textObject(obj: any) {
+    let filepath = save_path("textobject", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.TextObjectDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode textobject from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id)
+                return;
+            }
+            if (deobject.desc().content().header !== obj.header) {
+                output_check_err("header", obj.header, deobject.desc().content().header)
+                return;
+            }
+            if (deobject.body_expect().content().value !== obj.value) {
+                output_check_err("value", obj.value, deobject.body_expect().content().value)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        let header = obj.header
+        let value = obj.value
+        // 创建DescContent部分
+        let desc_content = new cyfs.TextObjectDescContent(id, header);
+        // 创建BodyContent部分
+        let body_content = new cyfs.TextObjectBodyContent(value);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.TextObjectBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.TextObject);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appStoreList(obj: any) {
+    let filepath = save_path("appstorelist", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppStoreListDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode appstorelist from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppStoreListDescContent();
+        // 创建BodyContent部分
+        let body_content = new cyfs.AppStoreListBodyContent(new cyfs.BuckyHashSet());
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppStoreListBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppStoreList);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appExtInfo(obj: any) {
+    let filepath = save_path("appextinfo", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppExtInfoDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode appextinfo from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id)
+                return;
+            }
+            if (deobject.body_expect().content().info !== obj.info) {
+                output_check_err("info", obj.info, deobject.body_expect().content().info)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        let info = obj.info
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppExtInfoDescContent(id);
+        // 创建BodyContent部分
+        let body_content = new cyfs.AppExtInfoBodyContent(info);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppExtInfoBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppExtInfo);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_transContext(obj: any) {
+    let filepath = save_path("transcontext", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.TransContextDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode transcontext from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().context_path !== obj.context_path) {
+                output_check_err("context_path", obj.context_path, deobject.desc().content().context_path)
+                return;
+            }
+            let dl = deobject.body_expect().content().device_list
+            for (let i in dl) {
+                if (dl[i].target.to_base_58() !== obj.device_list[i][0]) {
+                    output_check_err("device_list", obj.device_list[i][0], dl[i].target.to_base_58())
+                    return;
+                }
+            }
+
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let context_path = obj.context_path
+        let device_list: cyfs.TransContextDevice[] = []
+        for (let index of obj.device_list) {
+            let chunkdescmode: cyfs.ChunkCodecDesc = cyfs.ChunkCodecDesc.Unknown()
+            let deviceid = cyfs.DeviceId.from_base_58(index[0]).unwrap()
+            if (index[1] == "stream") {
+                chunkdescmode = cyfs.ChunkCodecDesc.Stream(1, 1, 1)
+            } else if (index[1] == "raptor") {
+                chunkdescmode = cyfs.ChunkCodecDesc.Raptor(1, 1, 1)
+            }
+            device_list.push(new cyfs.TransContextDevice(deviceid, chunkdescmode));
+        }
+        const path = cyfs.TransContextPath.fix_path(context_path);
+        // 创建DescContent部分
+        let desc_content = new cyfs.TransContextDescContent(path);
+        // 创建BodyContent部分
+        let body_content = new cyfs.TransContextBodyContent(device_list);
+
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.TransContextBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.TransContext);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_nftList(obj: any) {
+    let filepath = save_path("nftlist", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.TransContextDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode nftlist from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().context_path !== obj.context_path) {
+                output_check_err("context_path", obj.context_path, deobject.desc().content().context_path)
+                return;
+            }
+            let dl = deobject.body_expect().content().device_list
+            for (let i in dl) {
+                if (dl[i].target.to_base_58() !== obj.device_list[i][0]) {
+                    output_check_err("device_list", obj.device_list[i][0], dl[i].target.to_base_58())
+                    return;
+                }
+            }
+
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let lenstr = '18446744073709551615'
+        let len = cyfs.JSBI.BigInt(lenstr)
+        let desc_buffer = decoder(__dirname + '/test-tool/tool/test_config/test_file.desc')
+        let [target, buffer] = new cyfs.FileDecoder().raw_decode(desc_buffer).unwrap();
+        let desc = target.desc().content().hash
+        let list: cyfs.FileDesc[] = []
+
+
+        for (let l of obj.list) {
+
+            list = [new cyfs.FileDesc(undefined, undefined, undefined, undefined, undefined, undefined, new cyfs.FileDescContent(len, desc), undefined, undefined, undefined, undefined)]
+
+
+        }
+        // 创建DescContent部分
+        let desc_content = new cyfs.NFTListDescContent(list);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.NFTListBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.NFTList);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_Storage(obj: any) {
+    let filepath = save_path("storage", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.StorageDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode storage from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id() !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id())
+                return;
+            }
+            let deu8 = deobject.body_expect().content().value().toString()
+            console.log("-=-=-=-=-=-=-=deu8:" + deu8);
+            let value = new Uint8Array(obj.value).toString();
+            if (deu8 !== value) {
+                output_check_err("value", obj.value, deu8)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        let value = new Uint8Array(obj.value);
+        // 创建DescContent部分
+        let desc_content = new cyfs.StorageDescContent(id);
+        // 创建BodyContent部分
+        let body_content = new cyfs.StorageBodyContent(value);
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.StorageBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.Storage);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_addFriend(obj: any) {
+    let filepath = save_path("addfriend", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AddFriendDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode addfriend from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().to.to_base_58() !== obj.to) {
+                output_check_err("to peopleid", obj.to, deobject.desc().content().to.to_base_58())
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let to = cyfs.PeopleId.from_base_58(obj.to).unwrap()
+        // 创建DescContent部分
+        let desc_content = new cyfs.AddFriendDescContent(to);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AddFriendBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AddFriend);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_removeFriend(obj: any) {
+    let filepath = save_path("removefriend", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.RemoveFriendDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode removefriend from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().to.to_base_58() !== obj.to) {
+                output_check_err("to peopleid", obj.to, deobject.desc().content().to.to_base_58())
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let to = cyfs.PeopleId.from_base_58(obj.to).unwrap()
+        // 创建DescContent部分
+        let desc_content = new cyfs.RemoveFriendDescContent(to);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.RemoveFriendBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.RemoveFriend);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appLocalList(obj: any) {
+    let filepath = save_path("applocallist", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppLocalListDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode applocallist from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            if (deobject.desc().content().id !== obj.id) {
+                output_check_err("id", obj.id, deobject.desc().content().id)
+                return;
+            }
+
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        let value = new Uint8Array(obj.value);
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppLocalListDescContent(id, new cyfs.BuckyHashSet());
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppLocalListBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppLocalList);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appSetting(obj: any) {
+    let filepath = save_path("appsetting", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppSettingDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode appsetting from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            let decappid = deobject.desc().content().id.to_base_58()
+            if (decappid !== obj.id) {
+                output_check_err("decappid", obj.id, decappid)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let id = obj.id
+        // 创建DescContent部分
+        let desc_content = new cyfs.AppSettingDesc(id, false);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.AppSettingBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.AppSetting);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_friendOption(obj: any) {
+    let filepath = save_path("friendoption", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.FriendOptionDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode friendoption from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            let deo = deobject.desc().content().auto_confirm
+            if (deo !== obj.auto_confirm) {
+                output_check_err("auto_confirm", obj.auto_confirm, `${deo}`)
+                return;
+            }
+            let msg = deobject.desc().content().msg
+            if (msg !== obj.msg) {
+                output_check_err("msg", obj.msg, msg!)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let msg = obj.msg
+        let auto_confirm = obj.auto_confirm;
+        // 创建DescContent部分
+        let desc_content = new cyfs.FriendOptionDescContent(auto_confirm, msg);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.FriendOptionBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.FriendOption);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_Msg(obj: any) {
+    let filepath = save_path("msg", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.MsgDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode msg from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            let deo = deobject.desc().content().to.to_base_58()
+            if (deo !== obj.to) {
+                output_check_err("msg.to", obj.to, deo)
+                return;
+            }
+            let demc = deobject.desc().content().content;
+            let mc
+            if (obj.content.text) {
+                mc = cyfs.MsgContent.Text(obj.content.text);
+            }
+            if (obj.content.object) {
+                let id = cyfs.ObjectId.from_base_58(obj.content.object.id).unwrap()
+                let MsgObjectContent = new cyfs.MsgObjectContent(id, obj.content.object.name)
+                mc = cyfs.MsgContent.Object(MsgObjectContent)
+            }
+            if (demc !== mc) {
+                output_check_err("msg.to", obj.to, deo)
+                return;
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+    } else {
+        // 从json创建对象
+        let to = cyfs.ObjectId.from_base_58(obj.to).unwrap()
+
+        let content: cyfs.MsgContent
+        {
+            if (obj.content.text) { content = cyfs.MsgContent.Text(obj.content.text) }
+            else if (obj.content.object) {
+                let id = cyfs.ObjectId.from_base_58(obj.content.object.id).unwrap()
+                let MsgObjectContent = new cyfs.MsgObjectContent(id, obj.content.object.name)
+                content = cyfs.MsgContent.Object(MsgObjectContent)
+            }
+            else {console.error("未有输入msgcontent");
+            }
+        }
+        // 创建DescContent部分
+        let desc_content = new cyfs.MsgDescContent(to, content!);
+        // 创建BodyContent部分
+        let body_content = new cyfs.EmptyProtobufBodyContent();
+        // 创建一个Builder，并完成对象的构建
+        let builder = new cyfs.MsgBuilder(desc_content, body_content);
+        let newobject = process_common(builder, obj, cyfs.Msg);
+        fs.outputFileSync(filepath, newobject.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
+function process_appCmd(obj: any) {
+    let filepath = save_path("appcmd", obj.file)
+    if (proc_in) {
+        if (!fs.existsSync(filepath)) {
+            console.error(`endecode file ${filepath} is not exist！ please check json file`)
+        }
+        let object_r = new cyfs.AppCmdDecoder().from_raw(new Uint8Array(fs.readFileSync(filepath)))
+        if (object_r.err) {
+            console.error(`decode storage from file ${obj.file} err ${object_r.val}`)
+            ret = object_r.val.code
+            return;
+        }
+        // 先检查通用数据部分
+        let deobject = object_r.unwrap()
+        if (check_common(deobject, obj)) {
+            // 再检测content数据
+            let deappid = deobject.desc().content().app_id.to_base_58()
+            if (deappid !== obj.id) {
+                output_check_err("appcmd_appid", obj.id, `${deappid}`)
+                return;
+            }
+            let decode = deobject.desc().content().cmd_code.code.valueOf();
+            if (decode !== obj.code) {
+                output_check_err("appcmd_code", obj.code, decode.toString())
+                return;
+            }
+            if (obj.code == 0) {
+                let deownerid = deobject.desc().content().cmd_code.add?.app_owner_id?.to_base_58();
+                if (deownerid !== obj.owner) {
+                    output_check_err("addapp_ownerid", obj.owner, deownerid!)
+                    return;
+                }
+            }
+            if (obj.code == 8) {
+                let deauto_update = deobject.desc().content().cmd_code.auto_update;
+                if (deauto_update !== obj.auto_update) {
+                    output_check_err("appcmd_auto_update", obj.auto_update, `${deauto_update}`)
+                    return;
+                }
+            }
+            if (obj.code == 2) {
+                let deinstall = deobject.desc().content().cmd_code.install?.run_after_install;
+                let deinversion = deobject.desc().content().cmd_code.install?.ver;
+                if (deinstall !== obj.install[1]) {
+                    output_check_err("appcmd_install", obj.install[1], `${deinstall}`)
+                    return;
+                }
+                if (deinversion !== obj.install[0]) {
+                    output_check_err("appcmd_version", obj.deinversion, `${deinversion}`)
+                    return;
+                }
+            }
+            if (obj.code == 6) {
+                let depermission = deobject.desc().content().cmd_code.permission?.permission.get(obj.permission[0]);
+                if (depermission !== obj.permission[1]) {
+                    output_check_err("appcmd_permission", obj.permission, `${depermission}`)
+                    return;
+                }
+            }
+            if (obj.code == 7) {
+                let dequota_cpu = deobject.desc().content().cmd_code.quota?.cpu;
+                let dequota_disk = deobject.desc().content().cmd_code.quota?.disk_space;
+                let dequota_mem = deobject.desc().content().cmd_code.quota?.mem;
+                if (dequota_mem?.toString() !== obj.quota[0].toString()) {
+                    output_check_err("appcmd_quota_mem", obj.quota[0], `${dequota_mem}`)
+                    return;
+                }
+                if (dequota_disk?.toString() !== obj.quota[1].toString()) {
+                    output_check_err("appcmd_quota_disk", obj.quota[1], `${dequota_disk}`)
+                    return;
+                }
+                if (dequota_cpu?.toString() !== obj.quota[2].toString()) {
+                    output_check_err("appcmd_quota_cpu", obj.quota[2], `${dequota_cpu}`)
+                    return;
+                }
+            }
+            console.log(`解码成功 casename is (${obj.casename})`)
+        }
+
+    }
+    else {
+        // 从json创建对象
+        let owner = cyfs.ObjectId.from_base_58(obj.owner).unwrap()
+        let decid = cyfs.DecAppId.from_base_58(obj.id).unwrap()
+        let newobject: cyfs.NamedObject<cyfs.AppCmdDesc, cyfs.EmptyProtobufBodyContent>
+        if (obj.code == 0) {
+            newobject = cyfs.AppCmd.add(owner, decid, owner)
+        }
+        else if (obj.code == 1) { newobject = cyfs.AppCmd.remove(owner, decid) }
+        else if (obj.code == 2) { newobject = cyfs.AppCmd.install(owner, decid, obj.install[0], obj.install[1]) }
+        else if (obj.code == 3) { newobject = cyfs.AppCmd.uninstall(owner, decid) }
+        else if (obj.code == 4) { newobject = cyfs.AppCmd.start(owner, decid) }
+        else if (obj.code == 5) { newobject = cyfs.AppCmd.stop(owner, decid) }
+        else if (obj.code == 6) {
+            let map = new Map();
+            map.set(obj.permission[0], obj.permission[1])
+            newobject = cyfs.AppCmd.set_permission(owner, decid, map)
+        }
+        else if (obj.code == 7) {
+            let map = new Map();
+            map.set(0, obj.quota[0])
+            map.set(1, obj.quota[1])
+            map.set(2, obj.quota[2])
+            newobject = cyfs.AppCmd.set_quota(owner, decid, map)
+        }
+        else if (obj.code == 8) { newobject = cyfs.AppCmd.set_auto_update(owner, decid, obj.auto_update) }
+        else {
+            console.error("appcmdcode输入有误");
+        }
+        fs.outputFileSync(filepath, newobject!.to_vec().unwrap());
+        console.log(`编码输出路径：${filepath}`)
+    }
+}
 
 function main() {
     let json_path = process_argv();
@@ -1047,18 +1862,23 @@ function main() {
         case "zone":
             process_zone(obj);
             break;
-
-
-        case "applist": break;
-        case "app": break;
-        case "friendlist": break;
-        case "storage": break;
-        case "msg": break;
-        case "addfriend": break;
-        case "": break;
-        case "": break;
-        case "": break;
-        case "": break;
+        case "applist": process_appList(obj); break;
+        case "applocalstatus": process_appLocalStatus(obj); break;
+        case "decapp": process_decApp(obj); break;
+        case "appstatus": process_appStatus(obj); break;
+        case "textobject": process_textObject(obj); break;
+        case "appstorelist": process_appStoreList(obj); break;
+        case "appextinfo": process_appExtInfo(obj); break;
+        case "transcontext": process_transContext(obj); break;
+        case "nftlist": process_nftList(obj); break;
+        case "storage": process_Storage(obj); break;
+        case "addfriend": process_addFriend(obj); break;
+        case "removefriend": process_removeFriend(obj); break;
+        case "appcmd": process_appCmd(obj); break;
+        case "applocallist": process_appLocalList(obj); break;
+        case "appsetting": process_appSetting(obj); break;
+        case "friendoption": process_friendOption(obj); break;
+        case "msg": process_Msg(obj); break;
         case "": break;
         case "": break;
 
