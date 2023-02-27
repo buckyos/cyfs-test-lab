@@ -66,7 +66,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         })
         let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
         info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
-            LN: `${LN}$1$0`,
+            LN: `${LN}$1$${i+1}`,
             RN: `${RN}$1$0`,
             config: {
                 conn_tag: connect_1,

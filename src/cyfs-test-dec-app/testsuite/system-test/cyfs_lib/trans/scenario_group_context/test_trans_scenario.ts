@@ -729,7 +729,7 @@ describe("CYFS Stack Trans 模块测试", function () {
             })
             describe("File传输 Task 状态任务调度控制", async () => {
 
-                describe("对新建任务进行操作", () => {
+                describe.only("对新建任务进行操作", () => {
                     it("查询未auto_start 任务状态为：Paused", async () => {
                         // 创建监听器
                         let action_handler = new action_api.RegisterCommonHandler({

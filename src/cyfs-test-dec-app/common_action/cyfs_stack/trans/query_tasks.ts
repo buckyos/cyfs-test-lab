@@ -13,12 +13,12 @@ type TestOutput = {
     task_list : cyfs.TransTaskInfo[]
     
 }
-export class GetTransTaskState extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetTransTaskState}{
+export class QueryTaskAction extends BaseAction implements ActionAbstract {
+    static create_by_parent(action:Action,logger:Logger): {err:number,action?:QueryTaskAction}{
         /**
          * 父任务下载端 remote 查询任务状态
          */
-        let run = new GetTransTaskState({
+        let run = new QueryTaskAction({
             local :  action.remote!,
             remote : action.remote,
             input : {
@@ -31,8 +31,8 @@ export class GetTransTaskState extends BaseAction implements ActionAbstract {
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
-        this.action.type = "GetTransTaskState"
-        this.action.action_id = `GetTransTaskState-${Date.now()}`
+        this.action.type = "QueryTaskAction"
+        this.action.action_id = `QueryTaskAction-${Date.now()}`
         return await super.start(req);
     }
     async run(req: TestInput): Promise<{ err: number, log: string,resp?: TestOutput }> {

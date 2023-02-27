@@ -83,6 +83,7 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         }
         // 发布文件
         let begin_time = Date.now();
+
         let info1 = await local.trans().publish_file({
             common: {
                 // api级别

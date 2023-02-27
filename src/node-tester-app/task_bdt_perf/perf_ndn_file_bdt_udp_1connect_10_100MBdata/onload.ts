@@ -56,7 +56,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     //(4) 测试用例执行器添加测试任务
     for (let i = 0; i < 1; i++) {
         let info = await testRunner.createPrevTask({
-            LN: `${LN}$1$0`,
+            LN: `${LN}$1$${i+1}`,
             RN: `${RN}$1$0`,
             timeout: 20 * 60 * 1000,
             action: []
@@ -64,7 +64,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
         let connect_1 = `${Date.now()}_${RandomGenerator.string(10)}`;
         info = await testRunner.prevTaskAddAction(new BDTAction.BdtTunnelConnectAction({
             type: ActionType.connect,
-            LN: `${LN}$1$0`,
+            LN: `${LN}$1$${i+1}`,
             RN: `${RN}$1$0`,
             config: {
                 conn_tag: connect_1,

@@ -80,7 +80,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     conn_tag: connect_1,
                     timeout: 200 * 1000,
                 },
-                fileSize : 100*1024*1024,
+                fileSize : 1000*1024*1024,
                 expect: { err: 0 },
             }))     
         }

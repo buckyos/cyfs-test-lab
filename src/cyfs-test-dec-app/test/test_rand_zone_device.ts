@@ -3,7 +3,7 @@ import {run} from "../common_base/tool/desc"
 
 async function main() {
     let test = await run({
-        save : "E:\\git_test\\cyfs-test-lab\\src\\cyfs-test-dec-app\\cyfs-driver-client\\proxy\\desc\\zone3\\"
+        save : "E:\\bucky_file\\OneDrive - buckyos\\测试项目\\CYFS\\测试方法\\OOD服务\\OOD-Service更新"
     })
 }
 main()
