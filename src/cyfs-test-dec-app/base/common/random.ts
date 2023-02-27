@@ -325,11 +325,7 @@ export class RandomGenerator {
         chunk_data = Buffer.concat([chunk_data, Buffer.from(RandomGenerator.string(chunk_size))]);
         console.info(`rand_cyfs_chunk_cache in memory success`)
         let chunk_calculate = cyfs.ChunkId.calculate(chunk_data);
-        if (chunk_calculate.err) {
-            console.error(`rand_cyfs_chunk_cache error = ${chunk_calculate}`)
-            return { err: ErrorCode.fail, chunk_data, chunk_id: cyfs.ChunkId.default() }
-        }
-        return { err: ErrorCode.succ, chunk_data, chunk_id: chunk_calculate.unwrap() }
+        return { err: ErrorCode.succ, chunk_data, chunk_id: chunk_calculate }
     }
 
     async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {

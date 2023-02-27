@@ -128,7 +128,7 @@ export class UtilClient implements UtilTool {
         this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
         let chunk_data =  string_to_Uint8Array(this.string(chunk_size));
         this.logger.info(chunk_data);
-        let chunk_id =  cyfs.ChunkId.calculate(chunk_data).unwrap();
+        let chunk_id =  cyfs.ChunkId.calculate(chunk_data);
         return {err:ErrorCode.succ,chunk_data,chunk_id}
     }
 

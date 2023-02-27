@@ -9,7 +9,7 @@ import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
 import * as action_api from "../../../../common_action"
 
 
-
+// npx mocha .\test_encode.ts --reporter mochawesome --require ts-node/register
 let stack:cyfs.SharedCyfsStack;
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 let owner_id = ""
@@ -179,7 +179,7 @@ let owner_id = ""
         }
         
     })
-    describe("## 编码格式",async()=>{
+    describe.skip("## 【只支持UTF-8】编码格式",async()=>{
         //encodeType.length
         for(let i =0 ;i<encodeType.length;i++){
             describe(`### 编码格式${encodeType[i]} 兼容性`,async()=>{
@@ -579,7 +579,7 @@ let owner_id = ""
             })
         }
     })
-    describe("## unicode 字符随机测试100次",async()=>{
+    describe.skip("##【只支持UTF-8】 unicode 字符随机测试100次",async()=>{
         for(let i =0 ;i<100;i++){
             let char = RandomGenerator.unicode(1);
             describe(`### unicode字符 ${char}兼容性`,async()=>{
@@ -694,7 +694,7 @@ let owner_id = ""
             })
         }
     })
-    describe("## ascii 字符 随机测试100次",async()=>{
+    describe.skip("## 【只支持UTF-8】ascii 字符 随机测试100次",async()=>{
         for(let i =0 ;i<100;i++){
             let char = RandomGenerator.accii(1);
             describe(`### ascii字符 ${char}兼容性`,async()=>{

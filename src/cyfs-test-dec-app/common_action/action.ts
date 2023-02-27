@@ -73,9 +73,14 @@ export class BaseAction implements ActionAbstract{
     private remote? : cyfs.SharedCyfsStack;
     private user_list? : Array<cyfs.SharedCyfsStack>;
 
-    constructor(action: Action,logger:Logger) {
+    constructor(action: Action,logger?:Logger) {
         this.action = action;
-        this.logger = logger; 
+        // 默认使用 StackManager 日志库
+        if(logger){
+            this.logger = logger; 
+        }else{
+            this.logger = StackManager.createInstance().get_logger()!; 
+        } 
         this.child_actions = [];
     }
 
@@ -130,7 +135,7 @@ export class BaseAction implements ActionAbstract{
     }
 
     async start(req?:any): Promise<{ err: number, log: string,resp?:any}> {
-        this.logger!.info(`##### ${this.action.action_id} ${this.action.parent_action} start running `)
+        this.logger!.info(`<----------------------------- ${this.action.action_id} ${this.action.parent_action} start running -----------------------------> `)
         this.logger!.debug(`${this.action.action_id} req = ${JSON.stringify(req)} `)
         // 记录自定义参数
         this.action.action_req = req;

@@ -14,7 +14,7 @@ let stack:cyfs.SharedCyfsStack;
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 let owner_id = ""
 
-
+// npx mocha .\test_opt_access.ts --reporter mochawesome --require ts-node/register
 
 // TO_FIX : root_state_accessor ACL权限控制部分用例未修改，用例为旧的ACL配置文件体系，已删除用例
 

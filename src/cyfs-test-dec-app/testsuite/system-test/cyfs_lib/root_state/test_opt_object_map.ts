@@ -19,7 +19,7 @@ let zone2_ood_stack : cyfs.SharedCyfsStack;
 let zone2_device1_stack : cyfs.SharedCyfsStack;
 let zone2_device2_stack : cyfs.SharedCyfsStack;
 
-
+// npx mocha .\test_opt_object_map.ts --reporter mochawesome --require ts-node/register
 describe("#op-env 操作object_map", function () {
 
     this.timeout(0);
@@ -101,7 +101,7 @@ describe("#op-env 操作object_map", function () {
         addContext.default(this, report_result);
     })
     describe("##PathOpEnvStub", async () => {
-        describe.only("### Map相关接口操作", async () => {
+        describe("### Map相关接口操作", async () => {
             let op_env: cyfs.PathOpEnvStub
             let sid: cyfs.JSBI
             before(async () => {
@@ -1026,7 +1026,7 @@ describe("#op-env 操作object_map", function () {
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
                     assert.ok(!result1.err)
-                    await cyfs.sleep(10 * 1000)
+                    
                     let result3 = await op_env.commit();
                     console.info(JSON.stringify(result3))
                     assert.ok(!result3.err)
@@ -1056,14 +1056,14 @@ describe("#op-env 操作object_map", function () {
                     let result1 = await op_env.insert_with_key(path, key, obj_id1);
                     console.info(JSON.stringify(result1))
                     assert.ok(!result1.err)
-                    await cyfs.sleep(10 * 1000)
+                    
                     let result3 = await op_env.commit();
                     console.info(JSON.stringify(result3))
                     assert.ok(!result3.err)
                     V("commit ")
                 })
                 await process1;
-                await cyfs.sleep(5000)
+
                 let result = await zone1_ood_stack.root_state_stub(zone1_ood_id).create_path_op_env();
                 console.info(result)
                 assert.ok(!result.err);
@@ -1089,14 +1089,13 @@ describe("#op-env 操作object_map", function () {
                     let result1 = await op_env.insert(obj_id1);
                     console.info(JSON.stringify(result1))
                     assert.ok(!result1.err)
-                    await cyfs.sleep(10 * 1000)
+                    
                     let result3 = await op_env.abort();
                     console.info(JSON.stringify(result3))
                     assert.ok(!result3.err)
                     V("commit ")
                 })
                 await process1;
-                await cyfs.sleep(5 * 1000)
                 let result = await zone1_ood_stack.root_state_stub(zone1_ood_id).create_single_op_env();
                 assert.ok(!result.err);
                 let op_env = result.unwrap();
