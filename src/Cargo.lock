@@ -125,6 +125,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "android_log-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85965b6739a430150bdd138e2374a98af0c3ee0d030b3bb7fc3bddff58d0102e"
+
+[[package]]
+name = "android_logger"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8619b80c242aa7bd638b5c7ddd952addeecb71f69c75e33f1d47b2804f8f883a"
+dependencies = [
+ "android_log-sys",
+ "env_logger",
+ "log",
+ "once_cell",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -854,6 +872,12 @@ checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
 dependencies = [
  "jobserver",
 ]
+
+[[package]]
+name = "cesu8"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c"
 
 [[package]]
 name = "cfg-if"
@@ -1781,6 +1805,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "cyfs-perf-base"
+version = "0.6.2"
+dependencies = [
+ "cyfs-base 0.6.9",
+ "cyfs-core 0.6.5",
+ "cyfs-lib 0.8.0",
+ "cyfs-util 0.6.5",
+ "int-enum",
+ "lazy_static",
+ "log",
+ "protobuf",
+ "protoc-bin-vendored",
+ "protoc-rust",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "cyfs-perf-client"
+version = "0.6.1"
+dependencies = [
+ "android_logger",
+ "async-std",
+ "async-trait",
+ "chrono",
+ "cyfs-base 0.6.9",
+ "cyfs-core 0.6.5",
+ "cyfs-debug 0.6.3",
+ "cyfs-lib 0.8.0",
+ "cyfs-meta-lib",
+ "cyfs-perf-base",
+ "cyfs-util 0.6.5",
+ "int-enum",
+ "jni",
+ "log",
+ "rand 0.7.3",
+ "serde_json",
+ "sha2 0.8.2",
+]
+
+[[package]]
 name = "cyfs-raptorq"
 version = "1.6.1"
 dependencies = [
@@ -1838,6 +1903,7 @@ dependencies = [
  "cyfs-meta-lib",
  "cyfs-ndc",
  "cyfs-noc",
+ "cyfs-perf-client",
  "cyfs-task-manager",
  "cyfs-tracker-cache",
  "cyfs-util 0.6.5",
@@ -2119,6 +2185,16 @@ name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
+
+[[package]]
+name = "env_logger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
+dependencies = [
+ "log",
+ "regex",
+]
 
 [[package]]
 name = "erased-serde"
@@ -2877,6 +2953,26 @@ name = "itoa"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
+
+[[package]]
+name = "jni"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6df18c2e3db7e453d3c6ac5b3e9d5182664d28788126d39b91f2d1e22b017ec"
+dependencies = [
+ "cesu8",
+ "combine",
+ "jni-sys",
+ "log",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
+name = "jni-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
 name = "jobserver"
