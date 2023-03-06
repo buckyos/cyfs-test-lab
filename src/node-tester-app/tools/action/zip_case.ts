@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as path from 'path';
-import {DirHelper} from "../../base"
+import { DirHelper } from "../../base"
 import * as fs from 'fs-extra';
 import * as ChildProcess from 'child_process';
 let JSZIP = require("jszip");
@@ -22,26 +22,26 @@ function read_dir(zip: any, nowPath: string) {
     });
 }
 
-async function copy_tools(source: string, target: string) {
-    var currPath = __dirname;//文件的绝对路径 当前当前js所在的绝对路径
-    var tasksDir = path.join(currPath, target);
-    var tool_list = path.join(currPath, source)
-    var rustbdt2ToolFiles = await fs.readdirSync(tool_list)
-    var caseList = await fs.readdirSync(tasksDir)
-    for (let i = 0; i < caseList.length; i++) {
-        if (caseList[i] == "onload.js") {
+async function copy_tools(source: string) {
+
+    var tasks_dir = DirHelper.getTaskRoot();
+    var tool_list = DirHelper.getTestcaseRunner(source);
+    var testcase_runner_files = await fs.readdirSync(tool_list)
+    var case_list = await fs.readdirSync(tasks_dir)
+    for (let i = 0; i < case_list.length; i++) {
+        if (case_list[i] == "onload.js") {
             continue
         }
-        let targetPath = path.join(tasksDir, caseList[i])
+        let target_path = path.join(tasks_dir, case_list[i])
 
-        console.info(`testcase: ${targetPath}`)
-        for (let j = 0; j < rustbdt2ToolFiles.length; j++) {
-            if (rustbdt2ToolFiles[j] == "config.js" && fs.pathExistsSync(path.join(targetPath, rustbdt2ToolFiles[j]))) {
-                console.info(`${path.join(tool_list, rustbdt2ToolFiles[j])} already exist`)
+        console.info(`testcase: ${target_path}`)
+        for (let j = 0; j < testcase_runner_files.length; j++) {
+            if (testcase_runner_files[j] == "config.js" && fs.pathExistsSync(path.join(target_path, testcase_runner_files[j]))) {
+                console.info(`${path.join(tool_list, testcase_runner_files[j])} already exist`)
                 continue
             }
-            console.info(path.join(rustbdt2ToolFiles[j]))
-            await fs.copySync(path.join(tool_list, rustbdt2ToolFiles[j]), path.join(targetPath, rustbdt2ToolFiles[j]))
+            console.info(path.join(testcase_runner_files[j]))
+            await fs.copySync(path.join(tool_list, testcase_runner_files[j]), path.join(target_path, testcase_runner_files[j]))
         }
 
     }
@@ -50,25 +50,29 @@ async function copy_tools(source: string, target: string) {
 
 //开始压缩文件
 async function start_zip() {
-    var currPath = __dirname;//文件的绝对路径 当前当前js所在的绝对路径
-    var tasksDir = path.join(currPath, "../../node_tester_app/tasks");
-    var rustbdt2 = path.join(currPath, '../../node_tester_app/testcase_runner/cyfs_bdt_cli')
-    var rustbdt2ToolFiles = await fs.readdirSync(rustbdt2)
-    var caseList = await fs.readdirSync(tasksDir)
-    for (let i = 0; i < caseList.length; i++) {
-        let targetPath = path.join(tasksDir, caseList[i])
+    var tasks_dir = DirHelper.getTaskRoot(); //path.join(currPath, "../../node_tester_app/tasks");
+    var case_list = await fs.readdirSync(tasks_dir)
+    let running_lsit = [];
+    for (let i = 0; i < case_list.length; i++) {
+        let target_path = path.join(tasks_dir, case_list[i])
         //console.info(targetPath)
-        read_dir(zip, targetPath);
-        zip.generateAsync({//设置压缩格式，开始打包
-            type: "nodebuffer",//nodejs用
-            compression: "DEFLATE",//压缩算法
-            compressionOptions: {//压缩级别
-                level: 9
-            }
-        }).then(function (content: any) {
-            fs.writeFileSync(targetPath + `/${caseList[i]}.zip`, content, "utf-8");//将打包的内容写入 当前目录下的 result.zip中
-        });
+        read_dir(zip, target_path);
+        running_lsit.push(new Promise(async (resolve) => {
+            zip.generateAsync({//设置压缩格式，开始打包
+                type: "nodebuffer",//nodejs用
+                compression: "DEFLATE",//压缩算法
+                compressionOptions: {//压缩级别
+                    level: 9
+                }
+            }).then(function (content: any) {
+                fs.writeFileSync(target_path + `/${case_list[i]}.zip`, content, "utf-8");//将打包的内容写入 当前目录下的 result.zip中
+                resolve("finished")
+            });
+        }))
 
+    }
+    for(let run of running_lsit){
+        await run
     }
 
 }
@@ -98,32 +102,29 @@ async function gulp_build() {
 }
 
 
-async function modify_import(params: string, task_name: string, tool_url: string, deploy_url: string) {
-    let taskPath = path.join(__dirname, '../tasks')
-    task_name = path.join(__dirname, `../${task_name}`)
-    //console.info(`复制用例列表 ${task_name} -> ${taskPath}`)
-    let caseList = fs.readdirSync(task_name);
-    for (let index in caseList) {
-        //console.info(`复制用例 ${path.join(task_name,caseList[index])} -> ${taskPath}`)
-        fs.copySync(path.join(task_name, caseList[index]), path.join(taskPath, caseList[index]))
+async function modify_import(part: string, task_name: string, tool_url: string, deploy_url: string) {
+    let task_path = DirHelper.getTaskRoot();
+    task_name = DirHelper.getTestcaseDir(task_name)
+    let case_list = fs.readdirSync(task_name);
+    console.info(` begin modify_import ${task_name}`)
+    for (let index in case_list) {
+        console.info(`复制用例 ${path.join(task_name, case_list[index])} -> ${task_path}`)
+        fs.copySync(path.join(task_name, case_list[index]), path.join(task_path, case_list[index]))
     }
-    let testcasePath = fs.readdirSync(taskPath)
-    for (let index in testcasePath) {
-        // console.info(testcasePath[index])
-        if (testcasePath[index].indexOf(params) > -1) {
-
-            let onload = path.join(taskPath, testcasePath[index], 'onload.js')
-            // if(!fs.pathExistsSync(onload)){
-            //     continue
-            // }
-            //console.info(onload)
+    let testcase_path = fs.readdirSync(task_path)
+    for (let index in testcase_path) {
+        if (testcase_path[index].indexOf(part) > -1) {
+            let onload = path.join(task_path, testcase_path[index], 'onload.js')
             let replace = new Promise(async (v) => {
                 await fs.readFile(onload, 'utf8', (err, data) => {
                     if (err) {
                         console.info(err)
                         v(err);
                     }
+                    // 修改tools导包
                     let result = data.replace(new RegExp(tool_url, "gm"), deploy_url)
+                    // 修改base导包 ../../../base
+                    result = result.replace("../../../", "../../");
                     //console.info(`${onload} 替换 import`) 
                     fs.writeFile(onload, result, 'utf8', (err) => {
                         if (err) {
@@ -138,21 +139,59 @@ async function modify_import(params: string, task_name: string, tool_url: string
     }
 }
 async function empyt_task() {
-    let dir_path = path.join(__dirname, "../tasks")
-    fs.removeSync(dir_path)
+    let dir_path = DirHelper.getTaskRoot();
+    fs.removeSync(dir_path);
+    fs.mkdirpSync(dir_path)
+    console.info(`empty dir ${dir_path} finished`)
 }
 
 
+async function zip_case_all(type:string,part:string) {
+    let tescase_root = DirHelper.getTestcaseRoot();
+    let case_list = fs.readdirSync(tescase_root);
+    let running_list = []
+    for (let index of case_list) {
+        running_list.push(new Promise(async (resolve)=>{
+            if (!fs.existsSync(DirHelper.getTestcaseDir(index))) {
+                console.error(`testcase list path ${DirHelper.getTestcaseDir(index)} not exists!`);
+                resolve("finished");
+            }
+            await modify_import(part, index, `../../../testcase_runner/${type}`, '.');
+            await copy_tools(type); //复制 testcase_runner
+            await start_zip(); //生成zip压缩文件
+            resolve("finished");
+        }) )
+        
+    }
+    for(let run of running_list){
+        await run;
+    }    
+}
 
-export function makeCommand() {
+export function makeCommand(): Command {
     return new Command('zip_case')
         .description("")
-        .requiredOption("-d, --dir <dir>", "testcase name folder")
-        .requiredOption("-p, --part <part>", "fuzzy match to select testcase","_")
-        .action((options) => {
-            if (!fs.existsSync(DirHelper.getTestcaseDir(options.dir))) {
-                console.error(`testcase list path ${DirHelper.getTestcaseDir(options.dir)} not exists!`);
-                return;
+        .requiredOption("-d, --dir <dir>", "testcase name folder,you can use all zip all testcase")
+        .requiredOption("-p, --part <part>", "fuzzy match to select testcase", "_")
+        .requiredOption("-t, --type <type>", "testcase runner type", "cyfs_bdt_cli")
+        .action(async (options) => {
+            console.info(`${options.type} will zip testcase ${options.dir}`)
+            
+            await empyt_task();
+            if(options.dir == "all"){
+                return await zip_case_all(options.type,options.part)
+            }else{
+                if (!fs.existsSync(DirHelper.getTestcaseDir(options.dir))) {
+                    console.error(`testcase list path ${DirHelper.getTestcaseDir(options.dir)} not exists!`);
+                    return;
+                }
+                await modify_import(options.part, options.dir, `../../../testcase_runner/${options.type}`, '.');
+                await copy_tools(options.type); //复制 testcase_runner
+                await start_zip(); //生成zip压缩文件
+                return
             }
+            
         });
+
+
 }

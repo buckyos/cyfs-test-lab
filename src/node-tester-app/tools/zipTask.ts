@@ -99,7 +99,7 @@ async function gulpBuild() {
 
 async function modifyImport(params: string, task_name: string, tool_url: string, deploy_url: string) {
     let taskPath = path.join(__dirname, '../tasks')
-    task_name = path.join(__dirname, `../${task_name}`)
+    // /task_name = getTestcaseRunner path.join(__dirname, `../${task_name}`)
     //console.info(`复制用例列表 ${task_name} -> ${taskPath}`)
     let caseList = fs.readdirSync(task_name);
     for (let index in caseList) {

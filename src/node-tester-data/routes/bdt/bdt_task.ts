@@ -11,7 +11,7 @@ router.post('/add',
     async (req, res) => {
         console.info(`#receive bdt_task add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TaskModel = {
-            testcaseId : req.body.testcaseId,
+            testcaseId : req.body.testcase_id,
             task_id: req.body.task_id,
             LN:req.body.LN,
             RN:req.body.RN,
@@ -61,7 +61,7 @@ router.post('/add_action',
     async (req, res) => {
         console.info(`#receive bdt_task add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TaskModel = {
-              testcaseId : req.body.testcaseId,
+              testcaseId : req.body.testcase_id,
               task_id: req.body.task_id,
               LN:req.body.LN,
               RN:req.body.RN,

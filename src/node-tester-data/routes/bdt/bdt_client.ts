@@ -11,7 +11,7 @@ router.post('/add',
     async (req, res) => {
         console.info(`#receive bdt_client add request,body = ${JSON.stringify(req.body)} `)
         const client:BDTClientModel = {
-            testcaseId : req.body.testcaseId,
+            testcaseId : req.body.testcase_id,
             name: req.body.name,
             peerid : req.body.peerid, 
             peerInfo: req.body.peerInfo, 

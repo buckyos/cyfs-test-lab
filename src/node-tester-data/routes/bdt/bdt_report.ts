@@ -79,11 +79,11 @@ router.get('/reportList',
 router.post('/reportTestcase',
     async (req, res) => {
         console.info(`#receive reportHtml report request,report testcase info into html,body = ${JSON.stringify(req.body)} `)
-        if(!req.body.testcaseId){
+        if(!req.body.testcase_id){
             return res.json({err:true,log:"缺少输入参数"})
         }
         let testcase_mod = new BdtTestcase();
-        let testcase = await testcase_mod.query(req.body.testcaseId!);
+        let testcase = await testcase_mod.query(req.body.testcase_id!);
         let testcaseId = testcase.result![0].testcaseId!;
         let environment = testcase.result![0].environment!;
         let check = path.join(config.BDT_Report_Dir,environment,"task",`${testcaseId}.html`);
