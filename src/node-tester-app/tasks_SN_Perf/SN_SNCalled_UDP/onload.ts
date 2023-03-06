@@ -1,24 +1,24 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList,randShuffle} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import {TestRunner} from '../../testcase_runner/cyfs_bdt/test_runner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../testcase_runner/cyfs_bdt/type"
+import {LabAgent,BdtPeerClientConfig,LabSnList,randShuffle} from "../../testcase_runner/cyfs_bdt/labAgent"
+import  * as BDTAction from "../../testcase_runner/cyfs_bdt/bdtAction"
+import {AgentManager} from '../../testcase_runner/cyfs_bdt/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
-    let agentManager = AgentManager.createInstance(_interface);
-    await agentManager.initAgentList(labAgent);
+    let agent_manager = AgentManager.create_instance(_interface);
+    await agent_manager.init_agent_list(LabAgent);
     //(2) 创建测试用例执行器 TestRunner
-    let testRunner = new TestRunner(_interface);
-    let testcaseName = "SN_SNCalled_UDP"
+    let test_runner = new TestRunner(_interface);
+    let testcase_name = "SN_SNCalled_UDP"
     let testcase:Testcase = {
-        TestcaseName: testcaseName,
-        testcaseId: `${testcaseName}_${Date.now()}`,
+        testcase_name: testcase_name,
+        testcase_id: `${testcase_name}_${Date.now()}`,
         remark: `SN 打洞流程性能测试`,
         environment: "lab",
     };
-    await testRunner.initTestcase(testcase);
+    await test_runner.init_testcase(testcase);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
@@ -32,39 +32,39 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     // 每台机器运行一个bdt 客户端
     let agent_num = 5;
-    await agentManager.allAgentStartBdtPeer(config,agent_num,true)
+    await agent_manager.all_agent_start_bdt_peer(config,agent_num,true)
     
     //(4) 测试用例执行器添加测试任务
 
-    for(let [i,j] of randShuffle(labAgent.length*agent_num)){
-        let LN_index = i % labAgent.length;  
-        let RN_index = j % labAgent.length; 
-        let LN_client = (i - LN_index ) /labAgent.length + 1;  
-        let RN_client = (j - RN_index) /labAgent.length + 1; 
-        if(i != j && i>j &&labAgent[LN_index].NAT + labAgent[RN_index].NAT < 5 ){
+    for(let [i,j] of randShuffle(LabAgent.length*agent_num)){
+        let LN_index = i % LabAgent.length;  
+        let RN_index = j % LabAgent.length; 
+        let LN_client = (i - LN_index ) /LabAgent.length + 1;  
+        let RN_client = (j - RN_index) /LabAgent.length + 1; 
+        if(i != j && i>j &&LabAgent[LN_index].NAT + LabAgent[RN_index].NAT < 5 ){
             
-            let info = await testRunner.createPrevTask({
-                LN : `${labAgent[LN_index].tags[0]}$${LN_client}`,
-                RN : `${labAgent[RN_index].tags[0]}$${RN_client}`,
+            let info = await test_runner.create_prev_task({
+                LN : `${LabAgent[LN_index].tags[0]}$${LN_client}`,
+                RN : `${LabAgent[RN_index].tags[0]}$${RN_client}`,
                 timeout : 5*30*1000,
                 action : []
             })
             // 1.1 LN 连接 RN
             let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-            info = await testRunner.prevTaskAddAction(new BDTAction.ConnectPerfAction({
+            info = await test_runner.prev_task_add_action(new BDTAction.ConnectPerfAction({
                 type : ActionType.connect,
-                LN : `${labAgent[LN_index].tags[0]}$${LN_client}`,
-                RN : `${labAgent[RN_index].tags[0]}$${RN_client}`,
+                LN : `${LabAgent[LN_index].tags[0]}$${LN_client}`,
+                RN : `${LabAgent[RN_index].tags[0]}$${RN_client}`,
                 config:{
                     conn_tag: connect_1,
                     timeout : 30*1000,
                 },
                 expect : {err:0},    
             })) 
-            await testRunner.prevTaskRun();
+            await test_runner.prev_task_run();
         }
     }
-    await testRunner.waitFinished(20)
+    await test_runner.wait_finished(20)
     
     
 }

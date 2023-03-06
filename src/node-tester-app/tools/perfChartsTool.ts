@@ -327,9 +327,9 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
     })
 }
 
-export async function BDTPerfReport(testcaseId:string,agent:string,save_path:string){
-    console.info(`send req api/base/system_info/getRecords ${testcaseId} ${agent}`)
-    let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcaseId},ContentType.json)
+export async function BDTPerfReport(testcase_id:string,agent:string,save_path:string){
+    console.info(`send req api/base/system_info/getRecords ${testcase_id} ${agent}`)
+    let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcase_id},ContentType.json)
     console.info(`api/base/system_info/getRecords resp ${JSON.stringify(run)}`)
     let timeList = [];
     let cpuList =[];
@@ -354,7 +354,7 @@ export async function BDTPerfReport(testcaseId:string,agent:string,save_path:str
             maxNetworkSpeed = data.transmitted_bytes
         }
     }
-    let dirPath = path.join(save_path,testcaseId)
+    let dirPath = path.join(save_path,testcase_id)
     if(!fs.existsSync(dirPath)){
         fs.mkdirSync(dirPath);
     }
@@ -372,9 +372,9 @@ export async function BDTPerfReport(testcaseId:string,agent:string,save_path:str
 }
 
 async function main() {
-  let testcaseId = SysProcess.argv[2];
+  let testcase_id = SysProcess.argv[2];
   let agent = SysProcess.argv[3];
-  let run = await BDTPerfReport(testcaseId,agent,__dirname);
+  let run = await BDTPerfReport(testcase_id,agent,__dirname);
     
 }
 main();

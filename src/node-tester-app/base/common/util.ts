@@ -20,6 +20,13 @@ export class DirHelper {
         DirHelper.ensureDirExist(dir);
         return dir;
     }
+    static  getTestcaseDir(testcase: string): string {
+        let dir: string = path.join(DirHelper.getRootDir(), 'testcase');
+        DirHelper.ensureDirExist(dir);
+        dir = path.join(dir, testcase);
+        DirHelper.ensureDirExist(dir);
+        return dir;
+    }
 
     static getServiceDir(service: string): string {
         let dir: string = path.join(DirHelper.getRootDir(), 'service');

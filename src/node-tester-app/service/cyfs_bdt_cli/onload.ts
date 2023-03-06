@@ -4,7 +4,7 @@ import { LpcClient } from "./lpc_client"
 
 export async function ServiceMain(_interface: ServiceClientInterface) {
     _interface.getLogger().info(`=========start service namespace=${JSON.stringify(_interface.getNamespace())}`);
-    let manager: BdtClientManager = BdtClientManager.createInstance(_interface);
+    let manager: BdtClientManager = BdtClientManager.create_instance(_interface);
     await manager.init();
     _interface.registerApi('startPeerClient', async (from: Namespace, bytes: Buffer, param: {RUST_LOG :string,client_name:string,port:number,kill_server:boolean}): Promise<any> => {
         _interface.getLogger().info(`remote call startPeer`);

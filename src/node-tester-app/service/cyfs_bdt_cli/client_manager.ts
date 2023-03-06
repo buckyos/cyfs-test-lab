@@ -46,7 +46,7 @@ export class BdtClientManager extends EventEmitter {
         return this;
     }
 
-    static createInstance(_interface: ServiceClientInterface): BdtClientManager {
+    static create_instance(_interface: ServiceClientInterface): BdtClientManager {
         if (!BdtClientManager.manager) {
             BdtClientManager.manager = new BdtClientManager(_interface);
         }

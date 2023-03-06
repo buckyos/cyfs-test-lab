@@ -326,9 +326,9 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
     })
 }
 
-export async function BDTPerfReport(testcaseId:string,agent:string,save_path:string){
-    console.info(`send req api/base/system_info/getRecords ${testcaseId} ${agent}`)
-    let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcaseId},ContentType.json)
+export async function BDTPerfReport(testcase_id:string,agent:string,save_path:string){
+    console.info(`send req api/base/system_info/getRecords ${testcase_id} ${agent}`)
+    let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcase_id},ContentType.json)
     console.info(`api/base/system_info/getRecords resp ${JSON.stringify(run)}`)
     let timeList = [];
     let cpuList =[];
@@ -353,7 +353,7 @@ export async function BDTPerfReport(testcaseId:string,agent:string,save_path:str
             maxNetworkSpeed = data.transmitted_bytes
         }
     }
-    let dirPath = path.join(save_path,testcaseId)
+    let dirPath = path.join(save_path,testcase_id)
     if(!fs.existsSync(dirPath)){
         fs.mkdirSync(dirPath);
     }
@@ -391,8 +391,8 @@ async function main() {
     "NDN_BBR_UDP_File_Concurrent50_upload_1665327156763",
     "NDN_BBR_UDP_File_Concurrent100_upload_1665327201763",
   ]
-    //let testcaseId = "NDN_BBR_File_Concurrent10_download100_1665307471629";
-  for(let testcaseId of testcaseList){
+    //let testcase_id = "NDN_BBR_File_Concurrent10_download100_1665307471629";
+  for(let testcase_id of testcaseList){
     let agentList = [
       "PC_0005",
       "PC_0006",
@@ -410,7 +410,7 @@ async function main() {
       "PC_0018",
     ];
     for(let agent of agentList){
-       let run = await BDTPerfReport(testcaseId,agent,__dirname);
+       let run = await BDTPerfReport(testcase_id,agent,__dirname);
     }
   }
     

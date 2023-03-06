@@ -1,30 +1,30 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
+import {LabAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../testcase_runner/rust-bdt/labAgent';
+import {TestRunner,Testcase,Task} from '../../testcase_runner/rust-bdt/bdtRunner';
+import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../testcase_runner/rust-bdt/type';
 
 
 
 
 export async function TaskMain(_interface: TaskClientInterface) {
-    let testcaseName = "Stream_TCPTunnel_dataSize"
+    let testcase_name = "Stream_TCPTunnel_dataSize"
     let agentList:Array<Agent> = [];
     let taskList : Array<Task> = [];
     let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0006,
-        labAgent.PC_0007,
-        labAgent.PC_0008,
-        labAgent.PC_0009,
-        labAgent.PC_0010,
-        labAgent.PC_0011,
-        labAgent.PC_0012,
-        labAgent.PC_0013,
-        labAgent.PC_0014,
-        labAgent.PC_0015,
-        labAgent.PC_0016,
-        labAgent.PC_0017,
-        labAgent.PC_0018,
+        LabAgent.PC_0005,
+        LabAgent.PC_0006,
+        LabAgent.PC_0007,
+        LabAgent.PC_0008,
+        LabAgent.PC_0009,
+        LabAgent.PC_0010,
+        LabAgent.PC_0011,
+        LabAgent.PC_0012,
+        LabAgent.PC_0013,
+        LabAgent.PC_0014,
+        LabAgent.PC_0015,
+        LabAgent.PC_0016,
+        LabAgent.PC_0017,
+        LabAgent.PC_0018,
     ]
     let firstQA_answer= "";
     agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{tcp:true}},"info",1,[],{},firstQA_answer,Resp_ep_type.effectiveEP_WAN))
@@ -119,10 +119,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
     
 
     await sleep(2000);
-    let testRunner = new TestRunner(_interface);
+    let test_runner = new TestRunner(_interface);
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
+        testcase_name:testcase_name,
+        testcase_id : `${testcase_name}_${Date.now()}`,
                 remark : `# 操作流程：\n
                 （1）LN 和 RN 建立BDT连接。
                 （2）LN 和 RN 之间传输1000 MB 数据。
@@ -136,5 +136,5 @@ export async function TaskMain(_interface: TaskClientInterface) {
         taskMult:1
     }
     
-    await testRunner.testCaseRunner(testcase);
+    await test_runner.testCaseRunner(testcase);
 }

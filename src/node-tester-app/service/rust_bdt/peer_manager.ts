@@ -54,7 +54,7 @@ export class BdtPeerManager extends EventEmitter{
         return this;
     }
 
-    static createInstance(logger: Logger, platform: string): BdtPeerManager {
+    static create_instance(logger: Logger, platform: string): BdtPeerManager {
         if (!BdtPeerManager.manager) {
             BdtPeerManager.manager = new BdtPeerManager({logger, platform});
         }
@@ -243,7 +243,7 @@ export class BdtPeerManager extends EventEmitter{
         this.is_perf = false;
         return {err: ErrorCode.succ};
     }
-    async reportSystemInfo(agent:string, time:number=5000,testcaseId?:string): Promise<{err: ErrorCode}>{
+    async reportSystemInfo(agent:string, time:number=5000,testcase_id?:string): Promise<{err: ErrorCode}>{
         if(this.is_perf){
             return {err: ErrorCode.succ};
         }
@@ -262,7 +262,7 @@ export class BdtPeerManager extends EventEmitter{
                     }
                     let perf = {
                         name:agent,
-                        testcaseId:testcaseId,
+                        testcase_id:testcase_id,
                         cpu_usage: info.cpu_usage!, 
                         total_memory: info.total_memory!, 
                         used_memory:info.used_memory!, 

@@ -1,28 +1,28 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
-import { BDTERROR } from '../../taskTools/rust-bdt/type';
+import {TestRunner} from '../../testcase_runner/cyfs_bdt/test_runner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../testcase_runner/cyfs_bdt/type"
+import {LabAgent,BdtPeerClientConfig,LabSnList} from "../../testcase_runner/cyfs_bdt/labAgent"
+import  * as BDTAction from "../../testcase_runner/cyfs_bdt/bdtAction"
+import {AgentManager} from '../../testcase_runner/cyfs_bdt/agent_manager'
+import { BDTERROR } from '../../testcase_runner/rust-bdt/type';
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
-    let agentManager = AgentManager.createInstance(_interface);
-    await agentManager.initAgentList(labAgent);
+    let agent_manager = AgentManager.create_instance(_interface);
+    await agent_manager.init_agent_list(LabAgent);
     //(2) 创建测试用例执行器 TestRunner
-    let testRunner = new TestRunner(_interface);
-    let testcaseName = "NDN_ChunkTask_ChunkSize"
+    let test_runner = new TestRunner(_interface);
+    let testcase_name = "NDN_ChunkTask_ChunkSize"
     let testcase:Testcase = {
-        TestcaseName: testcaseName,
-        testcaseId: `${testcaseName}_${Date.now()}`,
+        testcase_name: testcase_name,
+        testcase_id: `${testcase_name}_${Date.now()}`,
         remark: `# 操作流程：\n
         + (1) LN、RN 初始化协议栈
         + (2) LN track上传一个10Mb文件，RN 进行Interest
         + (3) RN track上传一个10Mb文件，LN 进行Interest\n`,
         environment: "lab",
     };
-    await testRunner.initTestcase(testcase);
+    await test_runner.init_testcase(testcase);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
@@ -40,42 +40,42 @@ export async function TaskMain(_interface: TaskClientInterface) {
             resp_ep_type:Resp_ep_type.SN_Resp, 
     }
     // 每台机器运行一个bdt 客户端
-    await agentManager.allAgentStartBdtPeer(config)
+    await agent_manager.all_agent_start_bdt_peer(config)
     //(4) 测试用例执行器添加测试任务
     
-    for(let i in labAgent){
-        for(let j in labAgent){
+    for(let i in LabAgent){
+        for(let j in LabAgent){
             if(i != j ){
-                let info = await testRunner.createPrevTask({
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                let info = await test_runner.create_prev_task({
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     timeout : 60*1000,
                     action : []
                 })
-                info = await testRunner.prevTaskAddAction(new BDTAction.ConnectAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.ConnectAction({
                     type : ActionType.connect,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: "connect_1",
                         timeout : 60*1000,
                     },
                     expect : {err:0}    
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 1,
                     config:{
                         timeout : 60*1000,
                     },
                     expect : {err:0}     
                 }))
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 1000,
                     config:{
                         timeout : 60*1000,
@@ -83,10 +83,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0}  
                         
                 }))  
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 1500,
                     config:{
                         timeout : 60*1000,
@@ -94,10 +94,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0}  
                         
                 })) 
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 10*1024*1024,
                     config:{
                         timeout : 60*1000,
@@ -105,10 +105,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0}  
                         
                 })) 
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 64*1024*1024,
                     config:{
                         timeout : 60*1000,
@@ -116,10 +116,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0}  
                         
                 })) 
-                info = await testRunner.prevTaskAddAction(new BDTAction.SendChunkAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.SendChunkAction({
                     type : ActionType.send_file,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     chunkSize : 128*1024*1024,
                     config:{
                         timeout : 60*1000,
@@ -127,12 +127,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:BDTERROR.timeout}  
                         
                 })) 
-                await testRunner.prevTaskRun();
+                await test_runner.prev_task_run();
             }
         }
     }
 
-    await testRunner.waitFinished()
+    await test_runner.wait_finished()
     
     
 }

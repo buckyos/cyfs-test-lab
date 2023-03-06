@@ -204,6 +204,8 @@ impl BDTClientManager {
             log::error!("{}init bdt stack error: {}", &peer_name, e);
         }
         let stack = stack.unwrap();
+        // 设置上线SN 列表
+        let _ = stack.reset_sn_list(sn_list.clone());
         let acceptor = stack.stream_manager().listen(0).unwrap();
         match future::timeout(
             Duration::from_secs(20),

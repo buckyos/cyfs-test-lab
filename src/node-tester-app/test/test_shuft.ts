@@ -1,4 +1,4 @@
-import {labAgent} from "../taskTools/cyfs_bdt/labAgent"
+import {LabAgent} from "../testcase_runner/cyfs_bdt/labAgent"
 
 const shuffle =  function (arr:Array<any>) {
     let newArr = Array.prototype.slice.call(arr), // copy 新数组
@@ -22,8 +22,8 @@ function randshuffle(len:number){
 }
 
 async function main() {
-    console.info(labAgent.length)
-    let list = randshuffle(labAgent.length);
+    console.info(LabAgent.length)
+    let list = randshuffle(LabAgent.length);
     for(let [i,j] of list){
         console.info(i,j)
     

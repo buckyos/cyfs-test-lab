@@ -1,18 +1,18 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator,sleep} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
+import {LabAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../testcase_runner/rust-bdt/labAgent';
+import {TestRunner,Testcase,Task} from '../../testcase_runner/rust-bdt/bdtRunner';
+import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../testcase_runner/rust-bdt/type';
 
 
 
 
 export async function TaskMain(_interface: TaskClientInterface) {
-    let testcaseName = "Connect_Max_UDPConnection"
+    let testcase_name = "Connect_Max_UDPConnection"
     let agentList:Array<Agent> = [];
     let taskList : Array<Task> = [];
     let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0006,
+        LabAgent.PC_0005,
+        LabAgent.PC_0006,
     ]
     let firstQA_answer= "";
     agentList = agentList.concat(await InitAgentData(testAgent,{ipv4:{udp:true}},"info",1,LabSnList,{},firstQA_answer,Resp_ep_type.Empty))
@@ -43,10 +43,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
 
     await sleep(2000);
-    let testRunner = new TestRunner(_interface,true);
+    let test_runner = new TestRunner(_interface,true);
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
+        testcase_name:testcase_name,
+        testcase_id : `${testcase_name}_${Date.now()}`,
                 remark : `# 操作流程：\n
         + （1）LN/RN 初始化本地BDT协议栈\n
         + （2）LN 向 RN 发起10000连接\n
@@ -57,5 +57,5 @@ export async function TaskMain(_interface: TaskClientInterface) {
         taskMult:100
     }
     
-    await testRunner.testCaseRunner(testcase);
+    await test_runner.testCaseRunner(testcase);
 }

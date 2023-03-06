@@ -29,6 +29,7 @@
     "bs58": "^4.0.1",
     "bupnp": "^0.2.2",
     "compressing": "^1.5.0",
+    "commander": "^8.1.0",
     "echart5-canvars-ssr": "^1.0.0",
     "echarts": "^5.1.2",
     "express": "^4.18.1",
