@@ -33,7 +33,7 @@ export type SystemInfoModel =  {
             ssd_disk_avail: info.ssd_disk_avail, 
             hdd_disk_total: info.hdd_disk_total, 
             hdd_disk_avail:info.hdd_disk_avail, 
-            testcaseId:info.testcase_id,
+            testcase_id:info.testcase_id,
             create_time: Date.now().toString(),
         }})
         return result;
@@ -42,7 +42,7 @@ export type SystemInfoModel =  {
     async getRecords(name:string,testcase_id:string){
       try {
         const result = await this.prisma.agent_system_info.findMany({
-          where: { name,testcaseId:testcase_id },orderBy:[{create_time : "asc"}]  
+          where: { name,testcase_id:testcase_id },orderBy:[{create_time : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {
@@ -54,7 +54,7 @@ export type SystemInfoModel =  {
     }
     async getAgentList(testcase_id:string,version:string):Promise<{err:number,log:string,data?:any}>{
       try {
-        let sql = "SELECT DISTINCT `name`,testcaseId from agent_system_info WHERE testcaseId = " + `"${testcase_id}" or testcaseId = "${version}";`;
+        let sql = "SELECT DISTINCT `name`,testcase_id from agent_system_info WHERE testcase_id = " + `"${testcase_id}" or testcase_id = "${version}";`;
         console.info(sql);
         let data = await this.prisma.$queryRawUnsafe(sql);
         return { err: 0, log: "getRecords success", data }

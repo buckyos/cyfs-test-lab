@@ -2,7 +2,7 @@ import { PrismaClient,cyfs_task } from '@prisma/client'
 import {prisma} from ".."
 export type TaskModel = {
     task_id: string
-    testcaseId: string | null
+    testcase_id: string | null
     LN?: string | null
     RN?: string | null
     clients?: string | null
@@ -23,7 +23,7 @@ export class CyfsTask{
     //     try {
 
     //       const result = await this.prisma.cyfs_task.create({data:{
-    //           testcaseId : task.testcaseId,
+    //           testcase_id : task.testcase_id,
     //           task_id: task.task_id,
     //           LN:task.LN,
     //           RN:task.RN,

@@ -324,9 +324,9 @@ function bdteEchartsMem(filePath:string,agent:string,timeList:Array<number>,mem:
     })
 }
 
-export async function BDTPerfReport(testcaseId:string,agent:string,save_path:string){
+export async function BDTPerfReport(testcase_id:string,agent:string,save_path:string){
     let model = new SystemInfo();
-    let result =await  model.getRecords(agent,testcaseId);
+    let result =await  model.getRecords(agent,testcase_id);
     let timeList = [];
     let cpuList =[];
     let memList = [];
@@ -351,7 +351,7 @@ export async function BDTPerfReport(testcaseId:string,agent:string,save_path:str
             maxNetworkSpeed = data!.transmitted_bytes!
         }
       }
-      let dirPath = path.join(save_path,testcaseId)
+      let dirPath = path.join(save_path,testcase_id)
       if(!fs.existsSync(dirPath)){
           fs.mkdirpSync(dirPath);
       }

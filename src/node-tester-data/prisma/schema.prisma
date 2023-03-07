@@ -32,7 +32,7 @@ model agent_perf {
 model agent_system_info {
   id                Int     @id @default(autoincrement())
   name              String? @db.VarChar(255)
-  testcaseId        String? @db.VarChar(255)
+  testcase_id       String? @db.VarChar(255)
   cpu_usage         Float?  @db.Float
   total_memory      Float?  @db.Float
   used_memory       Float?  @db.Float
@@ -47,7 +47,7 @@ model agent_system_info {
 
 model bdt_action {
   id             Int     @id @default(autoincrement())
-  testcaseId     String? @db.VarChar(255)
+  testcase_id    String? @db.VarChar(255)
   task_id        String? @db.VarChar(255)
   action_id      String? @db.VarChar(255)
   type           String? @db.VarChar(255)
@@ -72,21 +72,21 @@ model bdt_action {
 }
 
 model bdt_agent {
-  id         Int     @id @default(autoincrement())
-  testcaseId String? @db.VarChar(255)
-  name       String? @db.VarChar(255)
-  NAT        String? @db.VarChar(255)
-  eps        String? @db.Text
-  agentMult  String? @db.VarChar(255)
-  agentid    String? @db.VarChar(255)
-  logUrl     String? @db.VarChar(255)
-  router     String? @db.VarChar(255)
-  portMap    String? @db.VarChar(255)
+  id          Int     @id @default(autoincrement())
+  testcase_id String? @db.VarChar(255)
+  name        String? @db.VarChar(255)
+  NAT         String? @db.VarChar(255)
+  eps         String? @db.Text
+  agentMult   String? @db.VarChar(255)
+  agentid     String? @db.VarChar(255)
+  logUrl      String? @db.VarChar(255)
+  router      String? @db.VarChar(255)
+  portMap     String? @db.VarChar(255)
 }
 
 model bdt_client {
   id          Int     @id @default(autoincrement())
-  testcaseId  String? @db.VarChar(255)
+  testcase_id String? @db.VarChar(255)
   name        String? @db.VarChar(255)
   peerid      String? @db.VarChar(255)
   peerInfo    String? @db.Text
@@ -98,7 +98,7 @@ model bdt_client {
 model bdt_task {
   id            Int     @id @default(autoincrement())
   task_id       String  @db.VarChar(255)
-  testcaseId    String? @db.VarChar(255)
+  testcase_id   String? @db.VarChar(255)
   LN            String? @db.VarChar(255)
   RN            String? @db.VarChar(255)
   Users         String? @db.Text
@@ -112,21 +112,21 @@ model bdt_task {
 }
 
 model bdt_testcase {
-  id           Int     @id @default(autoincrement())
-  testcaseId   String? @db.VarChar(255)
-  TestcaseName String? @db.VarChar(255)
-  remark       String? @db.Text
-  agentList    String? @db.Text
-  environment  String? @db.VarChar(255)
-  taskMult     String? @db.VarChar(255)
-  total        Int?
-  success      Int?
-  failed       Int?
-  createTime   String? @db.VarChar(255)
-  date         String? @db.VarChar(255)
-  result       String? @db.VarChar(255)
-  errorList    String? @db.LongText
-  reason       String? @db.Text
+  id            Int     @id @default(autoincrement())
+  testcase_id   String? @db.VarChar(255)
+  testcase_name String? @db.VarChar(255)
+  remark        String? @db.Text
+  agentList     String? @db.Text
+  environment   String? @db.VarChar(255)
+  taskMult      String? @db.VarChar(255)
+  total         Int?
+  success       Int?
+  failed        Int?
+  createTime    String? @db.VarChar(255)
+  date          String? @db.VarChar(255)
+  result        String? @db.VarChar(255)
+  errorList     String? @db.LongText
+  reason        String? @db.Text
 }
 
 model cyfs_action {

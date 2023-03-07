@@ -11,8 +11,8 @@ router.get("/text", (req, res) => {
 //     async (req, res) => {
 //         console.info(`#receive cyfs_testcase add request,body = ${JSON.stringify(req.body)} `)
 //         const testcaseInfo:TestcaseModel = {
-//             TestcaseName: req.body.TestcaseName,
-//             testcaseId : req.body.testcaseId,
+//             testcase_name: req.body.testcase_name,
+//             testcase_id : req.body.testcase_id,
 //             remark: req.body.remark,
 //             agentList:req.body.agentList,
 //             taskList:String(req.body.taskList),

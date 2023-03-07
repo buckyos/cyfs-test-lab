@@ -11,7 +11,7 @@ router.post('/add',
     async (req, res) => {
         console.info(`#receive bdt_testcase add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TestcaseModel = {
-            TestcaseName: req.body.testcase_name,
+            testcase_name: req.body.testcase_name,
             testcase_id : req.body.testcase_id,
             remark: req.body.remark,
             agentList:req.body.agentList,

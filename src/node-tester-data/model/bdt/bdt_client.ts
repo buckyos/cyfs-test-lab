@@ -20,7 +20,7 @@ export class BDTClient{
     async add(action:BDTClientModel){
         try {
           const result = await this.prisma.bdt_client.create({data:{
-            testcaseId : action.testcase_id,
+            testcase_id : action.testcase_id,
             name : action.name , 
             peerid : action.peerid ,
             peerInfo : action.peerInfo , 
@@ -35,10 +35,10 @@ export class BDTClient{
         }
         
     }
-    async queryByTestcaseId(testcaseId:string){
+    async queryByTestcaseId(testcase_id:string){
       try {
         const result = await this.prisma.bdt_client.findMany({
-          where: { testcaseId },orderBy:[{id : "asc"}]  
+          where: { testcase_id },orderBy:[{id : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {

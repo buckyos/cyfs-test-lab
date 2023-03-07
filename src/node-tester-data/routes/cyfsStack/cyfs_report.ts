@@ -70,16 +70,16 @@ router.get('/reportList',
 // async function main() {
 //     let run = await reportDataToHtml("Stream_AllEP");
 //     //let jquery = fs.copyFileSync(path.join(__dirname,"./report_suite/jquery-3.3.1.min.js"),path.join(config.BDT_Report_Dir, "Stream_AllEP","jquery-3.3.1.min.js"))
-//     // let  testcaseId = "Connect_Max_UDPConnection_1666785842903";
+//     // let  testcase_id = "Connect_Max_UDPConnection_1666785842903";
 //     // let  environment = "Stream_AllEP";
 //     // let SystemInfo_mod = new SystemInfo();
-//     // let agent_list = await SystemInfo_mod.getAgentList(testcaseId);
+//     // let agent_list = await SystemInfo_mod.getAgentList(testcase_id);
 //     // console.info(JSON.stringify(agent_list.data))
 //     // if(agent_list.data){
 //     //     console.info(JSON.stringify(agent_list.data))
-//     //     testcase_info.perf_info  = `./systemInfo/${testcaseId}.html`;
-//     //     let create_img = await reportSystemInfo( testcaseId,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
-//     //     let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcaseId}.html`) 
+//     //     testcase_info.perf_info  = `./systemInfo/${testcase_id}.html`;
+//     //     let create_img = await reportSystemInfo( testcase_id,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
+//     //     let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcase_id}.html`) 
 
 //     // }
 //     // console.info(run)

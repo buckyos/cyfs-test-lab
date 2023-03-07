@@ -22,7 +22,7 @@ export class BdtAgent{
       console.info(`add BDTAgentModel ${JSON.stringify(agent)}`)
         try {
           const result = await this.prisma.bdt_agent.create({data:{
-            testcaseId: agent.testcase_id,
+            testcase_id: agent.testcase_id,
             name : agent.name,
             NAT : String(agent.NAT),
             eps : agent.eps ,
@@ -39,11 +39,11 @@ export class BdtAgent{
       }
         
     }
-    async report(testcaseId:string,name:string){
-      //console.info(`查询节点数据：${testcaseId} ,${name}`)
+    async report(testcase_id:string,name:string){
+      //console.info(`查询节点数据：${testcase_id} ,${name}`)
       try {
         const result = await this.prisma.bdt_agent.findFirst({
-          where: { testcaseId,name },orderBy:[{id : "asc"}]  
+          where: { testcase_id,name },orderBy:[{id : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {

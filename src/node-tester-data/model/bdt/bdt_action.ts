@@ -35,7 +35,7 @@ export class BdtAction {
     try {
       const result = await this.prisma.bdt_action.create({
         data: {
-          testcaseId: action.testcase_id,
+          testcase_id: action.testcase_id,
           task_id: action.task_id,
           action_id: action.action_id,
           type: action.type,
@@ -79,7 +79,7 @@ export class BdtAction {
   }
   async report_testcase_perf(testcase_id: string) {
     try {
-      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcaseId ="${testcase_id}" GROUP BY type;`;
+      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcase_id ="${testcase_id}" GROUP BY type;`;
       console.info(sql);
       let data = await this.prisma.$queryRawUnsafe(sql);
       return { err: 0, log: "getRecords success", data }
@@ -89,7 +89,7 @@ export class BdtAction {
   }
   async report_version_perf(version: string) {
     try {
-      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcaseId IN ( SELECT testcaseId FROM bdt_testcase WHERE environment = "${version}" )  GROUP BY type;`;
+      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcase_id IN ( SELECT testcase_id FROM bdt_testcase WHERE environment = "${version}" )  GROUP BY type;`;
       console.info(sql);
       let data = await this.prisma.$queryRawUnsafe(sql);
       return { err: 0, log: "getRecords success", data }

@@ -11,7 +11,7 @@ router.get("/text", (req, res) => {
 //     async (req, res) => {
 //         console.info(`#receive CyfsAction add request,body = ${JSON.stringify(req.body)} `)
 //         const peerInfo:PeerInfoModel = {
-//           testcaseId: req.body.testcaseId,
+//           testcase_id: req.body.testcase_id,
 //           name: req.body.name,
 //           device_id: req.body.device_id,
 //           type: req.body.type,

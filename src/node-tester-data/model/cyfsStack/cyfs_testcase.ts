@@ -2,8 +2,8 @@
 import { PrismaClient,cyfs_testcase} from '@prisma/client'
 import {prisma} from "../"
 export type TestcaseModel = {
-    testcaseId: string 
-    TestcaseName: string 
+    testcase_id: string 
+    testcase_name: string 
     remark?: string 
     agentList?: string 
     taskList?: string 
@@ -26,8 +26,8 @@ export class CyfsTestcase{
     //   console.info(`add testcase ${JSON.stringify(testcase)}`)
     //     try {
     //       const result = await this.prisma.cyfs_testcase.create({data:{
-    //         TestcaseName: testcase.TestcaseName,
-    //         testcaseId : testcase.testcaseId,
+    //         testcase_name: testcase.testcase_name,
+    //         testcase_id : testcase.testcase_id,
     //         remark: testcase.remark,
     //         agentList:testcase.agentList,
     //         taskList:testcase.taskList,
@@ -40,7 +40,7 @@ export class CyfsTestcase{
     //         failed:testcase.failed,
     //         test_date:testcase.test_date,
     //     }})
-    //     return {err:0,log:`${testcase.testcaseId} add record success`}
+    //     return {err:0,log:`${testcase.testcase_id} add record success`}
     //   } catch (error) {
     //     return {err:0,log:` ${JSON.stringify(error)}`}
     //   }
