@@ -65,12 +65,11 @@ impl BDTClientManager {
         self.BDTClient_map.remove(peer_name).map(|v| v)
     }
 
-    pub fn get_client(&self, peer_name: &str) -> BDTClient {
+    pub fn get_client(&self, peer_name: &str) -> Option<BDTClient> {
         return self
             .BDTClient_map
             .get(peer_name)
-            .map(|v| v.clone())
-            .unwrap();
+            .map(|v| v.clone());
     }
 
     pub async fn load_local_bdt_stack(

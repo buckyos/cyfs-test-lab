@@ -108,11 +108,7 @@ impl BDTClient {
     pub fn get_question(&self) -> u64 {
         self.0.question_size.lock().unwrap().clone()
     }
-    pub async fn auto_accept(
-        &mut self,
-        seq: u32,
-        req: &AutoAcceptReq,
-    ) -> BuckyResult<AutoAcceptResp> {
+    pub async fn auto_accept(&mut self, seq: u32, req: &AutoAcceptReq) -> AutoAcceptResp {
         log::info!("BDTClient run auto_accept, req={:?}", &req);
         // listener bdt connect
         let answer_size = req.answer_size;
@@ -262,9 +258,9 @@ impl BDTClient {
             result: 0,
             msg: "success".to_string(),
         };
-        Ok(resp)
+        resp
     }
-    pub async fn connect(&mut self, remote: &Device, req: &ConnectReq) -> BuckyResult<ConnectResp> {
+    pub async fn connect(&mut self, remote: &Device, req: &ConnectReq) -> ConnectResp {
         log::info!("BDTClient connect, req={:?}", &req);
         //let (remote_desc, _other) = Device::raw_decode(buffer).unwrap();
         let req = req.clone();
@@ -405,22 +401,22 @@ impl BDTClient {
                 }
             }
         };
-        Ok(resp)
+        resp
     }
 
-    pub async fn send_stream(&mut self, req: &SendStreamReq) -> BuckyResult<SendStreamResp> {
+    pub async fn send_stream(&mut self, req: &SendStreamReq) -> SendStreamResp {
         let mut conn = self.get_stream(req.stream_name.clone().as_str());
         let conn_state = format!("{}", conn.get_stream().state());
         log::info!("check StreamState = {}", conn_state);
         if conn_state == "# StreamState::Closing" || conn_state == "StreamState::Closed" {
-            Ok(SendStreamResp {
+            SendStreamResp {
                 result: 1,
                 msg: "StreamState::Closeing".to_string(),
                 peer_name: req.peer_name.clone(),
                 stream_name: req.stream_name.clone(),
                 time: 0,
                 hash: HashValue::default(),
-            })
+            }
         } else {
             let resp = match conn.send_stream(req.size).await {
                 Err(e) => {
@@ -446,11 +442,11 @@ impl BDTClient {
                     }
                 }
             };
-            Ok(resp)
+            resp
         }
     }
 
-    pub async fn recv_stream(&mut self, req: &RecvStreamReq) -> BuckyResult<RecvStreamResp> {
+    pub async fn recv_stream(&mut self, req: &RecvStreamReq) -> RecvStreamResp {
         let mut conn = self.get_stream(req.stream_name.as_str());
         let resp = match conn.recv_stream().await {
             Err(e) => {
@@ -476,10 +472,10 @@ impl BDTClient {
                 }
             }
         };
-        Ok(resp)
+        resp
     }
 
-    pub fn shutdown(&mut self, req: &ShutdownReq) -> BuckyResult<ShutdownResp> {
+    pub fn shutdown(&mut self, req: &ShutdownReq) -> ShutdownResp {
         let mut conn = self.get_stream(req.stream_name.as_str());
         let resp = match conn.shutdown(req.shutdown_type.as_str()) {
             Ok(_) => {
@@ -497,7 +493,7 @@ impl BDTClient {
                 }
             }
         };
-        Ok(resp)
+        resp
     }
 
     pub async fn reset_endpoints(&mut self, endpoints: Vec<Endpoint>) -> BuckyResult<String> {
@@ -565,59 +561,47 @@ impl BDTClient {
     pub async fn set_chunk(&mut self, req: &SendStreamReq) -> BuckyResult<()> {
         Ok(())
     }
-    pub async fn track_chunk(
-        &mut self,
-        
-        req: &TrackChunkReq,
-    ) -> BuckyResult<TrackChunkResp> {
+    pub async fn track_chunk(&mut self, req: &TrackChunkReq) -> TrackChunkResp {
         log::info!("bdt client track_chunk, req={:?}", &req);
         let stack = self.get_stack();
         let chunk_store = self.get_chunk_store();
-        let resp = match calculate_chunk(req.path.clone(),req.chunk_size).await{
-            Ok((chunk_id,calculate_time,buf))=>{
+        let resp = match calculate_chunk(req.path.clone(), req.chunk_size).await {
+            Ok((chunk_id, calculate_time, buf)) => {
                 let dir = cyfs_util::get_named_data_root(
                     self.get_stack().local_device_id().to_string().as_str(),
                 );
                 let path = dir.join(chunk_id.to_string().as_str());
                 let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                 match chunk_store.chunk_writer(&chunk_id, path).await {
-                    Ok(writer) => {
-                        match writer.write(async_std::io::Cursor::new(buf)).await {
-                            Ok(_) => {
-                                let set_time = (system_time_to_bucky_time(
-                                    &std::time::SystemTime::now(),
-                                ) - begin_set_time)
-                                    as u32;
+                    Ok(writer) => match writer.write(async_std::io::Cursor::new(buf)).await {
+                        Ok(_) => {
+                            let set_time = (system_time_to_bucky_time(&std::time::SystemTime::now())
+                                - begin_set_time) as u32;
 
-                                let chunk_exists = stack
-                                    .ndn()
-                                    .chunk_manager()
-                                    .store()
-                                    .exists(&chunk_id)
-                                    .await;
-                                log::info!("chunk is exists {}", chunk_exists);
-                                TrackChunkResp {
-                                    peer_name: req.peer_name.clone(),
-                                    result: 0 as u16,
-                                    msg: "success".to_string(),
-                                    chunk_id: chunk_id.clone(),
-                                    calculate_time: calculate_time,
-                                    set_time: set_time,
-                                }
-                            }
-                            Err(e) => {
-                                log::error!("set-chunk failed, e={}", &e);
-                                TrackChunkResp {
-                                    peer_name: req.peer_name.clone(),
-                                    result: e.code().as_u16(),
-                                    msg: e.msg().to_string(),
-                                    chunk_id: chunk_id.clone(),
-                                    calculate_time: 0,
-                                    set_time: 0,
-                                }
+                            let chunk_exists =
+                                stack.ndn().chunk_manager().store().exists(&chunk_id).await;
+                            log::info!("chunk is exists {}", chunk_exists);
+                            TrackChunkResp {
+                                peer_name: req.peer_name.clone(),
+                                result: 0 as u16,
+                                msg: "success".to_string(),
+                                chunk_id: chunk_id.clone(),
+                                calculate_time: calculate_time,
+                                set_time: set_time,
                             }
                         }
-                    }
+                        Err(e) => {
+                            log::error!("set-chunk failed, e={}", &e);
+                            TrackChunkResp {
+                                peer_name: req.peer_name.clone(),
+                                result: e.code().as_u16(),
+                                msg: e.msg().to_string(),
+                                chunk_id: chunk_id.clone(),
+                                calculate_time: 0,
+                                set_time: 0,
+                            }
+                        }
+                    },
                     Err(e) => {
                         log::error!("chunk store write chunkfailed, e={}", &e);
                         TrackChunkResp {
@@ -630,117 +614,110 @@ impl BDTClient {
                         }
                     }
                 }
-                        
-            },
-            Err(err)=>{
-                TrackChunkResp {
-                    peer_name: req.peer_name.clone(),
-                    result: err.code().as_u16(),
-                    msg: err.msg().to_string(),
-                    chunk_id: ChunkId::default(),
-                    calculate_time: 0,
-                    set_time: 0,
-                }
             }
+            Err(err) => TrackChunkResp {
+                peer_name: req.peer_name.clone(),
+                result: err.code().as_u16(),
+                msg: err.msg().to_string(),
+                chunk_id: ChunkId::default(),
+                calculate_time: 0,
+                set_time: 0,
+            },
         };
-        Ok(resp)
+        resp
     }
-    pub async fn interest_chunk(&mut self, req: &InterestChunkReq,remote: &Device,) -> BuckyResult<InterestChunkResp> {
+    pub async fn interest_chunk(
+        &mut self,
+        req: &InterestChunkReq,
+        remote: &Device,
+    ) -> InterestChunkResp {
         let stack = self.get_stack();
         let chunk_store = self.get_chunk_store();
         let remote_id = remote.desc().device_id();
-        stack.device_cache().add(&remote_id,&remote);
-        // 设置chunk 保存目录        
+        stack.device_cache().add(&remote_id, &remote);
+        // 设置chunk 保存目录
         let save_path = match req.save_path.clone() {
-            Some(path_str)=>{
-                PathBuf::from_str(path_str.as_str()).unwrap()
-            },
-            None =>{
-                cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str())
-            }
+            Some(path_str) => PathBuf::from_str(path_str.as_str()).unwrap(),
+            None => cyfs_util::get_named_data_root(stack.local_device_id().to_string().as_str()),
         };
         let path = save_path.join(req.chunk_id.to_string().as_str());
-        let context = SampleDownloadContext::desc_streams("".to_string(),vec![remote.desc().clone()],);
-        let resp = match download_chunk(&stack,req.chunk_id.clone(),None,context).await{
-            Ok((_, reader)) => {
-                match chunk_store.chunk_writer(&req.chunk_id, path).await {
-                    Ok(writer) => match writer.write(reader).await {
-                        Ok(_) => InterestChunkResp {
-                            peer_name : req.peer_name.clone(),
-                            result: 0 as u16,
-                            msg: "success".to_string(),
-                        },
-                        Err(e) => {
-                            log::error!("interest-chunk write failed, e={}", &e);
-                            InterestChunkResp {
-                                peer_name : req.peer_name.clone(),
-                                result: e.code().as_u16(),
-                                msg: e.msg().to_string(),
-                            }
-                        }
+        let context =
+            SampleDownloadContext::desc_streams("".to_string(), vec![remote.desc().clone()]);
+        let resp = match download_chunk(&stack, req.chunk_id.clone(), None, context).await {
+            Ok((_, reader)) => match chunk_store.chunk_writer(&req.chunk_id, path).await {
+                Ok(writer) => match writer.write(reader).await {
+                    Ok(_) => InterestChunkResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 0 as u16,
+                        msg: "success".to_string(),
                     },
                     Err(e) => {
                         log::error!("interest-chunk write failed, e={}", &e);
                         InterestChunkResp {
-                            peer_name : req.peer_name.clone(),
+                            peer_name: req.peer_name.clone(),
                             result: e.code().as_u16(),
                             msg: e.msg().to_string(),
                         }
                     }
+                },
+                Err(e) => {
+                    log::error!("interest-chunk write failed, e={}", &e);
+                    InterestChunkResp {
+                        peer_name: req.peer_name.clone(),
+                        result: e.code().as_u16(),
+                        msg: e.msg().to_string(),
+                    }
                 }
-            }
+            },
             Err(e) => {
                 log::error!("download chunk failed, e={}", &e);
                 InterestChunkResp {
-                    peer_name : req.peer_name.clone(),
+                    peer_name: req.peer_name.clone(),
                     result: e.code().as_u16(),
                     msg: e.msg().to_string(),
                 }
             }
         };
-        Ok(resp)
+        resp
     }
-    pub async fn check_chunk(&mut self, req: &CheckChunkReq) -> BuckyResult<CheckChunkResp> {
+    pub async fn check_chunk(&mut self, req: &CheckChunkReq) -> CheckChunkResp {
         let stack = self.get_stack();
         let resp = match stack.ndn().chunk_manager().store().get(&req.chunk_id).await {
             Ok(mut reader) => match chunk_check(reader.as_mut(), req.chunk_id.clone()).await {
                 Ok(state) => CheckChunkResp {
-                    peer_name : req.peer_name.clone(),
+                    peer_name: req.peer_name.clone(),
                     result: 0,
                     msg: "success".to_string(),
-                    state ,
+                    state,
                 },
                 Err(e) => {
                     log::error!("get chunk state failed, e={}", &e);
                     CheckChunkResp {
-                        peer_name : req.peer_name.clone(),
+                        peer_name: req.peer_name.clone(),
                         result: e.code().as_u16(),
                         msg: e.msg().to_string(),
-                        state : ChunkState::NotFound,
+                        state: ChunkState::NotFound,
                     }
                 }
             },
             Err(e) => {
                 log::error!("get chunk failed, e={}", &e);
                 CheckChunkResp {
-                    peer_name : req.peer_name.clone(),
+                    peer_name: req.peer_name.clone(),
                     result: e.code().as_u16(),
                     msg: e.msg().to_string(),
-                    state : ChunkState::NotFound,
+                    state: ChunkState::NotFound,
                 }
             }
         };
-        Ok(resp)
+        resp
     }
 
-    pub async fn publish_file(
-        &mut self,
-        req: &PublishFileReq,
-    ) -> BuckyResult<(PublishFileResp, Option<File>)> {
+    pub async fn publish_file(&mut self, req: &PublishFileReq) -> (PublishFileResp, Option<File>) {
         log::info!("bdt client publish_file, req={:?}", &req);
         let chunk_store = self.get_chunk_store();
         let resp = match calculate_file(req.path.clone(), req.chunk_size).await {
-            Ok((file, calculate_time,path)) => {
+            Ok((file, calculate_time, path)) => {
                 let begin_set_time = system_time_to_bucky_time(&std::time::SystemTime::now());
                 // 将文件信息存入tracker
                 chunk_store
@@ -773,13 +750,9 @@ impl BDTClient {
                 None,
             ),
         };
-        Ok(resp)
+        resp
     }
-    pub async fn download_file(
-        &mut self,
-        req: &DownloadFileReq,
-        file: &File,
-    ) -> BuckyResult<DownloadFileResp> {
+    pub async fn download_file(&mut self, req: &DownloadFileReq, file: &File) -> DownloadFileResp {
         log::info!("bdt client download_file, req={:?}", &req);
         let stack = self.get_stack();
         let chunk_store = self.get_chunk_store();
@@ -811,58 +784,53 @@ impl BDTClient {
             .lock()
             .unwrap()
             .add_task(task_path.as_str(), Arc::new(download_file_task));
-        Ok(DownloadFileResp {
+        DownloadFileResp {
             peer_name: req.peer_name.clone(),
             result: 0,
             msg: "success".to_string(),
             session: task_path,
-        })
+        }
     }
 
-
-pub async fn get_download_task_state(
+    pub async fn get_download_task_state(
         &mut self,
         req: &DownloadFileStateReq,
-    ) -> BuckyResult<DownloadFileStateResp> {
-        log::info!("bdt client get_download_task_state, req={:?}", &req);        
-        let resp = match  self.0.file_tasks.lock().unwrap().get_task_state(&req.session.as_str()){
-            Some((state,cur_speed,transfered))=>{
+    ) -> DownloadFileStateResp {
+        log::info!("bdt client get_download_task_state, req={:?}", &req);
+        let resp = match self
+            .0
+            .file_tasks
+            .lock()
+            .unwrap()
+            .get_task_state(&req.session.as_str())
+        {
+            Some((state, cur_speed, transfered)) => {
                 let state = match state {
-                    NdnTaskState::Running =>{
-                        "Running".to_string()
-                    },
-                    NdnTaskState::Finished =>{
-                        "Finished".to_string()
-                    },
-                    NdnTaskState::Paused =>{
-                        "Paused".to_string()
-                    },
-                    NdnTaskState::Error(err)=>{
-                       format!("Error({:?})",err.msg()) 
+                    NdnTaskState::Running => "Running".to_string(),
+                    NdnTaskState::Finished => "Finished".to_string(),
+                    NdnTaskState::Paused => "Paused".to_string(),
+                    NdnTaskState::Error(err) => {
+                        format!("Error({:?})", err.msg())
                     }
                 };
-                DownloadFileStateResp{
-                    peer_name : req.peer_name.clone(),
-                    result : 0,
-                    msg : "success".to_string(),
-                    state ,
+                DownloadFileStateResp {
+                    peer_name: req.peer_name.clone(),
+                    result: 0,
+                    msg: "success".to_string(),
+                    state,
                     cur_speed,
                     transfered,
                 }
-            },
-            None =>{
-                DownloadFileStateResp{
-                    peer_name : req.peer_name.clone(),
-                    result : 1,
-                    msg : "session is not found".to_string(),
-                    state : "Not Found".to_string(),
-                    cur_speed : 0,
-                    transfered : 0,
-                }
             }
+            None => DownloadFileStateResp {
+                peer_name: req.peer_name.clone(),
+                result: 1,
+                msg: "session is not found".to_string(),
+                state: "Not Found".to_string(),
+                cur_speed: 0,
+                transfered: 0,
+            },
         };
-        Ok(resp)
-
+        resp
     }
-
 }

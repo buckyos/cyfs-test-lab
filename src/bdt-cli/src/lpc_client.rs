@@ -1,6 +1,6 @@
 use async_std::net::TcpListener;
 use async_std::prelude::*;
-use async_std::{ sync::Arc, sync::Mutex, task};
+use async_std::{sync::Arc, sync::Mutex, task};
 use bdt_utils::*;
 use cyfs_base::*;
 use cyfs_util::*;
@@ -18,7 +18,12 @@ struct BDTCliImpl {
 #[derive(Clone)]
 pub struct BDTCli(Arc<BDTCliImpl>);
 impl BDTCli {
-    pub fn new(address: String,temp_dir: PathBuf,service_path: PathBuf,bdt_port_index: u16) -> Self {
+    pub fn new(
+        address: String,
+        temp_dir: PathBuf,
+        service_path: PathBuf,
+        bdt_port_index: u16,
+    ) -> Self {
         Self(Arc::new(BDTCliImpl {
             bdt_stack_manager: Arc::new(Mutex::new(BDTClientManager::new(
                 temp_dir.clone(),
@@ -32,24 +37,24 @@ impl BDTCli {
             tcp_server_manager: Arc::new(Mutex::new(TcpClientManager::new())),
         }))
     }
-    pub async fn add_tcp_client(&self, name: String, address: String) -> BuckyResult<(SocketAddr)>  {
+    pub async fn add_tcp_client(&self, name: String, address: String) -> BuckyResult<(SocketAddr)> {
         let create_server = TcpListener::bind(address.as_str()).await;
-         match create_server {
-            Ok(listener)=>{
+        match create_server {
+            Ok(listener) => {
                 let address_resp = listener.local_addr();
-                let _ = self.0.tcp_server_manager.lock().await.add_client(name, listener, address);
+                let _ = self
+                    .0
+                    .tcp_server_manager
+                    .lock()
+                    .await
+                    .add_client(name, listener, address);
                 Ok(address_resp.unwrap())
-            },
-            Err(err)=>{
-                log::error!("TcpListener bind address {} error = {}",address,err);
-                Err(BuckyError::new(
-                    BuckyErrorCode::AddrInUse,
-                    err.to_string(),
-                ))
+            }
+            Err(err) => {
+                log::error!("TcpListener bind address {} error = {}", address, err);
+                Err(BuckyError::new(BuckyErrorCode::AddrInUse, err.to_string()))
             }
         }
-       
-        
     }
     pub async fn get_tcp_client(&self, name: String) -> TcpClient {
         self.0
@@ -58,7 +63,7 @@ impl BDTCli {
             .await
             .get_client(name.as_str())
     }
-    pub async fn get_bdt_client(&self, peer_name: &str) -> BDTClient {
+    pub async fn get_bdt_client(&self, peer_name: &str) -> Option<BDTClient> {
         self.0.bdt_stack_manager.lock().await.get_client(peer_name)
     }
     pub async fn create_client(
@@ -82,8 +87,13 @@ impl BDTCli {
     pub fn get_address(&self) -> String {
         self.0.address.clone()
     }
-    pub async fn reset_client(&self,req: &ResetStackReq)-> ResetStackResp{
-        self.0.bdt_stack_manager.lock().await.reset_client(req).await
+    pub async fn reset_client(&self, req: &ResetStackReq) -> ResetStackResp {
+        self.0
+            .bdt_stack_manager
+            .lock()
+            .await
+            .reset_client(req)
+            .await
     }
     pub async fn is_upload_system_info(&self) -> bool {
         self.0.upload_system_info.lock().await.clone()
@@ -190,16 +200,16 @@ impl BDTCli {
                             let _ = cli.on_track_chunk(lpc, seq, req).await;
                         }
                         LpcActionApi::InterestChunkReq(req) => {
-                            let _ = cli.on_interest_chunk(lpc, seq,buffer, req).await;
+                            let _ = cli.on_interest_chunk(lpc, seq, buffer, req).await;
                         }
                         LpcActionApi::CheckChunkReq(req) => {
                             let _ = cli.on_check_chunk(lpc, seq, req).await;
                         }
                         LpcActionApi::PublishFileReq(req) => {
-                            let _ = cli.on_publish_file(lpc, seq, req).await; 
+                            let _ = cli.on_publish_file(lpc, seq, req).await;
                         }
                         LpcActionApi::DownloadFileReq(req) => {
-                            let _ = cli.on_download_file(lpc, seq,buffer,req).await;
+                            let _ = cli.on_download_file(lpc, seq, buffer, req).await;
                         }
                         LpcActionApi::DownloadFileStateReq(req) => {
                             let _ = cli.on_download_file_state(lpc, seq, req).await;
@@ -250,7 +260,7 @@ impl BDTCli {
                 .await;
         });
     }
-    pub async fn on_create_bdt_client(&mut self,lpc: Lpc,seq: u32,req: &CreateStackReq) {
+    pub async fn on_create_bdt_client(&mut self, lpc: Lpc, seq: u32, req: &CreateStackReq) {
         log::info!("on create bdt stack, req={:?}", &req);
         let mut cli = self.clone();
         let req = req.clone();
@@ -289,21 +299,24 @@ impl BDTCli {
 
         let req = req.clone();
         let peer_name = req.peer_name.clone();
-        let mut bdt_client = self.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = self.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
             // listener bdt connect
             let mut lpc = lpc;
-            bdt_client.set_lpc(lpc.clone());
-            let resp = bdt_client.auto_accept(seq, &req).await;
-            let resp = match resp {
-                Ok(resp) => resp,
-                Err(err) => AutoAcceptResp {
-                    peer_name: peer_name.clone(),
-                    result: err.code().as_u16(),
-                    msg: err.msg().to_string(),
-                },
+            let resp = match bdt_client {
+                Some(mut bdt_client) => {
+                    bdt_client.set_lpc(lpc.clone());
+                    bdt_client.auto_accept(seq, &req).await
+                }
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    AutoAcceptResp {
+                        peer_name: peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                    }
+                }
             };
-
             let _ = lpc
                 .send_command(LpcCommand::new(
                     seq,
@@ -320,21 +333,24 @@ impl BDTCli {
         let (remote_desc, _) = Device::raw_decode(buffer).unwrap();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = match bdt_client.connect(&remote_desc, &req).await {
-                Ok(resp) => resp,
-                Err(err) => ConnectResp {
-                    result: err.code().as_u16(),
-                    peer_name: req.peer_name,
-                    msg: err.msg().to_string(),
-                    stream_name: String::new(),
-                    send_hash: HashValue::default(),
-                    recv_hash: HashValue::default(),
-                    connect_time: 0,
-                    calculate_time: 0,
-                    total_time: 0,
-                },
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.connect(&remote_desc, &req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    ConnectResp {
+                        peer_name: peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        stream_name: String::new(),
+                        send_hash: HashValue::default(),
+                        recv_hash: HashValue::default(),
+                        connect_time: 0,
+                        calculate_time: 0,
+                        total_time: 0,
+                    }
+                }
             };
             let mut lpc = lpc;
             let _ = lpc
@@ -351,18 +367,21 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = match bdt_client.send_stream(&req).await {
-                Ok(resp) => resp,
-                Err(err) => SendStreamResp {
-                    peer_name: req.peer_name.clone(),
-                    result: err.code().as_u16(),
-                    msg: err.msg().to_string(),
-                    stream_name: req.stream_name.clone(),
-                    time: 0,
-                    hash: HashValue::default(),
-                },
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.send_stream(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    SendStreamResp {
+                        peer_name: peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        stream_name: req.stream_name.clone(),
+                        time: 0,
+                        hash: HashValue::default(),
+                    }
+                }
             };
             let mut lpc = lpc;
             let _ = lpc
@@ -380,18 +399,21 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = match bdt_client.recv_stream(&req).await {
-                Ok(resp) => resp,
-                Err(err) => RecvStreamResp {
-                    peer_name: req.peer_name.clone(),
-                    result: err.code().as_u16(),
-                    msg: err.msg().to_string(),
-                    stream_name: req.stream_name.clone(),
-                    file_size: 0,
-                    hash: HashValue::default(),
-                },
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.recv_stream(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    RecvStreamResp {
+                        peer_name: peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        stream_name: req.stream_name.clone(),
+                        file_size: 0,
+                        hash: HashValue::default(),
+                    }
+                }
             };
             let mut lpc = lpc;
             let _ = lpc
@@ -404,29 +426,35 @@ impl BDTCli {
         });
     }
     pub async fn on_shutdown_stream(&mut self, lpc: Lpc, seq: u32, req: &ShutdownReq) {
-        log::info!("on_recv_stream, req={:?}", &req);
-
+        log::info!("on_shutdown_stream, req={:?}", &req);
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.shutdown(&req);
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.shutdown(&req),
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    ShutdownResp {
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
                     seq,
                     Vec::new(),
-                    LpcActionApi::ShutdownResp(resp.unwrap()),
+                    LpcActionApi::ShutdownResp(resp),
                 ))
                 .await;
         });
     }
     pub async fn on_reset_stack(&mut self, lpc: Lpc, seq: u32, req: &ResetStackReq) {
-        log::info!("on_recv_stream, req={:?}", &req);
-
+        log::info!("on_reset_stack, req={:?}", &req);
         let cli = self.clone();
-        //let peer_name = req.peer_name.clone();
         let req = req.clone();
         task::spawn(async move {
             let resp = cli.reset_client(&req).await;
@@ -443,7 +471,7 @@ impl BDTCli {
     pub async fn on_upload_system_info(&mut self, lpc: Lpc, seq: u32, req: &UploadSystemInfoReq) {
         let req = req.clone();
         let cli = self.clone();
-        if(cli.is_upload_system_info().await == false){
+        if (cli.is_upload_system_info().await == false) {
             self.set_upload_system_info(true).await;
             task::spawn(async move {
                 let url = "http://192.168.200.175:5000/api/base/system_info/report";
@@ -464,15 +492,16 @@ impl BDTCli {
                     };
                     let json_body = serde_json::to_vec(&sys_info).unwrap();
                     //log::info!("start upload_system_info to server {:#?} ",json_body.clone());
-                    let _ = match request_json_post(url.clone(), Body::from(json_body)).await  {
-                        Ok(get_json) =>{
+                    let _ = match request_json_post(url.clone(), Body::from(json_body)).await {
+                        Ok(get_json) => {
                             log::trace!("report bdt agent perf result = {:#?}", get_json.data);
-                            async_std::task::sleep(Duration::from_millis(req.interval.clone())).await;
+                            async_std::task::sleep(Duration::from_millis(req.interval.clone()))
+                                .await;
                         }
-                        Err(err)=>{
+                        Err(err) => {
                             log::error!("report bdt agent perf err = {:#?}", err);
                         }
-                    }; 
+                    };
                 }
                 log::info!("stop report bdt agent perf");
             });
@@ -520,20 +549,22 @@ impl BDTCli {
                     let conn_req = conn_req;
                     let peer_name = conn_req.peer_name.clone();
                     //(1) 创建一个bdt stack
-
                     //(2) 向remote 设备发起连接
                     //cli.create_client(req)
                     let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
-                    let connect_time = match bdt_client.connect(&remote_desc, &conn_req).await {
-                        Ok(resp) => resp.connect_time,
-                        Err(err) => {
-                            // 连接时间为0 的标记为连接失败
-                            log::error!("connect failed err = {}", err);
-                            0
+                    match bdt_client {
+                        Some(mut bdt_client) => {
+                            let connect_time = bdt_client
+                                .connect(&remote_desc, &conn_req)
+                                .await
+                                .connect_time;
+                            let mut list_new = list_now.lock().await;
+                            (*list_new).push(connect_time);
                         }
-                    };
-                    let mut list_new = list_now.lock().await;
-                    (*list_new).push(connect_time);
+                        None => {
+                            log::error!("not found peer client {}", peer_name.clone());
+                        }
+                    }
                 }));
             }
             // 等待子线程全部完成
@@ -556,7 +587,7 @@ impl BDTCli {
                 .await;
         });
     }
-    pub async fn on_resp_error_action(&mut self,lpc: Lpc,seq: u32,req: &ErrorParams) {
+    pub async fn on_resp_error_action(&mut self, lpc: Lpc, seq: u32, req: &ErrorParams) {
         let mut lpc = lpc;
         let _ = lpc
             .send_command(LpcCommand::new(
@@ -588,29 +619,32 @@ impl BDTCli {
         task::spawn(async move {
             let req = req.clone();
             let address_str = format!("{}:{}", req.address, req.port);
-            //let address = 
-            let resp = match cli.add_tcp_client(req.name.clone(), address_str.clone()).await{
-                Ok(address)=>{
+            //let address =
+            let resp = match cli
+                .add_tcp_client(req.name.clone(), address_str.clone())
+                .await
+            {
+                Ok(address) => {
                     let mut client = cli.get_tcp_client(req.name.clone()).await;
                     let lpc1 = lpc.clone();
                     task::spawn(async move {
-                        client.start_listener(Some(lpc1), Some(seq),req.answer_size).await;
+                        client
+                            .start_listener(Some(lpc1), Some(seq), req.answer_size)
+                            .await;
                     });
                     CreateTcpServerResp {
                         result: 0,
                         msg: "success".to_string(),
                         address: address.to_string(),
                     }
+                }
+                Err(err) => CreateTcpServerResp {
+                    result: err.code().as_u16(),
+                    msg: err.msg().to_string(),
+                    address: address_str,
                 },
-                Err(err)=>{
-                    CreateTcpServerResp {
-                        result: err.code().as_u16(),
-                        msg: err.msg().to_string(),
-                        address: address_str,
-                    }
-                }    
             };
-            
+
             let _ = lpc
                 .send_command(LpcCommand::new(
                     seq,
@@ -627,20 +661,20 @@ impl BDTCli {
         let mut lpc = lpc;
         task::spawn(async move {
             let mut client = cli.get_tcp_client(req.name).await;
-            let resp = match client.connect(req.address,req.question_size).await {
-                Ok((stream_name, connect_time,sequence_id)) => TcpConnectResp {
+            let resp = match client.connect(req.address, req.question_size).await {
+                Ok((stream_name, connect_time, sequence_id)) => TcpConnectResp {
                     result: 0,
                     msg: "success".to_string(),
                     stream_name,
                     connect_time,
-                    sequence_id : sequence_id.to_string(),
+                    sequence_id: sequence_id.to_string(),
                 },
                 Err(err) => TcpConnectResp {
                     result: err.code().as_u16(),
                     msg: err.msg().to_string(),
                     stream_name: "ERROR".to_string(),
                     connect_time: 0,
-                    sequence_id : 0.to_string(),
+                    sequence_id: 0.to_string(),
                 },
             };
             let _ = lpc
@@ -664,7 +698,7 @@ impl BDTCli {
                     result: 0,
                     msg: "success".to_string(),
                     send_time,
-                    sequence_id:sequence_id.to_string(),
+                    sequence_id: sequence_id.to_string(),
                     hash,
                 },
                 Err(err) => TcpStreamSendResp {
@@ -719,9 +753,22 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.track_chunk(&req).await.unwrap();
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.track_chunk(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    TrackChunkResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        chunk_id: ChunkId::default(),
+                        calculate_time: 0,
+                        set_time: 0,
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -732,15 +779,31 @@ impl BDTCli {
                 .await;
         });
     }
-    pub async fn on_interest_chunk(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &InterestChunkReq) {
+    pub async fn on_interest_chunk(
+        &mut self,
+        lpc: Lpc,
+        seq: u32,
+        buffer: &[u8],
+        req: &InterestChunkReq,
+    ) {
         log::info!("on_interest_chunk, req={:?}", &req);
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
         let (remote, _) = Device::raw_decode(buffer).unwrap();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.interest_chunk(&req,&remote).await.unwrap();
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.interest_chunk(&req, &remote).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    InterestChunkResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -756,9 +819,20 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.check_chunk(&req).await.unwrap();
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.check_chunk(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    CheckChunkResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        state: ChunkState::NotFound,
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -774,15 +848,29 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let (resp,file) = bdt_client.publish_file(&req).await.unwrap();
+            let (resp, file) = match bdt_client {
+                Some(mut bdt_client) => bdt_client.publish_file(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    (
+                        PublishFileResp {
+                            peer_name: req.peer_name.clone(),
+                            result: 1,
+                            msg: "not found peer".to_string(),
+                            file_id: FileId::default(),
+                            calculate_time: 0,
+                            set_time: 0,
+                        },
+                        None,
+                    )
+                }
+            };
             let resp_buffer = match file {
-                Some(file)=>{
-                    file.to_vec().unwrap()
-                },
-                None => Vec::new()
-            }; 
+                Some(file) => file.to_vec().unwrap(),
+                None => Vec::new(),
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -793,15 +881,32 @@ impl BDTCli {
                 .await;
         });
     }
-    pub async fn on_download_file(&mut self, lpc: Lpc, seq: u32, buffer: &[u8], req: &DownloadFileReq) {
+    pub async fn on_download_file(
+        &mut self,
+        lpc: Lpc,
+        seq: u32,
+        buffer: &[u8],
+        req: &DownloadFileReq,
+    ) {
         log::info!("on_download_file, req={:?}", &req);
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
         let (file, _) = File::raw_decode(buffer).unwrap();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.download_file(&req,&file).await.unwrap();
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.download_file(&req, &file).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    DownloadFileResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        session: "".to_string(),
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -817,9 +922,22 @@ impl BDTCli {
         let cli = self.clone();
         let peer_name = req.peer_name.clone();
         let req = req.clone();
-        let mut bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
+        let bdt_client = cli.get_bdt_client(peer_name.as_str()).await;
         task::spawn(async move {
-            let resp = bdt_client.get_download_task_state(&req).await.unwrap();
+            let resp = match bdt_client {
+                Some(mut bdt_client) => bdt_client.get_download_task_state(&req).await,
+                None => {
+                    log::error!("not found peer client {}", peer_name.clone());
+                    DownloadFileStateResp {
+                        peer_name: req.peer_name.clone(),
+                        result: 1,
+                        msg: "not found peer".to_string(),
+                        state: "Not Found".to_string(),
+                        cur_speed: 0,
+                        transfered: 0,
+                    }
+                }
+            };
             let mut lpc = lpc;
             let _ = lpc
                 .send_command(LpcCommand::new(
@@ -830,5 +948,4 @@ impl BDTCli {
                 .await;
         });
     }
-      
 }
