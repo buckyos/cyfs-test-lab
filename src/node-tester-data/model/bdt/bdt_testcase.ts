@@ -2,7 +2,7 @@
 import { PrismaClient,bdt_testcase} from '@prisma/client'
 import {prisma} from "../"
 export type TestcaseModel = {
-    testcaseId: string 
+  testcase_id: string 
     TestcaseName: string 
     remark?: string 
     agentList?: string 
@@ -27,7 +27,7 @@ export class BdtTestcase{
         try {
           const result = await this.prisma.bdt_testcase.create({data:{
             TestcaseName: testcase.TestcaseName,
-            testcaseId : testcase.testcaseId,
+            testcaseId : testcase.testcase_id,
             remark: testcase.remark,
             agentList:testcase.agentList,
             environment:testcase.environment,
@@ -40,7 +40,7 @@ export class BdtTestcase{
             failed:testcase.failed,
             date:testcase.date,
         }})
-        return {err:0,log:`${testcase.testcaseId} add record success`}
+        return {err:0,log:`${testcase.testcase_id} add record success`}
       } catch (error) {
         console.info(error)
         return {err:0,log:` ${JSON.stringify(error)}`}

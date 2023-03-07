@@ -12,7 +12,7 @@ export type SystemInfoModel =  {
     hdd_disk_total?: number
     hdd_disk_avail?: number 
     create_time?: string,
-    testcaseId?:string,
+    testcase_id?:string,
 }
   var date = require("silly-datetime");
 
@@ -33,16 +33,16 @@ export type SystemInfoModel =  {
             ssd_disk_avail: info.ssd_disk_avail, 
             hdd_disk_total: info.hdd_disk_total, 
             hdd_disk_avail:info.hdd_disk_avail, 
-            testcaseId:info.testcaseId,
+            testcaseId:info.testcase_id,
             create_time: Date.now().toString(),
         }})
         return result;
     }
 
-    async getRecords(name:string,testcaseId:string){
+    async getRecords(name:string,testcase_id:string){
       try {
         const result = await this.prisma.agent_system_info.findMany({
-          where: { name,testcaseId },orderBy:[{create_time : "asc"}]  
+          where: { name,testcaseId:testcase_id },orderBy:[{create_time : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {
@@ -52,9 +52,9 @@ export type SystemInfoModel =  {
       
 
     }
-    async getAgentList(testcaseId:string,version:string):Promise<{err:number,log:string,data?:any}>{
+    async getAgentList(testcase_id:string,version:string):Promise<{err:number,log:string,data?:any}>{
       try {
-        let sql = "SELECT DISTINCT `name`,testcaseId from agent_system_info WHERE testcaseId = " + `"${testcaseId}" or testcaseId = "${version}";`;
+        let sql = "SELECT DISTINCT `name`,testcaseId from agent_system_info WHERE testcaseId = " + `"${testcase_id}" or testcaseId = "${version}";`;
         console.info(sql);
         let data = await this.prisma.$queryRawUnsafe(sql);
         return { err: 0, log: "getRecords success", data }

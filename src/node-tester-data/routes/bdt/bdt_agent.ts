@@ -11,7 +11,7 @@ router.post('/add',
     async (req, res) => {
         console.info(`#receive bdt_agent add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:BDTAgentModel = {
-            testcaseId : req.body.testcase_id,
+            testcase_id : req.body.testcase_id,
             name: req.body.name,
             NAT: req.body.NAT,
             eps: req.body.eps ,

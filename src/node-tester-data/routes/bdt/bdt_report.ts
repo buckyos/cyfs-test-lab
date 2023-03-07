@@ -84,16 +84,16 @@ router.post('/reportTestcase',
         }
         let testcase_mod = new BdtTestcase();
         let testcase = await testcase_mod.query(req.body.testcase_id!);
-        let testcaseId = testcase.result![0].testcaseId!;
+        let testcase_id = testcase.result![0].testcase_id!;
         let environment = testcase.result![0].environment!;
-        let check = path.join(config.BDT_Report_Dir,environment,"task",`${testcaseId}.html`);
+        let check = path.join(config.BDT_Report_Dir,environment,"task",`${testcase_id}.html`);
         if(fs.pathExistsSync(check)){
             let result = {err:0,log:"测试报告已经生成，请勿重复触发",testcase_url:check}
             return res.json(result)
         }else{
-            console.info(`testcase: ${testcaseId}`)
+            console.info(`testcase: ${testcase_id}`)
             let  testcase_info : any = testcase;
-            let result_info = await reportTestcase(testcaseId,environment);  
+            let result_info = await reportTestcase(testcase_id,environment);  
             let result = {err:0,log:"create bdt testcase report sucesss",testcase_url:check}
             return res.json(result)
         }
@@ -144,42 +144,42 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
     let SystemInfo_mod = new SystemInfo();
     let client_mod = new BDTClient();
     for (let testcase of testcase_list.result!) {
-        let testcaseId = testcase.testcaseId!;
-        console.info(`testcase: ${testcaseId}`)
+        let testcase_id = testcase.testcase_id!;
+        console.info(`testcase: ${testcase_id}`)
         let  testcase_info : any = testcase;
-        testcase_info.details = `./task/${testcaseId}.html`;
+        testcase_info.details = `./task/${testcase_id}.html`;
         while (runMax <= 0) {
             await sleep(100)
             console.info(`runMax:${runMax}`)
         }
         running.push(new Promise(async (V) => {
             runMax = runMax - 1;
-            let result = await reportTestcase(testcaseId,environment);
+            let result = await reportTestcase(testcase_id,environment);
             runMax = runMax + 1;
             V("")
         }))
         // 统计操作数据
-        let action_perf = await action_mod.report_testcase_perf(testcaseId);
+        let action_perf = await action_mod.report_testcase_perf(testcase_id);
         if(action_perf.data){
-            testcase_info.action_info = `./perf/${testcaseId}.html`;
-            let save = await reportDataToFile(action_perf.data, path.join(__dirname, "./report_suite/TotalActionPerf.html"), path.join(config.BDT_Report_Dir, environment,"perf"), `${testcaseId}.html`) 
+            testcase_info.action_info = `./perf/${testcase_id}.html`;
+            let save = await reportDataToFile(action_perf.data, path.join(__dirname, "./report_suite/TotalActionPerf.html"), path.join(config.BDT_Report_Dir, environment,"perf"), `${testcase_id}.html`) 
         }
         // 生成性能监控图表
-        let agent_list = await SystemInfo_mod.getAgentList(testcaseId,environment);
+        let agent_list = await SystemInfo_mod.getAgentList(testcase_id,environment);
         if(agent_list.data){
             console.info(JSON.stringify(agent_list.data))
-            testcase_info.perf_info  = `./systemInfo/${testcaseId}.html`;
-            let create_img = await reportSystemInfo( testcaseId,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
-            let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcaseId}.html`) 
+            testcase_info.perf_info  = `./systemInfo/${testcase_id}.html`;
+            let create_img = await reportSystemInfo( testcase_id,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
+            let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcase_id}.html`) 
     
         }
         // 统计BDT client 配置数据
         
-        let client_list = await client_mod.queryByTestcaseId(testcaseId);
+        let client_list = await client_mod.queryByTestcaseId(testcase_id);
        
         if(client_list.result){
-            testcase_info.client_info  = `./client/${testcaseId}.html`;
-            let save = await reportDataToFile(client_list.result, path.join(__dirname, "./report_suite/ClientInfo.html"), path.join(config.BDT_Report_Dir,environment,"client"), `${testcaseId}.html`)
+            testcase_info.client_info  = `./client/${testcase_id}.html`;
+            let save = await reportDataToFile(client_list.result, path.join(__dirname, "./report_suite/ClientInfo.html"), path.join(config.BDT_Report_Dir,environment,"client"), `${testcase_id}.html`)
     
         }
         
@@ -201,17 +201,17 @@ async function reportDataToHtml(environment: string):Promise<{err:number,log:str
     return {err:0,log:`生成测试报告成功`}
 }
 
-async function reportSystemInfo(testcaseId:string,agent_list:Array<any>,save_path:string){
+async function reportSystemInfo(testcase_id:string,agent_list:Array<any>,save_path:string){
     // /console.info
     for(let agent of agent_list){
         let name = String(agent.name).split("$")[0]
-        let save_img = await BDTPerfReport(testcaseId,name,save_path)
+        let save_img = await BDTPerfReport(testcase_id,name,save_path)
     }
 }
 
-async function reportTestcase(testcaseId: string,environment:string) {
+async function reportTestcase(testcase_id: string,environment:string) {
     let task_mod = new BdtTask();
-    let task_list = await task_mod.report(testcaseId);
+    let task_list = await task_mod.report(testcase_id);
     if (task_list.err) {
         console.info(`查询测试用例失败:${task_list}`)
         return { err: 0, log: `查询测试用例失败:${task_list}` }
@@ -229,11 +229,11 @@ async function reportTestcase(testcaseId: string,environment:string) {
         }
         // 获取日志链接
         let agent_mod = new BdtAgent(); 
-        let agent_LN = await agent_mod.report(testcaseId,task.LN!.split("$")[0]);
+        let agent_LN = await agent_mod.report(testcase_id,task.LN!.split("$")[0]);
         if(agent_LN.result && agent_LN.result!.logUrl){
             task_info.LN_LOG = agent_LN.result!.logUrl!.replace("192.168.200.175","cyfs-test-lab");
         }
-        let agent_RN = await agent_mod.report(testcaseId,task.RN!.split("$")[0]);
+        let agent_RN = await agent_mod.report(testcase_id,task.RN!.split("$")[0]);
         if(agent_RN.result && agent_RN.result.logUrl){
             task_info.RN_LOG = agent_RN.result!.logUrl!.replace("192.168.200.175","cyfs-test-lab");
         }
@@ -248,7 +248,7 @@ async function reportTestcase(testcaseId: string,environment:string) {
     for (let run of running) {
         await run;
     }
-    let save = await reportDataToFile(task_list.result, path.join(__dirname, "./report_suite/TaskReport.html"), path.join(config.BDT_Report_Dir,environment,"task"), `${testcaseId}.html`)
+    let save = await reportDataToFile(task_list.result, path.join(__dirname, "./report_suite/TaskReport.html"), path.join(config.BDT_Report_Dir,environment,"task"), `${testcase_id}.html`)
     
     return { err: 0, log: `查询测试用例成功` }
 }
@@ -283,16 +283,16 @@ async function reportDataToFile(data: any, suit_file: string, save_path: string,
 // async function main() {
 //     let run = await reportDataToHtml("Stream_AllEP");
 //     //let jquery = fs.copyFileSync(path.join(__dirname,"./report_suite/jquery-3.3.1.min.js"),path.join(config.BDT_Report_Dir, "Stream_AllEP","jquery-3.3.1.min.js"))
-//     // let  testcaseId = "Connect_Max_UDPConnection_1666785842903";
+//     // let  testcase_id = "Connect_Max_UDPConnection_1666785842903";
 //     // let  environment = "Stream_AllEP";
 //     // let SystemInfo_mod = new SystemInfo();
-//     // let agent_list = await SystemInfo_mod.getAgentList(testcaseId);
+//     // let agent_list = await SystemInfo_mod.getAgentList(testcase_id);
 //     // console.info(JSON.stringify(agent_list.data))
 //     // if(agent_list.data){
 //     //     console.info(JSON.stringify(agent_list.data))
-//     //     testcase_info.perf_info  = `./systemInfo/${testcaseId}.html`;
-//     //     let create_img = await reportSystemInfo( testcaseId,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
-//     //     let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcaseId}.html`) 
+//     //     testcase_info.perf_info  = `./systemInfo/${testcase_id}.html`;
+//     //     let create_img = await reportSystemInfo( testcase_id,agent_list!.data!,path.join(config.BDT_Report_Dir,environment,"img"));
+//     //     let save = await reportDataToFile(agent_list.data, path.join(__dirname, "./report_suite/SystemInfo.html"), path.join(config.BDT_Report_Dir, environment,"systemInfo"), `${testcase_id}.html`) 
 
 //     // }
 //     // console.info(run)

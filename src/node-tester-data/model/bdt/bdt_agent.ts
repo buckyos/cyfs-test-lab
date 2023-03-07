@@ -2,7 +2,7 @@
 import { PrismaClient,bdt_agent} from '@prisma/client'
 import {prisma} from "../"
 export type BDTAgentModel = {
-    testcaseId?: string
+  testcase_id?: string
     name?: string
     NAT?: string
     eps?: string 
@@ -22,7 +22,7 @@ export class BdtAgent{
       console.info(`add BDTAgentModel ${JSON.stringify(agent)}`)
         try {
           const result = await this.prisma.bdt_agent.create({data:{
-            testcaseId: agent.testcaseId,
+            testcaseId: agent.testcase_id,
             name : agent.name,
             NAT : String(agent.NAT),
             eps : agent.eps ,
@@ -32,7 +32,7 @@ export class BdtAgent{
             portMap : agent.portMap,
             logUrl : agent.logUrl,
         }})
-        return {err:0,log:`${agent.testcaseId} ${agent.name} add record success`}
+        return {err:0,log:`${agent.testcase_id} ${agent.name} add record success`}
       } catch (error) {
         console.info(error)
         return {err:1,log:` ${JSON.stringify(error)}`}

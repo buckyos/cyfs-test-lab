@@ -12,7 +12,7 @@ router.post('/add',
         console.info(`#receive bdt_testcase add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TestcaseModel = {
             TestcaseName: req.body.testcase_name,
-            testcaseId : req.body.testcase_id,
+            testcase_id : req.body.testcase_id,
             remark: req.body.remark,
             agentList:req.body.agentList,
             environment:req.body.environment,

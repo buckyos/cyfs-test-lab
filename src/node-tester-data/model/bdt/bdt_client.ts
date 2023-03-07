@@ -1,7 +1,7 @@
 import { PrismaClient} from '@prisma/client'
 import {prisma} from "../"
 export interface BDTClientModel{
-  testcaseId?: string 
+  testcase_id?: string 
   name?: string 
   peerid?: string 
   peerInfo?: string 
@@ -20,7 +20,7 @@ export class BDTClient{
     async add(action:BDTClientModel){
         try {
           const result = await this.prisma.bdt_client.create({data:{
-            testcaseId : action.testcaseId,
+            testcaseId : action.testcase_id,
             name : action.name , 
             peerid : action.peerid ,
             peerInfo : action.peerInfo , 

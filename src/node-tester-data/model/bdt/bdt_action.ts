@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { prisma } from "../"
 export interface ActionModel {
-  testcaseId?: string
+  testcase_id?: string
   task_id?: string
   action_id?: string
   type?: string
@@ -35,7 +35,7 @@ export class BdtAction {
     try {
       const result = await this.prisma.bdt_action.create({
         data: {
-          testcaseId: action.testcaseId,
+          testcaseId: action.testcase_id,
           task_id: action.task_id,
           action_id: action.action_id,
           type: action.type,
@@ -77,9 +77,9 @@ export class BdtAction {
       return { err: 1, log: `${error}` }
     }
   }
-  async report_testcase_perf(testcaseId: string) {
+  async report_testcase_perf(testcase_id: string) {
     try {
-      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcaseId ="${testcaseId}" GROUP BY type;`;
+      let sql = `SELECT type,avg( connect_time / 1000 ) AS "connect_time",avg( fileSize / send_time ) AS "tran_speed",SUM(fileSize /(1024 * 1024 )) AS "filesize",count(*) AS "total" FROM bdt_action WHERE result = 0 AND testcaseId ="${testcase_id}" GROUP BY type;`;
       console.info(sql);
       let data = await this.prisma.$queryRawUnsafe(sql);
       return { err: 0, log: "getRecords success", data }

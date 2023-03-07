@@ -2,7 +2,7 @@ import { PrismaClient,bdt_task } from '@prisma/client'
 import {prisma} from "../"
 export type TaskModel = {
   task_id: string
-  testcaseId: string
+  testcase_id: string
   LN: string 
   RN: string 
   Users: string 
@@ -22,7 +22,7 @@ export class BdtTask{
         try {
 
           const result = await this.prisma.bdt_task.create({data:{
-              testcaseId : task.testcaseId,
+              testcaseId : task.testcase_id,
               task_id: task.task_id,
               LN:task.LN,
               RN:task.RN,
