@@ -12,7 +12,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agent_manager.init_agent_list(agent_ipv6);
     //(2) 创建测试用例执行器 TestRunner
     let test_runner = new TestRunner(_interface);
-    let testcase_name = "stream_0005_ipv6_udp_endpoint"
+    let testcase_name = "stream_005_ipv6_udp_endpoint"
     let testcase:Testcase = {
         testcase_name: testcase_name,
         testcase_id: `${testcase_name}_${Date.now()}`,

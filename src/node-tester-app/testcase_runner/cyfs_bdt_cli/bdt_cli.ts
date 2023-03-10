@@ -51,7 +51,13 @@ export class BdtCli extends EventEmitter {
         this.port = peer.client_port!;
         this.client_name = `${tags}_${this.port}`;
     }
-
+    async listener_unlive(){
+        let unlive = await this.m_interface.attachEvent(`unlive`, (err: ErrorCode, namespace: Namespace, json: string) => {
+            let eventIfo: api.LpcActionApi = JSON.parse(json);
+            this.logger.error(`${this.client_name } is unlive,may be panic.`);
+            this.m_interface.stopService(this.m_agentid);
+        }, this.m_agentid, this.m_timeout);
+    }
     get_stack_index(){
         this.stack_num = this.stack_num + 1;
         return this.stack_num - 1;
@@ -144,6 +150,7 @@ export class BdtCli extends EventEmitter {
 
     }
     
+
     async create_tcp_server(address:string,port:number=22223,listener_recv: boolean,answer_size:number=0):Promise<{tcp_stack:TcpStack,result:api.CreateTcpServerResp}>{
         let tcp_stack = new TcpStack(this.m_interface,this.m_agentid,this.tags,this.client_name!);
         if(answer_size==undefined){
@@ -214,7 +221,7 @@ export class BdtCli extends EventEmitter {
     }
 
 
-    getReportData(testcase_id: string) {
+    get_report_data(testcase_id: string) {
         return {
             name: this.tags,
             testcase_id: testcase_id,
@@ -251,13 +258,12 @@ export class BdtCli extends EventEmitter {
         this.state = state
         return BDTERROR.success;
     }
-    async uploadSystemInfo(testcase_id: string, interval: number): Promise<{ err: ErrorCode }> {
+    async upload_system_info(testcase_id: string, interval: number): Promise<{ err: ErrorCode }> {
         return new Promise(async (V) => {
             setTimeout(async () => {
                 V({ err: ErrorCode.timeout })
             }, 10000)
             let action : api.LpcActionApi = {
-                
                 UploadSystemInfoReq :{
                     agent_name: this.tags,
                     testcase_id,
@@ -267,7 +273,7 @@ export class BdtCli extends EventEmitter {
             let info = await this.m_interface.callApi('sendBdtLpcCommand', Buffer.from(""),{client_name : this.client_name,action}, this.m_agentid, 0);
             this.logger.debug(`callApi upload_system_info BuckyResult result = ${info.value}`)
             if (info.err || info.value.result) {
-                this.logger.error(`${this.tags} uploadSystemInfo failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+                this.logger.error(`${this.tags} upload_system_info failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
             }
             V({ err: info.value.result })
         })

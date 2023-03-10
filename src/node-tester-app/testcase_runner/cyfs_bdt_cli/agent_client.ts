@@ -81,20 +81,20 @@ export class AgentClient {
             //     }       
             // }
             this.ipInfo = IPInfo.value.ipInfo;
-            let loadAgentCache = await this.loadAgentCache("clean");
+            let loadAgentCache = await this.load_agent_cache("clean");
             this.state = 1;
             V({err:ErrorCode.succ,log:`${this.tags} get ipinfo success`}) 
         })
         
     }
-    async stopService(){
+    async stop_service(){
         for(let client of this.bdtPeerMap.values()){
             let stop = await client.destory();
         }
         await this.m_interface.stopService(this.m_agentid!)
     }
      
-    async uploadLog(testcase_id:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
+    async upload_log(testcase_id:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         if(!this.is_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
@@ -120,7 +120,7 @@ export class AgentClient {
         })
         
     }
-     async  BDTPerfReport(testcase_id:string,agent:string,save_path:string){
+     async bdt_perf_report(testcase_id:string,agent:string,save_path:string){
         this.logger.info(`${this.tags} send api/base/system_info/getRecords req `)
         let run = await request("POST","api/base/system_info/getRecords",{name:agent,testcase_id},ContentType.json)
         this.logger.info(`api/base/system_info/getRecords resp ${JSON.stringify(run.log)} `)
@@ -169,26 +169,26 @@ export class AgentClient {
         }
         return run.length;
     }
-    async saveAgentPerfInfo(testcase_id:string):Promise<{err:ErrorCode,log?:string}>{
+    async save_agent_perf_info(testcase_id:string):Promise<{err:ErrorCode,log?:string}>{
         if(!this.is_run || !this.is_report_perf){
             this.logger.error(`${this.tags} not run or not report perf info`)
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
-        let result = await this.BDTPerfReport(testcase_id,this.tags,this.logger.dir());
-        return {err : ErrorCode.succ,log:"saveAgentPerfInfo"}
+        let result = await this.bdt_perf_report(testcase_id,this.tags,this.logger.dir());
+        return {err : ErrorCode.succ,log:"save_agent_perf_info"}
     }
-    async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
+    async remove_ndc_data():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "removeNdcData",
+            name : "remove_ndc_data",
         }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} removeNdcData = ${JSON.stringify(result)}`)
+        this.logger.info(`${this.tags} remove_ndc_data = ${JSON.stringify(result)}`)
         if(result.err ){  
             return {err:ErrorCode.exception}
         }
         return {err:ErrorCode.succ,remove_list:result.value.remove_list}
     }  
     
-    async startPeerClient(config:BdtCliConfig,local?:string,client_port:number=22222):Promise<{err:number,log?:string,bdtClient?:BdtCli,online_time?:number}>{
+    async start_peer_client(config:BdtCliConfig,local?:string,client_port:number=22222):Promise<{err:number,log?:string,bdtClient?:BdtCli,online_time?:number}>{
         if(myconfig.AgentConcurrencyIgnoreWAN && this.agentMult > 0 && this.agentInfo.NAT == 0){
             this.logger.error(`${this.tags} Perf test WAN agent Ignore WAN Concurrency BDT client`)
             return {err:BDTERROR.success,log:"Perf test WAN agent Ignore WAN Concurrency BDT client"}
@@ -211,7 +211,7 @@ export class AgentClient {
         this.bdtPeerMap.set(`${this.agentMult}`,bdtClient);
         return {err:result.err,log:result.log,bdtClient}
     }
-    async startTcpServer(port:number=22223,answer_size:number=0){
+    async start_tcp_server(port:number=22223,answer_size:number=0){
         for(let client of this.bdtPeerMap.values()){
             this.m_interface.getLogger().info(`${this.tags} ${client.client_name} start tcp server ${port}`)
             let recv_data = false;
@@ -223,7 +223,7 @@ export class AgentClient {
         }
     }
 
-    async getBdtCli(client_index:string,stack_index:string):Promise<{err:ErrorCode,log?:string,bdt_stack?:BdtStack}>{
+    async get_bdt_cli(client_index:string,stack_index:string):Promise<{err:ErrorCode,log?:string,bdt_stack?:BdtStack}>{
         this.is_run = true;
         if(!this.bdtPeerMap.has(client_index)){
             return {err:BDTERROR.AgentError,log:`${this.tags} ${client_index} not exsit`}
@@ -243,7 +243,7 @@ export class AgentClient {
         let client = this.bdtPeerMap.get(client_index)!
         return {err:BDTERROR.success,log:`${this.tags} ${client_index} get success`,client}
     }
-    async reportAgent(testcase_id:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
+    async report_agent(testcase_id:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
         if(!this.is_run && check_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
@@ -265,20 +265,20 @@ export class AgentClient {
         if(report_bdtClient){
             let list = [];
             for(let client of this.bdtPeerMap.values()){
-                list.push(client.getReportData(testcase_id));
+                list.push(client.get_report_data(testcase_id));
             }
             let run_action =await request("POST","api/bdt/client/addList",{
                 list
             },ContentType.json)
             this.logger.info(`api/bdt/client/addList resp:  ${JSON.stringify(run_action)}`)
         }
-        return {err:BDTERROR.success,log:`reportAgent to server success`}
+        return {err:BDTERROR.success,log:`report_agent to server success`}
     }
-    async uploadSystemInfo(testcase_id:string,interval: number) :Promise<{err:ErrorCode}>{
+    async upload_system_info(testcase_id:string,interval: number) :Promise<{err:ErrorCode}>{
         if(!this.is_report_perf){
             this.is_report_perf = true;
             for(let client of this.bdtPeerMap.values()){
-                let result =  await client.uploadSystemInfo(testcase_id,interval);
+                let result =  await client.upload_system_info(testcase_id,interval);
                 if(result.err == 0){
                     break;
                 }
@@ -289,7 +289,7 @@ export class AgentClient {
         return {err:ErrorCode.succ}
     }
 
-    async loadAgentCache(init?:string):Promise<{err:ErrorCode,LocalDeviceCache?:string,RemoteDeviceCache?:string,local_list?: Array<string>,remote_list?:Array<string>}>{
+    async load_agent_cache(init?:string):Promise<{err:ErrorCode,LocalDeviceCache?:string,RemoteDeviceCache?:string,local_list?: Array<string>,remote_list?:Array<string>}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "loadAgentCache",
             agentName: this.tags,
@@ -306,7 +306,7 @@ export class AgentClient {
         this.cacheInfo = {LocalDeviceCache,RemoteDeviceCache,local_list,remote_list};
         return {err:ErrorCode.succ,LocalDeviceCache,RemoteDeviceCache,local_list,remote_list}
     }
-    async removeAgentCache(type:string):Promise<{err:ErrorCode,cachePath?:string}>{
+    async remove_agent_cache(type:string):Promise<{err:ErrorCode,cachePath?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
             name : "removeAgentCache",
             agentName: this.tags,

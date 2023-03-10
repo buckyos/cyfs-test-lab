@@ -38,7 +38,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agent_num = 1 ;
     let stack_num = 80;
     await agent_manager.all_agent_start_bdt_peer(config,agent_num)
-    await agent_manager.uploadSystemInfo(testcase.testcase_id,2000);
+    await agent_manager.upload_system_info(testcase.testcase_id,2000);
     let mult =50;
     while(mult--){
         for(let i = 0;i< LabAgent.length;i++){

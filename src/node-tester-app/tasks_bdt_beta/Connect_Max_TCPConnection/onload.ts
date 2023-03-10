@@ -49,7 +49,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let LN = agent_list.LAN[0].tags[0];
     let WAN = agent_list.WAN[0].tags[0];
     await agent_manager.all_agent_start_bdt_peer(config)
-    await agent_manager.uploadSystemInfo(testcase.testcase_id,2000);
+    await agent_manager.upload_system_info(testcase.testcase_id,2000);
     //(4) 测试用例执行器添加测试任务
     for(let i =0;i<50;i++){
         let info = await test_runner.create_prev_task({

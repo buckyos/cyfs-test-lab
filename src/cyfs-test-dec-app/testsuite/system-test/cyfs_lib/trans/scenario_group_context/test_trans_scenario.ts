@@ -121,7 +121,7 @@ describe("CYFS Stack Trans 模块测试", function () {
         })
         describe("Trans 传输File", async () => {
             describe("File传输 文件大小", async () => {
-                it.only("File传输 文件大小-传输空文件", async () => {
+                it("File传输 文件大小-传输空文件", async () => {
                     // 创建监听器
                     let action_handler = new action_api.RegisterCommonHandler({
                         local: {
@@ -729,7 +729,7 @@ describe("CYFS Stack Trans 模块测试", function () {
             })
             describe("File传输 Task 状态任务调度控制", async () => {
 
-                describe.only("对新建任务进行操作", () => {
+                describe("对新建任务进行操作", () => {
                     it("查询未auto_start 任务状态为：Paused", async () => {
                         // 创建监听器
                         let action_handler = new action_api.RegisterCommonHandler({
@@ -1984,6 +1984,124 @@ describe("CYFS Stack Trans 模块测试", function () {
                 describe("File传输 Task 初始化状态为Err： 调用Start/Stop/Delete", () => {
                     // TODD  目前无法构造 Err 类型任务。
                 })
+            })
+        })
+        describe("publish_file 设置默认权限",async()=>{
+            const stack_list = {
+                zone1_device1 : {
+                    peer_name: "zone1_device1",
+                    dec_id: dec_app_1.to_base_58(),
+                    type: cyfs.CyfsStackRequestorType.Http
+                },
+                zone1_device2 : {
+                    peer_name: "zone1_device2",
+                    dec_id: dec_app_1.to_base_58(),
+                    type: cyfs.CyfsStackRequestorType.Http
+                },    
+                zone2_device1 : {
+                    peer_name: "zone2_device1",
+                    dec_id: dec_app_1.to_base_58(),
+                    type: cyfs.CyfsStackRequestorType.Http
+                },
+            }
+
+            it.only("publish_file 设置access权限为full权限",async()=>{
+                // 上传文件
+                let rep_path = `/publish_file/${RandomGenerator.string(10)}`;
+                let publish_file_action = new action_api.PublishFileAction({
+                    local: stack_list.zone1_device1,
+                    remote: stack_list.zone1_device1,
+                    input: {
+                        timeout: 60 * 1000,
+                        file_size : 10*1024*1024,
+                        chunk_size :4*1024*1024,
+                    },
+                    expect: { err: 0 },
+
+                }, logger);
+                let result = await publish_file_action.start({
+                    rand_file :true,
+                    chunk_size :4*1024*1024,
+                    file_size : 10*1024*1024,
+                    req_path: rep_path,
+                    level: cyfs.NDNAPILevel.NDC,
+                    flags: 1,
+                    asscess :cyfs.AccessString.full()
+                });
+                assert.ok(!result.err,result.log);
+                
+                let stack1 = stack_manager.get_cyfs_satck(stack_list.zone1_device1).stack!;
+                // 同zone 设备获取file 对象
+                let stack2 = stack_manager.get_cyfs_satck(stack_list.zone1_device2).stack!;
+                let get_object = await stack2.non_service().get_object({
+                    common: {
+                        target : stack1.local_device_id().object_id,
+                        flags : 0,
+                        level : cyfs.NONAPILevel.Router
+                    },
+                    object_id: result.resp!.file_id,
+                });
+                assert.ok(!get_object.err,get_object.val.toString());
+                // 跨zone 设备获取file 对象
+                let stack3 = stack_manager.get_cyfs_satck(stack_list.zone2_device1).stack!;
+                let get_object_zone = await stack3.non_service().get_object({
+                    common: {
+                        target : stack1.local_device_id().object_id,
+                        flags : 0,
+                        level : cyfs.NONAPILevel.Router
+                    },
+                    object_id: result.resp!.file_id,
+                });
+                assert.ok(!get_object_zone.err,get_object_zone.val.toString());
+            })
+            it.only("publish_file 设置access权限为default 权限",async()=>{
+                // 上传文件
+                let rep_path = `/publish_file/${RandomGenerator.string(10)}`;
+                let publish_file_action = new action_api.PublishFileAction({
+                    local: stack_list.zone1_device1,
+                    remote: stack_list.zone1_device1,
+                    input: {
+                        timeout: 60 * 1000,
+                        file_size : 10*1024*1024,
+                        chunk_size :4*1024*1024,
+                    },
+                    expect: { err: 0 },
+
+                }, logger);
+                let result = await publish_file_action.start({
+                    rand_file :true,
+                    chunk_size :4*1024*1024,
+                    file_size : 10*1024*1024,
+                    req_path: rep_path,
+                    level: cyfs.NDNAPILevel.NDC,
+                    flags: 1,
+                    asscess :cyfs.AccessString.default()
+                });
+                assert.ok(!result.err,result.log);
+                
+                let stack1 = stack_manager.get_cyfs_satck(stack_list.zone1_device1).stack!;
+                // 同zone 设备获取file 对象
+                let stack2 = stack_manager.get_cyfs_satck(stack_list.zone1_device2).stack!;
+                let get_object = await stack2.non_service().get_object({
+                    common: {
+                        target : stack1.local_device_id().object_id,
+                        flags : 0,
+                        level : cyfs.NONAPILevel.Router
+                    },
+                    object_id: result.resp!.file_id,
+                });
+                assert.ok(!get_object.err,get_object.val.toString());
+                // 跨zone 设备获取file 对象
+                let stack3 = stack_manager.get_cyfs_satck(stack_list.zone2_device1).stack!;
+                let get_object_zone = await stack3.non_service().get_object({
+                    common: {
+                        target : stack1.local_device_id().object_id,
+                        flags : 0,
+                        level : cyfs.NONAPILevel.Router
+                    },
+                    object_id: result.resp!.file_id,
+                });
+                assert.ok(get_object_zone.err,get_object_zone.val.toString());
             })
         })
         describe("Trans 传输 Group功能测试", async () => {

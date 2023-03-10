@@ -15,6 +15,7 @@ type TestInput = {
     level: cyfs.NDNAPILevel,
     referer_object?: cyfs.NDNDataRefererObject[],
     flags: number,
+    asscess?:cyfs.AccessString
 }
 type TestOutput = {
     file_id : cyfs.ObjectId,
@@ -83,7 +84,6 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         }
         // 发布文件
         let begin_time = Date.now();
-
         let info1 = await local.trans().publish_file({
             common: {
                 // api级别
@@ -96,7 +96,7 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             owner: this.action.local!.device_id!,
             local_path: file_path!,
             chunk_size: this.action.input.chunk_size!,
-            access : cyfs.AccessString.full()
+            access : req.asscess
         });
         this.action.output!.total_time = Date.now() - begin_time; 
         if(info1.err){

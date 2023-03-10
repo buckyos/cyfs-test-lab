@@ -22,7 +22,7 @@ export class BaseAction implements ActionAbstract{
     }
     async checkAgent() {
         this.state = "ready";
-        await this.agent_manager!.checkBdtCli(this.action.LN)
+        await this.agent_manager!.check_bdt_cli(this.action.LN)
     }
     async init(_interface: TaskClientInterface,task:Task,index?:number,date?:string): Promise<{ err: number, log: string }> {
         this.action.testcase_id = task!.testcase_id;
@@ -63,7 +63,7 @@ export class BaseAction implements ActionAbstract{
             environment : this.action.environment,
         },ContentType.json);
         this.logger!.info(`api/bdt/action/add resp:  ${JSON.stringify(run_action)}`)
-        return {err:BDTERROR.success,log:`reportAgent to server success`}
+        return {err:BDTERROR.success,log:`report_agent to server success`}
     }
     record(){
         return {

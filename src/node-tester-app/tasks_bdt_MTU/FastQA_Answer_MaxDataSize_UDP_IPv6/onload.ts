@@ -40,7 +40,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     // 每台机器运行一个bdt 客户端
     await agent_manager.all_agent_start_bdt_peer(config)
-    await agent_manager.uploadSystemInfo(testcase.testcase_id,2000);
+    await agent_manager.upload_system_info(testcase.testcase_id,2000);
     //(4) 测试用例执行器添加测试任务
     
     for(let [i,j] of randShuffle(agent_ipv6.length)){

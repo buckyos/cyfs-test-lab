@@ -191,9 +191,9 @@ export class TestRunner{
         }
         return;
     }
-    async saveAgentPerfInfo() {
+    async save_agent_perf_info() {
         if(config.ReportAgentPerfInfo){
-           await this.agent_manager.saveAgentPerfInfo(this.Testcase!.testcase_id);
+           await this.agent_manager.save_agent_perf_info(this.Testcase!.testcase_id);
         }
         return;
     }
@@ -253,10 +253,10 @@ export class TestRunner{
     async saveRecord() {
         await this.saveTestcase();
         await this.saveTask();
-        await this.agent_manager.reportAgent(this.Testcase!.testcase_id,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
+        await this.agent_manager.report_agent(this.Testcase!.testcase_id,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
         await this.saveJson();
         await this.saveMysql();
-        await this.saveAgentPerfInfo();
+        await this.save_agent_perf_info();
         return;
     }
     // 退出测试用例
@@ -273,7 +273,7 @@ export class TestRunner{
         }
         // 保存日志测试数据
         try {
-            await this.agent_manager.uploadLog(this.Testcase!.testcase_id)
+            await this.agent_manager.upload_log(this.Testcase!.testcase_id)
             await this.saveRecord();
         } catch (error) {
             this.logger.error(error);

@@ -97,9 +97,9 @@ export class AgentManager {
         }
         return {err:BDTERROR.AgentError};
     }
-    async saveAgentPerfInfo(testcase_id:string){
+    async save_agent_perf_info(testcase_id:string){
         for(let agent of this.agentMap.values()){
-            let run = await agent.saveAgentPerfInfo(testcase_id)
+            let run = await agent.save_agent_perf_info(testcase_id)
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
@@ -168,7 +168,7 @@ export class AgentManager {
         })
         
     }
-    async uploadSystemInfo(testcase_id:string,interval: number){
+    async upload_system_info(testcase_id:string,interval: number){
         return new Promise(async(V)=>{
             setTimeout(()=>{
                 V("")
@@ -176,7 +176,7 @@ export class AgentManager {
             let taskList = []
             for(let agent of this.agentMap.values()){
                 taskList.push(new Promise(async(V)=>{
-                    let ret =await agent.uploadSystemInfo(testcase_id,interval)
+                    let ret =await agent.upload_system_info(testcase_id,interval)
                     V(ret)
                 }))
             }
@@ -188,34 +188,34 @@ export class AgentManager {
         
         
     } 
-    async uploadLog(testcase_id:string):Promise<{err:ErrorCode,log:string}>{
+    async upload_log(testcase_id:string):Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.uploadLog(testcase_id));
+            taskList.push(agent.upload_log(testcase_id));
         }
         for(let i in taskList){
             await taskList[i]
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
-    async removeNdcData():Promise<{err:ErrorCode,log:string}>{
+    async remove_ndc_data():Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.removeNdcData());
+            taskList.push(agent.remove_ndc_data());
         }
         for(let i in taskList){
             await taskList[i]
         }
-        return {err:BDTERROR.success,log:`removeNdcData success `}
+        return {err:BDTERROR.success,log:`remove_ndc_data success `}
     }
-    async reportAgent(testcase_id: string,report_agent:boolean,report_bdtClient:boolean,check_run?:boolean) :Promise<{err:ErrorCode,log:string}>{
+    async report_agent(testcase_id: string,report_agent:boolean,report_bdtClient:boolean,check_run?:boolean) :Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.reportAgent(testcase_id,report_agent,report_bdtClient,check_run));
+            taskList.push(agent.report_agent(testcase_id,report_agent,report_bdtClient,check_run));
         }
         for(let i in taskList){
             await taskList[i]
         }
-        return {err:BDTERROR.success,log:`reportAgent to server success`}
+        return {err:BDTERROR.success,log:`report_agent to server success`}
     }
 }

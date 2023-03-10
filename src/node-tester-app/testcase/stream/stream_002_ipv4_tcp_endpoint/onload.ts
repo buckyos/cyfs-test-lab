@@ -11,7 +11,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     await agent_manager.init_agent_list(LabAgent);
     //(2) 创建测试用例执行器 TestRunner
     let test_runner = new TestRunner(_interface);
-    let testcase_name = "stream_0002_ipv4_tcp_endpoint"
+    let testcase_name = "stream_002_ipv4_tcp_endpoint"
     let testcase:Testcase = {
         testcase_name: testcase_name,
         testcase_id: `${testcase_name}_${Date.now()}`,

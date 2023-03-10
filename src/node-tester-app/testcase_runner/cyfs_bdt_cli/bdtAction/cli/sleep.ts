@@ -9,11 +9,11 @@ export class SleepAction extends BaseAction implements ActionAbstract {
         if (!this.action.set_time) {
             this.action.set_time = 30000
         }
-        let LN = await this.agent_manager!.getBdtCli(this.action.LN);
+        let LN = await this.agent_manager!.get_bdt_cli(this.action.LN);
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }
-        let RN = await this.agent_manager!.getBdtCli(this.action.RN!);
+        let RN = await this.agent_manager!.get_bdt_cli(this.action.RN!);
         if (RN.err) {
             return { err: RN.err, log: `${this.action.RN} bdt client not exist` }
         } 

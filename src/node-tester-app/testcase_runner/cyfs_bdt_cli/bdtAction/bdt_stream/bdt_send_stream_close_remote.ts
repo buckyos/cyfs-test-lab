@@ -8,8 +8,8 @@ export class SendStreamCloseRemoteAction extends BaseAction implements ActionAbs
     async run(): Promise<{ err: number, log: string }> {
         // (1) 检查测试bdt 客户端
         this.action.type = ActionType.send_stream
-        let LN = await this.agent_manager!.getBdtCli(this.action.LN);
-        let RN = await this.agent_manager!.getBdtCli(this.action.RN!);
+        let LN = await this.agent_manager!.get_bdt_cli(this.action.LN);
+        let RN = await this.agent_manager!.get_bdt_cli(this.action.RN!);
         if (LN.err) {
             return { err: LN.err, log: `${this.action.LN} bdt client not exist` }
         }

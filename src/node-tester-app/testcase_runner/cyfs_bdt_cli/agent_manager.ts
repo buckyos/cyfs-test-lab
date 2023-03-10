@@ -44,7 +44,7 @@ export class AgentManager {
         }
     }
     
-    async checkBdtCli(name:string):Promise<{err:number,log?:string}> {
+    async check_bdt_cli(name:string):Promise<{err:number,log?:string}> {
         let agentName = name.split("$")[0];
         let BDTIndex = name.split("$")[1];
         
@@ -53,7 +53,7 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,log:`check BdtCli success`};
     }
-    async getBdtCli(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
+    async get_bdt_cli(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
         let agentName = name.split("$")[0];
         let client_index = name.split("$")[1];
         let stack_index = name.split("$")[2];
@@ -64,7 +64,7 @@ export class AgentManager {
             this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
             return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
         }
-        return this.agentMap.get(agentName)!.getBdtCli(client_index,stack_index);
+        return this.agentMap.get(agentName)!.get_bdt_cli(client_index,stack_index);
     }
     async get_bdt_stack(name:string):Promise<{err:number,log?:string,bdt_stack?: BdtStack}> {
         let agentName = name.split("$")[0];
@@ -74,7 +74,7 @@ export class AgentManager {
             this.m_interface.getLogger().error(`agent ${agentName} not exsit , agent list = ${this.agentMap.keys()}`)
             return {err:BDTERROR.AgentError,log:` agent ${agentName} not exsit`}
         }
-        return this.agentMap.get(agentName)!.getBdtCli(client_index,stack_index);
+        return this.agentMap.get(agentName)!.get_bdt_cli(client_index,stack_index);
     }
     async get_bdt_peer_client(name:string):Promise<{err:number,log?:string,client?: BdtCli}> {
         let agentName = name.split("$")[0];
@@ -99,20 +99,20 @@ export class AgentManager {
         }
         return {err:BDTERROR.success,BDTClientInfo,log:`get success`};
     } 
-    async checkBdtCliList(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
-        let result = await this.checkBdtCli(LN);
+    async check_bdt_cli_list(LN:string,RN?:string,Users?:Array<string>):Promise<{err:number,log?:string}> {
+        let result = await this.check_bdt_cli(LN);
         if(result.err){
             return result
         }
         if(RN){
-            result = await this.checkBdtCli(RN);
+            result = await this.check_bdt_cli(RN);
             if(result.err){
                 return result
             }
         }
         if(Users){
             for(let i in Users){
-                result = await this.checkBdtCli(Users[i]);
+                result = await this.check_bdt_cli(Users[i]);
                 if(result.err){
                     return result
                 }
@@ -120,9 +120,9 @@ export class AgentManager {
         }
         return {err:BDTERROR.AgentError};
     }
-    async saveAgentPerfInfo(testcase_id:string){
+    async save_agent_perf_info(testcase_id:string){
         for(let agent of this.agentMap.values()){
-            let run = await agent.saveAgentPerfInfo(testcase_id)
+            let run = await agent.save_agent_perf_info(testcase_id)
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
@@ -130,12 +130,12 @@ export class AgentManager {
         if(!this.agentMap.has(agentName)){
             return {err:BDTERROR.AgentError,log:`${agentName} not exsit`}
         }
-        return this.agentMap.get(agentName)!.startPeerClient(config)
+        return this.agentMap.get(agentName)!.start_peer_client(config)
 
     }
     async allAgentCleanCache(type:string="all"){
         for(let agent of this.agentMap.values()){
-            await  agent.removeAgentCache(type);
+            await  agent.remove_agent_cache(type);
             agent.cacheInfo!.local_list = [];
         }
     }
@@ -159,10 +159,10 @@ export class AgentManager {
                         peer_name = agent.tags + "_" + RandomGenerator.string(10);
                     }
                     this.m_interface.getLogger().info(`start peer ${peer_name}`)
-                    let result =  await agent.startPeerClient(config,peer_name,client_port);
+                    let result =  await agent.start_peer_client(config,peer_name,client_port);
                     await sleep(100);
                 }
-                await agent.loadAgentCache("init");
+                await agent.load_agent_cache("init");
 
                 V("run finished")
             }))
@@ -172,12 +172,12 @@ export class AgentManager {
             await taskList[i]
         }
     }
-    async allAgentStartTcpServer(port:number=22223,answer_size:number=0){
+    async all_agent_start_tcp_server(port:number=22223,answer_size:number=0){
         let taskList = []
         for(let agent of this.agentMap.values()){
             taskList.push(new Promise(async(V)=>{
                 this.m_interface.getLogger().info(`### ${agent.tags} start tcp server ${port}`)
-                let start = await agent.startTcpServer(port,answer_size)
+                let start = await agent.start_tcp_server(port,answer_size)
                 V("run finished")
             }))
             
@@ -186,7 +186,7 @@ export class AgentManager {
             await taskList[i]
         }
     }
-    async stopService(){
+    async stop_service(){
         return new Promise(async(V)=>{
             setTimeout(()=>{
                 return V("run finished")
@@ -195,7 +195,7 @@ export class AgentManager {
             for(let agent of this.agentMap.values()){
                 list.push(new Promise(async(V)=>{
                     //let result = await agent.
-                    await agent.stopService();
+                    await agent.stop_service();
                 }))  
             }
             for(let run of list){
@@ -205,7 +205,7 @@ export class AgentManager {
         })
         
     }
-    async uploadSystemInfo(testcase_id:string,interval: number){
+    async upload_system_info(testcase_id:string,interval: number){
         return new Promise(async(V)=>{
             setTimeout(()=>{
                 V("")
@@ -213,7 +213,7 @@ export class AgentManager {
             let taskList = []
             for(let agent of this.agentMap.values()){
                 taskList.push(new Promise(async(V)=>{
-                    let ret =await agent.uploadSystemInfo(testcase_id,interval)
+                    let ret =await agent.upload_system_info(testcase_id,interval)
                     V(ret)
                 }))
             }
@@ -225,34 +225,34 @@ export class AgentManager {
         
         
     } 
-    async uploadLog(testcase_id:string):Promise<{err:ErrorCode,log:string}>{
+    async upload_log(testcase_id:string):Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.uploadLog(testcase_id));
+            taskList.push(agent.upload_log(testcase_id));
         }
         for(let i in taskList){
             await taskList[i]
         }
         return {err:BDTERROR.success,log:`save test log to server success`}
     }
-    async removeNdcData():Promise<{err:ErrorCode,log:string}>{
+    async remove_ndc_data():Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.removeNdcData());
+            taskList.push(agent.remove_ndc_data());
         }
         for(let i in taskList){
             await taskList[i]
         }
-        return {err:BDTERROR.success,log:`removeNdcData success `}
+        return {err:BDTERROR.success,log:`remove_ndc_data success `}
     }
-    async reportAgent(testcase_id: string,report_agent:boolean,report_bdtClient:boolean,check_run?:boolean) :Promise<{err:ErrorCode,log:string}>{
+    async report_agent(testcase_id: string,report_agent:boolean,report_bdtClient:boolean,check_run?:boolean) :Promise<{err:ErrorCode,log:string}>{
         let taskList = []
         for(let agent of this.agentMap.values()){
-            taskList.push(agent.reportAgent(testcase_id,report_agent,report_bdtClient,check_run));
+            taskList.push(agent.report_agent(testcase_id,report_agent,report_bdtClient,check_run));
         }
         for(let i in taskList){
             await taskList[i]
         }
-        return {err:BDTERROR.success,log:`reportAgent to server success`}
+        return {err:BDTERROR.success,log:`report_agent to server success`}
     }
 }

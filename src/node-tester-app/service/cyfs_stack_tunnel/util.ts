@@ -33,7 +33,7 @@ export class UtilTool {
                 return await this.getIPInfo(command);
             };
             case "uploadLog": {
-                return await this.uploadLog(command);
+                return await this.upload_log(command);
             };
             case "uploadCacheFile": {
                 return await this.uploadCacheFile(command);
@@ -183,7 +183,7 @@ export class UtilTool {
             }
         }
     }
-    async uploadLog(command: BdtLpcCommand): Promise<BdtLpcResp> {
+    async upload_log(command: BdtLpcCommand): Promise<BdtLpcResp> {
         this.m_logger.info(`command : ${JSON.stringify(command.json)}`)
         if (!command.json.logName) {
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)

@@ -44,7 +44,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     let agent_list = await AgentList_LAN_WAN(LabAgent);
     let num = 5
     await agent_manager.all_agent_start_bdt_peer(config,num)
-    await agent_manager.uploadSystemInfo(testcase.testcase_id,5000);
+    await agent_manager.upload_system_info(testcase.testcase_id,5000);
     //(4) 测试用例执行器添加测试任务
     let Users = []
     for(let i =1;i<=num;i++){

@@ -191,7 +191,7 @@ export class BdtPeerClient extends EventEmitter {
         this.stack_list.set(unique_id, start_stack.bytes!);
         return { err: BDTERROR.success, log: `create bdt stack success`, online_time, sn_resp_eps, peerid }
     }
-    async reportAgent(testcase_id: string): Promise<{ err: ErrorCode, log: string }> {
+    async report_agent(testcase_id: string): Promise<{ err: ErrorCode, log: string }> {
         let run_action = await request("POST", "api/bdt/client/add", {
             name: this.tags,
             testcase_id: testcase_id,
@@ -203,9 +203,9 @@ export class BdtPeerClient extends EventEmitter {
             online_sn: this.online_sn,
         }, ContentType.json)
         this.logger.info(`api/bdt/client/add resp:  ${JSON.stringify(run_action)}`)
-        return { err: BDTERROR.success, log: `reportAgent to server success` }
+        return { err: BDTERROR.success, log: `report_agent to server success` }
     }
-    getReportData(testcase_id: string) {
+    get_report_data(testcase_id: string) {
         return {
             name: this.tags,
             testcase_id: testcase_id,
@@ -750,7 +750,7 @@ export class BdtPeerClient extends EventEmitter {
         }
         return { err: info.err, set_time: info.value?.set_time, file: info.bytes, ObjectId: info.value?.ObjectId, calculate_time: info.value?.calculate_time };
     }
-    async uploadSystemInfo(testcase_id: string, interval: number): Promise<{ err: ErrorCode }> {
+    async upload_system_info(testcase_id: string, interval: number): Promise<{ err: ErrorCode }> {
         return new Promise(async (V) => {
             setTimeout(async () => {
                 V({ err: ErrorCode.timeout })
@@ -765,7 +765,7 @@ export class BdtPeerClient extends EventEmitter {
             }, this.m_agentid, 0);
             this.logger.debug(`callApi upload_system_info BuckyResult result = ${info.value.result},msg = ${info.value.msg}`)
             if (info.err || info.value.result) {
-                this.logger.error(`${this.tags} uploadSystemInfo failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
+                this.logger.error(`${this.tags} upload_system_info failed,err =${info.err} ,info =${JSON.stringify(info.value)}`)
             }
             V({ err: info.value.result })
         })

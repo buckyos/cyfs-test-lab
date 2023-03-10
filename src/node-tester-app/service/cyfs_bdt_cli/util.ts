@@ -39,7 +39,7 @@ export class UtilTool {
                 return  await this.getIPInfo(command);
             };
             case "uploadLog":{
-                return await this.uploadLog(command);
+                return await this.upload_log(command);
             };
             case "uploadCacheFile":{
                 return await this.uploadCacheFile(command);
@@ -47,8 +47,8 @@ export class UtilTool {
             case "getCachePath":{
                 return await this.getCachePath(command);
             };
-            case "removeNdcData":{
-                return await this.removeNdcData(command);
+            case "remove_ndc_data":{
+                return await this.remove_ndc_data(command);
             }
             case "loadAgentCache":{
                 return await this.loadAgentCache(command);
@@ -63,7 +63,7 @@ export class UtilTool {
         this.m_logger.info(`#### not found utilRequest req_path `)
         return {err:ErrorCode.notFound}
     }
-    async removeNdcData(command:BdtLpcCommand):Promise<BdtLpcResp>{
+    async remove_ndc_data(command:BdtLpcCommand):Promise<BdtLpcResp>{
         let platform = this.m_interface.getPlatform();
         let cyfs_data = "/cyfs/data"
         if(platform == 'win32'){
@@ -307,7 +307,7 @@ export class UtilTool {
             bytes : Buffer.from("")
         }}
     }
-    async uploadLog(command:BdtLpcCommand):Promise<BdtLpcResp>{
+    async upload_log(command:BdtLpcCommand):Promise<BdtLpcResp>{
         this.m_logger.info(`command : ${JSON.stringify(command.json)}`)
         if(!command.json.log_name){
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)

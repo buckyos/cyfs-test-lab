@@ -20,7 +20,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     };
     await test_runner.init_testcase(testcase);
     let re = await agent_manager.allAgentCleanCache("all");
-    let remove = await agent_manager.removeNdcData();
+    let remove = await agent_manager.remove_ndc_data();
     await test_runner.wait_finished()
     
     

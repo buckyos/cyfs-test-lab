@@ -91,7 +91,7 @@ export class TestRunner{
     async runTask(task:Task):Promise<{err:number,log:string, record : {taskId:string,data:Array<any>}}>{
         // 判断机器状态是否正常，机器不正常
         return new Promise(async(V)=>{
-            let check = await this.agent_manager.checkBdtCliList(task.LN,task.RN,task.Users);
+            let check = await this.agent_manager.check_bdt_cli_list(task.LN,task.RN,task.Users);
             task.state = "run" ;
             if(!task.timeout){
                 task.timeout = 5*60*1000;
@@ -191,9 +191,9 @@ export class TestRunner{
         }
         return;
     }
-    async saveAgentPerfInfo() {
+    async save_agent_perf_info() {
         if(config.SaveAgentPerfInfo){
-           await this.agent_manager.saveAgentPerfInfo(this.Testcase!.testcase_id);
+           await this.agent_manager.save_agent_perf_info(this.Testcase!.testcase_id);
         }
         return;
     }
@@ -253,17 +253,17 @@ export class TestRunner{
     async saveRecord() {
         await this.saveTestcase();
         await this.saveTask();
-        await this.agent_manager.reportAgent(this.Testcase!.testcase_id,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
+        await this.agent_manager.report_agent(this.Testcase!.testcase_id,config.ReportAgent,config.ReportBDTPeer,config.ReportAgentCheckRun);
         await this.saveJson();
         await this.saveMysql();
-        await this.saveAgentPerfInfo();
+        await this.save_agent_perf_info();
         return;
     }
     // 退出测试用例
     async exitTestcase(err:number,log:string){
         this.end_time = Date.now();
         setTimeout(async()=>{
-            await this.agent_manager.stopService();
+            await this.agent_manager.stop_service();
             await this.m_interface.exit(err,log);
         },5*60*1000)
         if(this.failed==0){
@@ -273,7 +273,7 @@ export class TestRunner{
         }
         // 保存日志测试数据
         try {
-            await this.agent_manager.uploadLog(this.Testcase!.testcase_id)
+            await this.agent_manager.upload_log(this.Testcase!.testcase_id)
             await this.saveRecord();
         } catch (error) {
             this.logger.error(error);
@@ -287,7 +287,7 @@ export class TestRunner{
         for(let i in this.errorList){
             this.logger.info(`######## ErrorIndex ${i} taskid: ${this.errorList[i].taskId} , Error = ${this.errorList[i].error} `)
         }
-        await this.agent_manager.stopService();
+        await this.agent_manager.stop_service();
         await this.m_interface.exit(err,log);
     }
 

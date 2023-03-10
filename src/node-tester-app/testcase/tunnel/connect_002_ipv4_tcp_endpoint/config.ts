@@ -12,4 +12,4 @@ export const ReportAgentPerfWait = 5000;
 export const AgentConcurrencyIgnoreWAN = true;
 export const ReportAgentCheckRun = true; 
 export const ReportBDTPeer = true; //上报BDT客户端数据
-export const RUST_LOG = "debug"; //BDT 日志级别
+export const RUST_LOG = "trace"; //BDT 日志级别

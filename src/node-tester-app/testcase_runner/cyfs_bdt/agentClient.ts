@@ -89,7 +89,7 @@ export class AgentClient {
     async stopService(){
         await this.m_interface.stopService(this.m_agentid!)
     } 
-    async uploadLog(testcase_id:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
+    async upload_log(testcase_id:string):Promise<{err:ErrorCode,log?:string,url?:string}>{
         if(!this.is_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
@@ -164,19 +164,19 @@ export class AgentClient {
         }
         return run.length;
     }
-    async saveAgentPerfInfo(testcase_id:string):Promise<{err:ErrorCode,log?:string}>{
+    async save_agent_perf_info(testcase_id:string):Promise<{err:ErrorCode,log?:string}>{
         if(!this.is_run || !this.is_report_perf){
             this.logger.error(`${this.tags} not run or not report perf info`)
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
         let result = await this.BDTPerfReport(testcase_id,this.tags,this.logger.dir());
-        return {err : ErrorCode.succ,log:"saveAgentPerfInfo"}
+        return {err : ErrorCode.succ,log:"save_agent_perf_info"}
     }
-    async removeNdcData():Promise<{err:ErrorCode,remove_list?:string}>{
+    async remove_ndc_data():Promise<{err:ErrorCode,remove_list?:string}>{
         let result = await this.m_interface.callApi('utilRequest', Buffer.from(''), {
-            name : "removeNdcData",
+            name : "remove_ndc_data",
         }, this.m_agentid!, 10*1000);
-        this.logger.info(`${this.tags} removeNdcData = ${JSON.stringify(result)}`)
+        this.logger.info(`${this.tags} remove_ndc_data = ${JSON.stringify(result)}`)
         if(result.err ){  
             return {err:ErrorCode.exception}
         }
@@ -220,7 +220,7 @@ export class AgentClient {
         return {err:BDTERROR.success,log:`${this.tags} ${index} get success`,bdtClient}
     }
     
-    async reportAgent(testcase_id:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
+    async report_agent(testcase_id:string,report_agent:boolean,report_bdtClient:boolean,check_run:boolean = true) :Promise<{err:ErrorCode,log:string}>{
         if(!this.is_run && check_run){
             return {err:ErrorCode.exception,log:`${this.tags}  not run`}
         }
@@ -242,20 +242,20 @@ export class AgentClient {
         if(report_bdtClient){
             let list = [];
             for(let client of this.bdtPeerMap.values()){
-                list.push(client.getReportData(testcase_id));
+                list.push(client.get_report_data(testcase_id));
             }
             let run_action =await request("POST","api/bdt/client/addList",{
                 list
             },ContentType.json)
             this.logger.info(`api/bdt/client/addList resp:  ${JSON.stringify(run_action)}`)
         }
-        return {err:BDTERROR.success,log:`reportAgent to server success`}
+        return {err:BDTERROR.success,log:`report_agent to server success`}
     }
-    async uploadSystemInfo(testcase_id:string,interval: number) :Promise<{err:ErrorCode}>{
+    async upload_system_info(testcase_id:string,interval: number) :Promise<{err:ErrorCode}>{
         if(!this.is_report_perf){
             this.is_report_perf = true;
             for(let client of this.bdtPeerMap.values()){
-                let result =  await client.uploadSystemInfo(testcase_id,interval);
+                let result =  await client.upload_system_info(testcase_id,interval);
                 if(result.err == 0){
                     break;
                 }

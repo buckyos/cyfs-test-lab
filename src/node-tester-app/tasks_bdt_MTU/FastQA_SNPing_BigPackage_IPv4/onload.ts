@@ -40,7 +40,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     
     await agent_manager.all_agent_start_bdt_peer(config)
-    await agent_manager.uploadSystemInfo(testcase.testcase_id,2000);
+    await agent_manager.upload_system_info(testcase.testcase_id,2000);
     for(let i in LabAgent){
         let info = await test_runner.create_prev_task({
             LN : `${LabAgent[i].tags[0]}$1`,

@@ -1,7 +1,7 @@
 use async_std::{future, stream::StreamExt, sync::Arc, task};
-use cyfs_util::cache::{NamedDataCache, TrackerCache};
 use cyfs_base::*;
 use cyfs_bdt::*;
+use cyfs_util::cache::{NamedDataCache, TrackerCache};
 use std::{
     collections::{hash_map, HashMap},
     path::PathBuf,
@@ -45,12 +45,18 @@ impl BDTClientManager {
         peer_name: &str,
         stack: StackGuard,
         acceptor: StreamListenerGuard,
-        chunk_store : TrackedChunkStore,
+        chunk_store: TrackedChunkStore,
     ) -> BuckyResult<()> {
         match self.BDTClient_map.entry(peer_name.to_owned()) {
             hash_map::Entry::Vacant(v) => {
                 let client_path = self.temp_dir.clone().join(peer_name);
-                let info = BDTClient::new(stack, acceptor,chunk_store, client_path, self.service_path.clone());
+                let info = BDTClient::new(
+                    stack,
+                    acceptor,
+                    chunk_store,
+                    client_path,
+                    self.service_path.clone(),
+                );
                 v.insert(info);
                 Ok(())
             }
@@ -66,10 +72,7 @@ impl BDTClientManager {
     }
 
     pub fn get_client(&self, peer_name: &str) -> Option<BDTClient> {
-        return self
-            .BDTClient_map
-            .get(peer_name)
-            .map(|v| v.clone());
+        return self.BDTClient_map.get(peer_name).map(|v| v.clone());
     }
 
     pub async fn load_local_bdt_stack(
@@ -77,13 +80,13 @@ impl BDTClientManager {
         peer_name: &str,
         cache_path: &PathBuf,
         bdt_params: StackOpenParams,
-        chunk_store:TrackedChunkStore,
+        chunk_store: TrackedChunkStore,
     ) -> BuckyResult<(Device, PrivateKey, u64)> {
         let (device, key) = load_device(cache_path, peer_name).await;
         let mut params = StackOpenParams::new(device.desc().device_id().to_string().as_str());
         let begin_time = system_time_to_bucky_time(&std::time::SystemTime::now());
         let stack = Stack::open(device.clone(), key.clone(), params).await;
-        
+
         if let Err(e) = stack.clone() {
             log::error!("init bdt stack error: {}", e);
         }
@@ -108,17 +111,21 @@ impl BDTClientManager {
             }
             Ok(online_result) => match online_result {
                 Ok(state) => {
-                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                    let online_time =
+                        system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
                     if state == SnStatus::Online {
                         log::info!(
                             "device {} sn online success,time = {}",
                             device.desc().device_id(),
                             online_time
                         );
-                        
-                    }else{
-                        log::error!("device {} sn online fail state = {}", device.desc().device_id(),state);
-                        return  Err(BuckyError::new(BuckyErrorCode::Failed, "sn online fail")) ;
+                    } else {
+                        log::error!(
+                            "device {} sn online fail state = {}",
+                            device.desc().device_id(),
+                            state
+                        );
+                        return Err(BuckyError::new(BuckyErrorCode::Failed, "sn online fail"));
                     }
                     match self.BDTClient_map.entry(peer_name.to_owned()) {
                         hash_map::Entry::Vacant(v) => {
@@ -155,8 +162,8 @@ impl BDTClientManager {
         active_pn_list: &Vec<Device>,
         save_path: Option<PathBuf>,
         udp_sn_only: bool,
-        chunk_cache:&str 
-    ) -> BuckyResult<(StackGuard, u64)> {
+        chunk_cache: &str,
+    ) -> BuckyResult<(StackGuard, u64,Device)> {
         // 加载配置中的SN中的配置
 
         let private_key = PrivateKey::generate_rsa(1024).unwrap();
@@ -179,7 +186,7 @@ impl BDTClientManager {
         bdt_params.passive_pn = Some(passive_pn_list.clone());
         bdt_params.config.interface.udp.sn_only = udp_sn_only;
         bdt_params.tcp_port_mapping = None;
-        let chunk_store = match chunk_cache{
+        let chunk_store = match chunk_cache {
             "file" => {
                 let tracker = MemTracker::new();
                 TrackedChunkStore::new(
@@ -204,62 +211,89 @@ impl BDTClientManager {
         }
         let stack = stack.unwrap();
         // 设置上线SN 列表
-        let _ = stack.reset_sn_list(sn_list.clone());
+
         let acceptor = stack.stream_manager().listen(0).unwrap();
-        match future::timeout(
-            Duration::from_secs(20),
-            stack.sn_client().ping().wait_online(),
-        )
-        .await
-        {
-            Err(err) => {
-                log::error!(
-                    "sn online timeout {}.err= {}",
-                    device.desc().device_id(),
-                    err
-                );
-                Err(BuckyError::new(
-                    BuckyErrorCode::Timeout,
-                    "sn online timeout",
-                ))
-            }
-            Ok(online_result) => match online_result {
-                Ok(state) => {
-                    let online_time = system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
-                    if state == SnStatus::Online {
-                        log::info!(
-                            "device {} sn online success,time = {}",
-                            device.desc().device_id(),
-                            online_time
-                        );
-                        
-                    }else if sn_list.len() == 0  {
-                        log::error!("device {} not set sn list", device.desc().device_id());
-                    }else{
-                        log::error!("device {} sn online fail state = {}", device.desc().device_id(),state);
-                        return  Err(BuckyError::new(BuckyErrorCode::Failed, "sn online fail")) ;
-                    }
-                    match self.BDTClient_map.entry(peer_name.to_owned()) {
-                        hash_map::Entry::Vacant(v) => {
-                            let client_path = self.temp_dir.clone().join(peer_name);
-                            let info = BDTClient::new(
-                                stack.clone(),
-                                acceptor,
-                                chunk_store,
-                                client_path,
-                                self.service_path.clone(),
-                            );
-                            v.insert(info);
-                            Ok((stack, online_time))
-                        }
-                        hash_map::Entry::Occupied(_) => {
-                            let msg = format!("bdt stack already exists: {}", peer_name,);
-                            Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
-                        }
-                    }
+        let mut online_time = 0;
+        if sn_list.len() > 0 {
+            let _ = stack.reset_sn_list(sn_list.clone());
+            match future::timeout(
+                Duration::from_secs(20),
+                stack.sn_client().ping().wait_online(),
+            )
+            .await
+            {
+                Err(err) => {
+                    log::error!(
+                        "sn online timeout {}.err= {}",
+                        device.desc().device_id(),
+                        err
+                    );
+                    Err(BuckyError::new(
+                        BuckyErrorCode::Timeout,
+                        "sn online timeout",
+                    ))
                 }
-                Err(err) => Err(err),
-            },
+                Ok(online_result) => match online_result {
+                    Ok(state) => {
+                        let online_time =
+                            system_time_to_bucky_time(&std::time::SystemTime::now()) - begin_time;
+                        if state == SnStatus::Online {
+                            log::info!(
+                                "device {} sn online success,time = {}",
+                                device.desc().device_id(),
+                                online_time
+                            );
+                        } else if sn_list.len() == 0 {
+                            log::error!("device {} not set sn list", device.desc().device_id());
+                        } else {
+                            log::error!(
+                                "device {} sn online fail state = {}",
+                                device.desc().device_id(),
+                                state
+                            );
+                            return Err(BuckyError::new(BuckyErrorCode::Failed, "sn online fail"));
+                        }
+                        match self.BDTClient_map.entry(peer_name.to_owned()) {
+                            hash_map::Entry::Vacant(v) => {
+                                let client_path = self.temp_dir.clone().join(peer_name);
+                                let info = BDTClient::new(
+                                    stack.clone(),
+                                    acceptor,
+                                    chunk_store,
+                                    client_path,
+                                    self.service_path.clone(),
+                                );
+                                v.insert(info);
+                                Ok((stack, online_time,device))
+                            }
+                            hash_map::Entry::Occupied(_) => {
+                                let msg = format!("bdt stack already exists: {}", peer_name,);
+                                Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                            }
+                        }
+                    }
+                    Err(err) => Err(err),
+                },
+            }
+        } else {
+            match self.BDTClient_map.entry(peer_name.to_owned()) {
+                hash_map::Entry::Vacant(v) => {
+                    let client_path = self.temp_dir.clone().join(peer_name);
+                    let info = BDTClient::new(
+                        stack.clone(),
+                        acceptor,
+                        chunk_store,
+                        client_path,
+                        self.service_path.clone(),
+                    );
+                    v.insert(info);
+                    Ok((stack, online_time,device))
+                }
+                hash_map::Entry::Occupied(_) => {
+                    let msg = format!("bdt stack already exists: {}", peer_name,);
+                    Err(BuckyError::new(BuckyErrorCode::AlreadyExists, msg))
+                }
+            }
         }
     }
 
@@ -268,51 +302,49 @@ impl BDTClientManager {
         req: &CreateStackReq,
     ) -> BuckyResult<(CreateStackResp, Option<Device>)> {
         let peer_name = req.peer_name.as_str();
-
         log::info!(
             "create new bdt client name  = {} , list len = {}",
             peer_name,
             self.BDTClient_map.len()
         );
-        if (self.BDTClient_map.contains_key(&req.peer_name.clone())) {
+        // 检查peer 是否已经存在，不能重复创建
+        if(self.BDTClient_map.contains_key(peer_name)) {
             let msg = format!("bdt stack already exists: {}", &peer_name,);
             log::error!("{:?}", msg.clone());
             let client = self.BDTClient_map.get(&req.peer_name.clone()).unwrap();
-            let mut local = client.get_stack().sn_client().ping().default_local();
-            let online_sn_info = client.get_stack().sn_client().ping().sn_list().clone();
-            let mut endpoints = client.get_stack().net_manager().listener().endpoints();
-            let online_sn = device_list_to_string(&online_sn_info);
-            let ep_info = endpoint_tree_to_string(&endpoints);
-            let ep_resp = endpoint_tree_to_string(&endpoints);
+            let local = client.get_stack().sn_client().ping().default_local();
             return Ok((
                 CreateStackResp {
-                    result: 0,
+                    result: 1,
                     msg,
                     peer_name: peer_name.to_string(),
                     device_id: local.desc().device_id().to_string(),
                     online_time: 0,
-                    online_sn,
-                    ep_info,
-                    ep_resp,
+                    online_sn:Vec::new(),
+                    ep_info:Vec::new(),
+                    ep_resp:Vec::new(),
                 },
                 Some(local),
             ));
         }
+        // 根据 ip 生成endpoint
         let mut eps = Vec::new();
         for addr in req.addrs.iter() {
             let ep = { format!("{}:{}", addr, self.increase_bdt_port_index()) };
-            log::debug!("ep={} on create", &ep);
+            log::info!("{} bind  ep={}", peer_name,&ep);
             eps.push(ep);
         }
+        // 绑定Area
         let area = Area::from_str(req.area.as_str()).unwrap();
         //load sn pn
         let sn_list = load_desc_list(self.service_path.clone(), &req.sn).await;
         let passive_pn_list = load_desc_list(self.service_path.clone(), &req.active_pn).await;
         let active_pn_list = load_desc_list(self.service_path.clone(), &req.passive_pn).await;
-        let save_path = match req.local.clone() {
-            Some(s) => Some(self.temp_dir.join(s)),
-            None => None,
-        };
+
+        // let save_path = match req.local.clone() {
+        //     Some(s) => Some(self.temp_dir.join(s)),
+        //     None => None,
+        // };
 
         // (2)实例化BDT Stack
         let (resp, local) = match self
@@ -325,75 +357,94 @@ impl BDTClientManager {
                 &active_pn_list,
                 None,
                 req.sn_only.clone(),
-                req.chunk_cache.as_str()
+                req.chunk_cache.as_str(),
             )
             .await
         {
             //(3)解析BDT Stack 启动结果
-            Ok((stack, online_time)) => {
-                let mut local = stack.sn_client().ping().default_local();
-                let online_sn_id = match stack.sn_client().ping().default_client() {
-                    Some(ping_client) => ping_client.sn().object_id().to_string(),
-                    None => "None".to_string(),
-                };
-                let ep_info = local.mut_connect_info().mut_endpoints().clone();
-                // 设置返回Device 对象 ep 类型用于测试
-                let _ = match req.ep_type.clone() {
-                    Some(ep_type_str) => {
-                        let ep_type = ep_type_str.as_str();
-                        let _ = match ep_type {
-                            "WAN" => {
-                                local.mut_connect_info().mut_endpoints().clear();
-                                for ep in ep_info.clone() {
-                                    if ep.is_static_wan() {
-                                        local.mut_connect_info().mut_endpoints().push(ep);
+            Ok((stack, online_time,device)) => {
+                // 在上线上线的逻辑
+                if online_time > 0{
+                    let mut local = stack.sn_client().ping().default_local();
+                    let online_sn_id = match stack.sn_client().ping().default_client() {
+                        Some(ping_client) => ping_client.sn().object_id().to_string(),
+                        None => "None".to_string(),
+                    };
+                    let ep_info = local.mut_connect_info().mut_endpoints().clone();
+                    // 设置返回Device 对象 ep 类型用于测试
+                    let _ = match req.ep_type.clone() {
+                        Some(ep_type_str) => {
+                            let ep_type = ep_type_str.as_str();
+                            let _ = match ep_type {
+                                "WAN" => {
+                                    local.mut_connect_info().mut_endpoints().clear();
+                                    for ep in ep_info.clone() {
+                                        if ep.is_static_wan() {
+                                            local.mut_connect_info().mut_endpoints().push(ep);
+                                        }
                                     }
                                 }
-                            }
-                            "LAN" => {
-                                local.mut_connect_info().mut_endpoints().clear();
-                                for ep in ep_info.clone() {
-                                    if !ep.is_static_wan() {
-                                        local.mut_connect_info().mut_endpoints().push(ep);
+                                "LAN" => {
+                                    local.mut_connect_info().mut_endpoints().clear();
+                                    for ep in ep_info.clone() {
+                                        if !ep.is_static_wan() {
+                                            local.mut_connect_info().mut_endpoints().push(ep);
+                                        }
                                     }
                                 }
-                            }
-                            "Empty" => {
-                                local.mut_connect_info().mut_endpoints().clear();
-                            }
-                            "Default" => {
-                                local.mut_connect_info().mut_endpoints().clear();
-                                let ep = cyfs_base::Endpoint::default();
-                                local.mut_connect_info().mut_endpoints().push(ep);
-                            }
-                            _ => {
-                                log::info!("resp sn resp all endpoints")
-                            }
-                        };
-                    }
-                    None => {
-                        log::info!("resp sn resp all endpoints")
-                    }
-                };
-                let ep_resp = local.mut_connect_info().mut_endpoints();
+                                "Empty" => {
+                                    local.mut_connect_info().mut_endpoints().clear();
+                                }
+                                "Default" => {
+                                    local.mut_connect_info().mut_endpoints().clear();
+                                    let ep = cyfs_base::Endpoint::default();
+                                    local.mut_connect_info().mut_endpoints().push(ep);
+                                }
+                                _ => {
+                                    log::info!("resp sn resp all endpoints")
+                                }
+                            };
+                        }
+                        None => {
+                            log::info!("resp sn resp all endpoints")
+                        }
+                    };
+                    let ep_resp = local.mut_connect_info().mut_endpoints();
 
-                let mut online_sn = Vec::new();
-                online_sn.push(online_sn_id);
-                let ep_info = endpoint_list_to_string(&ep_info);
-                let ep_resp = endpoint_list_to_string(&ep_resp);
-                (
-                    CreateStackResp {
-                        result: 0,
-                        msg: "success".to_string(),
-                        peer_name: peer_name.to_string(),
-                        device_id: local.desc().device_id().to_string(),
-                        online_time,
-                        online_sn,
-                        ep_info,
-                        ep_resp,
-                    },
-                    Some(local),
-                )
+                    let mut online_sn = Vec::new();
+                    online_sn.push(online_sn_id);
+                    let ep_info = endpoint_list_to_string(&ep_info);
+                    let ep_resp = endpoint_list_to_string(&ep_resp);
+                    (
+                        CreateStackResp {
+                            result: 0,
+                            msg: "success".to_string(),
+                            peer_name: peer_name.to_string(),
+                            device_id: local.desc().device_id().to_string(),
+                            online_time,
+                            online_sn,
+                            ep_info,
+                            ep_resp,
+                        },
+                        Some(local),
+                    )
+                }else {
+                    // 没有在sn上线的逻辑
+                    (
+                        CreateStackResp {
+                            result: 0,
+                            msg: "success".to_string(),
+                            peer_name: peer_name.to_string(),
+                            device_id: device.desc().device_id().to_string(),
+                            online_time,
+                            online_sn:Vec::new(),
+                            ep_info:eps.clone(),
+                            ep_resp:eps.clone(),
+                        },
+                        Some(device),
+                    )    
+                }
+                
             }
             Err(err) => (
                 CreateStackResp {
