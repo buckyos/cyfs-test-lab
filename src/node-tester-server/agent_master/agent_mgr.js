@@ -756,7 +756,7 @@ class AgentMgr {
         this.m_serviceStorage.updateAllNetInfoOfAgent(agentInfo);
     }
 
-    handleAgentRemove(ctx) {
+    async handleAgentRemove(ctx) {
         const request = ctx.request.body;
         
         let resp = {
@@ -773,8 +773,8 @@ class AgentMgr {
             resp.err.msg = `not found agent(${request.agentid})`;
             return;
         }
-        this.m_serviceStorage.deleteAgent(request.agentid)
-        return;
+        return await this.m_serviceStorage.deleteAgent(request.agentid)
+
     }
     handleAgentList(ctx) {
         let resp = {
