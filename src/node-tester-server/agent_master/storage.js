@@ -617,7 +617,7 @@ class ServiceStorage {
     deleteAgent(agentid) {
         let stmt = this.m_stmts.get('deleteAgent');
         assert(stmt);
-        stmt.run(agentId);
+        stmt.run(agentid);
     }
     updateAgent(agent) {
         let stmt = this.m_stmts.get('updateAgent');
