@@ -614,10 +614,10 @@ class ServiceStorage {
         assert(stmt);
         stmt.run(agent.agentId, agent.desc, agent.accessible, JSON.stringify(agent.tags), agent.version, agent.platform);
     }
-    deleteAgent(agent) {
+    deleteAgent(agentid) {
         let stmt = this.m_stmts.get('deleteAgent');
         assert(stmt);
-        stmt.run(agent.agentId);
+        stmt.run(agentId);
     }
     updateAgent(agent) {
         let stmt = this.m_stmts.get('updateAgent');
