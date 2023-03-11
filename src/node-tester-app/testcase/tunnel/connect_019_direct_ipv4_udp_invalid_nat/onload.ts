@@ -65,26 +65,6 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     },
                     expect : {err:1004},    
                 }))
-                // 1.2 LN 关闭连接
-                info = await test_runner.prev_task_add_action(new BDTAction.CloseConnectAction({
-                    
-                    LN : `${LabAgent[i].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))
-                // 1.3 RN 关闭连接
-                info = await test_runner.prev_task_add_action(new BDTAction.CloseConnectAction({
-                    
-                    LN : `${LabAgent[j].tags[0]}$1`,
-                    config:{
-                        conn_tag: connect_1,
-                        timeout : 30*1000,
-                    },
-                    expect : {err:0},      
-                }))  
                 await test_runner.prev_task_run();
             }
         }

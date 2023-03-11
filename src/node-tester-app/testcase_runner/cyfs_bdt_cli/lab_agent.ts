@@ -191,7 +191,7 @@ export async function IPv6Agent() {
 
 export type BdtCliConfig={
     LW_type? :string,
-    eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean}}
+    eps:{ipv4?:{tcp?:boolean,udp?:boolean},ipv6?:{tcp?:boolean,udp?:boolean},is_wan?:boolean}
     bdt_port_range? : number,
     client_port? : number,
     PN? : {
@@ -213,6 +213,9 @@ export async function InitBdtCliData(agent:Agent,config: BdtCliConfig):Promise<P
     let epList = [];
     let LW_type = "L";
     if (agent.NAT == NAT_Type.Public) {
+        LW_type = "W";
+    }
+    if (config.eps.is_wan) {
         LW_type = "W";
     }
     if (config.LW_type) {

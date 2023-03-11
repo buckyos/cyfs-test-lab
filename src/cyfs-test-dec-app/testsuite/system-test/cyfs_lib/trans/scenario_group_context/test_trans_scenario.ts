@@ -2005,7 +2005,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                 },
             }
 
-            it.only("publish_file 设置access权限为full权限",async()=>{
+            it("publish_file 设置access权限为full权限",async()=>{
                 // 上传文件
                 let rep_path = `/publish_file/${RandomGenerator.string(10)}`;
                 let publish_file_action = new action_api.PublishFileAction({
@@ -2054,7 +2054,7 @@ describe("CYFS Stack Trans 模块测试", function () {
                 });
                 assert.ok(!get_object_zone.err,get_object_zone.val.toString());
             })
-            it.only("publish_file 设置access权限为default 权限",async()=>{
+            it("publish_file 设置access权限为default 权限",async()=>{
                 // 上传文件
                 let rep_path = `/publish_file/${RandomGenerator.string(10)}`;
                 let publish_file_action = new action_api.PublishFileAction({

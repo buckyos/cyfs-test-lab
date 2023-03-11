@@ -34,7 +34,8 @@ export async function TaskMain(_interface: TaskClientInterface) {
             eps:{
                 ipv4:{
                     udp:true,
-                }
+                },
+                is_wan : true
             },
             logType:"info",
             SN :[],
