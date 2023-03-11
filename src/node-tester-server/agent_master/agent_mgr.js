@@ -756,6 +756,26 @@ class AgentMgr {
         this.m_serviceStorage.updateAllNetInfoOfAgent(agentInfo);
     }
 
+    handleAgentRemove(ctx) {
+        const request = ctx.request.body;
+        
+        let resp = {
+            err: {
+                code: AgentMgr.ErrorCode.success,
+                msg: 'success',
+            },
+        };
+        ctx.body = resp;
+
+        let agentInfo = this.m_agents.get(request.agentid);
+        if (!agentInfo) {
+            resp.err.code = AgentMgr.ErrorCode.notFound;
+            resp.err.msg = `not found agent(${request.agentid})`;
+            return;
+        }
+        this.m_serviceStorage.deleteAgent(request.agentid)
+        return;
+    }
     handleAgentList(ctx) {
         let resp = {
             err: {
