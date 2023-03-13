@@ -21,7 +21,7 @@ CYFS_DATA_ENV_NIGHTLY=mysql://root:Bucky@0809@192.168.100.205:3306/cyfs_test_lab
 
 beta 环境：
 CYFS_NODE_ENV=beta
-CYFS_DATA_ENV_BETA=mysql://root:Bucky@0809@${mysql_host}/cyfs_test_lab
+CYFS_DATA_ENV_BETA=mysql://root:Bucky@0809@${mysql_host }/cyfs_test_lab
 
  * **/
 function set_db(){

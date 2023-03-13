@@ -33,10 +33,7 @@
     "@vue/cli-plugin-router": "^5.0.8",
     "@vue/cli-plugin-typescript": "^5.0.8",
     "@vue/cli-service": "^5.0.8",
-    "typescript": "~3.5.3",
+    "typescript": "^4.9.5",
     "vue-template-compiler": "^2.6.10"
-  },
-  "overrides": {
-    "glob-parent": "^6.0.2"
   }
 }
