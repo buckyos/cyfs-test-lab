@@ -1866,13 +1866,17 @@ class AgentMgr {
             resp.err.msg = `field(${missFieldName} not filled)`;
             return;
         }
-
+        
         let jobInfo = this.m_jobs.get(request.jobid);
+        let version = jobInfo.desc;
+         
+        
         if (!jobInfo) {
             resp.err.code = AgentMgr.ErrorCode.notFound;
             resp.err.msg = `not found job(${request.jobid})`;
             return;
         }
+        
 
         if (this._getJobStatus(jobInfo) === ServiceStorage.JobStatus.finish) {
             // 重启

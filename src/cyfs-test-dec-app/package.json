@@ -60,5 +60,8 @@
     "vite": "^4.1.1",
     "ws": "^8.8.1",
     "xmlhttprequest": "^1.8.0"
+  },
+  "overrides": {
+    "glob-parent": "^6.0.2"
   }
 }

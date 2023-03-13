@@ -95,6 +95,15 @@ model bdt_client {
   status      String? @db.VarChar(255)
 }
 
+model bdt_report {
+  id               Int     @id @default(autoincrement())
+  version          String? @db.VarChar(255)
+  zip_url          String? @db.VarChar(255)
+  testcase_url     String? @db.VarChar(255)
+  action_total_url String? @db.VarChar(255)
+  date             String? @db.VarChar(255)
+}
+
 model bdt_task {
   id            Int     @id @default(autoincrement())
   task_id       String  @db.VarChar(255)
@@ -155,6 +164,15 @@ model cyfs_peer_info {
   SDK_type   String? @db.VarChar(255)
   config     String? @db.Text
   createTime String? @db.VarChar(255)
+}
+
+model cyfs_report {
+  id           Int     @id @default(autoincrement())
+  version      String? @db.VarChar(255)
+  zip_url      String? @db.VarChar(255)
+  testcase_url String? @db.VarChar(255)
+  date         String? @db.VarChar(255)
+  coverage_url String? @db.VarChar(255)
 }
 
 model cyfs_task {
@@ -310,22 +328,4 @@ model users {
   avatar   String?   @db.VarChar(255)
   identity String?   @db.VarChar(255)
   date     DateTime? @db.DateTime(0)
-}
-
-model bdt_report {
-  id               Int     @id @default(autoincrement())
-  version          String? @db.VarChar(255)
-  zip_url          String? @db.VarChar(255)
-  testcase_url     String? @db.VarChar(255)
-  action_total_url String? @db.VarChar(255)
-  date             String? @db.VarChar(255)
-}
-
-model cyfs_report {
-  id           Int     @id @default(autoincrement())
-  version      String? @db.VarChar(255)
-  zip_url      String? @db.VarChar(255)
-  testcase_url String? @db.VarChar(255)
-  date         String? @db.VarChar(255)
-  coverage_url String? @db.VarChar(255)
 }
