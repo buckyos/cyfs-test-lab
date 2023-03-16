@@ -1,4 +1,4 @@
-import { ErrorCode } from "../base"
+import { ErrorCode } from "../common"
 import * as cyfs from "../cyfs"
 
 

@@ -1,5 +1,6 @@
 import { CyfsStackClient, UtilTool } from "../cyfs_driver"
-import { ErrorCode, Namespace, Logger, TaskClientInterface } from "../../base"
+import { ErrorCode, Logger } from "../../common"
+import {  Namespace, TaskClientInterface } from "../../cyfs-driver-base"
 import { EventEmitter } from 'events';
 import net from "net";
 import { ProxyUtilTool } from "./proxy_util_tool"

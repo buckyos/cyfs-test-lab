@@ -1,4 +1,6 @@
-import {ErrorCode, GlobalConfig,LocalMaster, DirHelper,Namespace,LocalStorageJson, TaskClient, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
+import {ErrorCode, DirHelper,LocalStorageJson,  BufferReader, Logger, BufferWriter, sleep, RandomGenerator} from '../../common';
+import {GlobalConfig,TaskClient,LocalMaster, Namespace, TaskClientInterface, ClientExitCode, } from '../../cyfs-driver-base';
+
 import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR, Task} from './type'
 import {BdtPeerClient} from "./bdt_client"

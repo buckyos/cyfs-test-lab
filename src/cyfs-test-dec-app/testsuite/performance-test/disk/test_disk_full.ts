@@ -2,12 +2,12 @@ import assert = require('assert');
 import * as cyfs from '../../../cyfs'
 
 import { StackManager, CyfsDriverType } from "../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../base';
+import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../common_action"
-import { HandlerRequestObject } from "../../../common_base"
-import { PrepareTransFileRequest } from '../../../common_action';
+import * as action_api from "../../../dec-app-action"
+import { HandlerRequestObject } from "../../../dec-app-base"
+import { PrepareTransFileRequest } from '../../../dec-app-action';
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -327,7 +327,7 @@ describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
                 arr.push(randomStr.charCodeAt(i));
             }
             let uint8Array: Uint8Array = new Uint8Array(arr);
-            chunkId = cyfs.ChunkId.calculate(uint8Array).unwrap();
+            chunkId = cyfs.ChunkId.calculate(uint8Array);
             console.info(`测试随机的chunkId 为：${chunkId}`)
 
 

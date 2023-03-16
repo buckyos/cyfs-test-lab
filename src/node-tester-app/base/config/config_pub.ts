@@ -14,7 +14,7 @@ export class GlobalConfig {
     };
 
     static fileUploadServer: {host: string, port: number} = {
-        host: '106.75.175.123',
+        host: 'bdttest.tinyappcloud.com',
         port: 11000
     };
 

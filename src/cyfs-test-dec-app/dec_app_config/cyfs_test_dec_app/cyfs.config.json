@@ -7,7 +7,7 @@
   "service": {
     "pack": [
       "base",
-      "common_base",
+      "dec-app-base",
       "cyfs",
       "config",
       "common_service",

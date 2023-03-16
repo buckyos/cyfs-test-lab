@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ErrorCode = void 0;
+var ErrorCode;
+(function (ErrorCode) {
+    ErrorCode[ErrorCode["succ"] = 0] = "succ";
+    ErrorCode[ErrorCode["fail"] = 1] = "fail";
+    ErrorCode[ErrorCode["noMoreData"] = 2] = "noMoreData";
+    ErrorCode[ErrorCode["unknownCommand"] = 3] = "unknownCommand";
+    ErrorCode[ErrorCode["netError"] = 4] = "netError";
+    ErrorCode[ErrorCode["exist"] = 5] = "exist";
+    ErrorCode[ErrorCode["notExist"] = 6] = "notExist";
+    ErrorCode[ErrorCode["exception"] = 7] = "exception";
+    ErrorCode[ErrorCode["notChange"] = 8] = "notChange";
+    ErrorCode[ErrorCode["invalidState"] = 9] = "invalidState";
+    ErrorCode[ErrorCode["timeout"] = 10] = "timeout";
+    ErrorCode[ErrorCode["md5NotMatch"] = 11] = "md5NotMatch";
+    ErrorCode[ErrorCode["notSupport"] = 12] = "notSupport";
+    ErrorCode[ErrorCode["invalidParam"] = 13] = "invalidParam";
+    ErrorCode[ErrorCode["notFound"] = 14] = "notFound";
+    ErrorCode[ErrorCode["waiting"] = 15] = "waiting";
+    ErrorCode[ErrorCode["break"] = 16] = "break";
+    ErrorCode[ErrorCode["connectProxyClientFailed"] = 1000] = "connectProxyClientFailed";
+    ErrorCode[ErrorCode["cyfsStackOnlineTimeout"] = 10001] = "cyfsStackOnlineTimeout";
+    ErrorCode[ErrorCode["cyfsStackOnlineFailed"] = 10002] = "cyfsStackOnlineFailed";
+})(ErrorCode = exports.ErrorCode || (exports.ErrorCode = {}));

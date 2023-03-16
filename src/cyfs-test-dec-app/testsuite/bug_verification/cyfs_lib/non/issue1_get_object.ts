@@ -2,12 +2,12 @@ import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
 
 import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../../base';
+import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../../common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../common_action"
-import { HandlerRequestObject } from "../../../../common_base"
-import { PrepareTransFileRequest } from '../../../../common_action';
+import * as action_api from "../../../../dec-app-action"
+import { HandlerRequestObject } from "../../../../dec-app-base"
+import { PrepareTransFileRequest } from '../../../../dec-app-action';
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")

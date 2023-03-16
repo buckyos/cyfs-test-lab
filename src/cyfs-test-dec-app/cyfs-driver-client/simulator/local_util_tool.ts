@@ -1,6 +1,6 @@
-import { ErrorCode, Logger, TaskClientInterface } from '../../base';
+import { ErrorCode, Logger } from '../../common';
 import { UtilTool } from "../cyfs_driver";
-import { string_to_Uint8Array } from "../../common_base"
+import { string_to_Uint8Array } from "../../dec-app-base"
 import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import path from 'path';

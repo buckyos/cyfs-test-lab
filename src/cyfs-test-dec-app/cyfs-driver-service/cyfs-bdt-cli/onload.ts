@@ -1,4 +1,5 @@
-import { ErrorCode, Namespace, BufferWriter, ServiceClientInterface, RandomGenerator, NetHelper, sleep } from '../../base';
+import { ErrorCode, BufferWriter, RandomGenerator, NetHelper, sleep } from '../../common';
+import {Namespace, ServiceClientInterface} from '../../cyfs-driver-base';
 import { BdtClientManager } from './client_manager';
 import { LpcClient } from "./lpc_client"
 

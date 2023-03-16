@@ -4,7 +4,7 @@ import {  CyfsStackDriverManager } from "./driver_manager"
 import { CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig } from "./cyfs_driver"
 import { DRIVER_TYPE, REAL_MACHINE_LIST, SIMULATOR_LIST ,REAL_MACHINE_OTHER_LIST} from "../config/cyfs_driver_config"
 import * as cyfs from "../cyfs"
-import { ErrorCode, Logger } from "../base";
+import { ErrorCode, Logger } from "../common";
 var date = require("silly-datetime");
 import path from "path";
 import * as fs from "fs-extra";

@@ -455,7 +455,7 @@ describe("TS meta_client 接口测试",function(){
                     console.info(`peopleid:${people.calculate_id()}`)
                     let file_content = stringToUint8Array(`9po8eBzh4Gb5ut48qEyQxipPUbjzBS329po8eBzh4Gb5ut48qEyQxipPUbjzBS32hsfjashfjahfj${Date.now()}`)
                     let hash = cyfs.HashValue.hash_data(file_content);
-                    let chunk = cyfs.ChunkId.calculate(file_content).unwrap();
+                    let chunk = cyfs.ChunkId.calculate(file_content);
                     let ChunkList = new cyfs.ChunkList([chunk])
                     let file =  cyfs.File.create(people.calculate_id(),cyfs.JSBI.BigInt(file_content.byteLength),hash,ChunkList)
                     cyfs.sign_and_push_named_object(people_pk, file, new cyfs.SignatureRefIndex(254)).unwrap()
@@ -918,7 +918,7 @@ describe("TS meta_client 接口测试",function(){
                     console.info(`peopleid:${people.calculate_id()}`)
                     let file_content = stringToUint8Array("9po8eBzh4Gb5ut48qEyQxipPUbjzBS329po8eBzh4Gb5ut48qEyQxipPUbjzBS32hsfjashfjahfj")
                     let hash = cyfs.HashValue.hash_data(file_content);
-                    let chunk = cyfs.ChunkId.calculate(file_content).unwrap();
+                    let chunk = cyfs.ChunkId.calculate(file_content);
                     let ChunkList = new cyfs.ChunkList([chunk])
                     let file =  cyfs.File.create(people.calculate_id(),cyfs.JSBI.BigInt(file_content.byteLength),hash,ChunkList)
                     cyfs.sign_and_push_named_object(people_pk, file, new cyfs.SignatureRefIndex(254)).unwrap()

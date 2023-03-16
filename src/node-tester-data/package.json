@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "init_db" : "node ./config/set_db.js",
+    "init_db": "node ./config/set_db.js",
     "init_client": "npx prisma db pull & npx prisma generate"
   },
   "devDependencies": {

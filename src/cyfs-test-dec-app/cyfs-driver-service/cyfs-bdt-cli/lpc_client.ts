@@ -1,4 +1,4 @@
-import { ErrorCode, Logger, BufferReader, sleep, RandomGenerator } from '../../base';
+import { ErrorCode, Logger, BufferReader, sleep, RandomGenerator } from '../../common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import { BdtLpc, BdtLpcCommand, BdtLpcResp } from './lpc';

@@ -1,5 +1,5 @@
 
-import { ErrorCode, Logger, BufferReader, sleep, RandomGenerator } from '../../base';
+import { ErrorCode, Logger, BufferReader, sleep, RandomGenerator } from '../../common';
 import { LpcClient } from "./lpc_client";
 import { BdtLpc, BdtLpcCommand, BdtLpcResp } from './lpc';
 import {Started,LpcActionApi} from "./action_api";

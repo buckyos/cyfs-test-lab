@@ -1,4 +1,4 @@
-import { ErrorCode, Logger } from '../../base';
+import { ErrorCode, Logger } from '../../common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 

@@ -1,8 +1,8 @@
 import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
-import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../base';
+import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../common_action"
+import * as action_api from "../../../../dec-app-action"
 import {request,ContentType} from "./request"
 
 //Interface

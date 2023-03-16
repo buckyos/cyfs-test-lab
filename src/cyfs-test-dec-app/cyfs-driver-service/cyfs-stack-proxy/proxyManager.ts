@@ -1,4 +1,5 @@
-import { ErrorCode, Namespace, Logger, ServiceClientInterface, RandomGenerator } from '../../base';
+import { Namespace,  ServiceClientInterface } from '../../cyfs-driver-base';
+import {ErrorCode,Logger,RandomGenerator} from "../../common"
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import { UtilTool } from "./util"

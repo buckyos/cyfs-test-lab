@@ -1,4 +1,4 @@
-import {TaskClientInterface} from '../../base';
+import {TaskClientInterface} from '../../cyfs-driver-base';
 export enum NAT_Type{
     Public = 0,
     FullCone = 1,

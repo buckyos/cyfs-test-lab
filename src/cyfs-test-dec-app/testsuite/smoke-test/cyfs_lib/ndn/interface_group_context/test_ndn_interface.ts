@@ -2,9 +2,9 @@ import assert = require('assert');
 import * as cyfs from '../../../../../cyfs'
 
 import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
-import { RandomGenerator, sleep } from '../../../../../base';
+import { RandomGenerator, sleep } from '../../../../../common';
 import path = require('path');
-import * as action_api from "../../../../../common_action"
+import * as action_api from "../../../../../dec-app-action"
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")

@@ -1,12 +1,12 @@
 import assert  from 'assert'; 
 import * as cyfs from '../../../../cyfs';
-import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../base";
+import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../common";
 import * as path from 'path';
 import { before } from 'mocha';
 let encoding = require('encoding');
 import * as addContext from "mochawesome/addContext"
 import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
-import * as action_api from "../../../../common_action"
+import * as action_api from "../../../../dec-app-action"
 
 
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register

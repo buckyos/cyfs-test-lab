@@ -1,6 +1,8 @@
 
 import { CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig } from "../cyfs_driver"
-import { ErrorCode, Logger, TaskClient, LocalStorageJson, DirHelper, RandomGenerator, GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode } from "../../base"
+import { ErrorCode, Logger, LocalStorageJson, DirHelper, RandomGenerator,} from "../../common"
+import { GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode ,TaskClient} from '../../cyfs-driver-base';
+
 import { CyfsStackProxyClient, } from "./proxy_client"
 import * as os from 'os';
 import { REAL_MACHINE_LIST ,REAL_MACHINE_OTHER_LIST} from "../../config/cyfs_driver_config"

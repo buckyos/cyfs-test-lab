@@ -1,6 +1,7 @@
-import { ErrorCode, Logger, TaskClientInterface } from '../../base';
+import { ErrorCode, Logger } from '../../common';
+import {TaskClientInterface} from "../../cyfs-driver-base"
 import { UtilTool } from "../cyfs_driver"
-import { string_to_Uint8Array } from "../../common_base"
+import { string_to_Uint8Array } from "../../dec-app-base"
 import * as cyfs from "../../cyfs"
 import * as crypto from 'crypto';
 const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';

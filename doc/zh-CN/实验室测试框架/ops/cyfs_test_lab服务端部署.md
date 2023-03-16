@@ -79,7 +79,7 @@ HTTP_FILE_SERVER 使用python + Flask + redis实现。
 + 安装python依赖包
 ```
 cd node_tester_server
-pip3 install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple/ 
+pip3 install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple/  //-i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com
 ```
 + 启动服务 gunicorn
 ```

@@ -1,6 +1,5 @@
-import * as cyfs from "../cyfs"
-import {RandomGenerator} from "../base"
-import {Uint8Array_to_string,string_to_Uint8Array} from "../common_action"
+import {RandomGenerator} from "../common"
+import {Uint8Array_to_string,string_to_Uint8Array} from "../dec-app-action"
 import * as fs from "fs-extra";
 
 async function main() {

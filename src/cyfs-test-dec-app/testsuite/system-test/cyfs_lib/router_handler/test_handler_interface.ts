@@ -1,10 +1,10 @@
 import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
-import * as myHandler from "../../../../common_base/tool/handler"
-import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../base';
+import * as myHandler from "../../../../dec-app-base/tool/handler"
+import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../common_action"
+import * as action_api from "../../../../dec-app-action"
 
 async function createTestObject(stack: cyfs.SharedCyfsStack, peerId: string, access?: cyfs.AccessString, req_path?: string) {
     // peerId stack_runtime.local_device_id().to_base_58()

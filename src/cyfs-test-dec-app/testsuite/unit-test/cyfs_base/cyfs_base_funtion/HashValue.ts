@@ -1,6 +1,6 @@
 import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
-import {  RandomGenerator, sleep ,Logger} from '../../../../base';
+import {  RandomGenerator, sleep ,Logger} from '../../../../common';
 import path = require('path');
 import * as fs from 'fs-extra';
 

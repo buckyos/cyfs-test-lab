@@ -2,7 +2,7 @@ import { CyfsStackClient, CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig }
 import { CyfsStackProxyDriver } from "./proxy/proxy_driver";
 import { CyfsStackSimulatorDriver } from "./simulator/simulator_driver";
 import { BDTDriver } from "./bdt_client/bdt_driver";
-import {  ErrorCode } from "../base";
+import {  ErrorCode } from "../common";
 import path from "path";
 import { DRIVER_TYPE,REAL_MACHINE_LIST,SIMULATOR_LIST } from "../config/cyfs_driver_config"
 var date = require("silly-datetime");

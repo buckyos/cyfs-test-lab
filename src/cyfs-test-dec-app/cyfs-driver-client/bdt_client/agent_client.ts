@@ -1,4 +1,5 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
+import {ErrorCode, Logger,  sleep, } from '../../common';
+import {TaskClientInterface, } from '../../cyfs-driver-base';
 import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR} from './type'
 import {request,ContentType} from "./request";

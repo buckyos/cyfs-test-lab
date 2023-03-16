@@ -1,6 +1,6 @@
 
 import { CyfsStackClient, CyfsStackDriver ,CyfsStackClientConfig} from "../cyfs_driver"
-import { ErrorCode, Namespace, Logger,DirHelper, sleep,  } from "../../base"
+import { ErrorCode, Logger,DirHelper, sleep,  } from "../../common"
 import { CyfsStackSimulatorClient } from "./simulator_client"
 import * as ChildProcess from 'child_process';
 import path from "path";

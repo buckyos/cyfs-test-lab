@@ -1,10 +1,10 @@
 import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
-import * as myHandler from "../../../../common_base/tool/handler"
-import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../base';
+import * as myHandler from "../../../../dec-app-base/tool/handler"
+import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../common_action"
+import * as action_api from "../../../../dec-app-action"
 
 
 // TO_FIX : filter 表达式测试用例长期未维护 

@@ -1,11 +1,11 @@
 import assert = require('assert');
 import * as cyfs from '../../../../../cyfs'
-import {create_people_random,create_device} from "../../../../../common_base"
-import * as myHandler from "../../../../../common_base/tool/handler"
+import {create_people_random,create_device} from "../../../../../dec-app-base"
+import * as myHandler from "../../../../../dec-app-base/tool/handler"
 import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../base';
+import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../common';
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../../common_action"
+import * as action_api from "../../../../../dec-app-action"
 
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")

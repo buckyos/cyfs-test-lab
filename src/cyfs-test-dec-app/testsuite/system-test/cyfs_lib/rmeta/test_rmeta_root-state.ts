@@ -1,6 +1,6 @@
 import assert from "assert";
 import * as cyfs from '../../../../cyfs';
-import { RandomGenerator } from "../../../../base";
+import { RandomGenerator } from "../../../../common";
 
 //初始化日志
 cyfs.clog.enable_file_log({

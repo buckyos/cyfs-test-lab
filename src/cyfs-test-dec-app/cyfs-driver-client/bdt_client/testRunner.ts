@@ -1,4 +1,6 @@
-import {ErrorCode, RandomGenerator, Logger, TaskClientInterface, ClientExitCode, sleep} from '../../base';
+import {ErrorCode, RandomGenerator, Logger, sleep} from '../../common';
+import { TaskClientInterface, ClientExitCode,} from "../../cyfs-driver-base"
+
 import {AgentManager} from './agentManager';
 import {BDTERROR,ActionType,Agent,Testcase,Task,Action,ActionAbstract} from './type';
 import {request,ContentType} from "./request";

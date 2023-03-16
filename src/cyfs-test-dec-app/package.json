@@ -1,11 +1,9 @@
 {
   "scripts": {
     "init": "node init.js",
-    "test": "cross-env ts-node",
     "prepare_protoc": "npm i -g ts-protoc-gen",
-    "protos_dec": "protoc.exe --proto_path=./common_base/codec/protos --js_out=import_style=commonjs,binary:./common_base/codec/protos --ts_out=./common_base/codec/protos ./common_base/codec/protos/dec_objects.proto",
-    "protos": "npm run prepare_protoc && npm run protos_dec",
-    "build": "webpack --config webpack.config.js"
+    "protos_dec": "protoc.exe --proto_path=./dec-app-base/codec/protos --js_out=import_style=commonjs,binary:./dec-app-base/codec/protos --ts_out=./dec-app-base/codec/protos ./dec-app-base/codec/protos/dec_objects.proto",
+    "protos": "npm run prepare_protoc && npm run protos_dec"
   },
   "devDependencies": {
     "@types/bs58": "^4.0.1",
@@ -22,8 +20,9 @@
     "ts-loader": "^8.4.0",
     "tslint": "^6.1.3",
     "typescript": "^4.1.2",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^4.10.0"
+    "webpack": "^5.76.1",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.6.0"
   },
   "dependencies": {
     "@types/express": "^4.17.13",
@@ -60,8 +59,5 @@
     "vite": "^4.1.1",
     "ws": "^8.8.1",
     "xmlhttprequest": "^1.8.0"
-  },
-  "overrides": {
-    "glob-parent": "^6.0.2"
   }
 }
