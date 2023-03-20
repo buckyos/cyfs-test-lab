@@ -66,12 +66,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 },
                 expect : {err:0},    
             }))
-            // LN -> RN 发送数据 1 字节
+            // LN -> RN 发送数据 100 字节
             info = await test_runner.prev_task_add_action(new BDTAction.SendStreamAction({
                 type : ActionType.send_stream,
                 LN : `${testAgent[i].tags[0]}$1`,
                 RN : `${testAgent[j].tags[0]}$1`,
-                fileSize : 1,
+                fileSize : 100,
                 config:{
                     conn_tag: connect_1,
                     timeout : 30*1000,

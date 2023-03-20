@@ -7,14 +7,14 @@ import * as SysProcess from 'process';
 import { Command } from "commander";
 import { DirHelper } from "../../base";
 var date = require("silly-datetime");
-async function addTask(name:string,serviceid:number,servicename:string,desc:string,version:string,url:string,mds:string,runrule:number,distribute:number){
+async function addTask(serviceid:number,servicename:string,desc:string,version:string,url:string,mds:string,runrule:number,distribute:number){
     console.info(`addTask serviceid =${serviceid} servicename = ${servicename} desc = ${desc} mds = ${mds}`)
     let postData = JSON.stringify(
         {
             "serviceid": Number(serviceid),
             "servicename":servicename,
             "version":version,
-            "desc":name+desc,
+            "desc":desc,
             "url":url,
             "md5":mds,
             "runrule":runrule,
@@ -56,7 +56,7 @@ async function uploadTasks(config:CaseConfig){
         let taskInfo = config.rust_bdt.list[caseIndex];
         if( taskInfo.taskid ===0 ||taskInfo.taskid === undefined){
             let infoFile = await uplaodTaskZip(taskInfo.desc)
-            let infoTask = await addTask(name,config.rust_bdt.serviceid,config.rust_bdt.servicename,taskInfo.desc,version!,infoFile.url,infoFile.md5,config.rust_bdt.runrule,config.rust_bdt.distribute)
+            let infoTask = await addTask(config.rust_bdt.serviceid,config.rust_bdt.servicename,taskInfo.desc,version!,infoFile.url,infoFile.md5,config.rust_bdt.runrule,config.rust_bdt.distribute)
             config.rust_bdt.list[caseIndex].taskid = infoTask.data.taskid
             console.info(`add task ${taskInfo.desc} : ${JSON.stringify(infoTask)}`)
         }else{

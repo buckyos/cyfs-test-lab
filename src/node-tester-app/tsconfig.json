@@ -10,7 +10,9 @@
   },
   "exclude": [
     "deploy",
-    "service/always_run_nft"
+    "service/always_run_nft",
+    "testcase/fast_qa",
+    "tasks_bdt_regress"
   ],
   "include": [
     "./**/*.ts",

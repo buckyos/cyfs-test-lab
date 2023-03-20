@@ -47,7 +47,7 @@ export async function TaskMain(_interface: TaskClientInterface) {
     // 每台机器运行一个bdt 客户端
     await agent_manager.all_agent_start_bdt_peer(config)
     //(4) 测试用例执行器添加测试任务
-    for(let [i,j] of testAgent){
+    for(let [i,j] of randShuffle(testAgent.length)){
         if(i != j && testAgent[i].NAT * testAgent[j].NAT==0 ){
             let info = await test_runner.create_prev_task({
                 LN : `${testAgent[i].tags[0]}$1`,
@@ -67,12 +67,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
                 },
                 expect : {err:0},    
             }))
-            // LN -> RN 发送数据 1 字节
+            // LN -> RN 发送数据 100 字节
             info = await test_runner.prev_task_add_action(new BDTAction.SendStreamAction({
                 type : ActionType.send_stream,
                 LN : `${testAgent[i].tags[0]}$1`,
                 RN : `${testAgent[j].tags[0]}$1`,
-                fileSize : 1,
+                fileSize : 100,
                 config:{
                     conn_tag: connect_1,
                     timeout : 30*1000,
