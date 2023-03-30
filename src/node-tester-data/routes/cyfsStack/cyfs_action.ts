@@ -11,7 +11,7 @@ router.get("/text", (req, res) => {
 //     async (req, res) => {
 //         console.info(`#receive CyfsAction add request,body = ${JSON.stringify(req.body)} `)
 //         const actionInfo:ActionModel = {
-//             testcaseId: req.body.testcaseId,
+//             testcase_id: req.body.testcase_id,
 //             task_id:req.body.task_id,
 //             action_id: req.body.action_id,
 //             parent_action:req.body.parent_action,

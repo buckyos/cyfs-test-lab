@@ -1,26 +1,26 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {TestRunner} from '../../taskTools/cyfs_bdt/testRunner';
-import {Testcase,Task,ActionType,Resp_ep_type} from "../../taskTools/cyfs_bdt/type"
-import {labAgent,BdtPeerClientConfig,LabSnList,IPv6Agent,randShuffle} from "../../taskTools/cyfs_bdt/labAgent"
-import  * as BDTAction from "../../taskTools/cyfs_bdt/bdtAction"
-import {AgentManager} from '../../taskTools/cyfs_bdt/agentManager'
+import {TestRunner} from '../../testcase_runner/cyfs_bdt/test_runner';
+import {Testcase,Task,ActionType,Resp_ep_type} from "../../testcase_runner/cyfs_bdt/type"
+import {LabAgent,BdtPeerClientConfig,LabSnList,IPv6Agent,randShuffle} from "../../testcase_runner/cyfs_bdt/labAgent"
+import  * as BDTAction from "../../testcase_runner/cyfs_bdt/bdtAction"
+import {AgentManager} from '../../testcase_runner/cyfs_bdt/agent_manager'
 
 export async function TaskMain(_interface: TaskClientInterface) {
     //(1) 连接测试节点
-    let agentManager = AgentManager.createInstance(_interface);
-    await agentManager.initAgentList(labAgent);
+    let agent_manager = AgentManager.create_instance(_interface);
+    await agent_manager.init_agent_list(LabAgent);
     //(2) 创建测试用例执行器 TestRunner
-    let testRunner = new TestRunner(_interface);
-    let testcaseName = "FastQA_Perf_UDP_500_500_Post"
+    let test_runner = new TestRunner(_interface);
+    let testcase_name = "FastQA_Perf_UDP_500_500_Post"
     let testcase:Testcase = {
-        TestcaseName: testcaseName,
-        testcaseId: `${testcaseName}_${Date.now()}`,
+        testcase_name: testcase_name,
+        testcase_id: `${testcase_name}_${Date.now()}`,
         remark: `测试性能:
         (1)LN -> RN 发起连接请求 Question 带有500 Bytes请求数据 
         (2)RN 监听连接请求，收到连接请求后，解析Question,confrim 时回复500 Bytes响应数据`,
         environment: "lab",
     };
-    await testRunner.initTestcase(testcase);
+    await test_runner.init_testcase(testcase);
     //(3) 创建BDT测试客户端
     let config : BdtPeerClientConfig = {
             eps:{
@@ -34,26 +34,26 @@ export async function TaskMain(_interface: TaskClientInterface) {
             resp_ep_type:Resp_ep_type.All, 
     }
     // 每台机器运行一个bdt 客户端
-    await agentManager.allAgentStartBdtPeer(config)
-    await agentManager.uploadSystemInfo(testcase.testcaseId,2000);
+    await agent_manager.all_agent_start_bdt_peer(config)
+    await agent_manager.upload_system_info(testcase.testcase_id,2000);
     //(4) 测试用例执行器添加测试任务
     
-    for(let [i,j] of randShuffle(labAgent.length)){
+    for(let [i,j] of randShuffle(LabAgent.length)){
         
-        if(i != j &&  labAgent[j].NAT + labAgent[i].NAT < 5  ){
-            let info = await testRunner.createPrevTask({
-                LN : `${labAgent[i].tags[0]}$1`,
-                RN : `${labAgent[j].tags[0]}$1`,
+        if(i != j &&  LabAgent[j].NAT + LabAgent[i].NAT < 5  ){
+            let info = await test_runner.create_prev_task({
+                LN : `${LabAgent[i].tags[0]}$1`,
+                RN : `${LabAgent[j].tags[0]}$1`,
                 timeout : 5*30*1000,
                 action : []
             })
             // 1.1 LN -> RN 连接10次
             for(let x=0;x<1;x++){
                 let connect_1 =  `${Date.now()}_${RandomGenerator.string(10)}`;
-                info = await testRunner.prevTaskAddAction(new BDTAction.FastQAPerfAction({
+                info = await test_runner.prev_task_add_action(new BDTAction.FastQAPerfAction({
                     type : ActionType.FasTQA,
-                    LN : `${labAgent[i].tags[0]}$1`,
-                    RN : `${labAgent[j].tags[0]}$1`,
+                    LN : `${LabAgent[i].tags[0]}$1`,
+                    RN : `${LabAgent[j].tags[0]}$1`,
                     config:{
                         conn_tag: connect_1,
                         firstQA_answer : 500,
@@ -64,12 +64,12 @@ export async function TaskMain(_interface: TaskClientInterface) {
                     expect : {err:0},    
                 }))
             }           
-            await testRunner.prevTaskRun();
+            await test_runner.prev_task_run();
         }
         
     }
 
-    await testRunner.waitFinished()
+    await test_runner.wait_finished()
     
     
 }

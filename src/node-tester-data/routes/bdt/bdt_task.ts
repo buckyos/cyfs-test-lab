@@ -11,7 +11,7 @@ router.post('/add',
     async (req, res) => {
         console.info(`#receive bdt_task add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TaskModel = {
-            testcaseId : req.body.testcaseId,
+            testcase_id : req.body.testcase_id,
             task_id: req.body.task_id,
             LN:req.body.LN,
             RN:req.body.RN,
@@ -35,7 +35,7 @@ router.post('/addList',
         let taskInfoList = req.body.taskInfoList;
         for(let i in taskInfoList){
             const testcaseInfo:TaskModel = {
-                testcaseId : taskInfoList[i].testcaseId,
+                testcase_id : taskInfoList[i].testcase_id,
                 task_id: taskInfoList[i].task_id,
                 LN:taskInfoList[i].LN,
                 RN:taskInfoList[i].RN,
@@ -61,7 +61,7 @@ router.post('/add_action',
     async (req, res) => {
         console.info(`#receive bdt_task add request,body = ${JSON.stringify(req.body)} `)
         const testcaseInfo:TaskModel = {
-              testcaseId : req.body.testcaseId,
+              testcase_id : req.body.testcase_id,
               task_id: req.body.task_id,
               LN:req.body.LN,
               RN:req.body.RN,

@@ -1,1 +1,0 @@
-npx mocha .\tasks\unittest_stack_simulator\testcase_runner.ts  --reporter mochawesome --require ts-node/register

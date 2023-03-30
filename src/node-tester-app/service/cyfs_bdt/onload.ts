@@ -4,7 +4,7 @@ import {BdtPeer} from "./peer"
 
 export async function ServiceMain(_interface: ServiceClientInterface) {
     _interface.getLogger().info(`=========start service namespace=${JSON.stringify(_interface.getNamespace())}`);
-    let manager: BdtPeerManager = BdtPeerManager.createInstance(_interface);
+    let manager: BdtPeerManager = BdtPeerManager.create_instance(_interface);
     await manager.init();
     _interface.registerApi('startPeerClient', async (from: Namespace, bytes: Buffer, param: any): Promise<any> => {
         _interface.getLogger().debug(`remote call startPeer`);

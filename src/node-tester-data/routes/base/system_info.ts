@@ -24,7 +24,7 @@ router.post('/report',
             ssd_disk_avail: req.body.ssd_disk_avail, 
             hdd_disk_total: req.body.hdd_disk_total, 
             hdd_disk_avail:req.body.hdd_disk_avail, 
-            testcaseId:req.body.testcaseId,
+            testcase_id:req.body.testcase_id,
         }
         let model = new SystemInfo();
         let result =await  model.report(save);
@@ -34,11 +34,11 @@ router.post('/report',
 router.post('/getRecords',
     async (req, res) => {
         console.info(`#receive system_info getRecords request,body = ${JSON.stringify(req.body)} `)
-        if( !req.body.name || !req.body.testcaseId){
+        if( !req.body.name || !req.body.testcase_id){
             return res.json({err:true,log:"缺少输入参数"})
         }
         let model = new SystemInfo();
-        let result =await  model.getRecords(req.body.name,req.body.testcaseId);
+        let result =await  model.getRecords(req.body.name,req.body.testcase_id);
         return res.json(result)
     }
 );

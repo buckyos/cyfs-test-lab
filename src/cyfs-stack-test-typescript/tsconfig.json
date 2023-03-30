@@ -18,6 +18,6 @@
   "include": [
     "./common/**/*.ts",
     "./config/**/*.ts",
-    "./TestSuite/unittest_stack_interface/**/*.ts","mocha_run_ci.ts",
+    "./TestSuite/**/*.ts","mocha_run_ci.ts",
   ]
 }

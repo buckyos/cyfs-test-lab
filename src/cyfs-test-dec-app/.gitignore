@@ -1,3 +1,5 @@
 /blog/
+/dist/
+/my-web/
 !/cyfs
 /*mochawesome-report*

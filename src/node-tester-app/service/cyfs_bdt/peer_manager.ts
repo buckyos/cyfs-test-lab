@@ -46,7 +46,7 @@ export class BdtPeerManager extends EventEmitter{
         return this;
     }
 
-    static createInstance(_interface:ServiceClientInterface): BdtPeerManager {
+    static create_instance(_interface:ServiceClientInterface): BdtPeerManager {
         if (!BdtPeerManager.manager) {
             BdtPeerManager.manager = new BdtPeerManager(_interface);
         }

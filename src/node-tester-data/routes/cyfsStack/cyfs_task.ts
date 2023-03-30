@@ -11,7 +11,7 @@ router.get("/text", (req, res) => {
 //     async (req, res) => {
 //         console.info(`#receive cyfs_task add request,body = ${JSON.stringify(req.body)} `)
 //         const taskInfo:TaskModel = {
-//             testcaseId : req.body.testcaseId,
+//             testcase_id : req.body.testcase_id,
 //             task_id: req.body.task_id,
 //             LN:req.body.LN,
 //             RN:req.body.RN,

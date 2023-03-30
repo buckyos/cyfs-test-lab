@@ -1,6 +1,7 @@
-import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
+import {ErrorCode, BufferReader, Logger, BufferWriter, sleep, RandomGenerator} from '../../common';
 import {Agent,Peer,BDTERROR} from './type'
-import {string_to_Uint8Array} from "../../common_base"
+import {GlobalConfig,TaskClient,LocalMaster, Namespace, TaskClientInterface} from '../../cyfs-driver-base';
+import {string_to_Uint8Array} from "../../dec-app-base"
 import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import {UtilTool} from "../cyfs_driver"
@@ -128,7 +129,7 @@ export class UtilClient implements UtilTool {
         this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
         let chunk_data =  string_to_Uint8Array(this.string(chunk_size));
         this.logger.info(chunk_data);
-        let chunk_id =  cyfs.ChunkId.calculate(chunk_data).unwrap();
+        let chunk_id =  cyfs.ChunkId.calculate(chunk_data);
         return {err:ErrorCode.succ,chunk_data,chunk_id}
     }
 

@@ -1,9 +1,9 @@
-import {run} from "../common_base/tool/desc"
+import {run} from "../dec-app-base/tool/desc"
 
 
 async function main() {
     let test = await run({
-        save : "E:\\git_test\\cyfs-test-lab\\src\\cyfs-test-dec-app\\cyfs-driver-client\\proxy\\desc\\zone4\\"
+        save : "E:\\bucky_file\\OneDrive - buckyos\\测试项目\\CYFS\\OOD数据备份测试\\linux"
     })
 }
 main()

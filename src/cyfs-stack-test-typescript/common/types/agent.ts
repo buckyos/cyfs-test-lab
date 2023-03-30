@@ -272,14 +272,14 @@ export class Agent extends NamedObject<AgentDescContent, AgentBodyContent>{
 
     get_Info(){
         return {
-            owner : this.desc().owner()?.unwrap().to_base_58(),
+            owner : this.desc().owner()?.to_base_58(),
             device_id:this.desc().content().device_id.to_base_58(),
-            name : this.body().unwrap().content().name.value(),
-            network: this.body().unwrap().content().network.value(),
-            status: this.body().unwrap().content().stauts.value(),
-            last_time: this.body().unwrap().content().last_time.value(),
-            system:this.body().unwrap().content().system.value(),
-            ood_runtime:this.body().unwrap().content().ood_runtime.value(),
+            name : this.body()?.content().name.value(),
+            network: this.body()?.content().network.value(),
+            status: this.body()?.content().stauts.value(),
+            last_time: this.body()?.content().last_time.value(),
+            system:this.body()?.content().system.value(),
+            ood_runtime:this.body()?.content().ood_runtime.value(),
         }
     }
 

@@ -1,0 +1,34 @@
+{
+    "stack_type": "simulator",
+    "type": "dir",
+    "casename": "Ts编解码:正常输入dir包含的所有参数",
+    "file": "dir_test_main.desc",
+    "owner": "5r4MYfFdhhaG9ENa8ED1AYRttuGNYDBiaZdpBHGsW7oC",
+    "attributes": 0,
+    "obj_list": {
+        "info": {
+            "chunck_id": null,
+            "obj_list": {
+                "parent_chunk": null,
+                "object_map": {
+                    "buckystring": "weqweqweqeddsdqwqwrrqfqfwrqwrqfwqwqwfdewwqd",
+                    "innernodeinfo": {
+                        "attributes": 0,
+                        "node": {
+                            "object_id": "C:/cyfs/tmp/test_nameObject_ts/file/file_test_main.desc",
+                            "chunk_id": null,
+                            "index": null
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "body": {
+        "chunck_id": null,
+        "obj_list": {
+            "fileid": "C:/cyfs/tmp/test_nameObject_ts/file/file_test_main.desc",
+            "buckybuffer": "C:/cyfs/tmp/test_nameObject_ts/file/file_test_main.desc" 
+        }
+    }
+}

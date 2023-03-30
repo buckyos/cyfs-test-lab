@@ -5,12 +5,12 @@ import * as ChildProcess from 'child_process';
 import * as compressing from 'compressing';
 import * as os from 'os';
 import { Reporter, DirHelper, getFileMd5, HttpDownloader, VersionHelper, FileUploader, GlobalConfig, RandomGenerator, sleep, ErrorCode, LocalStorageJson, Logger } from '../base';
-const Base = require('../base/common/base.js');
+const Base = require('../common/base.js');
 const Http = require('http');
 
 const SUPPORT_QQ_ADDRESS = '（官方QQ群:777179682）';
 const TIME_WHEN_NET_ERROR: number = 30 * 1000;
-const TIME_WHEN_SUCC: number = 2 * 60 * 1000;
+const TIME_WHEN_SUCC: number = 60 * 1000;
 
 type RunnerOptions = {
     account: AccountStatusProfile;
@@ -48,6 +48,7 @@ class Runner {
     async start() {
         await this.m_deviceIdSave.load();
         while(true) {
+            
             this._updateImpl();
             await new Promise((resolve) => {
                 setTimeout(() => {
@@ -136,22 +137,19 @@ class Runner {
     }
 
     private async _update(): Promise<number> {
+        Base.blog.info(`check service update after sleep 120s`);
         do {
             let deviceID = await this.getDeviceID();
             let resp: any = await this.m_reporter!.report('update', { sessionID: this.m_account.sessionID, deviceID, platform: os.platform() });
             if (!resp || !resp.content) {
                 break;
             }
-
-            Base.blog.debug(`updated command: ${JSON.stringify(resp)}`);
-
             let profit = resp.content.profit;
             if (resp.content.errorMsg && resp.content.errorMsg.length > 0) {
                 this.m_account.errorMsg = resp.content.errorMsg;
                 await this.m_account.save();
                 break;
             }
-
             this.m_account.errorMsg = '正常' + SUPPORT_QQ_ADDRESS;
             this.m_account.totalProfit = profit.totalProfit;
             this.m_account.todayProfit = profit.todayProfit;
@@ -159,14 +157,13 @@ class Runner {
             this.m_account.walletType = 1;
             await this.m_account.save();
         } while(false);
-
         let deviceID = await this.getDeviceID();
         let resp = await this._httpGet({
             agentid: deviceID,
             curversion: this.m_version,
         });
 
-        Base.blog.debug(`updated command: ${JSON.stringify(resp)} agentid=${deviceID}, currversion=${this.m_version}`);
+        Base.blog.info(`updated command: ${JSON.stringify(resp)} agentid=${deviceID}, currversion=${this.m_version}`);
         if (resp.err) {
             return TIME_WHEN_NET_ERROR;
         }
@@ -181,6 +178,7 @@ class Runner {
 
         //正在下载
         if (this.m_downinfo.has(resp.content!.md5)) {
+            Base.blog.info(`${resp.content!.md5} is downloading`)
             return TIME_WHEN_SUCC;
         }
         this.m_downinfo.add(resp.content!.md5);
@@ -195,7 +193,6 @@ class Runner {
 
         if (fs.existsSync(filePath)) {
             await this._stopLocalMaster();
-
             let result  = await compressing.zip.uncompress(filePath, DirHelper.getRootDir());
             Base.blog.info(`compressing zip result = ${result}`);
             process.exit(0);
@@ -270,9 +267,9 @@ async function main() {
     DirHelper.emptyDir(logFolder);
     DirHelper.emptyDir(DirHelper.getTempDir());
     setInterval(() => {
-        DirHelper.clearExpired(DirHelper.getTempDir(), 7);
-        DirHelper.clearExpired(DirHelper.getLogDir(), 7);
-        DirHelper.clearExpired(DirHelper.getUpdateDir(), 60);
+        DirHelper.clearExpired(DirHelper.getTempDir(), 3);
+        DirHelper.clearExpired(DirHelper.getLogDir(), 3);
+        DirHelper.clearExpired(DirHelper.getUpdateDir(), 7);
     }, 24 * 3600 * 1000);
 
     Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);

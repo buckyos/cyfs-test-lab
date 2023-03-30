@@ -1,4 +1,6 @@
-import {ErrorCode, GlobalConfig,LocalMaster, DirHelper,Namespace,LocalStorageJson, TaskClient, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator} from '../../base';
+import {ErrorCode, DirHelper,LocalStorageJson,  BufferReader, Logger, BufferWriter, sleep, RandomGenerator} from '../../common';
+import {GlobalConfig,TaskClient,LocalMaster, Namespace, TaskClientInterface, ClientExitCode, } from '../../cyfs-driver-base';
+
 import {BdtPeerClientConfig,InitBdtPeerClientData} from "./labAgent"
 import {Agent,Peer,BDTERROR, Task} from './type'
 import {BdtPeerClient} from "./bdt_client"
@@ -8,7 +10,7 @@ import path from "path";
 import * as os from 'os';
 import fs from "fs-extra";
 
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 export class AgentManager implements CyfsStackDriver {
     static manager?: AgentManager;
     public agent_map : Map<string,AgentClient>

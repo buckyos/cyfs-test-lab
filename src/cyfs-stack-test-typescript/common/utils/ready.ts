@@ -1,5 +1,5 @@
 import assert from 'assert';
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from '../../cyfs_node';
 import { RandomGenerator } from "./generator";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -13,15 +13,19 @@ export enum chunk_mode {
 
 export class Ready {
 
-    static async addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, fileSize: number, chunkSize: number, level: cyfs.NDNAPILevel, mount?: string, control_object?: string, access?: cyfs.AccessString, putdata?: string,mixchar?:boolean) {
+    static async addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack, fileSize: number, chunkSize: number, level: cyfs.NDNAPILevel, mount?: string, control_object?: string, access?: cyfs.AccessString, putdata?: string, mixchar?: boolean) {
 
-        let saveDir = path.join(__dirname, "../../test_cache_file")
-        let inner_path =`/file-${RandomGenerator.string(3,3,3)}.txt`
+        let saveDir = path.join(__dirname, "../../test_cache_file/file-NDN")
+        let inner_path = `/file-${RandomGenerator.string(3, 3, 3)}.txt`
         //if (mixchar){inner_path=`/file-${RandomGenerator.string(3,3,3)}.txt`}
         let local_path = path.join(saveDir, inner_path)
         console.log(`_______>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${local_path}`)
-        if (fs.pathExistsSync(local_path)) {
-            await fs.removeSync(local_path)
+        { //清理缓存文件
+            let num = fs.readdirSync(saveDir).length
+            if (num > 5) {
+                await fs.removeSync(saveDir)
+                console.log("-----------------------> 缓存文件已超过最大数，执行清理操作成功！")
+            }
         }
         //(2)生成测试文件
         //RandomGenerator.createRandomDir(__dirname,1,1,fileSize)
@@ -35,7 +39,7 @@ export class Ready {
                 level: level,
                 flags: 0,
                 dec_id: source.dec_id,
-                target: target.local_device_id().object_id,
+                //target: target.local_device_id().object_id,
                 req_path: undefined,
                 referer_object: []
             },
@@ -48,7 +52,7 @@ export class Ready {
         console.info(`addDir publish_file 耗时：${publish_file_time}`)
         assert(!pubres.err, `publish_file 失败`)
 
-        let pub_resp: cyfs.TransAddFileResponse = pubres.unwrap();
+        let pub_resp = pubres.unwrap();
 
         let object_map_id = cyfs.ObjectMapId.try_from_object_id(pub_resp.file_id).unwrap()
 
@@ -78,7 +82,7 @@ export class Ready {
         //根据objectmap 获取dirid
         let dresp
         {
-            let req: cyfs.UtilBuildDirFromObjectMapOutputRequest = {
+            let req = {
                 common: {
                     flags: 0
                 },
@@ -166,7 +170,7 @@ export class Ready {
                     let resp = await source.ndn_service().get_data(rep2);
                     assert(!resp.err, `get_data 传输chunk失败`)
                     let respc = resp.unwrap()
-                    type = new cyfs.NONObjectInfo(respc.object_id, respc.data)
+                    type = new cyfs.NONObjectInfo(respc.object_id, respc.data!)
                 case "file":
                     type = respf.object;
                     break
@@ -192,7 +196,7 @@ export class Ready {
         let inner_node: cyfs.InnerNodeInfo = new cyfs.InnerNodeInfo(new cyfs.Attributes(0), new cyfs.InnerNode({ object_id: cyfs.ObjectId.default() }))
         let object_map: cyfs.BuckyHashMap<cyfs.BuckyString, cyfs.InnerNodeInfo> = new cyfs.BuckyHashMap()
         object_map.set(new cyfs.BuckyString("path1"), inner_node)
-        let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(new cyfs.NoneOption(), object_map)
+        let list: cyfs.NDNObjectList = new cyfs.NDNObjectList(undefined, object_map)
         let attr: cyfs.Attributes = new cyfs.Attributes(0xFFFF)
 
         // // 第一种情况，构造一个普通大小的dir，内容可以放到desc里面
@@ -204,7 +208,6 @@ export class Ready {
         // let hash: cyfs.HashValue = cyfs.HashValue.hash_data(buf)
         let data = cyfs.to_vec(list).unwrap()
         let descchunk_id: cyfs.ChunkId = cyfs.ChunkId.calculate(data).unwrap()
-        console.log(`-----------> descchunk_id = ${descchunk_id}`)
         let obj_map: cyfs.BuckyHashMap<cyfs.ObjectId, cyfs.BuckyBuffer> = new cyfs.BuckyHashMap()
         obj_map.set(descchunk_id.calculate_id(), new cyfs.BuckyBuffer(data))
         // 第二种情况，对于超大内容的dir，使用chunk模式，但和上面一种模式是对等的
@@ -212,7 +215,7 @@ export class Ready {
         let dir_id: cyfs.ObjectId = cyfs.ObjectId.default()
         let req_path: string = ""
         let rdata: Uint8Array
-        let body_chunk_id: cyfs.ChunkId | undefined = undefined
+        let chunk_id: cyfs.ChunkId | undefined = undefined
 
         if (mode == chunk_mode.descChunk) {
             // chunk可以放到body缓存里面，方便查找；也可以独立存放，但dir在解析时候需要再次查找该chunk可能会耗时久，以及查找失败等情况
@@ -221,14 +224,16 @@ export class Ready {
             dir_id = dir.desc().calculate_id()
             console.log(`-----------> dir_id = ${dir_id}`)
             rdata = dir.to_vec().unwrap()
+            chunk_id = descchunk_id
+            console.log(`-----------> descchunk_id = ${chunk_id}`)
         }
         else if (mode == chunk_mode.bodyChunk) {
             // body也可以放到chunk,由于只是影响body的结构，所以不影响dir的object_id
             let body_data = cyfs.to_vec(obj_map).unwrap()
-            body_chunk_id = cyfs.ChunkId.calculate(body_data).unwrap()
-            console.log(`-----------> bodychunk_id = ${body_chunk_id}`)
+            chunk_id = cyfs.ChunkId.calculate(body_data).unwrap()
+            console.log(`-----------> bodychunk_id = ${chunk_id}`)
             // 注意： body_chunk_id需要额外的保存到本地，put_data(body_chunk, body_chunk_id)
-            let builder3 = new cyfs.DirBuilder(new cyfs.DirDescContent(attr, new cyfs.NDNObjectInfo({ chunk_id: descchunk_id })), new cyfs.DirBodyContent({ chunk_id: body_chunk_id }));
+            let builder3 = new cyfs.DirBuilder(new cyfs.DirDescContent(attr, new cyfs.NDNObjectInfo({ chunk_id: descchunk_id })), new cyfs.DirBodyContent({ chunk_id: chunk_id }));
             dir = builder3.no_create_time().update_time(cyfs.JSBI.BigInt(0)).build(cyfs.Dir)
             dir_id = dir.desc().calculate_id()
             rdata = dir.to_vec().unwrap()
@@ -240,16 +245,16 @@ export class Ready {
                     // 来源DEC
                     dec_id: undefined,
                     // api级别
-                    level: cyfs.NDNAPILevel.Router,
+                    level: cyfs.NDNAPILevel.NDC,
                     // targrt设备参数目前无用
                     target: source.local_device_id().object_id,
                     // 需要处理数据的关联对象，主要用以chunk/file等
                     referer_object: [],
                     flags: 1,
                 },
-                object_id: body_chunk_id.calculate_id(),
-                length: body_data.length,
-                data: body_data,
+                object_id: chunk_id.calculate_id(),
+                length: rdata.length,
+                data: rdata,
             }
             //调用接口
             let resp = await source.ndn_service().put_data(rep);
@@ -282,7 +287,7 @@ export class Ready {
                 access: access
             })
         }
-        return {descchunk_id, body_chunk_id, dir_id, req_path }
+        return { chunk_id, dir_id, req_path }
         //assert(dir_id2.to_base_58() == dir_id3.to_base_58(), "生成的dirid不相等")
 
     }

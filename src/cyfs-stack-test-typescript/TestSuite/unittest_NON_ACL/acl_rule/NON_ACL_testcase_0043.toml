@@ -1,2 +1,0 @@
-in2 = { action = "in-put", group = { location = "outer" }, access = "accept" }
-out2 = { action = "out-put",res = "/*/*/qa_test/*" , group = { location = "outer"}, access = "reject" }

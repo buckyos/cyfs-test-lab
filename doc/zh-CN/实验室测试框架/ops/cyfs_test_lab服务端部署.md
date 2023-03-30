@@ -28,6 +28,7 @@ sudo apt install libssl-dev libncurses5-dev libsqlite3-dev libreadline-dev libtk
 sudo wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
 sudo tar xzf Python-3.7.9.tgz
 cd Python-3.7.9/
+./configure prefix=/opt/python3.7
 sudo ./configure --enable-optimizations
 make
 make install
@@ -78,7 +79,7 @@ HTTP_FILE_SERVER 使用python + Flask + redis实现。
 + 安装python依赖包
 ```
 cd node_tester_server
-pip install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple/ 
+pip3 install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple/ 
 ```
 + 启动服务 gunicorn
 ```

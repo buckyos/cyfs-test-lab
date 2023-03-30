@@ -1,7 +1,7 @@
 import { PrismaClient,cyfs_action} from '@prisma/client'
 import {prisma} from "../"
 export interface ActionModel{
-  testcaseId: string | null
+  testcase_id: string | null
   task_id?: string | null
   action_id?: string | null
   parent_action?: string | null
@@ -28,7 +28,7 @@ export class CyfsAction{
     // async add(action:ActionModel){
     //     try {
     //       const result = await this.prisma.cyfs_action.create({data:{
-    //         testcaseId: action.testcaseId,
+    //         testcase_id: action.testcase_id,
     //         task_id:action.task_id,
     //         action_id: action.action_id,
     //         parent_action:action.parent_action,

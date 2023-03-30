@@ -1,5 +1,5 @@
 import assert = require('assert');
-import * as cyfs from "../../cyfs_node/cyfs_node"
+import * as cyfs from "../../cyfs_node"
 import { RandomGenerator } from "./generator";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -14,7 +14,7 @@ export class NDNTestManager {
         console.info('开始chunk 传输流程 get_data')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const file_resp_0 = (await source.trans().publish_file({
             common: {
@@ -38,7 +38,7 @@ export class NDNTestManager {
             return { err: true, log: "transChunks publish_file failed" }
         }
         //assert(!file_resp_0.err,`transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -72,7 +72,7 @@ export class NDNTestManager {
         }
         //assert(!put_file_object.err,`source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list.inner_chunk_list()
 
         let chunkRecvPromise: Array<any> = []
 
@@ -81,7 +81,7 @@ export class NDNTestManager {
                 setTimeout(() => {
                     v({ err: true, log: `ndn_service get_data timeout` })
                 }, timeout)
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let chunkId = chunkIdList![i];
                 console.info(`开始传输chunk：${chunkId}`)
                 let req: cyfs.NDNGetDataOutputRequest = {
                     common: {
@@ -122,7 +122,7 @@ export class NDNTestManager {
         console.info('开始chunk 传输流程 put_data')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -142,7 +142,7 @@ export class NDNTestManager {
             return { err: true, log: "transChunks publish_file failed" }
         }
         //assert(!file_resp_0.err,`transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -173,12 +173,12 @@ export class NDNTestManager {
         }
         //assert(!put_file_object.err,`source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list!.inner_chunk_list();
 
         let chunkRecvPromise: Array<any> = []
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let  chunkId = chunkIdList![i]
                 let req: cyfs.NDNPutDataOutputRequest = {
                     common: {
                         // api级别
@@ -191,7 +191,7 @@ export class NDNTestManager {
                     // 目前只支持ChunkId/FileId/DirId
                     object_id: chunkId.calculate_id(),
                     length: 1024,
-                    data: buff,
+                    data: buf,
 
                 }
                 let begin = Date.now();
@@ -219,7 +219,7 @@ export class NDNTestManager {
         console.info('开始chunk 串行传输流程')
         console.info(`source:${source.local_device_id()} target:${target.local_device_id()}`)
         //1. source 设备 publish_file 将文件存放到本地NDC 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -236,7 +236,7 @@ export class NDNTestManager {
             dirs: []
         }));
         assert(!file_resp_0.err, `transChunks publish_file failed`)
-        const file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        const file_resp = file_resp_0.unwrap();
         //assert(file_resp.file_id)
 
         //2. source 设备 使用NOC 获取文件对象
@@ -261,13 +261,13 @@ export class NDNTestManager {
         }))
         assert(!put_file_object.err, `source put file object to target failed`)
         const [file, buf] = new cyfs.FileDecoder().raw_decode(file_obj_resp.object.object_raw).unwrap();
-        let chunkIdList = file.body_expect().content().try_to_proto().unwrap().chunk_list!.chunk_id_list
+        let chunkIdList = file.body_expect().content().chunk_list!.inner_chunk_list()!;
 
         let chunkRecvPromise: Array<any> = []
         let download = []
         for (let i = 0; i < chunkIdList!.length && i < chunkNumber; i++) {
             chunkRecvPromise.push(new Promise(async (v) => {
-                let [chunkId, buff] = new cyfs.ChunkIdDecoder().raw_decode(chunkIdList![i]).unwrap();
+                let chunkId = chunkIdList[i]
                 let req: cyfs.NDNGetDataOutputRequest = {
                     common: {
                         // api级别
@@ -301,7 +301,7 @@ export class NDNTestManager {
         let totalTime = 0;
         let begin = Date.now();
 
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         const file_resp_0 = (await source.trans().publish_file({
             common: {
                 level: level,
@@ -319,7 +319,7 @@ export class NDNTestManager {
         if (file_resp_0.err) {
             return { err: file_resp_0.err, log: `transFile trans publish_file failed` }
         }
-        let file_resp: cyfs.TransAddFileResponse = file_resp_0.unwrap();
+        let file_resp = file_resp_0.unwrap();
 
         //assert(file_resp.file_id)
 
@@ -386,7 +386,7 @@ export class NDNTestManager {
                     task_id: create_task.task_id
                 })).unwrap();
                 console.log("get task status", resp.state);
-                if (resp.state === cyfs.TransTaskState.Finished) {
+                if (resp.state.state === cyfs.TransTaskState.Finished) {
                     time = Date.now() - start;
                     totalTime = Date.now() - begin;
                     console.log("download task finished")
@@ -414,7 +414,7 @@ export class NDNTestManager {
             return { err: true, log: `下载文件夹不存在` }
         }
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const dir_resp_0 = (await source.trans().publish_file({
             common: {
@@ -436,7 +436,7 @@ export class NDNTestManager {
         if (dir_resp_0.err) {
             return { err: true, log: `transDir publish_file failed ` }
         }
-        let dir_resp: cyfs.TransAddFileResponse = dir_resp_0.unwrap();
+        let dir_resp = dir_resp_0.unwrap();
         //2. source 设备 使用NOC 获取dir对象
         const dir_obj_resp_0 = (await source.non_service().get_object({
             common: {
@@ -565,7 +565,7 @@ export class NDNTestManager {
         }
 
         //1. source 设备 publish_file 将dir存放到本地NDC  
-        let owner = source.local_device().desc().owner()!.unwrap()
+        let owner = source.local_device().desc().owner()!
         let publish_file_time = Date.now();
         const publish_file_resp = (await source.trans().publish_file({
             common: {
@@ -586,7 +586,7 @@ export class NDNTestManager {
             return { err: true, log: `transDir publish_file failed ` }
         }
         publish_file_time = Date.now() - publish_file_time;
-        let publish_file_info: cyfs.TransAddFileResponse = publish_file_resp.unwrap();
+        let publish_file_info = publish_file_resp.unwrap();
         console.info(`#transDir publish_file 耗时：${publish_file_time},file_id = ${publish_file_info.file_id}`)
 
         //2. source 设备 使用NOC 获取dir map
@@ -868,8 +868,8 @@ export class NDNTestManager {
                     })).unwrap();
 
                     console.log(`${taskList[i].object_id} get task status`, resp.state);
-                    taskList[i].state = resp.state
-                    if (resp.state === cyfs.TransTaskState.Finished) {
+                    taskList[i].state = resp.state.state
+                    if (resp.state.state === cyfs.TransTaskState.Finished) {
                         console.log("download task finished")
                         break;
                     }

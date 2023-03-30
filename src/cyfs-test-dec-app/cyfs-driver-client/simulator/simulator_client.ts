@@ -1,6 +1,6 @@
 
 import { CyfsStackClient, CyfsStackClientConfig } from "../cyfs_driver"
-import { ErrorCode, Logger } from "../../base"
+import { ErrorCode, Logger } from "../../common"
 import { LocalUtilTool } from "./local_util_tool"
 import path from "path";
 import * as cyfs from "../../cyfs";

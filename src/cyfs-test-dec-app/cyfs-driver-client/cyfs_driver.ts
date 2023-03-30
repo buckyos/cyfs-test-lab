@@ -1,4 +1,4 @@
-import { ErrorCode } from "../base"
+import { ErrorCode } from "../common"
 import * as cyfs from "../cyfs"
 
 
@@ -9,10 +9,13 @@ export type CyfsStackClientConfig = {
     bdt_port: number,
     http_port: number,
     ws_port: number,
+    ood_daemon_status_port?:number,
 }
 
 export enum CyfsDriverType {
     real_machine = "Real_machine",
+    runtime = "Runtime",
+    gateway = "Gateway",
     simulator = "Simulator",
     bdt_client = "Bdt_client",
     other = "Other"
@@ -28,7 +31,7 @@ export abstract class CyfsStackDriver {
     // 重启
     abstract restart(): Promise<{ err: ErrorCode, log: string }>;
     // 加载配置文件初始化CYFS Stack 测试客户端
-    abstract load_config(type?: string): Promise<{ err: ErrorCode, log: string }>;
+    abstract load_config(agent_list : Array<CyfsStackClientConfig>): Promise<{ err: ErrorCode, log: string }>;
     // 添加一个 CYFS Stack 测试客户端
     abstract add_client(name: string, client: CyfsStackClient): { err: ErrorCode, log: string }
     // 获取一个CYFS Stack 测试客户端

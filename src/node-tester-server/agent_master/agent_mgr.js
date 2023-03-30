@@ -756,6 +756,26 @@ class AgentMgr {
         this.m_serviceStorage.updateAllNetInfoOfAgent(agentInfo);
     }
 
+    async handleAgentRemove(ctx) {
+        const request = ctx.request.body;
+        
+        let resp = {
+            err: {
+                code: AgentMgr.ErrorCode.success,
+                msg: 'success',
+            },
+        };
+        ctx.body = resp;
+
+        let agentInfo = this.m_agents.get(request.agentid);
+        if (!agentInfo) {
+            resp.err.code = AgentMgr.ErrorCode.notFound;
+            resp.err.msg = `not found agent(${request.agentid})`;
+            return;
+        }
+        return await this.m_serviceStorage.deleteAgent(request.agentid)
+
+    }
     handleAgentList(ctx) {
         let resp = {
             err: {
@@ -1846,13 +1866,17 @@ class AgentMgr {
             resp.err.msg = `field(${missFieldName} not filled)`;
             return;
         }
-
+        
         let jobInfo = this.m_jobs.get(request.jobid);
+        let version = jobInfo.desc;
+         
+        
         if (!jobInfo) {
             resp.err.code = AgentMgr.ErrorCode.notFound;
             resp.err.msg = `not found job(${request.jobid})`;
             return;
         }
+        
 
         if (this._getJobStatus(jobInfo) === ServiceStorage.JobStatus.finish) {
             // 重启

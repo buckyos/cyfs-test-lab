@@ -193,11 +193,11 @@ export class MyTestIdDecoder extends NamedObjectIdDecoder<DeviceDescContent, Dev
 // 提供创建方法和其他自定义方法
 export class MyTest extends NamedObject<MyTestDescContent, MyTestBodyContent>{
     static create(
-        owner: cyfs.Option<ObjectId> ,
-        author: cyfs.Option<ObjectId> ,
-        prev: cyfs.Option<ObjectId> ,
-        ref_objects: cyfs.Option<cyfs.Vec<cyfs.ObjectLink>>,
-        single_key : cyfs.Option<cyfs.PublicKey>,
+        owner: ObjectId|undefined ,
+        author: ObjectId|undefined ,
+        prev: ObjectId|undefined ,
+        ref_objects: cyfs.Vec<cyfs.ObjectLink>|undefined,
+        single_key : cyfs.PublicKey|undefined,
         name: string,
         network: string,
 
@@ -216,9 +216,9 @@ export class MyTest extends NamedObject<MyTestDescContent, MyTestBodyContent>{
 
     get_Info(){
         return {
-            owner : this.desc().owner()?.unwrap().to_base_58(),
-            name : this.body().unwrap().content().name.value(),
-            network: this.body().unwrap().content().network.value(),
+            owner : this.desc().owner()?.to_base_58(),
+            name : this.body()?.content().name.value(),
+            network: this.body()?.content().network.value(),
         }
     }
 

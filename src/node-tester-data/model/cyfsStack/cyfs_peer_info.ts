@@ -2,7 +2,7 @@
 import { PrismaClient,cyfs_peer_info} from '@prisma/client'
 import {prisma} from "../"
 export type PeerInfoModel = {
-    testcaseId: string | null
+    testcase_id: string | null
     name?: string | null
     device_id?: string | null
     type?: string | null
@@ -20,7 +20,7 @@ export class PeerInfo{
     //   console.info(`add testcase ${JSON.stringify(peerInfo)}`)
     //     try {
     //       const result = await this.prisma.cyfs_peer_info.create({data:{
-    //         testcaseId: peerInfo.testcaseId,
+    //         testcase_id: peerInfo.testcase_id,
     //         name: peerInfo.name,
     //         device_id: peerInfo.device_id,
     //         type: peerInfo.type,

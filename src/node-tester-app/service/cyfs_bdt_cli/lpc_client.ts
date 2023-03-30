@@ -75,12 +75,12 @@ export class LpcClient extends EventEmitter {
         this.m_latestCommandTimeFromBdt = Date.now();
         this.m_keepliveTimer = setInterval(() => {
             this._ping();
-            if (!this.m_bDestory && (Date.now() - this.m_latestCommandTimeFromBdt > 5 * 60 * 1000)) {
+            if (!this.m_bDestory && (Date.now() - this.m_latestCommandTimeFromBdt > 30 * 1000)) {
                 clearInterval(this.m_keepliveTimer!);
                 this.m_keepliveTimer = undefined;
                 this.emit('unlive');
             }
-        }, 10000);
+        }, 5000);
 
         return ErrorCode.succ;
     }

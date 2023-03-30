@@ -6,6 +6,7 @@ export type CyfsStackClientConfig = {
     bdt_port: number,
     http_port: number,
     ws_port: number,
+    ood_daemon_status_port?:number,
 }
 
 // export enum CyfsDriverType {
@@ -27,6 +28,7 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
         bdt_port: 30001,
         http_port: 31000,
         ws_port: 31001,
+        ood_daemon_status_port : 32001,
     },
     {
         peer_name: "zone1_device1",
@@ -51,6 +53,7 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
         bdt_port:30004,
         http_port:31006,
         ws_port: 31007,
+        ood_daemon_status_port : 32002,
     },
     {
         peer_name: "zone2_ood",
@@ -59,6 +62,7 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
         bdt_port: 30010,
         http_port: 31010,
         ws_port: 31011,
+        ood_daemon_status_port : 32003,
     },
     {
         peer_name: "zone2_device1",
@@ -86,12 +90,13 @@ export const REAL_MACHINE_LIST: Array<CyfsStackClientConfig> = [
 
  export const REAL_MACHINE_OTHER_LIST: Array<CyfsStackClientConfig> =[
     {
-        peer_name: "zone4_ood",
-        zone_tag: "zone4",
+        peer_name: "zone1_ood",
+        zone_tag: "zone1",
         stack_type: "ood",
-        bdt_port: 40010,
-        http_port: 41010,
-        ws_port: 41011
+        bdt_port: 30001,
+        http_port: 31000,
+        ws_port: 31001,
+        ood_daemon_status_port : 32001,
     }
 ]
     

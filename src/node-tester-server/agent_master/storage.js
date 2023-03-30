@@ -40,6 +40,10 @@ const _stmtSqls = [
         sql: 'INSERT INTO agents (agentId,desc,accessible,tags,version,platform) VALUES (?1,?2,?3,?4,?5,?6)',
     },
     {
+        name: 'deleteAgent',
+        sql: 'DELETE FROM agents WHERE (agentId=?1)',
+    },
+    {
         name: 'updateAgent',
         sql: 'UPDATE agents SET desc=?2,accessible=?3,tags=?4,version=?5,platform=?6 WHERE agentId=?1',
     },
@@ -610,7 +614,13 @@ class ServiceStorage {
         assert(stmt);
         stmt.run(agent.agentId, agent.desc, agent.accessible, JSON.stringify(agent.tags), agent.version, agent.platform);
     }
-
+    async deleteAgent(agentId) {
+        let stmt = this.m_stmts.get('deleteAgent');
+        assert(stmt);
+        return new Promise(resolve => {
+            stmt.run(agentId, (err) => resolve(err));
+        });
+    }
     updateAgent(agent) {
         let stmt = this.m_stmts.get('updateAgent');
         assert(stmt);

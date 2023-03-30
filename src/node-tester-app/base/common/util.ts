@@ -12,7 +12,7 @@ import * as os from 'os';
 import * as net from 'net';
 
 export class DirHelper {
-    public static m_rootDir: string = '';
+    public static m_rootDir: string = path.join(__dirname,"../../");
     static  getTaskDir(task: string): string {
         let dir: string = path.join(DirHelper.getRootDir(), 'tasks');
         DirHelper.ensureDirExist(dir);
@@ -20,7 +20,32 @@ export class DirHelper {
         DirHelper.ensureDirExist(dir);
         return dir;
     }
-
+    static  getTaskRoot(): string {
+        let dir: string = path.join(DirHelper.getRootDir(), 'tasks');
+        DirHelper.ensureDirExist(dir);
+        DirHelper.ensureDirExist(dir);
+        return dir;
+    }
+    static  getTestcaseDir(testcase: string): string {
+        let dir: string = path.join(DirHelper.getRootDir(), 'testcase');
+        DirHelper.ensureDirExist(dir);
+        dir = path.join(dir, testcase);
+        DirHelper.ensureDirExist(dir);
+        return dir;
+    }
+    static getTestcaseRoot(): string {
+        let dir: string = path.join(DirHelper.getRootDir(), 'testcase');
+        DirHelper.ensureDirExist(dir);
+        DirHelper.ensureDirExist(dir);
+        return dir;
+    }
+    static  getTestcaseRunner(testcase: string): string {
+        let dir: string = path.join(DirHelper.getRootDir(), 'testcase_runner');
+        DirHelper.ensureDirExist(dir);
+        dir = path.join(dir, testcase);
+        DirHelper.ensureDirExist(dir);
+        return dir;
+    }
     static getServiceDir(service: string): string {
         let dir: string = path.join(DirHelper.getRootDir(), 'service');
         DirHelper.ensureDirExist(dir);

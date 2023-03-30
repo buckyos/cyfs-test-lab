@@ -385,7 +385,8 @@ export class LocalMaster extends ClientStack {
         let clients = this._findClientByNamespace(namespace);
         if (clients.length) {
             //正在运行，先不打断更新
-            return;
+            // return;
+            this.logger.error(`update service unsafe client number = ${clients.length}`);
         }
 
         let servicesInfo = this.m_localServiceStorage.getServiceInfo(service.serviceid);

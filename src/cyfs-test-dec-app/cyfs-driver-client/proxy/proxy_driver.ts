@@ -1,15 +1,18 @@
 
-import { CyfsStackDriver,CyfsDriverType } from "../cyfs_driver"
-import { ErrorCode, Logger, TaskClient, LocalStorageJson, DirHelper, RandomGenerator, GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode } from "../../base"
-import { CyfsStackProxyClient } from "./proxy_client"
+import { CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig } from "../cyfs_driver"
+import { ErrorCode, Logger, LocalStorageJson, DirHelper, RandomGenerator,} from "../../common"
+import { GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode ,TaskClient} from '../../cyfs-driver-base';
+
+import { CyfsStackProxyClient, } from "./proxy_client"
 import * as os from 'os';
 import { REAL_MACHINE_LIST ,REAL_MACHINE_OTHER_LIST} from "../../config/cyfs_driver_config"
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 import path from "path";
 import fs from "fs-extra";
 
 export class CyfsStackProxyDriver implements CyfsStackDriver {
     private stack_client_map: Map<string, CyfsStackProxyClient>
+    
     private logger: Logger;
     private local_storage: LocalStorageJson;
     private namespace: Namespace;
@@ -19,6 +22,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
     private interface?: TaskClientInterface;
     constructor(log_path: string) {
         this.stack_client_map = new Map();
+        
         DirHelper.setRootDir(path.join(__dirname, "../../"));
         Base.BX_SetLogLevel(Base.BLOG_LEVEL_INFO);
         Base.BX_EnableFileLog(log_path, `cyfs_stack_real_driver_${Date.now()}`, '.log');
@@ -116,16 +120,11 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         await this.stop();
         return await this.start();
     }
-    async load_config(type?:string): Promise<{ err: ErrorCode, log: string }>{
-        if(type == CyfsDriverType.other){
-            return await this.load_config_other();
-        }else{
-            return await this.load_config_real_machine();
-        }
-    }
-    async load_config_real_machine(): Promise<{ err: ErrorCode, log: string }> {
+    async load_config(agent_list : Array<CyfsStackClientConfig>): Promise<{ err: ErrorCode, log: string }>{
         let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
-        for (let agent of REAL_MACHINE_LIST) {
+        this.logger.info(`proxy_driver will load agent len = ${agent_list.length} `);
+        for (let agent of agent_list) {
+            this.logger.info(`proxy_driver will load agent ${agent.peer_name}`);
             run_list.push(new Promise(async (V) => {
                 let client = new CyfsStackProxyClient({
                     _interface: this.interface!,
@@ -134,36 +133,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
                     timeout: 60 * 1000,
                     ws_port: agent.ws_port,
                     http_port: agent.http_port,
-                })
-                let result = await client.init();
-                if (result.err) {
-                    this.logger.error(`${agent.peer_name} start CyfsStackProxyClient fialed `)
-                    V(result);
-                }
-                this.stack_client_map.set(agent.peer_name, client)
-                V(result);
-            }))
-
-        }
-        for (let run of run_list) {
-            let result = await run;
-            if (result.err) {
-                return result;
-            }
-        }
-        return { err: ErrorCode.succ, log: "init success" }
-    }
-    async load_config_other(): Promise<{ err: ErrorCode, log: string }> {
-        let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
-        for (let agent of REAL_MACHINE_OTHER_LIST) {
-            run_list.push(new Promise(async (V) => {
-                let client = new CyfsStackProxyClient({
-                    _interface: this.interface!,
-                    peer_name: agent.peer_name,
-                    stack_type: agent.stack_type,
-                    timeout: 60 * 1000,
-                    ws_port: agent.ws_port,
-                    http_port: agent.http_port,
+                    ood_daemon_status_port : agent.ood_daemon_status_port,
                 })
                 let result = await client.init();
                 if (result.err) {
@@ -184,9 +154,6 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         }
         return { err: ErrorCode.succ, log: "init success" }
     }
-
-
-
     get_client(name: string): { err: ErrorCode, log: string, client?: CyfsStackProxyClient } {
         if (!this.stack_client_map.has(name)) {
             return { err: ErrorCode.notFound, log: "cleint not found" }

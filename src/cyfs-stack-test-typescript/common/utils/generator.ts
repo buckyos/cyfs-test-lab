@@ -22,7 +22,7 @@ export function getKey(keyType: string, size: number = 1024) {
 export function create_people(): [cyfs.People, cyfs.PrivateKey] {
     let pk = getKey("rsa")
     let public_key = pk.public();
-    let people = cyfs.People.create(cyfs.None, [], public_key, cyfs.Some(cyfs.Area.from_str("00:00:0000:00").unwrap()));
+    let people = cyfs.People.create(undefined, [], public_key, cyfs.Area.from_str("00:00:0000:00").unwrap());
     return [people, pk];
 }
 
@@ -68,7 +68,7 @@ export function create_device(owner: cyfs.ObjectId, pk: cyfs.PrivateKey, categor
     console.info(`unique_str: ${unique_id} -> ${unique.as_slice().toHex()}`);
 
     const device = cyfs.Device.create(
-        cyfs.Some(owner),
+        owner,
         unique,
         [],
         [],
@@ -360,24 +360,6 @@ export class RandomGenerator {
         }
         return result;
     }
-    // static ESC_char = "\0\b\t\n\v\f\r\"\'\\\x34\xfa\123\253\u3445\uabcd";
-    // static ESC_char_random(length: number = 1){
-
-    //     let len = RandomGenerator.ESC_char.length;
-    //     let result = '';
-    //     for (let i = 0; i < length; i++) {
-    //         result += RandomGenerator.ESC_char.charAt(RandomGenerator.integer(len));
-    //     }
-    //     return result;
-    // }
-    // static ESC_char_list(){
-    //     let len = RandomGenerator.ESC_char.length;
-    //     let result = [];
-    //     for (let i = 0; i < len; i++) {
-    //         result.push(RandomGenerator.ESC_char.charAt(i));
-    //     }
-    //     return result;
-    // }
     static language(length: number = 32, type: number = 2) {
         let myLen = 0
         let result = ""

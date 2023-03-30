@@ -2,8 +2,8 @@
 import { PrismaClient,bdt_testcase} from '@prisma/client'
 import {prisma} from "../"
 export type TestcaseModel = {
-    testcaseId: string 
-    TestcaseName: string 
+  testcase_id: string 
+    testcase_name: string 
     remark?: string 
     agentList?: string 
     environment?: string 
@@ -26,8 +26,8 @@ export class BdtTestcase{
       console.info(`add testcase ${JSON.stringify(testcase)}`)
         try {
           const result = await this.prisma.bdt_testcase.create({data:{
-            TestcaseName: testcase.TestcaseName,
-            testcaseId : testcase.testcaseId,
+            testcase_name: testcase.testcase_name,
+            testcase_id : testcase.testcase_id,
             remark: testcase.remark,
             agentList:testcase.agentList,
             environment:testcase.environment,
@@ -40,7 +40,7 @@ export class BdtTestcase{
             failed:testcase.failed,
             date:testcase.date,
         }})
-        return {err:0,log:`${testcase.testcaseId} add record success`}
+        return {err:0,log:`${testcase.testcase_id} add record success`}
       } catch (error) {
         console.info(error)
         return {err:0,log:` ${JSON.stringify(error)}`}
@@ -57,10 +57,10 @@ export class BdtTestcase{
         return {err:1,log:`${error}`}
       }
     }
-    async query(testcaseId:string){
+    async query(testcase_id:string){
       try {
         const result = await this.prisma.bdt_testcase.findMany({
-          where: { testcaseId },orderBy:[{id : "asc"}]  
+          where: { testcase_id },orderBy:[{id : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {

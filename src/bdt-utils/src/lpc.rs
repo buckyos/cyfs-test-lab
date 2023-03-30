@@ -138,13 +138,13 @@ impl Lpc {
         async_std::task::spawn(async move {
             let mut last_recv_ping = lpc.get_last_recv_ping().await;
             let now = bucky_time_now();
-            while now - last_recv_ping < 60 * 1000_000 {
-                log::info!("#### send PingResp");
+            while now - last_recv_ping < 5 * 60 * 1000_000 {
+                log::info!("lpc send PingResp");
                 let action: LpcActionApi = LpcActionApi::PingResp(PingResp {});
                 let mut lpc = lpc.clone();
                 match lpc.send_command(LpcCommand::new(0, Vec::new(), action)).await {
                     Ok(_)=>{
-                        async_std::task::sleep(std::time::Duration::new(10, 0)).await;
+                        async_std::task::sleep(std::time::Duration::new(5, 0)).await;
                     },
                     Err(err)=>{
                         log::error!("send PingResp error,not send ping");
@@ -153,6 +153,8 @@ impl Lpc {
                 }
                 
             }
+            log::error!("not recv lpc ping 5 min,exit process!");
+            std::process::exit(0);
         });
     }
 

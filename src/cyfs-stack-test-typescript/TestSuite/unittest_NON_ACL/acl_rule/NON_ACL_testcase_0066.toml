@@ -1,1 +1,0 @@
-in2 = { action = "in-put", group = { location = "outer",protocol="http-bdt"}, access = "accept" }

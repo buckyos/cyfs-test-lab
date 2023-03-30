@@ -2,7 +2,7 @@ import { PrismaClient,bdt_task } from '@prisma/client'
 import {prisma} from "../"
 export type TaskModel = {
   task_id: string
-  testcaseId: string
+  testcase_id: string
   LN: string 
   RN: string 
   Users: string 
@@ -22,7 +22,7 @@ export class BdtTask{
         try {
 
           const result = await this.prisma.bdt_task.create({data:{
-              testcaseId : task.testcaseId,
+              testcase_id : task.testcase_id,
               task_id: task.task_id,
               LN:task.LN,
               RN:task.RN,
@@ -42,10 +42,10 @@ export class BdtTask{
         }
         
     }
-    async report(testcaseId:string){
+    async report(testcase_id:string){
       try {
         const result = await this.prisma.bdt_task.findMany({
-          where: { testcaseId },orderBy:[{id : "asc"}]  
+          where: { testcase_id },orderBy:[{id : "asc"}]  
         });
         return {err:0,log:"getRecords success",result}
       } catch (error) {

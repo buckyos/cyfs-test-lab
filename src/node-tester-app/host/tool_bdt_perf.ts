@@ -187,11 +187,11 @@ async function main() {
     const serviceid = "679";
     
     const taskList = [
-        "perf_stream_connect_control_tcp_keep_100",
-        "perf_stream_connect_control_tcp_keep_1000",
-        "Perf_stream_connect_control_tcp_keep_2000",
-        "perf_stream_connect_control_tcp_keep_5000",
-        "perf_stream_connect_control_tcp_keep_10000",
+        "perf_stream_connect_original_tcp_keep_100",
+        "perf_stream_connect_original_tcp_keep_1000",
+        "Perf_stream_connect_original_tcp_keep_2000",
+        "perf_stream_connect_original_tcp_keep_5000",
+        "perf_stream_connect_original_tcp_keep_10000",
         "perf_stream_connect_tcp_keep_100",
         "perf_stream_connect_tcp_keep_1000",
         "perf_stream_connect_tcp_keep_2000",
@@ -202,6 +202,20 @@ async function main() {
         "perf_stream_connect_udp_keep_2000",
         "perf_stream_connect_udp_keep_5000",
         "perf_stream_connect_udp_keep_10000",
+        "perf_stream_data_bdt_tcp_1connect_10_100MBdata",
+        "perf_stream_data_bdt_tcp_10connect_10_100MBdata",
+        "perf_stream_data_bdt_udp_1connect_10_100MBdata",
+        "perf_stream_data_bdt_udp_10connect_10_100MBdata",
+        "perf_stream_data_original_tcp_1connect_10_100MBdata",
+        "perf_stream_data_original_tcp_10connect_10_100MBdata",
+        "perf_ndn_chunk_bdt_tcp_1channel_10_100MBdata",
+        "perf_ndn_chunk_bdt_tcp_10channel_10_100MBdata",
+        "perf_ndn_chunk_bdt_udp_1connect_10_100MBdata",
+        "perf_ndn_chunk_bdt_udp_10connect_10_100MBdata",
+        "perf_ndn_file_bdt_tcp_1channel_10_100MBdata",
+        "perf_ndn_file_bdt_tcp_10channel_10_100MBdata",
+        "perf_ndn_file_bdt_udp_1connect_10_100MBdata",
+        "perf_ndn_file_bdt_udp_10connect_10_100MBdata",
     ];
     runner.process.on(`exit`,async()=>{
         console.info(`runner exit`)

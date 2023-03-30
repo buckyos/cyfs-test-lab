@@ -20,7 +20,7 @@ let performanceWait = 10*1000;
 
 export async function ServiceMain(_interface: ServiceClientInterface) {
     _interface.getLogger().info(`=========start service namespace=${JSON.stringify(_interface.getNamespace())}`);
-    let manager: BdtPeerManager = BdtPeerManager.createInstance(_interface.getLogger(), _interface.getPlatform());
+    let manager: BdtPeerManager = BdtPeerManager.create_instance(_interface.getLogger(), _interface.getPlatform());
     await manager.init();
 
     manager.on('unlive', (peerName: string) => {
@@ -312,9 +312,9 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let info = await manager.addDevice(param.peerName, bytes);
         return {err: info.err, bytes: Buffer.from(''), value: info};
     });
-    _interface.registerApi('start_report', async (from: Namespace, bytes: Buffer, param: {agent:string, time:number,testcaseId:string}): Promise<any> => {
+    _interface.registerApi('start_report', async (from: Namespace, bytes: Buffer, param: {agent:string, time:number,testcase_id:string}): Promise<any> => {
         _interface.getLogger().debug(`remote call start_report`);
-        let info = await manager.reportSystemInfo ( param.agent,param.time,param.testcaseId);
+        let info = await manager.reportSystemInfo ( param.agent,param.time,param.testcase_id);
         return {err: info.err, bytes: Buffer.from(''), value: info};
     });
     _interface.registerApi('stop_report', async (from: Namespace, bytes: Buffer, param: {}): Promise<any> => {

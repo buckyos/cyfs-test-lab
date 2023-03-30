@@ -1,4 +1,5 @@
-import { ErrorCode, Namespace, Logger, ServiceClientInterface, RandomGenerator } from '../../base';
+import {  Namespace,  ServiceClientInterface, } from '../../cyfs-driver-base';
+import {ErrorCode} from "../../common"
 import { ProxyManager } from './proxyManager';
 
 

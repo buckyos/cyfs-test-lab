@@ -1,0 +1,43 @@
+{
+  "config_version": 1,
+  "app_name": "cyfs-test-dec-app",
+  "version": "1.0.30",
+  "description": "测试用的DEC APP",
+  "icon": "E:\\githubSpace\\cyfs-test-lab\\src\\cyfs-test-dec-app\\www\\favicon.ico",
+  "service": {
+    "pack": [
+      "dist/common",
+      "dist/cyfs-driver-base",
+      "dist/dec-app-base",
+      "dist/cyfs",
+      "dist/test_file",
+      "dist/config",
+      "dist/dec-app-service",
+      "dist/cyfs-driver-client"
+    ],
+    "type": "node",
+    "dist_targets": [
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ],
+    "app_config": {
+      "default": "service_package.cfg"
+    },
+    "app_dependent_config": {
+      "default": "dependent.cfg"
+    },
+    "app_acl_config": {
+      "default": "acl.cfg"
+    }
+  },
+  "web": {
+    "folder": "dist/web",
+    "entry": "index.html"
+  },
+  "dist": "deploy",
+  "owner_config": ".cyfs\\owner.json",
+  "ext_info": {
+    "medias": []
+  },
+  "app_id": "9tGpLNndR5tyui8DkYBpEz8mFHzjfqkCVmsFusa5roHd"
+}

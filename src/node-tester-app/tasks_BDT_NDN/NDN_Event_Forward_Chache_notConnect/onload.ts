@@ -1,19 +1,19 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
-import {labAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../taskTools/rust-bdt/labAgent';
-import {TestRunner,Testcase,Task} from '../../taskTools/rust-bdt/bdtRunner';
-import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../taskTools/rust-bdt/type';
+import {LabAgent,LabSnList,InitAgentData,PNType,SameRouter} from '../../testcase_runner/rust-bdt/labAgent';
+import {TestRunner,Testcase,Task} from '../../testcase_runner/rust-bdt/bdtRunner';
+import { BDTERROR,Agent,taskType,Resp_ep_type,AgentData} from '../../testcase_runner/rust-bdt/type';
 
 
 
 
 export async function TaskMain(_interface: TaskClientInterface) {
-    let testcaseName = "NDN_Event_Forward_Chache_notConnect"
+    let testcase_name = "NDN_Event_Forward_Chache_notConnect"
     let agentList:Array<Agent> = [];
     let taskList : Array<Task> = [];
     let testAgent:Array<AgentData> =[
-        labAgent.PC_0005,
-        labAgent.PC_0007,
-        labAgent.PC_0018,
+        LabAgent.PC_0005,
+        LabAgent.PC_0007,
+        LabAgent.PC_0018,
 
     ]
     let firstQA_answer= "";
@@ -63,10 +63,10 @@ export async function TaskMain(_interface: TaskClientInterface) {
     )
     
 
-    let testRunner = new TestRunner(_interface);
+    let test_runner = new TestRunner(_interface);
     let testcase:Testcase = {
-        TestcaseName:testcaseName,
-        testcaseId : `${testcaseName}_${Date.now()}`,
+        testcase_name:testcase_name,
+        testcase_id : `${testcase_name}_${Date.now()}`,
         remark : ``,
         environment : "lab",
         agentList,
@@ -74,5 +74,5 @@ export async function TaskMain(_interface: TaskClientInterface) {
         taskMult:10
     }
     
-    await testRunner.testCaseRunner(testcase);
+    await test_runner.testCaseRunner(testcase);
 }

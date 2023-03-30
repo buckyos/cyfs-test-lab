@@ -1,7 +1,7 @@
 import {ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, RandomGenerator} from '../../base';
 
-import {TestRunner,Testcase,Task,Agent} from '../../taskTools/cyfs_stack/stackRunner';
-import { CustumObjectType} from '../../taskTools/cyfs_stack/ws_params';
+import {TestRunner,Testcase,Task,Agent} from '../../testcase_runner/cyfs_stack/stackRunner';
+import { CustumObjectType} from '../../testcase_runner/cyfs_stack/ws_params';
 var date = require("silly-datetime");
 
 
@@ -50,11 +50,11 @@ export async function TaskMain(_interface: TaskClientInterface) {
             expect:{err:0,log:"run success"},
         })
     }
-    let testRunner = new TestRunner(_interface);
+    let test_runner = new TestRunner(_interface);
     //测试用例数据
     let testcase:Testcase = {
-        TestcaseName:'NON_put_object',
-        testcaseId : `NON_put_object_${Date.now()}`,
+        testcase_name:'NON_put_object',
+        testcase_id : `NON_put_object_${Date.now()}`,
         remark : "测试NON put_object操作100次，并发数10 操作流程 （1）A put object B (2)B get object Noc check",
         environment : "lab",
         test_date :  date.format(new Date(),'YYYY/MM/DD'),
@@ -64,5 +64,5 @@ export async function TaskMain(_interface: TaskClientInterface) {
     }
     //_interface.getLogger().info(JSON.stringify(testcase))
     //测试用例执行
-    await testRunner.testCaseRunner(testcase);
+    await test_runner.testCaseRunner(testcase);
 }

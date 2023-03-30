@@ -23,6 +23,7 @@ async function RunAgentControl(agentMgr, Config) {
     };
 
     router.post('/agent/update', getRequestProcessor((ctx) => agentMgr.handleAgentUpdate(ctx), '/agent/update'));
+    router.post('/agent/remove', getRequestProcessor((ctx) => agentMgr.handleAgentRemove(ctx), '/agent/remove'));
     router.post('/agent/list', getRequestProcessor((ctx) => agentMgr.handleAgentList(ctx), '/agent/list'));
     router.post('/agent/worklist', getRequestProcessor((ctx) => agentMgr.handleAgentWorkList(ctx), '/agent/worklist'));
     router.post('/agent/detail', getRequestProcessor((ctx) => agentMgr.handleAgentDetail(ctx), '/agent/detail'));

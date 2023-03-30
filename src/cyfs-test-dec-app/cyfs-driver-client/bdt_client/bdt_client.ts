@@ -1,4 +1,5 @@
-import { ErrorCode, NetEntry, Namespace, AccessNetType, BufferReader, Logger, TaskClientInterface, ClientExitCode, BufferWriter, sleep, RandomGenerator } from '../../base';
+import { ErrorCode, BufferReader, Logger, BufferWriter, sleep, RandomGenerator } from '../../common';
+import {GlobalConfig,TaskClient,LocalMaster, Namespace, TaskClientInterface, ClientExitCode, } from '../../cyfs-driver-base';
 import { EventEmitter } from 'events';
 import { Agent, Peer, BDTERROR } from './type'
 import { UtilClient } from "./bdt_util_tool"

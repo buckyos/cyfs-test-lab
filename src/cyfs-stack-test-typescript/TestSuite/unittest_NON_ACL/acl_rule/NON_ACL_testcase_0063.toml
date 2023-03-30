@@ -1,2 +1,0 @@
-in2 = { action = "in-put", group = { location = "outer" }, access = "accept" }
-in1 = { action = "in-put", group = { location = "inner" }, access = "reject" }

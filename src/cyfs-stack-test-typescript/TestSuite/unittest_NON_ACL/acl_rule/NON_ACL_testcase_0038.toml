@@ -1,2 +1,0 @@
-in2 = { action = "in-put", group = { location = "outer" }, access = "accept" }
-out2 = { action = "out-put",res = "/5aSixgM68qjfa5efF3ZVU1J5vRXNL32d2V3SXUwrZ3LA/**/**",group = { location = "outer"}, access = "accept" }
