@@ -6,7 +6,7 @@ import * as ChildProcess from 'child_process';
 import path from "path";
 import { SIMULATOR_LIST } from "../../config/cyfs_driver_config"
 import * as fs from "fs-extra";
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     private stack_client_map: Map<string, CyfsStackSimulatorClient>
     private log_path: string;

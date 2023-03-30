@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { DirHelper, FileUploader, GlobalConfig, Logger, LocalStorageJson, LocalMaster, ClientExitCode } from '../base';
-const Base = require('../base/common/base.js');
+const Base = require('../common/base.js');
 
 
 async function main() {

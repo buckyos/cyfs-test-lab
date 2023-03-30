@@ -1,4 +1,4 @@
-import { ErrorCode, Logger, sleep } from '../../common';
+import { ErrorCode, Logger, RandomGenerator, sleep } from '../../common';
 import {Namespace, ServiceClientInterface} from '../../cyfs-driver-base';
 import { BdtLpc, BdtLpcCommand, BdtLpcResp } from './lpc';
 
@@ -15,6 +15,7 @@ export class UtilTool {
     private cache_mb?: Buffer;
     private cahce_buff?: Buffer; //1000037 大素数
     public cache_path: { file_upload: string, file_download: string };
+    private rand_file_running : boolean;
     constructor(_interface: ServiceClientInterface, logger: Logger, root:string) {
         let cache_path = {
             file_upload: path.join(root, "file_upload"),
@@ -25,6 +26,7 @@ export class UtilTool {
         this.m_logger = logger;
         this.m_interface = _interface;
         this.cache_path = cache_path;
+        this.rand_file_running = false;
     }
     async init_cache() {
         if (!this.cache_mb) {
@@ -82,10 +84,15 @@ export class UtilTool {
     async _createFile(file_path: string, file_size: number) {
         // 初始化随机cache
         await this.init_cache();
-        // 每次往文件中写入质数个bytes,避免chunk 重复 
+        // 每次往文件中写入质数个bytes,避免chunk 重复
+        if(file_size>1*1000*1000){
+            let data =  Buffer.from(this.string(this.integer(500*1000,100*1000)));
+            await fs.appendFileSync(file_path,  data);
+            file_size = file_size -  data.byteLength;
+        }
         while (file_size > this.cahce_buff!.byteLength) {
-            await fs.appendFileSync(file_path, this.cahce_buff!)
-            file_size = file_size - this.cahce_buff!.byteLength;
+            await fs.appendFileSync(file_path,  this.cahce_buff!)
+            file_size = file_size -  this.cahce_buff!.byteLength;
         }
         await fs.appendFileSync(file_path, Buffer.from(this.string(file_size)))
     }
@@ -101,7 +108,11 @@ export class UtilTool {
             this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
-       
+        while(this.rand_file_running){
+            await sleep(100);
+            this.m_logger.info(`rand file is running,wait 100 ms`);
+        }
+        this.rand_file_running = true;
         let file_name = `${this.string(10)}.txt`
         let file_size: number = command.json.file_size!;
         let file_path = path.join(this.cache_path.file_upload, `${file_name}`)
@@ -112,6 +123,7 @@ export class UtilTool {
         //生成文件
         await this._createFile(file_path, file_size);
         let md5 = await this._md5(file_path);
+        this.rand_file_running = false;
         return {
             err: ErrorCode.succ, resp: {
                 json: {

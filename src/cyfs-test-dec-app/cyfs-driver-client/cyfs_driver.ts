@@ -14,6 +14,8 @@ export type CyfsStackClientConfig = {
 
 export enum CyfsDriverType {
     real_machine = "Real_machine",
+    runtime = "Runtime",
+    gateway = "Gateway",
     simulator = "Simulator",
     bdt_client = "Bdt_client",
     other = "Other"

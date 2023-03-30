@@ -5,7 +5,7 @@ import * as ChildProcess from 'child_process';
 import * as compressing from 'compressing';
 import * as os from 'os';
 import { Reporter, DirHelper, getFileMd5, HttpDownloader, VersionHelper, FileUploader, GlobalConfig, RandomGenerator, sleep, ErrorCode, LocalStorageJson, Logger } from '../base';
-const Base = require('../base/common/base.js');
+const Base = require('../common/base.js');
 const Http = require('http');
 
 const SUPPORT_QQ_ADDRESS = '（官方QQ群:777179682）';

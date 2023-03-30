@@ -1,7 +1,4 @@
 import * as cyfs from "../cyfs"
-
-
-
 export type PeerInfo ={ 
     peer_name: string, 
     dec_id?: string, 

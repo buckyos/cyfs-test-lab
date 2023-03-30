@@ -6,7 +6,7 @@ import { GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCo
 import { CyfsStackProxyClient, } from "./proxy_client"
 import * as os from 'os';
 import { REAL_MACHINE_LIST ,REAL_MACHINE_OTHER_LIST} from "../../config/cyfs_driver_config"
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 import path from "path";
 import fs from "fs-extra";
 

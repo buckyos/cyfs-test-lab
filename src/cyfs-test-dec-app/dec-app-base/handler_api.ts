@@ -1,12 +1,46 @@
-import { ErrorCode } from '../common';
 import * as cyfs from "../cyfs"
+export enum ErrorCode {
+    succ = 0,
+    fail = 1,
+    noMoreData = 2,
+    unknownCommand = 3,
+    netError = 4,
+    exist = 5,
+    notExist = 6,
+    exception = 7,
+    notChange = 8,
+    invalidState = 9,
+    timeout = 10,
+    md5NotMatch = 11,
+    notSupport = 12,
+    invalidParam = 13,
+    notFound = 14,
+    waiting = 15,
+    break = 16,
+    connectProxyClientFailed =1000,
+    cyfsStackOnlineTimeout = 10001,
+    cyfsStackOnlineFailed = 10002,
+}
 
 export enum HandlerType{
-    TransFile = "trans-file",
-    PrepareTransFile = "prepare-trans-file",
-    UpdateContext = "update-context",
-    AddContext = "add-context",
-    ShareFileAddAccess = "share-file-add-access"
+    // NON 操作
+    PutObject = "PutObject",
+    GetObject = "GetObject",
+    // root_state 相关操作
+    // NDN 操作
+    TransFile = "TransFile",
+    PrepareTransFile = "PrepareTransFile",
+    UpdateContext = "UpdateContext",
+    AddContext = "AddContext",
+    ShareFileAddAccess = "ShareFileAddAccess",
+    // 
+    OS_IO_ReadFile = "OS_IO_ReadFile",
+    OS_IO_WriteFile = "OS_IO_WriteFile",
+    OS_IO_RunFile = "OS_IO_RunFile",
+    OS_Network_HttpListern = "OS_Network_HttpListern",
+    OS_Network_HttpRequest = "OS_Network_HttpRequest",
+
+
 }
 
 export interface HandlerApi {
@@ -22,6 +56,78 @@ export interface HandlerApi {
     UpdateContextHandlerResp?:UpdateContextHandlerResp,
     ShareFileAddAccessHandlerReq?:ShareFileAddAccessHandlerReq,
     ShareFileAddAccessHandlerResp?:ShareFileAddAccessHandlerResp,
+    PutObjectReq?:PutObjectReq,
+    PutObjectResp?:PutObjectResp,
+    // 系统磁盘IO 、网络请求等操作
+    OS_IO_ReadFileReq?:OS_IO_ReadFileReq,
+    OS_IO_ReadFileResp?:OS_IO_ReadFileResp,
+    OS_IO_WriteFileReq?:OS_IO_WriteFileReq,
+    OS_IO_WriteFileResp?:OS_IO_WriteFileResp,
+    OS_IO_RunFileReq?:OS_IO_RunFileReq,
+    OS_IO_RunFileResp?:OS_IO_RunFileResp,
+    OS_Network_HttpListernReq?:OS_Network_HttpListernReq,
+    OS_Network_HttpListernResp?:OS_Network_HttpListernResp, 
+    OS_Network_HttpRequestReq?:OS_Network_HttpRequestReq,
+    OS_Network_HttpRequestResp?:OS_Network_HttpRequestResp,
+}
+
+
+export type OS_Network_HttpRequestReq = {
+    method : string,
+    url : string,
+    data : string,
+}
+export type OS_Network_HttpRequestResp = {
+    result: number,
+    msg: string,
+    response : string,
+}
+
+export type OS_Network_HttpListernReq = {
+    port : number,
+}
+export type OS_Network_HttpListernResp = {
+    result: number,
+    msg: string,
+    ip : string,
+}
+
+export type OS_IO_RunFileReq = {
+    file_path?: string,
+    cmd? : string,
+}
+export type OS_IO_RunFileResp = {
+    result: number,
+    msg: string,
+    output : string,
+}
+
+export type OS_IO_WriteFileReq = {
+    file_path: string,
+    data: string,
+}
+export type OS_IO_WriteFileResp = {
+    result: number,
+    msg: string,
+}
+
+export type OS_IO_ReadFileReq = {
+    file_path: string,
+}
+export type OS_IO_ReadFileResp = {
+    result: number,
+    msg: string,
+    data?: string,
+}
+
+
+export type PutObjectReq = {
+    message: string,
+}
+export type PutObjectResp = {
+    result: number,
+    msg: string,
+    message_resp: string,
 }
 
 export type ShareFileAddAccessHandlerReq = {

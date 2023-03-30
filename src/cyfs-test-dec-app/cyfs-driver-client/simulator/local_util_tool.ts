@@ -5,6 +5,7 @@ import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import path from 'path';
 import * as cyfs from "../../cyfs"
+import { sleep } from 'cyfs-sdk';
 
 const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';
 export class LocalUtilTool implements UtilTool {
@@ -15,6 +16,7 @@ export class LocalUtilTool implements UtilTool {
     private cahce_buff?: Buffer; //1000037 大素数
     private cache_path: { file_upload: string, file_download: string };
     private logger: Logger;
+    private rand_file_running? : boolean;
     constructor(logger: Logger, root: string) {
         this.logger = logger;
         this.cache_path = {
@@ -56,7 +58,7 @@ export class LocalUtilTool implements UtilTool {
             this.cache_100mb = Buffer.concat([this.cache_100mb, this.cache_mb!]);
             size = size - mb_length;
         }
-        this.cache_100mb = Buffer.concat([this.cache_100mb, Buffer.from(this.string(size))]);
+        this.cache_100mb = Buffer.concat([Buffer.from(this.string(size)),this.cache_100mb,]);
     }
     string(length: number = 32) {
         let maxPos = CHAR_SET.length;
@@ -109,6 +111,11 @@ export class LocalUtilTool implements UtilTool {
 
     }
     async create_file(file_size: number, dir_path?: string): Promise<{ err: ErrorCode, log?: string, file_name?: string, file_path?: string, md5?: string }> {
+        while(this.rand_file_running ){
+            this.logger.info(`wait 100 ms`)
+            await sleep(100)
+        }
+        this.rand_file_running =  true;
         let file_name = `${this.string(10)}.txt`
         if (!dir_path) {
             dir_path = this.cache_path.file_upload
@@ -122,6 +129,7 @@ export class LocalUtilTool implements UtilTool {
         await this._createFile(file_path, file_size);
         let md5 = await this._md5(file_path);
         this.logger.info(`create file ${file_path} success`);
+        this.rand_file_running =  false;
         return {
             err: ErrorCode.succ,
             log: `create file success`,

@@ -6,7 +6,7 @@ import {GlobalConfig,TaskClient,LocalMaster, Namespace, TaskClientInterface, Cli
 import { AgentClient } from "./agent_client"
 import * as os from 'os';
 import { REAL_MACHINE_LIST } from "../../config/cyfs_driver_config"
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 import path from "path";
 import fs from "fs-extra";
 

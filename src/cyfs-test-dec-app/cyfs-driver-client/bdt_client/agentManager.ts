@@ -10,7 +10,7 @@ import path from "path";
 import * as os from 'os';
 import fs from "fs-extra";
 
-const Base = require('../../base/common/base.js');
+const Base = require('../../common/base.js');
 export class AgentManager implements CyfsStackDriver {
     static manager?: AgentManager;
     public agent_map : Map<string,AgentClient>

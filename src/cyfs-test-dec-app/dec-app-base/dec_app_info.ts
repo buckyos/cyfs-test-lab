@@ -9,3 +9,5 @@ export const BETA_CYFS_TEST_DEC_APP = "9tGpLNni9AYycMDC9LrAAKoPqQc7VQSnodotFWXuh
 export const BETA_DEC_APP_SERVICE = "9tGpLNndR5tyui8DkYBpEz8mFHzjfqkCVmsFusa5roHd"
 
 
+
+export let DEC_APP = NIGHTLY_CYFS_TEST_DEC_APP;

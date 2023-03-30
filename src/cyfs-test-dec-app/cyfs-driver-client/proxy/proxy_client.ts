@@ -6,6 +6,7 @@ import net from "net";
 import { ProxyUtilTool } from "./proxy_util_tool"
 import * as cyfs from "../../cyfs"
 import { tgz } from "compressing";
+import { sleep } from "cyfs-sdk";
 
 
 export function Uint8Array_to_string(fileData: Uint8Array) {
@@ -123,9 +124,14 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
                     c.write(msg_u8);
 
                 }, this.m_agentid!);
-                //let seq = 0;
+                let seq = -1;
+                let running = 0;
                 c.on('data', async (buf) => {
-                    //seq = seq + 1;
+                    seq = seq + 1;
+                    const seq_index = seq;
+                    while(seq_index > running){
+                        await sleep(1)
+                    }
                     let param = {
                         //seq,
                         type,
@@ -141,9 +147,15 @@ export class CyfsStackProxyClient extends EventEmitter implements CyfsStackClien
                     }else{
                         let data1 =  data.buffer.slice(0,30000)
                         let data2 =  data.buffer.slice(30000)
+                        this.logger.debug(`send data ${seq_index} ${running} part1 size = ${data1.byteLength}`)
                         let info1 = await this.m_interface.callApi('proxy_data',Buffer.from(data1) , param, this.m_agentid!, 0);
+                        this.logger.debug(`send data ${seq_index} ${running} part1 size = ${data1.byteLength} finished`)
+                        this.logger.debug(`send data ${seq_index} ${running} part2 size = ${data2.byteLength}`)
                         let info2 = await this.m_interface.callApi('proxy_data',Buffer.from(data2) , param, this.m_agentid!, 0);
+                        this.logger.debug(`send data ${seq_index} ${running} part2 size = ${data2.byteLength} finished`)
+                        
                     }
+                    running = running + 1;
                     //console.info(` ${this.peer_name} TCP Client ${port} read data ${c.remoteAddress}:${c.remotePort} size = ${data.length}`);
                     //console.info(` ${this.peer_name} TCP Client data = ${data}`);
                     

@@ -46,6 +46,27 @@ export class CommonPostObjectHandler implements cyfs.RouterHandlerPostObjectRout
             case HandlerType.ShareFileAddAccess:{
                 return await (new HandlerListenr.ShareFileAddAccessHandler(this.stack,this.local,this.logger).start(request));
             }
+            case HandlerType.PutObject:{
+                return await (new HandlerListenr.PutObjectHandler(this.stack,this.local,this.logger).start(request));
+            }
+            // docker 权限隔离简单测试
+            // 磁盘相关操作
+            case HandlerType.OS_IO_ReadFile:{
+                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local,this.logger).start(request));
+            }
+            case HandlerType.OS_IO_WriteFile:{
+                return await (new HandlerListenr.WriteFIleHandler(this.stack,this.local,this.logger).start(request));
+            }
+            case HandlerType.OS_IO_RunFile:{
+                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local,this.logger).start(request));
+            }
+            // 网络相关操作
+            case HandlerType.OS_Network_HttpListern:{
+                return await (new HandlerListenr.HttpServerHandler(this.stack,this.local,this.logger).start(request));
+            }
+            case HandlerType.OS_Network_HttpRequest:{
+                return await (new HandlerListenr.HttpRequestHandler(this.stack,this.local,this.logger).start(request));
+            }
             default: {
                 let result = NotFoundError
                 return HandlerRequestObject.create(this.stack.local_device_id().object_id,request.request_type, request.id,JSON.stringify({ result }), Buffer.from(""))

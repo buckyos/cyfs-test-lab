@@ -74,14 +74,23 @@ export class StackManager {
         });
         this.logger = new Logger(cyfs.clog.info, cyfs.clog.debug, cyfs.clog.error, log_dir)
         this.logger.info(`init cyfs stack manager log success`);
-        this.driver_manager = CyfsStackDriverManager.createInstance();
-        let result = await this.driver_manager.create_driver(this.driver_type,this.agent_list!);
-        if (result.err) {
-            this.logger!.info(`${this.driver_type} create error,result = ${result}`)
+        if(this.driver_type == "Runtime" ||  this.driver_type == "Gateway" ){
+            return {
+                err: ErrorCode.succ,
+                log:`init cyfs log suucess , run without driver`
+            }
+        }
+        else{
+            this.driver_manager = CyfsStackDriverManager.createInstance();
+            let result = await this.driver_manager.create_driver(this.driver_type,this.agent_list!);
+            if (result.err) {
+                this.logger!.info(`${this.driver_type} create error,result = ${result}`)
+                return result;
+            }
+            this.driver = result.driver;
             return result;
         }
-        this.driver = result.driver;
-        return result;
+        
 
     }
     async load_config_stack(requestor_type: cyfs.CyfsStackRequestorType = cyfs.CyfsStackRequestorType.Http, dec_id: cyfs.ObjectId): Promise<{ err: ErrorCode, log: string }> {
@@ -90,6 +99,10 @@ export class StackManager {
         } else if (this.driver_type == CyfsDriverType.simulator) {
             await this.load_simulator(requestor_type, dec_id)
         } else if (this.driver_type == CyfsDriverType.other) {
+            await this.load_driver_manager(requestor_type, dec_id)
+        }else if (this.driver_type == CyfsDriverType.runtime) {
+            await this.load_driver_manager(requestor_type, dec_id)
+        }else if (this.driver_type == CyfsDriverType.gateway) {
             await this.load_driver_manager(requestor_type, dec_id)
         }
         return await this.check_stack_online();
@@ -118,6 +131,7 @@ export class StackManager {
                     this.logger!.error(`######## cyfs satck check online fail,result = ${JSON.stringify(result)}`)
                     V({ err: ErrorCode.cyfsStackOnlineFailed, log: "cyfs satck online failed" });
                 }
+                //this.logger!.info(`cyfs satck check online success,result = ${JSON.stringify(result)}`)
             }
             running = false;
             this.logger!.info(`######## cyfs satck check online sucesss`)
@@ -172,7 +186,35 @@ export class StackManager {
             }
         }
     }
-
+    async load_runtime(dec_id: cyfs.ObjectId,requestor_type: cyfs.CyfsStackRequestorType =  cyfs.CyfsStackRequestorType.Http) {
+        // runtime 的 连接池
+        let stack_map = new Map();
+        if(this.peer_map.has("runtime")){
+            stack_map = this.peer_map.get("runtime")!
+        }else{
+            this.peer_map.set("runtime", stack_map);
+        }
+        let stack = cyfs.SharedCyfsStack.open_runtime(dec_id);
+        if(dec_id) {
+            stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
+        } else {
+            stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
+        }
+    }
+    async load_gateway(dec_id: cyfs.ObjectId,requestor_type: cyfs.CyfsStackRequestorType =  cyfs.CyfsStackRequestorType.Http) {
+        let stack_map = new Map();
+        if(this.peer_map.has("gateway")){
+            stack_map = this.peer_map.get("gateway")!
+        }else{
+            this.peer_map.set("gateway", stack_map);
+        }
+        let stack = cyfs.SharedCyfsStack.open_runtime(dec_id);
+        if(dec_id) {
+            stack_map.set(`${dec_id.to_base_58()}_${requestor_type}`, stack);
+        } else {
+            stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
+        }
+    }
     async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         for (let agent of SIMULATOR_LIST) {
             this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);

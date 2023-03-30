@@ -1,4 +1,4 @@
-import { ErrorCode, Logger } from '../../common';
+import { ErrorCode, Logger } from '../../base';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 
@@ -54,18 +54,10 @@ export class BdtLpc extends EventEmitter {
         this.m_id = s;
     }
 
-    async initFromListener(port: number): Promise<ErrorCode> {
-        return new Promise(async(V)=>{
-            this.m_logger.info(`begin connect 127.0.0.1:${port}`);
-            this.m_socket = net.connect(port, "127.0.0.1", () => {
-                this.m_logger.info(` connect tcp 127.0.0.1:${port} success`)
-                this._initSocket();
-                V(ErrorCode.succ)
-            }).on('error', e => {
-                this.m_logger.error(e);
-                V(ErrorCode.fail)
-            });
-        }) 
+    initFromListener(socket: net.Socket): ErrorCode {
+        this.m_socket = socket;
+        this._initSocket();
+        return ErrorCode.succ;
     }
 
     private _next_cmd_seq(): number {
@@ -74,7 +66,7 @@ export class BdtLpc extends EventEmitter {
 
     send(command: BdtLpcCommand): ErrorCode {
         command.seq = this._next_cmd_seq();
-        this.m_logger.debug(`bdtlpc send command to bdt.exe, seq=${command.seq!}, data=${JSON.stringify(command.json)}`);
+        this.m_logger.debug(`bdtlpc send command to bdt.exe, seq=${command.seq!}, name=${command.json.name}`);
         let info = this._encodeMsg(command);
         if (info.err) {
             this.m_logger.error(`bdtlpc send command to bdt.exe failed,for encode failed, err=${info.err}}`);
@@ -148,7 +140,6 @@ export class BdtLpc extends EventEmitter {
         });
 
         this.m_socket!.on('error', (err) => {
-            this.m_logger.error(`socket error = ${err}`)
             this.emit('error', this, ErrorCode.fail);
         })
 
@@ -203,7 +194,7 @@ export class BdtLpc extends EventEmitter {
 
     private _encodeMsg(command: BdtLpcCommand): { err: ErrorCode, buffer?: Buffer } {
         try {
-            let buffer: Buffer = new Buffer(4/*total*/ + 4/*seq*/ + 4/*bytes length*/);
+            let buffer: Buffer = Buffer.allocUnsafe(4/*total*/ + 4/*seq*/ + 4/*bytes length*/);
 
             let jsonStr = JSON.stringify(command.json);
             let total: number = 4 + 4 + command.bytes.length + jsonStr.length;
