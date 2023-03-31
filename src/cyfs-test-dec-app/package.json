@@ -74,7 +74,7 @@
     "copy-webpack-plugin": "^11.0.0",
     "crypto": "^1.0.1",
     "crypto-browserify": "^3.12.0",
-    "cyfs-sdk": "^0.6.1",
+    "cyfs-sdk": "^0.6.2",
     "cyfs-sdk-nightly": "^0.6.2",
     "download": "^8.0.0",
     "encoding": "^0.1.13",
