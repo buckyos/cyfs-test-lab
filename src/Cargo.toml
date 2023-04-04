@@ -5,6 +5,7 @@ members=[
     "bdt-tools",
     "bdt-unittest",
     "bdt-cli",
+    "rust-dec-app-service",
     "bdt-utils",
     "perf-report-tool",
     "cyfs-tools",
