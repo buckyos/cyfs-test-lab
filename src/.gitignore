@@ -1,5 +1,6 @@
 /log/
 /target/
+/design_patterns/
 /deploy/
 **/cyfs_node/
 **/cyfs/
