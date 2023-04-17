@@ -139,8 +139,8 @@ module.exports = (env) => {
         plugins: plugins,
         externals: [
             function ({ context, request }, callback) {
-                //if (/cyfs-sdk-nightly$/.test(request)) {
-                if (/cyfs-sdk$/.test(request)) {
+                if (/cyfs-sdk-nightly$/.test(request)) {
+                //if (/cyfs-sdk$/.test(request)) {
                     console.log('replace', request);
                     return callback(null, 'cyfs');
                 }

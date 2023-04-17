@@ -1,22 +1,29 @@
 import * as fs from "fs-extra";
 import * as path from "path";
 
+
+
+/**
+ * 爬取网上的随机图片
+ * 
+ */
+
 export const IMGURL = [
-    // 'https://img.paulzzh.tech/touhou/random',
-    // "https://api.ixiaowai.cn/gqapi/gqapi.php",
-    // //"https://api.ixiaowai.cn/mcapi/mcapi.php",
-    // "https://acg.toubiec.cn/random.php",
+    'https://img.paulzzh.tech/touhou/random',
+    "https://api.ixiaowai.cn/gqapi/gqapi.php",
+    "https://api.ixiaowai.cn/mcapi/mcapi.php",
+    "https://acg.toubiec.cn/random.php",
     "https://www.dmoe.cc/random.php",
-    // "https://unsplash.it/1600/900?random",
+    "https://unsplash.it/1600/900?random",
     "https://source.unsplash.com/user/erondu/1600x900",
-    // "https://unsplash.it/1600/900?random",
-    // "https://picsum.photos/1600/900"
+    "https://unsplash.it/1600/900?random",
+    "https://picsum.photos/1600/900"
 
 ]
 
 
 /**
- * 将文件
+ * 对图片进行裁剪
  * @param source 
  * @param target 
  */
@@ -36,6 +43,12 @@ export async function crop_image(source: string, target: string) {
     }
 }
 
+/**
+ * 往磁盘中写入一张爬取的图片
+ * @param img_path 
+ * @param name 
+ * @returns 
+ */
 async function img(img_path: string, name: string) {
     if (!fs.pathExistsSync(img_path)) {
         fs.mkdirpSync(img_path);

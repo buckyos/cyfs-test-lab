@@ -1,3 +1,7 @@
+/**
+ * 时间间隔
+ */
+
 export class IntervalAction {
     private m_timer?: NodeJS.Timer;
 

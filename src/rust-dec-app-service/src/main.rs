@@ -15,7 +15,7 @@ fn main() {
 }
 
 async fn main_run() {
-    let dec_str = "9tGpLNnHAp2vgMR5BcwVf4HWiELkP71JXWqRwED8Pvpn";
+    let dec_str = "9tGpLNnjQLBcvwkbjXvdYDA5EnENFswfZKd7FNWqKVT3";
     let dec_id:cyfs_base::ObjectId = cyfs_base::ObjectId::from_base58(dec_str).unwrap();
     const NAME: &str = "rust-dec-app-service";
     let status = cyfs_util::process::check_cmd_and_exec(NAME);

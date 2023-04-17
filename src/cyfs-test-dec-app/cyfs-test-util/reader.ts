@@ -7,7 +7,7 @@
 
 'use strict';
 import  assert from 'assert';
-import {Encoding, EncodingError} from './encoding';
+import {Encoding, EncodingError} from '../cyfs-test-base/encoding';
 import * as Crypto from 'crypto';
 
 const EMPTY = Buffer.alloc(0);

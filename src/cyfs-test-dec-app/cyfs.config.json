@@ -1,16 +1,15 @@
 {
   "config_version": 1,
   "app_name": "cyfs-test-dec-app",
-  "version": "1.0.30",
-  "description": "测试用的DEC APP",
-  "icon": "E:\\githubSpace\\cyfs-test-lab\\src\\cyfs-test-dec-app\\www\\favicon.ico",
+  "version": "1.0.42",
+  "description": "cyfs-test-dec-app is a dec app for testing",
+  "icon": "cyfs://o/5r4MYfFJ7ktzBzSi1sWmU7BJLgpEEdp8ukbWemsFuQc1/7Tk94YfdUMwpQJiEYieJFpJntCgCyZ131qMdHTEu1nkf",
   "service": {
     "pack": [
       "dist/common",
       "dist/cyfs-driver-base",
       "dist/dec-app-base",
       "dist/cyfs",
-      "dist/test_file",
       "dist/config",
       "dist/dec-app-service",
       "dist/cyfs-driver-client"

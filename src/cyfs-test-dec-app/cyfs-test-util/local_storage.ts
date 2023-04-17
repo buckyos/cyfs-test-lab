@@ -1,5 +1,11 @@
 import {ErrorCode,Logger} from '../cyfs-test-base';
 import * as fs from 'fs-extra';
+
+/**
+ * 
+ * 对磁盘中json文件进行操作
+ * 
+ */
 export class LocalStorageJson {
     private m_logger: Logger;
     private m_file: string;

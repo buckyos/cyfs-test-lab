@@ -16,7 +16,7 @@ export default function TestBoard() {
         }
     });
     const [request_type, set_request_type] = useState({
-        value: "put-object",
+        value: "PutObject",
         label: "PutObject",
     });
     const [response, set_response] = useState({});
