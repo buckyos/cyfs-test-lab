@@ -1,6 +1,6 @@
 //export * from '../../../cyfs-ts-sdk/src/sdk';
-//export * from 'cyfs-sdk';
-export * from 'cyfs-sdk-nightly';
+export * from 'cyfs-sdk';
+//export * from 'cyfs-sdk-nightly';
 
 
 export const NIGHTLY_CYFS_TEST_DEC_APP = "9tGpLNndR5tyui8DkYBpEz8mFHzjfqkCVmsFusa5roHd"

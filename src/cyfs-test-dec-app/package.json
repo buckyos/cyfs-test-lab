@@ -25,7 +25,6 @@
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "antd": "^5.3.1",
-    
     "css-loader": "^6.7.3",
     "esbuild-loader": "^3.0.1",
     "eslint": "^7.32.0",
@@ -79,7 +78,7 @@
     "crypto-browserify": "^3.12.0",
     "cyfs-sdk": "^0.6.2",
     "cyfs-sdk-nightly": "^0.6.2",
-    "download": "^8.0.0",
+    "download": "^3.3.0",
     "encoding": "^0.1.13",
     "express": "^4.18.1",
     "fs-extra": "^9.1.0",

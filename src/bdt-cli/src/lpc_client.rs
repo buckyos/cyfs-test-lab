@@ -109,6 +109,7 @@ impl BDTCli {
         let listener = TcpListener::bind(self.get_address().as_str())
             .await
             .unwrap();
+        // TO DO 地址被占用问题
         let mut incoming = listener.incoming();
         let client_name = client_name.clone();
         while let Some(stream) = incoming.next().await {
