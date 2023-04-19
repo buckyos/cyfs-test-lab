@@ -39,7 +39,7 @@ These measures are aimed at testing and optimizing the data transmission and con
 
 
 
-### CYFS-Stack Nightly测试环境
+### CYFS-Stack Nightly environment
 
 In the CYFS protocol, there is a concept of "Zone", where all devices belonging to one person are grouped into a zone, and permissions are isolated based on the Zone. OOD (Owner Operated Device) is equivalent to the user's personal server, running the DEC APP service side and storing the user's personal data. Devices running CYFS Browser, CYFS Chat, or any client running cyfs-runtime can be used as a Device.
 
@@ -78,8 +78,8 @@ CYFS and BDT are new protocols, so in order to test them, we have designed a ser
 If you need to build a cyfs-test-lab testing environment, you can refer to the following documentation for setup:
 
 + cyfs-test-lab machine list: Currently, cyfs-test-lab uses real physical machines to build the testing environment, and Docker testing environment setup method will be provided in the future.
-+ cyfs-test-lab Server deploy ：[cyfs-test-lab 服务端搭建教程](./doc/zh-CN/实验室测试框架/ops/cyfs_test_lab服务端部署.md)
-+ cyfs-test-lab Client deploy：[cyfs-test-lab 客户端端搭建教程](./doc/zh-CN/实验室测试框架/ops/cyfs_test_lab客户端部署.md)
++ cyfs-test-lab Server deploy ：[cyfs-test-lab server build tutorial](./doc/zh-CN/实验室测试框架/ops/cyfs_test_lab服务端部署.md)
++ cyfs-test-lab Client deploy：[cyfs-test-lab agent build tutorial](./doc/zh-CN/实验室测试框架/ops/cyfs_test_lab客户端部署.md)
 
 
 ## Test Methods
@@ -88,7 +88,7 @@ If you need to build a cyfs-test-lab testing environment, you can refer to the f
   + BDT network protocol unit testing
   + BDT network protocol laboratory testing method
   
-+ CYFS协议栈测试方法 : 
++ CYFS Stack testing methods:
   + [CYFS Stack simulator test methods](./doc/zh-CN/CYFS协议栈测试/测试方法/CYFS协议栈模拟器测试方法.md)
   + [CYFS Stack real machine test methods](./doc/zh-CN/CYFS协议栈测试/测试方法/CYFS协议栈在实验室测试方法.md)
 
