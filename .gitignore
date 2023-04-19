@@ -14,4 +14,4 @@ src/cyfs-test-dec-app/cyfs/cyfs_node.d.ts
 src/cyfs-test-dec-app/cyfs/cyfs_node.js
 src/cyfs-test-dec-app/cyfs/cyfs_node.js.map
 src/node-tester-web/package-lock.json
-.vscode/settings.json
+.vscode
