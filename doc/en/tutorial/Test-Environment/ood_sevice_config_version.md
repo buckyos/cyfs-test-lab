@@ -13,8 +13,8 @@ You can distinguish the testing environment 1-Beta and 0-Nightly through the thi
   + [Linux](https://www.cyfs.com/download/beta/ood/linux/latest/)
 
 + Download DIY-OOD for Nightly environment:
-  + [WIndows](https://www.cyfs.com/download/beta/ood/windows/latest)
-  + [Linux](https://www.cyfs.com/download/beta/ood/linux/latest/)
+  + [WIndows](http://bdttest.tinyappcloud.com/cyfs_test_package/DIY_OOD_Nightly/CYFSOOD-x86-64-1.0.0.524-nightly.exe)
+  + [Linux](http://bdttest.tinyappcloud.com/cyfs_test_package/DIY_OOD_Nightly/CYFSOOD-x86-64-1.0.0.524-nightly.bin)
 
 ## Configuring OOD Testing Version
 By default, the Service version installed by OOD is the stable version configured by the official for testing purposes. You can update to the specified testing version through configuration.
