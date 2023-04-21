@@ -1,32 +1,35 @@
-const path = require('path');
-
 module.exports = {
-    entry: './app/index.ts',
-    devtool: 'inline-source-map',
-    module: {
-        rules: [
-            {
-                test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: [
-                    /node_modules/,
-                    /dist/
-                ]
-            },
-        ],
-    },
+    mode: "development",
+    devtool: "inline-source-map",
+    entry: "./testsuite/system-test/cyfs_lib/ndn/scenario_group_context/test_ndn_scenario.ts",
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+      extensions: [".ts", ".js"],
     },
-    output: {
-        filename: 'app.js',
-        path: path.resolve(__dirname, 'dist'),
-        library: 'app',
-        libraryTarget: 'window'
-    },
-    externals: [
+    module: {
+      rules: [
         {
-            "../cyfs": "cyfs"
-        }
-    ],
-};
+          test: /\.ts$/,
+          use: [
+            {
+              loader: "ts-loader",
+              options: {
+                transpileOnly: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.m?js$/,
+          exclude: /(node_modules|bower_components)/,
+          use: {
+            loader: "babel-loader",
+            options: {
+              presets: [
+                ["@babel/preset-env", { targets: "last 2 versions" }],
+              ],
+            },
+          },
+        },
+      ],
+    },
+  };

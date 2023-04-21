@@ -1,7 +1,6 @@
-import {CyfsStackDriverManager,CyfsDriverType,BdtPeerClient} from "../cyfs-driver-client"
-import assert = require('assert');
+import assert from "assert";
 import * as cyfs from '../cyfs'
-import {StackManager} from "../cyfs-driver-client/stack_manager"
+import {StackManager} from "../cyfs-test-util"
 import * as action_api from "../dec-app-action"
 import { ErrorCode } from '../common';
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")

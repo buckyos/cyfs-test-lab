@@ -1,7 +1,7 @@
 import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
 
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep,Logger } from '../../../../common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
@@ -20,7 +20,7 @@ describe("【root_state-issue1】SingleOpEnvStub支持inner_path参数和新的�
     this.timeout(0);
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();

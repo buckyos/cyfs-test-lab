@@ -4,7 +4,7 @@ import { Namespace, Channel, NamespaceHelper, ClientExitCode, Command, SysComman
 import * as ChildProcess from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { GlobalConfig } from "../../../config/config";
+import { GlobalConfig } from "../base/global_config";
 
 export type ClientProxyOptions = ChannelOptions & {
     

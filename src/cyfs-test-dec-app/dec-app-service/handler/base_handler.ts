@@ -1,7 +1,7 @@
 import * as cyfs from "../../cyfs";
 import { HandlerRequestObject, HandlerRequestObjectDecoder,HandlerApi,NotFoundError} from "../../dec-app-base"
 import { ErrorCode, Logger,sleep } from '../../common';
-import {PeerInfo} from "../../cyfs-driver-client"
+import {PeerInfo} from "../../cyfs-test-base"
 
 export type HandlerInfo ={
     // 默认数据

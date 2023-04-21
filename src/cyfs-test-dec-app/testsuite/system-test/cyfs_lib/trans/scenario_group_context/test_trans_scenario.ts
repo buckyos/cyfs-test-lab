@@ -1,13 +1,16 @@
 import assert = require('assert');
 import * as cyfs from '../../../../../cyfs'
 
-import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
+import {ActionManager,StackManager} from "../../../../../cyfs-test-util"
+
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
 import * as action_api from "../../../../../dec-app-action"
 import { HandlerRequestObject } from "../../../../../dec-app-base"
 import { PrepareTransFileRequest } from '../../../../../dec-app-action';
+
+import * as cyfs_test_util from "../../../../../cyfs-test-util"
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -19,16 +22,17 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 //Stress testing
 //Smoke testing
 //Regression testing
+//Integration Testing
+
 
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 //  npx mocha .\test_trans_scenario.ts --reporter mochawesome --require ts-node/register
 
-describe("CYFS Stack Trans 模块测试", function () {
+describe("CYFS Stack Trans Integration Testing", function () {
     this.timeout(0);
     const stack_manager = StackManager.createInstance();
-   
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
@@ -39,7 +43,7 @@ describe("CYFS Stack Trans 模块测试", function () {
         let dec_app_2_client = await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
         assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
         assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
-        logger.info(`############用例执开始执行`);
+        logger.info(`<------------------------  Test framewaork init finished ------------------------------>`);
     })
     this.afterAll(async () => {
         // 停止测试模拟器
@@ -48,6 +52,7 @@ describe("CYFS Stack Trans 模块测试", function () {
         await stack_manager.driver!.stop();
         // 保存测试记录
         data_manager.save_history_to_file(logger.dir());
+        logger.info(`<------------------------  Test framewaork exit ------------------------------>`);
     })
     let report_result: {
         title: string;
@@ -55,7 +60,7 @@ describe("CYFS Stack Trans 模块测试", function () {
     };
     beforeEach(function () {
         // 设置当前用例id 方便日志定位问题
-        let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
+        let testcase_id = `${this.currentTest?.title}-${cyfs_test_util.get_date()}`;
         data_manager.update_current_testcase_id(testcase_id);
 
         logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)

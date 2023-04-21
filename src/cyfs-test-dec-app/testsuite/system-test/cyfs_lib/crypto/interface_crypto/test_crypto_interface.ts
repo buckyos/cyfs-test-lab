@@ -2,7 +2,7 @@ import assert = require('assert');
 import * as cyfs from '../../../../../cyfs'
 import {create_people_random,create_device} from "../../../../../dec-app-base"
 import * as myHandler from "../../../../../dec-app-base/tool/handler"
-import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
+import {ActionManager,StackManager} from "../../../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../common';
 import * as addContext from "mochawesome/addContext"
 import * as action_api from "../../../../../dec-app-action"
@@ -21,7 +21,7 @@ describe("SharedCyfsStack crypto目录", function () {
     const stack_manager = StackManager.createInstance();
     let sysdec = cyfs.get_system_dec_app().object_id;
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();

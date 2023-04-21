@@ -1,6 +1,8 @@
 import assert = require('assert');
 import * as cyfs from '../../../cyfs'
-import { StackManager, CyfsStackDriverManager, CyfsStackDriver, CyfsDriverType } from "../../../cyfs-driver-client"
+import {CyfsStackDriverManager, CyfsStackDriver} from "../../../cyfs-driver-client"
+import {CyfsDriverType} from "cyfs-test-base"
+import {ActionManager,StackManager} from "../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
 
 import * as addContext from "mochawesome/addContext"
@@ -103,7 +105,7 @@ describe("cyfs-back-up数据恢复测试",function(){
 ]);
     
     const driver_manager = CyfsStackDriverManager.createInstance();
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         // 使用代理 或者nginx 转发

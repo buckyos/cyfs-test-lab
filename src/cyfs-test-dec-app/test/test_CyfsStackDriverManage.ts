@@ -1,5 +1,5 @@
-import {CyfsStackDriverManager,CyfsDriverType} from "../cyfs-driver-client"
-
+import {CyfsStackDriverManager} from "../cyfs-driver-client"
+import {CyfsDriverType} from "cyfs-test-base"
 
 async function main() {
     let driverManager = CyfsStackDriverManager.createInstance();

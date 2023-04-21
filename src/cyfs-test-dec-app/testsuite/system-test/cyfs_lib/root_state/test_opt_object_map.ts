@@ -5,7 +5,7 @@ import * as path from 'path';
 import { before } from 'mocha';
 let encoding = require('encoding');
 import * as addContext from "mochawesome/addContext"
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
 let stack: cyfs.SharedCyfsStack;
@@ -25,7 +25,7 @@ describe("#op-env 操作object_map", function () {
     this.timeout(0);
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();

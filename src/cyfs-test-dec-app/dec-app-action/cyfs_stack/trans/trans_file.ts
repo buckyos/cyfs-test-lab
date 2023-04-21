@@ -1,14 +1,11 @@
-import { BaseAction, ActionAbstract,Action} from "../../action";
+import { BaseAction, ActionAbstract,Action} from "../../../cyfs-test-util";
 import { ErrorCode, Logger,RandomGenerator,sleep } from '../../../common';
 import * as cyfs from "../../../cyfs";
-import { StackManager, CyfsDriverType ,PeerInfo} from "../../../cyfs-driver-client"
 import { PublishFileAction } from "./publish_file"
-import { PutContextAction } from "./put_context"
-
 import  {LinkObjectAction} from "../root_state/link_object";
 import { TransFileRequest } from "../handler"
 import {TransFileHandlerResp} from "../../../dec-app-base"
-import * as path from "path";
+
 /**
  * 输入数据
  */

@@ -1,13 +1,10 @@
-import assert = require('assert');
-import * as cyfs from '../../../../../cyfs'
-
-import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep,Logger } from '../../../../../common';
+import assert  from 'assert';
+import * as cyfs from '@src/cyfs'
+import {ActionManager,StackManager,CyfsTestRunner} from "@src/cyfs-test-util"
+import { ErrorCode, RandomGenerator, sleep,Logger } from '@src/common';
 import path = require('path');
-import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../../dec-app-action"
-import { HandlerRequestObject } from "../../../../../dec-app-base"
-import { PrepareTransFileRequest } from '../../../../../dec-app-action';
+import * as addContext from "mochawesome/addContext";
+import * as action_api from "dec-app-action";
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -19,60 +16,39 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 //Stress testing
 //Smoke testing
 //Regression testing
-
+//Integration Testing
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 //  npx mocha .\test_ndn_scenario.ts --reporter mochawesome --require ts-node/register
-describe("CYFS Stack NDN 模块测试", function () {
+// npx mocha .\testsuite\system-test\cyfs_lib\ndn\scenario_group_context\test_ndn_scenario.ts --reporter mochawesome --require ts-node/register
+
+// Development not implemented
+// Waiting issuse# to fix
+
+describe("CYFS Stack NDN Integration Testing", function () {
     this.timeout(0);
-    const stack_manager = StackManager.createInstance();
+    let test_runner =  CyfsTestRunner.createInstance();
+    const stack_manager = test_runner.stack_manager;
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
     this.beforeAll(async function () {
-        //测试前置条件，连接测试模拟器设备
-        await stack_manager.init();
-        logger = stack_manager.logger!;
-        await sleep(5000);
-        // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
-        let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        let dec_app_2_client = await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
-        assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
-        assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
-        logger.info(`############用例执开始执行`);
+        await test_runner.before_all_common();
+        logger = test_runner.logger!;
     })
-    this.afterAll(async () => {
-        // 停止测试模拟器
-        stack_manager.destory();
-        // 停止测试驱动
-        await stack_manager.driver!.stop();
-        // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+    this.afterAll(async function () {
+        await test_runner.after_all_common();
     })
-    let report_result: {
-        title: string;
-        value: any;
-    };
-    beforeEach(function () {
-        // 设置当前用例id 方便日志定位问题
-        let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
-        data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+    this.beforeEach(async function () {
+        let testcase_id =this.currentTest!.title;
+        await test_runner.before_each_common(testcase_id);
     })
-    afterEach(function () {
-        // 将当前用例执行记录到history
-        let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
-        report_result = {
-            title: `用例:${current_actions.testcase_id}`,
-            value: current_actions.action_list
-        };
+    this.afterEach(async function () {
+        let report_result = await test_runner.after_each_common();
         addContext.default(this, report_result);
     })
-
-    describe("put_data 功能测试",async()=>{
-        describe(`NDN put_data 基本流程HTTP+WebSocket`,async()=>{
-            
-            it("【大数据会出现异常 BUG未解决】 本地NDC put_data chunk数据 - WebSocket",async()=>{
-                // 创建测试任务
+    
+    describe("System Testing: stack.ndn_service().put_data() ",async()=>{
+        describe(`put_data CyfsStackRequestorType: HTTP/WebSocket`,async()=>{    
+            it(" NDC put_data chunk data by WebSocket Requestor,Auto use Http Requestor",async()=>{
+                // Create test Action
                 let action =await new action_api.PutDataAction({
                     local: {
                         peer_name: "zone1_device1",
@@ -95,8 +71,8 @@ describe("CYFS Stack NDN 模块测试", function () {
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
-            it("本地NDC put_data chunk数据 - HTTP",async()=>{
-                // 创建测试任务
+            it("NDC put_data chunk data by Http Requestor",async()=>{
+                // Create test Action
                 let action =await new action_api.PutDataAction({
                     local: {
                         peer_name: "zone1_device1",
@@ -120,8 +96,8 @@ describe("CYFS Stack NDN 模块测试", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe(`NDN put_data 发送数据类型`,async()=>{
-            it("本地NDC put_data 发送Chunk",async()=>{
+        describe(`put_data data type : Chunk/File/Dir+inner_path`,async()=>{
+            it("put_data send Chunk",async()=>{
                 // 创建测试任务
                 let action =await new action_api.PutDataAction({
                     local: {
@@ -145,7 +121,7 @@ describe("CYFS Stack NDN 模块测试", function () {
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
-            it("【协议栈未支持】本地NDC put_data 发送File",async()=>{
+            it.only("put_data send File",async()=>{
                 // 创建测试任务
                 let action =await new action_api.PutDataAction({
                     local: {
@@ -275,7 +251,7 @@ describe("CYFS Stack NDN 模块测试", function () {
         
 
     })
-    describe("get_data 功能测试",async()=>{
+    describe("System Testing: stack.ndn_service().get_data()",async()=>{
         describe(`NDN get_data 基本流程HTTP+WebSocket`,async()=>{
             it("本地NDC get_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
@@ -2310,7 +2286,7 @@ describe("CYFS Stack NDN 模块测试", function () {
             })
         }) 
     })
-    describe("【TS-SDK未实现】delete_data 功能测试",async()=>{
+    describe.skip("[Development not implemented] System Testing: stack.ndn_service().delete_data() ",async()=>{
         describe(`NDN delete_data 基本流程HTTP+WebSocket`,async()=>{
             it.skip("协议栈未实现】本地NDC delete_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
@@ -2344,7 +2320,7 @@ describe("CYFS Stack NDN 模块测试", function () {
             })
         }) 
     })
-    describe.skip("【协议栈未实现】put_shared_data 功能测试",async()=>{
+    describe.skip("[Development not implemented] System Testing: stack.ndn_service().put_shared_data()",async()=>{
         describe(`NDN put_shared_data 基本流程HTTP+WebSocket`,async()=>{
             
             it("【大数据会出现异常 BUG未解决】 本地NDC put_shared_data chunk数据 - WebSocket",async()=>{
@@ -2549,7 +2525,7 @@ describe("CYFS Stack NDN 模块测试", function () {
             
         })
     })
-    describe.skip("【ts-sdk 存在问题】get_shared_data 功能测试",async()=>{
+    describe.skip("[Waiting issuse# to fix] System Testing: stack.ndn_service().get_shared_data()",async()=>{
         describe(`NDN get_shared_data 基本流程HTTP+WebSocket`,async()=>{
             it("本地NDC get_shared_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
@@ -3211,7 +3187,7 @@ describe("CYFS Stack NDN 模块测试", function () {
             })
         }) 
     })
-    describe("query_file 功能测试",async()=>{
+    describe("System Testing: stack.ndn_service().query_file()",async()=>{
 
         it(`get_data 获取 File`,async()=>{
             // 创建测试任务

@@ -1,8 +1,8 @@
-import {BaseAction,ActionAbstract,Action} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../../cyfs-test-util";
 import { ErrorCode, Logger} from '../../../common';
 import * as cyfs from "../../../cyfs";
 import {HandlerApi} from "../../../dec-app-base"
-import { StackManager, CyfsDriverType ,PeerInfo} from "../../../cyfs-driver-client"
+import { StackManager} from "../../../cyfs-test-util"
 import {PutDataAction} from "./put_data"
 import {LinkObjectAction} from "../root_state/link_object"
 import {PublishFileAction,PutContextAction,PublishDirAction} from "../trans"

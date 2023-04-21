@@ -1,9 +1,7 @@
-import {BaseAction,ActionAbstract,Action} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../../cyfs-test-util";
 import { ErrorCode, Logger} from '../../../common';
 import * as cyfs from "../../../cyfs";
-import {HandlerApi} from "../../../dec-app-base"
-import { StackManager, CyfsDriverType ,PeerInfo} from "../../../cyfs-driver-client"
-import * as fs from "fs-extra";
+import { StackManager} from "../../../cyfs-test-util"
 /**
  * 输入数据
  */

@@ -1,7 +1,9 @@
 import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
-import { StackManager, CyfsStackDriverManager,CyfsStackDriver ,CyfsDriverType } from "../../../../cyfs-driver-client"
+import { CyfsStackDriverManager} from "../../../../cyfs-driver-client"
+import {ActionManager,StackManager} from "../../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
+import {CyfsDriverType} from "../../../../cyfs-test-base"
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
 import * as action_api from "../../../../dec-app-action"
@@ -35,7 +37,7 @@ describe("ood-daemon 本地1330服务测试", function () {
         ood_daemon_status_port : 32001,
     }]);
     const driver_manager = CyfsStackDriverManager.createInstance();
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         logger = stack_manager.logger!;

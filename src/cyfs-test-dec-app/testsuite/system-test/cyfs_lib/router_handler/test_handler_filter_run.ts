@@ -1,6 +1,6 @@
 import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as myHandler from "../../../../dec-app-base/tool/handler"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"

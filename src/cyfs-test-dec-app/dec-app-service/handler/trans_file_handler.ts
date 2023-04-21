@@ -1,10 +1,9 @@
 import { ErrorCode, Logger, sleep } from '../../common';
 import * as cyfs from "../../cyfs";
 import * as path from "path";
-
 import { BaseHandler } from "./base_handler"
 import { HandlerRequestObject, HandlerRequestObjectDecoder, HandlerApi, NotFoundError, InvalidParamError } from "../../dec-app-base"
-import { StackManager, CyfsDriverType, PeerInfo } from "../../cyfs-driver-client"
+import { StackManager} from "../../cyfs-test-util"
 /**
  * 操作描述：
  * handler：remote 监听文件传输行为（ 参数group 设置传输组,get_object 获取file 对象，post_object 获取context对象，trans 创建传输任务，完成下载流程） 

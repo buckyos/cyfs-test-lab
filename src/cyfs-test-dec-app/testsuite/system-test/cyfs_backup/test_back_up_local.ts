@@ -1,12 +1,10 @@
 import assert = require('assert');
-import * as cyfs from '../../../cyfs'
-import { StackManager, CyfsStackDriverManager, CyfsStackDriver, CyfsDriverType,LocalUtilTool } from "../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
-
-import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../dec-app-action"
-import { HandlerRequestObject,HandlerRequestObjectDecoder, HandlerType } from "../../../dec-app-base"
-import { PrepareTransFileRequest } from '../../../dec-app-action';
+import * as cyfs from 'cyfs';
+import {CyfsDriverType} from "cyfs-test-base";
+import {CyfsStackDriverManager, CyfsStackDriver,LocalUtilTool } from "cyfs-driver-client"
+import {ActionManager,StackManager} from "../../../cyfs-test-util"
+import { ErrorCode, RandomGenerator, sleep, Logger } from 'common';
+import { HandlerRequestObject,HandlerRequestObjectDecoder, HandlerType } from "dec-app-base"
 
 import * as fs from "fs-extra";
 import path  from "path";
@@ -103,7 +101,7 @@ describe("cyfs-back-up数据恢复测试",function(){
     ]);
     
     const driver_manager = CyfsStackDriverManager.createInstance();
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         // 使用代理 或者nginx 转发

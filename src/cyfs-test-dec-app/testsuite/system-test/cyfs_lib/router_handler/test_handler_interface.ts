@@ -1,6 +1,6 @@
 import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as myHandler from "../../../../dec-app-base/tool/handler"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"
@@ -46,7 +46,7 @@ describe("SharedCyfsStack NON相关接口测试", function () {
     const stack_manager = StackManager.createInstance();
     let sysdec = cyfs.get_system_dec_app().object_id;
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();

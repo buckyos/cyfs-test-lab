@@ -1,11 +1,8 @@
 import assert  from 'assert'; 
 import * as cyfs from '../../../../cyfs';
-import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep, ErrorCode} from "../../../../common";
-import * as path from 'path';
-import { before } from 'mocha';
-let encoding = require('encoding');
+import {RandomGenerator,Logger,sleep, ErrorCode} from "../../../../common";
 import * as addContext from "mochawesome/addContext"
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
 
@@ -28,7 +25,7 @@ const test_agent = {
     this.timeout(0);
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();

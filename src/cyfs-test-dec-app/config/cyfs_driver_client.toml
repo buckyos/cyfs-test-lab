@@ -1,0 +1,22 @@
+[config]
+version = "2.12"
+reportCrash = false
+removeLog = false
+heartbeatIntervalTime = 60000
+
+[config.agentServer]
+host="bdttest.tinyappcloud.com"
+port = 11080
+
+[config.updateServer]
+host="bdttest.tinyappcloud.com"
+port = 9012
+
+[config.reportServer]
+host="bdttest.tinyappcloud.com"
+port = 11000
+
+[config.fileUploadServer]
+host="bdttest.tinyappcloud.com"
+port = 11000
+

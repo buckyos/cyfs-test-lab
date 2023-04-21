@@ -1,4 +1,4 @@
-import { BaseAction, ActionAbstract, Action, } from "../../action";
+import { BaseAction, ActionAbstract, Action, } from "../../../cyfs-test-util";
 import { ErrorCode, Logger, RandomGenerator } from '../../../common';
 import * as cyfs from "../../../cyfs";
 import { PutObjectAction } from "../non/put_object"

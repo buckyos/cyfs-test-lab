@@ -1,7 +1,8 @@
 import assert = require('assert');
 import * as cyfs from '../../../../../cyfs'
 
-import { StackManager, CyfsDriverType } from "../../../../../cyfs-driver-client"
+import { CyfsDriverType } from "cyfs-test-base"
+import { StackManager } from "cyfs-test-util"
 import { RandomGenerator, sleep } from '../../../../../common';
 import path = require('path');
 import * as fs from 'fs-extra';

@@ -1,8 +1,8 @@
-import {BaseAction,ActionAbstract,Action} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../../cyfs-test-util";
 import { ErrorCode, Logger} from '../../../common';
 import * as cyfs from "../../../cyfs";
-import {StackManager,CyfsDriverType,PeerInfo} from "../../../cyfs-driver-client"
-import { type } from "os";
+import { StackManager} from "../../../cyfs-test-util"
+
 
 /**
  * 输入数据

@@ -2,9 +2,8 @@ import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../../dec-app-action"
 import {request,ContentType} from "./request"
-
+import {ActionManager} from "../../../../cyfs-test-util"
 //Interface
 //Test scenario
 //System testing
@@ -19,7 +18,7 @@ import {request,ContentType} from "./request"
 describe("ood-daemon 本地1330服务测试", function () {
     this.timeout(0);
    
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         await sleep(5000);
     })

@@ -1,12 +1,12 @@
 import assert = require('assert');
-import * as cyfs from '../../../cyfs'
-import { StackManager, CyfsStackDriverManager,CyfsStackDriver ,CyfsDriverType } from "../../../cyfs-driver-client"
-import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../common';
+import * as cyfs from 'cyfs'
+import {CyfsDriverType} from "cyfs-test-base";
+import {StackManager} from  "cyfs-test-util";
+import {CyfsStackDriverManager} from "cyfs-driver-client"
+import { ErrorCode, RandomGenerator, sleep ,Logger} from 'common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../dec-app-action"
-import { HandlerRequestObject } from "../../../dec-app-base"
-import { PrepareTransFileRequest } from '../../../dec-app-action';
+import {ActionManager} from "cyfs-test-util"
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -35,7 +35,7 @@ describe("Docker 权限控制测试", function () {
         ood_daemon_status_port : 32001,
     }]);
     const driver_manager = CyfsStackDriverManager.createInstance();
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         logger = stack_manager.logger!;

@@ -1,13 +1,10 @@
 import assert = require('assert');
 import * as cyfs from '../../../cyfs'
-
-import { StackManager, CyfsDriverType } from "../../../cyfs-driver-client"
+import {ActionManager,StackManager} from "../../../cyfs-test-util"
+import {CyfsDriverType } from "cyfs-test-base"
 import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
 import path = require('path');
 import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../dec-app-action"
-import { HandlerRequestObject } from "../../../dec-app-base"
-import { PrepareTransFileRequest } from '../../../dec-app-action';
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -211,7 +208,7 @@ describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
     }]);
 
     let logger: Logger;
-    const data_manager = action_api.ActionManager.createInstance();
+    const data_manager = ActionManager.createInstance();
     this.beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         let make_dirver = await stack_manager.init();

@@ -5,7 +5,7 @@ import * as path from 'path';
 import { before } from 'mocha';
 let encoding = require('encoding');
 import * as addContext from "mochawesome/addContext"
-import { StackManager, CyfsDriverType } from "../../../../cyfs-driver-client"
+import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
 

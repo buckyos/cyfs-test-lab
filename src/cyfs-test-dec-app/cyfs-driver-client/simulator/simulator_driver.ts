@@ -4,7 +4,6 @@ import { ErrorCode, Logger,DirHelper, sleep,  } from "../../common"
 import { CyfsStackSimulatorClient } from "./simulator_client"
 import * as ChildProcess from 'child_process';
 import path from "path";
-import { SIMULATOR_LIST } from "../../config/cyfs_driver_config"
 import * as fs from "fs-extra";
 const Base = require('../../common/base.js');
 export class CyfsStackSimulatorDriver implements CyfsStackDriver {
@@ -15,6 +14,7 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     private pid: number;
     private process?: ChildProcess.ChildProcess;
     private logger: Logger;
+    
     constructor(log_path:string) {
         this.log_path = log_path;
         this.cache_path = path.join(this.log_path,"../cache");

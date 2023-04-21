@@ -1,8 +1,6 @@
-import {BaseAction,ActionAbstract,Action} from "../../action";
+import {BaseAction,ActionAbstract,Action} from "../../../cyfs-test-util";
 import { ErrorCode, Logger} from '../../../common';
 import * as cyfs from "../../../cyfs";
-import {StackManager,CyfsDriverType} from "../../../cyfs-driver-client"
-import {PeerInfo,CustumObjectType} from "../../../dec-app-base"
 import {CommonPostObjectHandler} from "../../../dec-app-service"
 /**
  * 输入数据

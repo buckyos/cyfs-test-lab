@@ -1,4 +1,4 @@
-import {BaseAction,ActionAbstract} from "../../action"
+import {BaseAction,ActionAbstract} from "../../../cyfs-test-util"
 import { ErrorCode, Logger} from '../../../common';
 
 export class TransDirAction extends BaseAction implements ActionAbstract {

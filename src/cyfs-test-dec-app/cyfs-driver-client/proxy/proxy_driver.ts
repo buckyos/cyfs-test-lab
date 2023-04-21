@@ -1,11 +1,11 @@
 
-import { CyfsStackDriver,CyfsDriverType,CyfsStackClientConfig } from "../cyfs_driver"
+import { CyfsStackDriver,CyfsStackClientConfig } from "../cyfs_driver"
 import { ErrorCode, Logger, LocalStorageJson, DirHelper, RandomGenerator,} from "../../common"
 import { GlobalConfig, Namespace, LocalMaster, TaskClientInterface, ClientExitCode ,TaskClient} from '../../cyfs-driver-base';
 
 import { CyfsStackProxyClient, } from "./proxy_client"
 import * as os from 'os';
-import { REAL_MACHINE_LIST ,REAL_MACHINE_OTHER_LIST} from "../../config/cyfs_driver_config"
+
 const Base = require('../../common/base.js');
 import path from "path";
 import fs from "fs-extra";

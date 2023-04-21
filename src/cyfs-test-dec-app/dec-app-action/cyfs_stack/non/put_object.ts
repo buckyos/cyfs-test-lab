@@ -1,4 +1,4 @@
-import {BaseAction,ActionAbstract} from "../../action"
+import {BaseAction,ActionAbstract} from "../../../cyfs-test-util"
 import { ErrorCode, Logger, RandomGenerator} from '../../../common';
 import { PeerInfo } from "../../../dec-app-base";
 import * as cyfs from "../../../cyfs";
