@@ -15,7 +15,7 @@ For CYFS Stack&Service Release-83 version, the following modifications have been
 - [x]  [Install DEC APP run command "npm i --production --force" failed #216](https://github.com/buckyos/CYFS/issues/216) : [Test Details](https://github.com/buckyos/cyfs-test-lab/blob/main/doc/en/GithubIssuse/cyfs_stack/app-manager/issues_216.md)
 
 
-- [ ]  [# After switching OOD stop Dec App get prompt of “Can not stop app. app status not found in list“ #222](https://github.com/buckyos/CYFS/issues/222) : [Test Details](https://github.com/buckyos/cyfs-test-lab/blob/main/doc/en/GithubIssuse/cyfs_stack/app-manager/issues_222.md) 
+- [ ]  [After switching OOD stop Dec App get prompt of “Can not stop app. app status not found in list“ #222](https://github.com/buckyos/CYFS/issues/222) : [Test Details](https://github.com/buckyos/cyfs-test-lab/blob/main/doc/en/GithubIssuse/cyfs_stack/app-manager/issues_222.md) 
 
 - [ ]  [ Error of op-env usage in zone manager #224](https://github.com/buckyos/CYFS/issues/224) : [Test Details](https://github.com/buckyos/cyfs-test-lab/blob/main/doc/en/GithubIssuse/cyfs_stack/app-manager/issues_224.md)
 
