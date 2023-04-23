@@ -75,6 +75,14 @@ cargo build -p app-tool --release
 
 Nightly/Beta environments currently have the same official configuration ID, and the difference lies in the app-tool client. Different versions of the client will query from Meta Chain in different environments.
 
+
+Windows tool:
++ [Beta app-tool.exe](http://bdttest.tinyappcloud.com/cyfs_test_package/beta_tool/app-tool.exe)
++ [Nightly app-tool.exe](https://bdttest.tinyappcloud.com/cyfs_test_package/nightly_tool/app-tool.exe)
+
+
+## CYFS Service device id 
+
 + Service List Id
 
 | Describe|AppId |

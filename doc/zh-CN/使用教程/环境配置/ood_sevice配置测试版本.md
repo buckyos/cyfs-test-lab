@@ -14,8 +14,8 @@
   + [Linux](https://www.cyfs.com/download/beta/ood/linux/latest/)
 
 + Nighlty 环境 DIY-OOD 下载：
-  + [WIndows](https://www.cyfs.com/download/beta/ood/windows/latest)
-  + [Linux](https://www.cyfs.com/download/beta/ood/linux/latest/)
+  + [WIndows](http://bdttest.tinyappcloud.com/cyfs_test_package/DIY_OOD_Nightly/CYFSOOD-x86-64-1.0.0.524-nightly.exe)
+  + [Linux](http://bdttest.tinyappcloud.com/cyfs_test_package/DIY_OOD_Nightly/CYFSOOD-x86-64-1.0.0.524-nightly.bin)
 
 ## 配置OOD测试版本方法
 OOD 默认安装的Service版本是官方配置的稳定版本，通常我们用来测试，可以通过配置更新到指定的测试版本
@@ -72,6 +72,11 @@ cargo build -p app-tool --release
 ```
 Nightly/Beta 环境目前官方配置的ID是相同，区别在于app-tool客户端，不同版本的客户端会从不同环境的Meta chain 进行查询
 
+windows系统工具:
++ [Beta app-tool.exe](http://bdttest.tinyappcloud.com/cyfs_test_package/beta_tool/app-tool.exe)
++ [Nightly app-tool.exe](http://bdttest.tinyappcloud.com/cyfs_test_package/nightly_tool/app-tool.exe)
+
+### 服务器配置
 
 + Service List Id
 
@@ -111,5 +116,7 @@ app-tool.exe list show 9tGpLNnPYrQBpwV6LAksdUptxBNFzRFtts1Acrh9DBij
 app-tool.exe app show 9tGpLNnQnReSYJhrgrLMjz2bFoRDVKP9Dp8Crqy1bjzY
 ```
 
-[Document Link]()
-[Chiness]()
+## Document Link
+
+[Document Link](https://github.com/buckyos/cyfs-test-lab/tree/main/doc/en/tutorial/Test-Environment/ood_sevice_config_version.md)
+[Chiness](https://github.com/buckyos/cyfs-test-lab/tree/main/doc/zh-CN/使用教程/环境配置/ood_sevice配置测试版本.md)
