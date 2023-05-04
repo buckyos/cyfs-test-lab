@@ -3,7 +3,7 @@ import * as cyfs from '../../../../cyfs';
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as myHandler from "../../../../dec-app-base/tool/handler"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
-import * as addContext from "mochawesome/addContext"
+
 import * as action_api from "../../../../dec-app-action"
 
 
@@ -55,11 +55,11 @@ const testList = [
 
 
 describe('cyfs sdk router handler filter测试',function(){
-    before(async function(){
+    beforeAll(async function(){
         //用例执行的前置操作
         
     })
-    after(async function(){
+    afterAll(async function(){
         //用例执行的数据回收操作
         
     })    

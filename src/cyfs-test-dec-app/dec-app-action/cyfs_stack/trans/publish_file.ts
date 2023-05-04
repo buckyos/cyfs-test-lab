@@ -25,7 +25,7 @@ type TestOutput = {
 
 export class PublishFileAction extends BaseAction implements ActionAbstract {
 
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
+    static create_by_parent(action:Action): {err:number,action?:PublishFileAction}{
         let run =  new PublishFileAction({
             local :  action.local,
             remote : action.local,
@@ -36,10 +36,10 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
-    static create_by_parent_for_remote(action:Action,logger:Logger): {err:number,action?:PublishFileAction}{
+    static create_by_parent_for_remote(action:Action): {err:number,action?:PublishFileAction}{
         let run =  new PublishFileAction({
             local :  action.remote!,
             remote : action.remote,
@@ -50,7 +50,7 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput; }> {
@@ -62,8 +62,8 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         // 获取连接池中的cyfs stack
         let local = this.local!;
         // 获取测试驱动中的工具类
-        this.logger.info(`PublishFileAction : local : ${local.local_device_id().object_id.to_base_58()}`)
-        this.logger.info(`PublishFileAction: remote : ${this.action.remote!.device_id}`)
+        console.info(`PublishFileAction : local : ${local.local_device_id().object_id.to_base_58()}`)
+        console.info(`PublishFileAction: remote : ${this.action.remote!.device_id}`)
         // 如果没有文件，创建测试文件
         let file_name:string|undefined;
         let file_path :string;
@@ -73,13 +73,13 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
             let file_source = this.local!;
             // 获取测试驱动中的工具类
             let file_source_tool = stack_manager.driver!.get_client(this.action.local.peer_name).client!.get_util_tool();
-            this.logger.info(`publish file device : ${file_source.local_device_id().object_id.to_base_58()}`);
+            console.info(`publish file device : ${file_source.local_device_id().object_id.to_base_58()}`);
             // 创建测试文件
             let local_file = await file_source_tool.create_file(req.file_size!);
             file_name = local_file.file_name!
             file_path = local_file.file_path!
             md5 = local_file.md5!
-            this.logger.info(`local_file : ${JSON.stringify(local_file)}`);
+            console.info(`local_file : ${JSON.stringify(local_file)}`);
         }
         // 发布文件
         let begin_time = Date.now();
@@ -99,10 +99,10 @@ export class PublishFileAction extends BaseAction implements ActionAbstract {
         });
         this.action.output!.total_time = Date.now() - begin_time; 
         if(info1.err){
-            this.logger.error(`publish_file error : ${JSON.stringify(info1)} `);
+            console.error(`publish_file error : ${JSON.stringify(info1)} `);
             return { err: info1.val.code, log: info1.val.msg}
         }else{
-            this.logger.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);
+            console.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);
             return { err: ErrorCode.succ, log: "success",resp:{file_id:info1.unwrap().file_id,file_name,file_path:file_path!,md5}}
         }
      

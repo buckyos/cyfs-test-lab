@@ -1,6 +1,6 @@
-import * as cyfs from '@src/cyfs';
-import {HandlerRequestObject,HandlerRequestObjectDecoder} from '@src/dec-app-base/dec_object';
-import {HandlerApi,HandlerType} from '@src/dec-app-base/handler_api';
+import * as cyfs from '@/cyfs';
+import {HandlerRequestObject,HandlerRequestObjectDecoder} from '@/dec-app-base/dec_object';
+import {HandlerApi,HandlerType} from '@/dec-app-base/handler_api';
 import {StackInstance} from "../utils/stack"
 //import {RandomGenerator,ErrorCode} from '@src/common';
 

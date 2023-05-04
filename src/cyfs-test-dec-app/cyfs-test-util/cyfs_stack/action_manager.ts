@@ -27,6 +27,7 @@ export class ActionManager {
             testcase_id :  `Testcase-${RandomGenerator.string(10)}-${Date.now()}`,
             action_list : []
         }
+        console.info(`init ActionManager frist,begin record test action data`)
     }
     record_action(action:Action){
         this.current_action.action_list.push(action)

@@ -12,7 +12,7 @@ type TestInput = {
 }
 
 export class AddAccess extends BaseAction implements ActionAbstract {
-    static create_by_parent(action: Action, logger: Logger): { err: number, action?: AddAccess } {
+    static create_by_parent(action: Action): { err: number, action?: AddAccess } {
         let run = new AddAccess({
             local: action.local,
             remote: action.remote,
@@ -20,7 +20,7 @@ export class AddAccess extends BaseAction implements ActionAbstract {
             parent_action: action.action_id!,
             expect: { err: 0 },
 
-        }, logger)
+        })
         return { err: ErrorCode.succ, action: run }
     }
     async start(req: TestInput): Promise<{ err: number; log: string; resp?: any; }> {
@@ -37,7 +37,7 @@ export class AddAccess extends BaseAction implements ActionAbstract {
             req.req_path!,
             req.access
         ));
-        this.logger.info(`${req.req_path} root_state_meta_stub add_access result = ${test}`);
+        console.info(`${req.req_path} root_state_meta_stub add_access result = ${test}`);
 
         if (test.err) {
             return { err: ErrorCode.fail, log: `${JSON.stringify(test)}` }

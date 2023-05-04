@@ -1,19 +1,11 @@
-import {CyfsStackDriverManager, CyfsStackDriver,CyfsStackClientConfig} from "cyfs-driver-client"
-import {CyfsDriverType} from "cyfs-test-base"
+import {CyfsStackDriverManager, CyfsStackDriver,CyfsStackClientConfig} from "../../cyfs-driver-client"
+import {CyfsDriverType} from "../../cyfs-test-base"
 import * as cyfs from "../../cyfs"
-import { ErrorCode, Logger } from "../../common";
+import { ErrorCode, Logger ,sleep} from "../../common";
 var date = require("silly-datetime");
 import path from "path";
-import * as fs from "fs-extra";
-import {load_toml} from "../tools/toml_load"
+import {load_driver_machine_conf} from "../tools/toml_load"
 import {PeerInfo} from "../../cyfs-test-base"
-
-
-export function load_driver_machine(){
-    let cyfs_driver_client_conf = path.join(__dirname,"../config/cyfs_driver_client.toml")
-    let config = load_toml(cyfs_driver_client_conf);
-    return config.config
-}
 
 
 
@@ -25,8 +17,11 @@ export class StackManager {
     private driver_manager?: CyfsStackDriverManager;
     public agent_list?: Array<CyfsStackClientConfig>;
     public driver?: CyfsStackDriver
-    public logger?: Logger;
-    private config : any;
+    private config : {
+        DRIVER_TYPE : CyfsDriverType,
+        real_machine : Array<CyfsStackClientConfig>,
+        simulator :  Array<CyfsStackClientConfig>,
+    };
     //单例模式
     static createInstance(driver_type?: CyfsDriverType,agent_list?:Array<CyfsStackClientConfig>): StackManager {
         if (!StackManager.manager) {
@@ -36,50 +31,39 @@ export class StackManager {
     }
     constructor(driver_type?: CyfsDriverType,agent_list?:Array<CyfsStackClientConfig>) {
         this.peer_map = new Map();
-        this.config = load_driver_machine();
+        this.config = load_driver_machine_conf();
         if(this.config == undefined){
             throw new Error(`Please check your cyfs_driver_client.toml is exist`);
+        }else{
+            console.info(`cyfs_driver_client.toml = ${JSON.stringify(this.config)}`)
         }
-        if (!driver_type) {
+        
+        if(driver_type != undefined){
+            console.info(`will use ${driver_type},agent_list=`,agent_list)
+            this.driver_type = driver_type;
+            this.agent_list = agent_list;
+        }else{
+            this.driver_type = this.config.DRIVER_TYPE;
+            console.info(`will use cyfs_driver_client.toml config driver,${this.driver_type}`)
             // 不指定使用配置文件
-            if (this.config.DRIVER_TYPE == CyfsDriverType.real_machine.toString()) {
-                this.driver_type = CyfsDriverType.real_machine
-                this.agent_list = this.config.REAL_MACHINE_LIST
-            } else if (this.config.DRIVER_TYPE == CyfsDriverType.simulator.toString()) {
-                this.driver_type = CyfsDriverType.simulator
-                this.agent_list = this.config.SIMULATOR_LIST
-            } else if(this.config.DRIVER_TYPE == CyfsDriverType.other.toString()){
-                this.driver_type = CyfsDriverType.other
+            if (this.driver_type == CyfsDriverType.real_machine) {
+                this.agent_list = this.config.real_machine
+            } else if (this.config.DRIVER_TYPE == CyfsDriverType.simulator) {
+                this.agent_list = this.config.simulator
+            } else if(this.config.DRIVER_TYPE == CyfsDriverType.other){
                 this.agent_list = agent_list;
             }  else {
                 // 默认使用模拟器
                 this.driver_type = CyfsDriverType.simulator
-                this.agent_list = this.config.SIMULATOR_LIST
+                this.agent_list = this.config.simulator
             }
-        } else {
-            this.driver_type = driver_type;
-            this.agent_list = agent_list;
-        }
-    }
-    get_logger() {
-        return this.logger!;
+        }  
+        console.info(`init StackManager frist,driver_type = ${this.driver_type},agent_list = ${JSON.stringify(this.agent_list)}`)
     }
     async init() {
-        // 初始化测试驱动
-        let date_info = date.format(new Date(), 'YYYY_MM_DD_HH_mm_ss')
-        let log_dir = path.join(__dirname, "../", "blog", date_info);
-        if (!fs.pathExistsSync(log_dir)) {
-            fs.mkdirpSync(log_dir);
-        }
-        cyfs.clog.enable_file_log({
-            name: "cyfs_stack",
-            dir: log_dir,
-            file_max_size: 1024 * 1024 * 10,
-            file_max_count: 10,
-        });
-        this.logger = new Logger(cyfs.clog.info, cyfs.clog.debug, cyfs.clog.error, log_dir)
-        this.logger.info(`init cyfs stack manager log success`);
+        await sleep(1000);
         if(this.driver_type == "Runtime" ||  this.driver_type == "Gateway" ){
+            console.info(`driver_type is Runtime or Gateway,not need start test driver,will connect local port`)
             return {
                 err: ErrorCode.succ,
                 log:`init cyfs log suucess , run without driver`
@@ -87,12 +71,13 @@ export class StackManager {
         }
         else{
             this.driver_manager = CyfsStackDriverManager.createInstance();
+            console.info(`agent_list: ${this.agent_list?.length}`)
             let result = await this.driver_manager.create_driver(this.driver_type,this.agent_list!);
             if (result.err) {
-                this.logger!.info(`${this.driver_type} create error,result = ${result}`)
+                console.info(`${this.driver_type} create error,result = ${result}`)
                 return result;
             }
-            this.driver = result.driver;
+            this.driver = result.driver!;
             return result;
         }
         
@@ -115,11 +100,11 @@ export class StackManager {
 
     async check_stack_online(): Promise<{ err: ErrorCode, log: string }> {
         return new Promise(async (V) => {
-            this.logger!.info(`######## cyfs satck check online running`)
+            console.info(`######## cyfs satck check online running`)
             let running = true
             setTimeout(async () => {
                 if (running) {
-                    this.logger!.error(`######## check_stack_online timeout`)
+                    console.error(`######## check_stack_online timeout`)
                     V({ err: ErrorCode.cyfsStackOnlineTimeout, log: "cyfs satck online timeout" });
                 }
             }, 20000)
@@ -133,13 +118,13 @@ export class StackManager {
                 let result = await check;
                 if (result.err) {
                     running = false;
-                    this.logger!.error(`######## cyfs satck check online fail,result = ${JSON.stringify(result)}`)
+                    console.error(`######## cyfs satck check online fail,result = ${JSON.stringify(result)}`)
                     V({ err: ErrorCode.cyfsStackOnlineFailed, log: "cyfs satck online failed" });
                 }
-                //this.logger!.info(`cyfs satck check online success,result = ${JSON.stringify(result)}`)
+                //console.info(`cyfs satck check online success,result = ${JSON.stringify(result)}`)
             }
             running = false;
-            this.logger!.info(`######## cyfs satck check online sucesss`)
+            console.info(`######## cyfs satck check online sucesss`)
             V({ err: ErrorCode.succ, log: "success" })
         })
 
@@ -147,8 +132,8 @@ export class StackManager {
 
     async load_real_machine(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         
-        for (let agent of this.config.REAL_MACHINE_LIST) {
-            this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
+        for (let agent of this.config.real_machine) {
+            console.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
             if (requestor_type == cyfs.CyfsStackRequestorType.WebSocket) {
                 let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
@@ -171,7 +156,7 @@ export class StackManager {
 
     async load_driver_manager(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
         for (let agent of this.driver_manager!.stack_port_map) {
-            this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
+            console.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
             if (requestor_type == cyfs.CyfsStackRequestorType.WebSocket) {
                 let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
@@ -221,8 +206,8 @@ export class StackManager {
         }
     }
     async load_simulator(requestor_type: cyfs.CyfsStackRequestorType, dec_id: cyfs.ObjectId) {
-        for (let agent of this.config.SIMULATOR_LIST) {
-            this.logger!.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
+        for (let agent of this.config.simulator) {
+            console.info(`${agent.peer_name} open bdt satck type = ${requestor_type} dec_id = ${dec_id}`);
             let stack_param = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(agent.http_port, agent.ws_port, dec_id).unwrap();
             if (requestor_type == cyfs.CyfsStackRequestorType.WebSocket) {
                 let ws_param = cyfs.SharedCyfsStackParam.ws_requestor_config();
@@ -232,6 +217,7 @@ export class StackManager {
             if(this.peer_map.has(agent.peer_name)){
                 stack_map = this.peer_map.get(agent.peer_name)!
             }else{
+                console.info(`create satck cahce ${agent.peer_name}`)
                 this.peer_map.set(agent.peer_name, stack_map);
             }
             let stack = cyfs.SharedCyfsStack.open(stack_param);
@@ -240,18 +226,21 @@ export class StackManager {
             } else {
                 stack_map.set(`system_${cyfs.CyfsStackRequestorType}`, stack);
             }
+            console.info(`${agent.peer_name} cache SharedCyfsStack ${dec_id.to_base_58()}_${requestor_type}`)
         }
+        console.info(`stack list :${JSON.stringify(this.peer_map)}`)
     }
    
     
     get_cyfs_satck(local: PeerInfo): { err: ErrorCode, log: string, stack?: cyfs.SharedCyfsStack } {
+        console.debug(`get_cyfs_satck : ${JSON.stringify(local)}`)
         if (!this.peer_map.has(local.peer_name)) {
             return { err: ErrorCode.notFound, log: `error peer name ${local.peer_name}` }
         }
         if (!this.peer_map.get(local.peer_name)!.has(`${local.dec_id}_${local.type}`)) {
             return { err: ErrorCode.notFound, log: `error dec_id dec_id =  ${local.dec_id},type = ${local.type}` }
         }
-        this.logger!.info(`get satck ${local.peer_name} success,dec_id = ${local.dec_id} type = ${local.type}`)
+        console.debug(`get satck ${local.peer_name} success,dec_id = ${local.dec_id} type = ${local.type}`)
         return { err: ErrorCode.succ, log: `get cyfs stack success`, stack: this.peer_map.get(local.peer_name)!.get(`${local.dec_id}_${local.type}`)! }
     }
     get_device_id(local: PeerInfo):{ err: ErrorCode, log: string, device_id?: cyfs.DeviceId }{
@@ -266,7 +255,7 @@ export class StackManager {
     } 
 
     destory() {
-        this.logger!.info(`cyfs satck manager destory all cyfs stack`)
+        console.info(`cyfs satck manager destory all cyfs stack`)
         for (let peer of this.peer_map.values()) {
             for (let stack of peer.values()) {
                 stack = undefined;

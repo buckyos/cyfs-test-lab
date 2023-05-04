@@ -92,7 +92,7 @@ export class Channel extends EventEmitter {
 
         this.m_rpc = rpc;
         rpc.on('command', (r: Rpc, c: Command) => {
-            this.m_logger.info(`recv command from rpc, ${stringifyComand(c)} namespace=${JSON.stringify(this.namespace)}`);
+            console.info(`recv command from rpc, ${stringifyComand(c)} namespace=${JSON.stringify(this.namespace)}`);
             this._onRecvCommand(c);
         });
 
@@ -189,7 +189,7 @@ export class Channel extends EventEmitter {
         }
 
         this.m_timeoutTimer = setTimeout(() => {
-            this.m_logger.info(`----------channel timeout, namespace=${JSON.stringify(this.namespace)}`);
+            console.info(`----------channel timeout, namespace=${JSON.stringify(this.namespace)}`);
             delete this.m_timeoutTimer;
             this._onExit();
         }, this.m_timeout);

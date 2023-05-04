@@ -47,7 +47,7 @@ async function main() {
     //     process.exit(0);
     // })
     let logger = new Logger(cyfs.clog.info, cyfs.clog.debug, cyfs.clog.error, cyfs.get_app_log_dir(APP_NAME))
-    logger.info(`init cyfs stack manager log success`);
+    console.info(`init cyfs stack manager log success`);
     let req_path = new cyfs.RequestGlobalStatePath(stack.dec_id, "QATest").toString()
     let result = await stack.router_handlers().add_post_object_handler(
         cyfs.RouterHandlerChain.Handler,
@@ -56,15 +56,15 @@ async function main() {
         `obj_type == ${CustumObjectType.HandlerRequest}`,
         req_path,
         cyfs.RouterHandlerAction.Default,
-        new CommonPostObjectHandler(stack, { peer_name: stack.local_device_id().to_base_58(), type: cyfs.CyfsStackRequestorType.Http }, logger)
+        new CommonPostObjectHandler(stack, { peer_name: stack.local_device_id().to_base_58(), type: cyfs.CyfsStackRequestorType.Http })
     );
     if(result.err){
-        logger.error(`add_post_object_handler error = ${result.val.msg} `);
+        console.error(`add_post_object_handler error = ${result.val.msg} `);
     }
-    logger.info(`init cyfs stack manager log success`);
+    console.info(`init cyfs stack manager log success`);
     while(true){
         await cyfs.sleep(60*1000);
-        logger.info(`dec app service is running`);
+        console.info(`dec app service is running`);
     }
     
 }

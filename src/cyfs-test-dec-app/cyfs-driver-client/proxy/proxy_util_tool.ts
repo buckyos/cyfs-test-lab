@@ -61,7 +61,7 @@ export class ProxyUtilTool implements UtilTool {
             peer_name: this.peer_name,
             file_size,
         }, this.m_agentid!, 10 * 1000);
-        this.logger.info(`${this.tags} createFile = ${JSON.stringify(result)}`)
+        console.info(`${this.tags} createFile = ${JSON.stringify(result)}`)
         return result.value;
     }
     async create_dir(file_number: number, file_size: number, dir_number: number, deep: string): Promise<{
@@ -77,7 +77,7 @@ export class ProxyUtilTool implements UtilTool {
             deep,
             file_size,
         }, this.m_agentid!, 10 * 1000);
-        this.logger.info(`${this.tags} createDir = ${JSON.stringify(result)}`)
+        console.info(`${this.tags} createDir = ${JSON.stringify(result)}`)
         return result.value;
     }
     async md5_file(file_path: string): Promise<{ err: ErrorCode, md5?: string }> {
@@ -87,7 +87,7 @@ export class ProxyUtilTool implements UtilTool {
             peer_name: this.peer_name,
             file_path,
         }, this.m_agentid!, 10 * 1000);
-        this.logger.info(`${this.tags} md5File = ${JSON.stringify(result)}`)
+        console.info(`${this.tags} md5File = ${JSON.stringify(result)}`)
         return result.value;
     }
     async get_cache_path(): Promise<{ err: ErrorCode,platform?:string, cache_path?: { file_upload: string, file_download: string } }> {
@@ -96,7 +96,7 @@ export class ProxyUtilTool implements UtilTool {
             name: "get_cache_path",
             peer_name: this.peer_name,
         }, this.m_agentid!, 10 * 1000);
-        this.logger.info(`${this.tags} getCachePath = ${JSON.stringify(result)}`)
+        console.info(`${this.tags} getCachePath = ${JSON.stringify(result)}`)
         return result.value;
     }
     integer(max: number, min: number = 0) {
@@ -118,7 +118,7 @@ export class ProxyUtilTool implements UtilTool {
         return result;
     };
     async rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }> {
-        this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
+        console.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
 
         await this.init_cache();
         let chunk_data: Buffer = Buffer.from("");
@@ -155,7 +155,7 @@ export class ProxyUtilTool implements UtilTool {
     }
 
     async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {
-        this.logger.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
+        console.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
         let chunk_list: Array<cyfs.ChunkId> = []
         let file_data: Buffer = Buffer.from("");
         while (file_size > chunk_size) {

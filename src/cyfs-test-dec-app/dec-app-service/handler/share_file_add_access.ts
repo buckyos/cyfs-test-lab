@@ -22,14 +22,14 @@ export class ShareFileAddAccessHandler extends BaseHandler {
         // 将对象挂载
         let op_env = (await this.stack.root_state_stub(this.stack.local_device_id().object_id,this.stack.dec_id).create_path_op_env()).unwrap();
         let modify_path = await op_env.insert_with_path(request_info.req_path!,cyfs.ObjectId.from_base_58(request_info.file_id).unwrap());
-        this.logger.info(`${this.stack.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);
+        console.info(`${this.stack.local_device_id().object_id.to_base_58()} op_env.insert_with_path ${JSON.stringify(req)},result = ${JSON.stringify(modify_path)} `);
         let commit_result = await op_env.commit();
         // 修改对象权限
         let test = await this.stack.root_state_meta_stub(this.stack.local_device_id().object_id,this.stack.dec_id).add_access(cyfs.GlobalStatePathAccessItem.new(
             request_info.req_path!,
             cyfs.AccessString.full(),
         ));
-        this.logger.info(`${request_info.req_path} root_state_meta_stub add_access result = ${test}`);
+        console.info(`${request_info.req_path} root_state_meta_stub add_access result = ${test}`);
         // 检查是否关联成功
         let check_result = await this.stack.root_state_accessor().get_object_by_path({
             common: {
@@ -42,7 +42,7 @@ export class ShareFileAddAccessHandler extends BaseHandler {
             inner_path: request_info.req_path!,
         }); 
         if(check_result.err){
-            this.logger.error(`${this.stack.local_device_id().object_id.to_base_58()} get req_path ${request_info.req_path!}  result =  ${JSON.stringify(check_result)}`)
+            console.error(`${this.stack.local_device_id().object_id.to_base_58()} get req_path ${request_info.req_path!}  result =  ${JSON.stringify(check_result)}`)
             return{
                 ShareFileAddAccessHandlerResp:{ result: check_result.val.code, msg : check_result.val.msg}
             } 

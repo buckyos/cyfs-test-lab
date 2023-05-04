@@ -175,7 +175,7 @@ export class ClientStack implements ClientStackInterface {
 
             return {err: ErrorCode.succ, dstPath};
         } catch (err) {
-            this.logger.error(`zip failed, src=${srcfile}, dst=${dstfileName}, err=${err}`);
+            console.error(`zip failed, src=${srcfile}, dst=${dstfileName}, err=${err}`);
             return {err: ErrorCode.exception};
         }
     }
@@ -187,7 +187,7 @@ export class ClientStack implements ClientStackInterface {
 
         let info: any = await FileUploader.getInstance().upload(file, remoteDir);
         if (info.result !== 0) {
-        	this.m_logger.error(`uploadfile failed,info=${JSON.stringify(info)}`);
+        	console.error(`uploadfile failed,info=${JSON.stringify(info)}`);
             return {err: ErrorCode.netError};
         }
 
@@ -311,7 +311,7 @@ export class ClientStack implements ClientStackInterface {
                 });
     
                 rpc.once('error', (r: Rpc, errcode: ErrorCode) => {
-                    this.m_logger.debug(`connect to server failed,ip=${ip},port=${port} will retry`);
+                    console.debug(`connect to server failed,ip=${ip},port=${port} will retry`);
                     v(errcode);
                 });
     

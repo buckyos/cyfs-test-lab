@@ -12,17 +12,17 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 
 describe("CYFS Stack NDN 模块测试", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance(CyfsDriverType.simulator);
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        stack_manager.logger!.info(`##########用例执开始执行`);
+        console.info(`##########用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         //await sleep(10*1000)

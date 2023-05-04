@@ -3,3 +3,8 @@
 /my-web/
 !/cyfs
 /*mochawesome-report*
+report
+coverage
+allure-report
+allure-results
+test-report

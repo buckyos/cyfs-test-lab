@@ -40,7 +40,7 @@ export class AddContextHandler extends BaseHandler {
                     chunk_codec_desc = cyfs.ChunkCodecDesc.Unknown();
                 }
                 let  device_id = cyfs.DeviceId.from_base_58(device.toString()).unwrap();
-                this.logger.info(`${context_cache.desc().calculate_id().to_base_58()} context add device source ${device_id} ${JSON.stringify(chunk_codec_desc)}`)
+                console.info(`${context_cache.desc().calculate_id().to_base_58()} context add device source ${device_id} ${JSON.stringify(chunk_codec_desc)}`)
                 context_cache.body_expect().content().device_list.push(new cyfs.TransContextDevice(device_id,chunk_codec_desc!));
             }
         }

@@ -17,14 +17,14 @@ type TestOutput = {
 }
 
 export class PutDataAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PutDataAction}{
+    static create_by_parent(action:Action): {err:number,action?:PutDataAction}{
         let run =  new PutDataAction({
             local : action.remote!,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {
@@ -48,14 +48,14 @@ export class PutDataAction extends BaseAction implements ActionAbstract {
             object_id = local_data.chunk_id.calculate_id();
             length = req.chunk_size;
             md5 = await local_tool.md5_buffer(data as Buffer);
-            this.logger.info(`put_data chunk  = ${local_data.chunk_id} object_id = ${object_id}`)
+            console.info(`put_data chunk  = ${local_data.chunk_id} object_id = ${object_id}`)
         }else{
             return {
                 err: ErrorCode.fail, 
                 log: "cyfs stack not support"
             }
         }
-        this.logger.info(`random data success ${object_id.to_base_58()}`)
+        console.info(`random data success ${object_id.to_base_58()}`)
         let begin_send = Date.now();
         let put_result =await stack.ndn_service().put_data({
             common: {
@@ -68,7 +68,7 @@ export class PutDataAction extends BaseAction implements ActionAbstract {
         });
         //await fs.appendFileSync("E:\\cyfs\\data_put.txt", data);
         let send_time = Date.now() - begin_send;
-        this.logger.info(`put_data send_time = ${send_time} result =  ${put_result.err}`)
+        console.info(`put_data send_time = ${send_time} result =  ${put_result.err}`)
         if(put_result.err){
             return {err:put_result.val.code,log:put_result.val.msg}
         }

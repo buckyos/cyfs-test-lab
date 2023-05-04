@@ -57,7 +57,7 @@ export class Rpc extends EventEmitter {
     }
 
     connect(ip: string, port: number): ErrorCode {
-        this.m_logger.info(`begin connect to server ip=${ip} port=${port}`);
+        console.info(`begin connect to server ip=${ip} port=${port}`);
         this.m_socket = net.createConnection(port, ip);
         this.m_socket!.once('connect', () => {
             this._initSocket();
@@ -66,7 +66,7 @@ export class Rpc extends EventEmitter {
         });
         
         this.m_socket!.once('error', (err: Error) => {
-            this.m_logger.error(`connect failed, err=${err}`);
+            console.error(`connect failed, err=${err}`);
             this.emit('error', this, ErrorCode.fail);
         });
 
@@ -80,10 +80,10 @@ export class Rpc extends EventEmitter {
     }
 
     send(command: Command): ErrorCode {
-        this.m_logger.debug(`send command, ${stringifyComand(command)}`);
+        console.debug(`send command, ${stringifyComand(command)}`);
         let info = this._encodeMsg({magic: Buffer.from('12'), version: this.m_version, command});
         if (info.err) {
-            this.m_logger.error(`send encode msg failed,for encode failed, err=${info.err}, ${stringifyComand(command)}`);
+            console.error(`send encode msg failed,for encode failed, err=${info.err}, ${stringifyComand(command)}`);
             return info.err;
         }
         return this._send(info.buffer!);
@@ -102,7 +102,7 @@ export class Rpc extends EventEmitter {
             this.m_bQueue = !this.m_socket!.write(buff);
             return ErrorCode.succ;
         } catch (e) {
-            this.m_logger.error(`send failed, error=${e}, s=${this.m_id}`);
+            console.error(`send failed, error=${e}, s=${this.m_id}`);
             return ErrorCode.fail;
         }
     }
@@ -135,7 +135,7 @@ export class Rpc extends EventEmitter {
             while (this.m_recvCache && this.m_recvCache.length > 8) {
                 let msgInfo = this._decodeMsg();
                 if (msgInfo.err) {
-                    this.m_logger.error(`decode failed, err=${msgInfo.err}`);
+                    console.error(`decode failed, err=${msgInfo.err}`);
                     if (msgInfo.err !== ErrorCode.noMoreData) {
                         this.m_recvCache = Buffer.from('');
                     }
@@ -147,12 +147,12 @@ export class Rpc extends EventEmitter {
         });
 
         this.m_socket!.on('error', (err) => {
-            this.m_logger.error(`socket error ${JSON.stringify(err)}`);
+            console.error(`socket error ${JSON.stringify(err)}`);
             this.emit('error', this, ErrorCode.fail);
         })
 
         this.m_socket!.on('close', (had_error) => {
-            this.m_logger.error(`socket close ${had_error}`);
+            console.error(`socket close ${had_error}`);
             this.emit('close', this, had_error);
         });
     }
@@ -162,28 +162,28 @@ export class Rpc extends EventEmitter {
             let decodeOffset: number = 0;
 
             if (this.m_recvCache!.length < 2 + decodeOffset) {
-                this.m_logger.error(`not get magic when decode for no more data, length=${this.m_recvCache!.length}, need=${2+decodeOffset}`);
+                console.error(`not get magic when decode for no more data, length=${this.m_recvCache!.length}, need=${2+decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             let magic = this.m_recvCache!.slice(decodeOffset, decodeOffset + 2);
             decodeOffset += 2;
 
             if (this.m_recvCache!.length < 2 + decodeOffset) {
-                this.m_logger.error(`not get version when decode for no more data, length=${this.m_recvCache!.length}, need=${2+decodeOffset}`);
+                console.error(`not get version when decode for no more data, length=${this.m_recvCache!.length}, need=${2+decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             let version = this.m_recvCache!.readUInt16LE(decodeOffset);
             decodeOffset += 2;
 
             if (this.m_recvCache!.length < 4 + decodeOffset) {
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4+decodeOffset}`);
+                console.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4+decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             let length = this.m_recvCache!.readUInt32LE(decodeOffset);
             decodeOffset += 4;
             if (this.m_recvCache!.length < length + decodeOffset) {
-                this.m_logger.debug(this.m_recvCache!.toString())
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}<${length + decodeOffset}`);
+                console.debug(this.m_recvCache!.toString())
+                console.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}<${length + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             
@@ -199,7 +199,7 @@ export class Rpc extends EventEmitter {
             let msg: RpcMsg = {magic, version, command: cmdInfo.command!};
             return { err: ErrorCode.succ,  msg}; 
         } catch (e) {
-            this.m_logger.error(`[rpc] decode msg exception, e=${e}`);
+            console.error(`[rpc] decode msg exception, e=${e}`);
             return {err: ErrorCode.exception};
         }
     }
@@ -218,7 +218,7 @@ export class Rpc extends EventEmitter {
             buffer = Buffer.concat([rpcMsg.magic.slice(0, 2), buffer, body]);
             return { err: ErrorCode.succ, buffer };
         } catch (e) {
-            this.m_logger.error(`[rpc] encode msg exception, e=${e}`);
+            console.error(`[rpc] encode msg exception, e=${e}`);
             return {err: ErrorCode.exception};
         }
     }

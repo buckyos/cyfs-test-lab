@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import * as cyfs from '@src/cyfs';
+import * as cyfs from '@/cyfs';
 import { Button, Input, Spin } from 'antd';
-import { post_put_object } from "@www/apis/handler_request"
+import { post_put_object } from "@/www/apis/handler_request"
 import Select from 'react-select'
 import JSONEditor from 'react-json-editor-ajrm';
 

@@ -4,7 +4,7 @@ import {create_people_random,create_device} from "../../../../../dec-app-base"
 import * as myHandler from "../../../../../dec-app-base/tool/handler"
 import {ActionManager,StackManager} from "../../../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../common';
-import * as addContext from "mochawesome/addContext"
+
 import * as action_api from "../../../../../dec-app-action"
 
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
@@ -17,15 +17,15 @@ let system_stack : cyfs.SharedCyfsStack
 let zone1device2 : cyfs.SharedCyfsStack
 
 describe("SharedCyfsStack crypto目录", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance();
     let sysdec = cyfs.get_system_dec_app().object_id;
     let logger : Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
@@ -33,7 +33,7 @@ describe("SharedCyfsStack crypto目录", function () {
         let dec_app_2_client = await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http,system_dec_app);
         assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
         assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
         zone1device1 = stack_manager.get_cyfs_satck({
             peer_name : "zone1_device1",
             type : cyfs.CyfsStackRequestorType.Http,
@@ -55,13 +55,13 @@ describe("SharedCyfsStack crypto目录", function () {
             dec_id : dec_app_1.to_base_58() 
         }).stack!;
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -72,17 +72,17 @@ describe("SharedCyfsStack crypto目录", function () {
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
 
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例: ${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     });
 
 

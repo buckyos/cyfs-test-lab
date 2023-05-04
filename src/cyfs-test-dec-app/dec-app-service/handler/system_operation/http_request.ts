@@ -1,16 +1,14 @@
-import { ErrorCode, Logger, sleep } from '../../../common';
-import * as cyfs from "../../../cyfs";
-import * as path from "path";
+
 import { BaseHandler } from "../base_handler"
 import { HandlerRequestObject, HandlerRequestObjectDecoder, HandlerApi, NotFoundError, InvalidParamError,HandlerType } from "../../../dec-app-base"
-import * as fs from "fs-extra"
-import fetch from 'node-fetch';
+//import fetch from 'node-fetch';
 
 export class HttpRequestHandler extends BaseHandler {
     async start(req: HandlerRequestObject): Promise<HandlerRequestObject> {
         // 封装一些操作
-        this.handler_info.type = "HttpRequestHandler"
-        return await super.start(req);
+        this.handler_info.type! = "HttpRequestHandler";
+        let result = await super.start(req);
+        return result;
     }
     async run(req: HandlerApi): Promise<HandlerApi> {
         // 默认没有操作返回报错
@@ -23,9 +21,8 @@ export class HttpRequestHandler extends BaseHandler {
                 method: request.method,
                 body: request.data,
                 headers: {'Content-Type': 'application/json'},
-                timeout : 30*1000
             });
-            const data = await response.json()
+            const data = await response.json() as any
             if(response.status !=200){
                 return {
                     OS_Network_HttpRequestResp: {
@@ -35,7 +32,7 @@ export class HttpRequestHandler extends BaseHandler {
                     }
                 }
             }
-            this.logger.info(`send http request${request.url} success`);
+            console.info(`send http request${request.url} success`);
             return {
                 OS_Network_HttpRequestResp: {
                     result: 0,
@@ -44,7 +41,7 @@ export class HttpRequestHandler extends BaseHandler {
                 }
             }
         } catch (error) {
-            this.logger.error(`send http request error:${error}`);
+            console.error(`send http request error:${error}`);
             return {
                 OS_Network_HttpRequestResp: {
                     result: 1,

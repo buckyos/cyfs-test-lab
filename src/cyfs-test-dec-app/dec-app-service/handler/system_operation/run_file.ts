@@ -72,10 +72,10 @@ export class RunFIleHandler extends BaseHandler {
                         }) 
                     })
                 }
-                this.logger.error(`run command ${request} success`);
+                console.error(`run command ${request} success`);
                 
             } catch (error) {
-                this.logger.error(`run file ${request.file_path} error:${error}`);
+                console.error(`run file ${request.file_path} error:${error}`);
                 resolve({
                     OS_IO_RunFileResp: {
                         result: 1,

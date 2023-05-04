@@ -29,7 +29,7 @@ type TestOutput = {
 
 export class PublishDirAction extends BaseAction implements ActionAbstract {
 
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PublishDirAction}{
+    static create_by_parent(action:Action): {err:number,action?:PublishDirAction}{
         let run =  new PublishDirAction({
             local :  action.local,
             remote : action.local,
@@ -40,10 +40,10 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
-    static create_by_parent_for_remote(action:Action,logger:Logger): {err:number,action?:PublishDirAction}{
+    static create_by_parent_for_remote(action:Action): {err:number,action?:PublishDirAction}{
         let run =  new PublishDirAction({
             local :  action.remote!,
             remote : action.remote,
@@ -54,7 +54,7 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput; }> {
@@ -66,7 +66,7 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
         // 获取连接池中的cyfs stack
         let local = this.local!;
         // 获取测试驱动中的工具类
-        this.logger.info(`PublishDirAction : local : ${local.local_device_id().object_id.to_base_58()}`)
+        console.info(`PublishDirAction : local : ${local.local_device_id().object_id.to_base_58()}`)
 
         // 如果没有文件，创建测试文件
         // let file_name:string|undefined;
@@ -77,7 +77,7 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
         let file_source = this.local!;
         // 获取测试驱动中的工具类
         let file_source_tool = stack_manager.driver!.get_client(this.action.local.peer_name).client!.get_util_tool();
-        this.logger.info(`publish dir device : ${file_source.local_device_id().object_id.to_base_58()}`);
+        console.info(`publish dir device : ${file_source.local_device_id().object_id.to_base_58()}`);
         // 创建测试文件
         let local_dir = await file_source_tool.create_dir(req.file_num,req.file_size);
         let dir_path  = local_dir.dir_path!;
@@ -100,10 +100,10 @@ export class PublishDirAction extends BaseAction implements ActionAbstract {
         });
         this.action.output!.total_time = Date.now() - begin_time; 
         if(info1.err){
-            this.logger.error(`publish_file error : ${JSON.stringify(info1)} `);
+            console.error(`publish_file error : ${JSON.stringify(info1)} `);
             return { err: info1.val.code, log: info1.val.msg}
         }else{
-            this.logger.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);
+            console.info(`publish_file : ${JSON.stringify(info1.unwrap())}`);
             return { err: ErrorCode.succ, log: "success",resp:{dir_id:info1.unwrap().file_id,dir_name,dir_path:dir_path,file_list:local_dir.file_list}}
         }
      

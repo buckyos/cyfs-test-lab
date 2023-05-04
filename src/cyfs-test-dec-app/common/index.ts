@@ -8,4 +8,4 @@ export * from './local_storage';
 export * from './upload';
 export * from './interval_action';
 export * from './random';
-// export const base = require('./base') ;
+export const base = require('./base') ;

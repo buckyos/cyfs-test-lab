@@ -9,7 +9,7 @@ import * as cry from "crypto"
 
 
 describe("SharedCyfsStack crypto目录", function () {
-    this.timeout(0);
+    
     describe("HashValue 测试", async () => {
         it("hash_value比较计算正确性", async () => {
             let packagevaluestr = "/test/contract/" + "12346sdsdad132323qwe12eqw121eqwwe2wasdadd";

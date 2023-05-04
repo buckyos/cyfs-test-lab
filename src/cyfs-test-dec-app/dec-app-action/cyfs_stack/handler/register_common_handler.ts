@@ -14,14 +14,14 @@ import {CommonPostObjectHandler} from "../../../dec-app-service"
  * 
  */
 export class RegisterCommonHandler extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:RegisterCommonHandler}{
+    static create_by_parent(action:Action): {err:number,action?:RegisterCommonHandler}{
         let run =  new RegisterCommonHandler({
             local :  action.remote!,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {
@@ -50,7 +50,7 @@ export class RegisterCommonHandler extends BaseAction implements ActionAbstract 
             undefined, 
             req_path!,
             cyfs.RouterHandlerAction.Default,
-            new CommonPostObjectHandler(this.local!,this.action.local,this.logger)
+            new CommonPostObjectHandler(this.local!,this.action.local)
         );
         if(result.err){
             return { err: result.val.code, log: result.val.msg}

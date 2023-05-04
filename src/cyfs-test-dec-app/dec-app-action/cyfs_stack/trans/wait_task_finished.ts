@@ -13,7 +13,7 @@ type TestOutput = {
     group?: string,
 }
 export class WaitTaskFinished extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:WaitTaskFinished}{
+    static create_by_parent(action:Action): {err:number,action?:WaitTaskFinished}{
         /**
          * 父任务下载端 remote 查询任务状态
          */
@@ -26,7 +26,7 @@ export class WaitTaskFinished extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
@@ -50,10 +50,10 @@ export class WaitTaskFinished extends BaseAction implements ActionAbstract {
                 },
                 task_id: req.task_id,
             });
-            this.logger.info(`get_task_state : ${JSON.stringify(info_check)}`);
+            console.info(`get_task_state : ${JSON.stringify(info_check)}`);
             if (info_check.unwrap().state.state == cyfs.TransTaskState.Pending || info_check.unwrap().state.state == cyfs.TransTaskState.Downloading) {
                 let percent = info_check.unwrap().state.on_air_state?.download_percent;
-                this.logger.info(`${req.task_id} downloading percent = ${percent}`)
+                console.info(`${req.task_id} downloading percent = ${percent}`)
                 if(percent){
                     if(percent == history_percent){
                         check_percent = check_percent + 1;

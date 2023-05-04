@@ -2,9 +2,7 @@ import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../common";
 import * as path from 'path';
-import { before } from 'mocha';
 let encoding = require('encoding');
-import * as addContext from "mochawesome/addContext"
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
@@ -21,8 +19,8 @@ import * as action_api from "../../../../dec-app-action"
 
 
 describe("#op-env 初始化方式", function () {
-    this.timeout(0);
-    this.beforeAll(async function () {
+    
+    beforeAll(async function () {
         //测试前置条件,连接测试模拟器设备
         console.info(`##########用例执开始执行`);
  
@@ -31,7 +29,7 @@ describe("#op-env 初始化方式", function () {
         //await ZoneSimulator.init();
         //stack = ZoneSimulator.zone1_device1_stack!;;
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         //每个函数执行前,清除所有handler
         console.info(`#########用例执行完成`);
         //ZoneSimulator.stopZoneSimulator();

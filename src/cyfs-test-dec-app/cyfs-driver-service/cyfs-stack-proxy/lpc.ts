@@ -66,10 +66,10 @@ export class BdtLpc extends EventEmitter {
 
     send(command: BdtLpcCommand): ErrorCode {
         command.seq = this._next_cmd_seq();
-        this.m_logger.debug(`bdtlpc send command to bdt.exe, seq=${command.seq!}, name=${command.json.name}`);
+        console.debug(`bdtlpc send command to bdt.exe, seq=${command.seq!}, name=${command.json.name}`);
         let info = this._encodeMsg(command);
         if (info.err) {
-            this.m_logger.error(`bdtlpc send command to bdt.exe failed,for encode failed, err=${info.err}}`);
+            console.error(`bdtlpc send command to bdt.exe failed,for encode failed, err=${info.err}}`);
             return info.err;
         }
         return this._send(info.buffer!);
@@ -101,7 +101,7 @@ export class BdtLpc extends EventEmitter {
             this.m_bQueue = !this.m_socket!.write(buff);
             return ErrorCode.succ;
         } catch (e) {
-            this.m_logger.error(`bdtlpc send failed, error=${e}, s=${this.m_id}`);
+            console.error(`bdtlpc send failed, error=${e}, s=${this.m_id}`);
             return ErrorCode.fail;
         }
     }
@@ -128,7 +128,7 @@ export class BdtLpc extends EventEmitter {
             while (this.m_recvCache && this.m_recvCache.length > 2) {
                 let msgInfo = this._decodeMsg();
                 if (msgInfo.err) {
-                    this.m_logger.error(`bdtlpc decode failed, err=${msgInfo.err}`);
+                    console.error(`bdtlpc decode failed, err=${msgInfo.err}`);
                     if (msgInfo.err !== ErrorCode.noMoreData) {
                         this.m_recvCache = Buffer.from('');
                     }
@@ -144,7 +144,7 @@ export class BdtLpc extends EventEmitter {
         })
 
         this.m_socket!.on('close', (had_error) => {
-            this.m_logger.error(`bdtlpc socket close ${had_error}`);
+            console.error(`bdtlpc socket close ${had_error}`);
             this.emit('close', this, had_error);
         });
     }
@@ -153,14 +153,14 @@ export class BdtLpc extends EventEmitter {
         try {
             let decodeOffset: number = 0;
             if (this.m_recvCache!.length < 4) {
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
+                console.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
             let length = this.m_recvCache!.readUInt32LE(decodeOffset);
             decodeOffset += 4;
 
             if (this.m_recvCache!.length < 4 + length) {
-                this.m_logger.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
+                console.error(`not get length when decode for no more data, length=${this.m_recvCache!.length}, need=${4 + decodeOffset}`);
                 return { err: ErrorCode.noMoreData };
             }
 
@@ -180,14 +180,14 @@ export class BdtLpc extends EventEmitter {
             let jsonBuffer = this.m_recvCache!.slice(decodeOffset, decodeOffset + jsonLength);
             decodeOffset += jsonLength;
             this.m_recvCache = this.m_recvCache!.slice(decodeOffset);
-            //this.m_logger.debug(`-----------------${jsonBuffer.toString('utf-8')}, decodeOffset=${decodeOffset}, length=${this.m_recvCache!.length}`);
+            //console.debug(`-----------------${jsonBuffer.toString('utf-8')}, decodeOffset=${decodeOffset}, length=${this.m_recvCache!.length}`);
 
             let json = JSON.parse(jsonBuffer.toString('utf-8'));
 
             let command: BdtLpcCommand = { seq, bytes, json };
             return { err: ErrorCode.succ, command };
         } catch (e) {
-            this.m_logger.error(`bdtlpc decode msg exception, e=${e}`);
+            console.error(`bdtlpc decode msg exception, e=${e}`);
             return { err: ErrorCode.exception };
         }
     }
@@ -206,7 +206,7 @@ export class BdtLpc extends EventEmitter {
 
             return { err: ErrorCode.succ, buffer };
         } catch (e) {
-            this.m_logger.error(`bdtlpc encode msg exception, e=${e}`);
+            console.error(`bdtlpc encode msg exception, e=${e}`);
             return { err: ErrorCode.exception };
         }
     }

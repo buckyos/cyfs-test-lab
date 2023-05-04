@@ -32,14 +32,14 @@ type TestOutput = {
 }
 
 export class GetDataAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetDataAction}{
+    static create_by_parent(action:Action): {err:number,action?:GetDataAction}{
         let run =  new GetDataAction({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput}> {
@@ -55,7 +55,7 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         let md5_source : string = "";
         let dir_inner_path :string | undefined;
         if(req.object_type == "chunk"){
-            let put_result = await PutDataAction.create_by_parent(this.action,this.logger).action!.start({
+            let put_result = await PutDataAction.create_by_parent(this.action).action!.start({
                 object_type: req.object_type,
                 chunk_size: req.chunk_size,
                 file_size: req.file_size,
@@ -68,7 +68,7 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         }else if(req.object_type == "file"){
             this.action.input.chunk_size = req.chunk_size
             this.action.input.file_size = req.file_size
-            let put_result = await PublishFileAction.create_by_parent_for_remote(this.action,this.logger).action!.start({
+            let put_result = await PublishFileAction.create_by_parent_for_remote(this.action).action!.start({
                 rand_file : true,
                 file_size : req.file_size!,
                 chunk_size: req.chunk_size!,
@@ -84,7 +84,7 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         }else if(req.object_type == "dir"){
             this.action.input.chunk_size = req.chunk_size
             this.action.input.file_size = req.file_size
-            let put_result = await PublishDirAction.create_by_parent_for_remote(this.action,this.logger).action!.start({
+            let put_result = await PublishDirAction.create_by_parent_for_remote(this.action).action!.start({
                 rand_file : true,
                 file_num : 2,
                 file_size : req.file_size!,
@@ -99,23 +99,23 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
             let object_map_id = put_result.resp!.dir_id;
             md5_source = "dir";
 
-            let dir_get = await BuildDirFromObjectMapAction.create_by_parent_remote_noc(this.action,this.logger).action!.start({
+            let dir_get = await BuildDirFromObjectMapAction.create_by_parent_remote_noc(this.action).action!.start({
                 object_id:object_map_id
             })
             let dir_id = dir_get.resp!.object_id;
             object_id = dir_id;
-            let dir_object_get = await GetObjectAction.create_by_parent_remote_noc(this.action,this.logger).action!.start({
+            let dir_object_get = await GetObjectAction.create_by_parent_remote_noc(this.action).action!.start({
                 object_id:dir_id,
             })
             let dir_object =  new cyfs.DirDecoder().from_raw(dir_object_get.resp!.object_raw!).unwrap() 
             dir_object.desc().content().obj_list().match({
                 Chunk: (chunk_id: cyfs.ChunkId) => {
-                    this.logger.error(`obj_list in chunk not support yet! ${chunk_id}`);
+                    console.error(`obj_list in chunk not support yet! ${chunk_id}`);
                 },
                 ObjList: (obj_list) => {
                     for (const [inner_path, info] of obj_list.object_map().entries()) {
                          if(info.node().is_object_id()){
-                            this.logger!.info(`Dir inner_path =  ${inner_path} object_id =  ${info.node().object_id}`);
+                            console.info(`Dir inner_path =  ${inner_path} object_id =  ${info.node().object_id}`);
                             dir_inner_path = inner_path.toString();
                             //break;
                          }
@@ -129,7 +129,7 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         let local_tool = stack_manager.driver!.get_client(this.action.local.peer_name).client!.get_util_tool();
         // remote 将 put_data 的object 关联到root_state req_path
         if(req.is_link_root_state){
-            let link_action = await LinkObjectAction.create_by_parent_for_remote(this.action,this.logger).action!.start({
+            let link_action = await LinkObjectAction.create_by_parent_for_remote(this.action).action!.start({
                 object_id:object_id!,
                 req_path : req.req_path,
                 access : cyfs.AccessString.full()
@@ -138,7 +138,7 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
         // local 创建context 对象
         if(!req.not_set_context){
             if(req.context){
-                let context_action =await PutContextAction.create_by_parent(this.action,this.logger).action!.start({
+                let context_action =await PutContextAction.create_by_parent(this.action).action!.start({
                     context_path: req.context,
                     chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                     deviceid_list: [this.get_remote()!.local_device_id()]
@@ -168,9 +168,9 @@ export class GetDataAction extends BaseAction implements ActionAbstract {
   
         });
         let send_time = Date.now() - begin_send;
-        this.logger.info(`get_data send_time = ${send_time} result =  ${get_result.err}`)
+        console.info(`get_data send_time = ${send_time} result =  ${get_result.err}`)
         if(get_result.err){
-            this.logger.error(`get_data  result =  ${get_result}`)
+            console.error(`get_data  result =  ${get_result}`)
             return {err:get_result.val.code,log:get_result.val.msg}
         }
         let result = get_result.unwrap();

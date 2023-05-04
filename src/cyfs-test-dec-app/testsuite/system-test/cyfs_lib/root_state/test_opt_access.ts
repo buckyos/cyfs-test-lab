@@ -2,9 +2,9 @@ import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../common";
 import * as path from 'path';
-import { before } from 'mocha';
+
 let encoding = require('encoding');
-import * as addContext from "mochawesome/addContext"
+
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
@@ -19,14 +19,14 @@ let owner_id = ""
 // TO_FIX : root_state_accessor ACL权限控制部分用例未修改，用例为旧的ACL配置文件体系，已删除用例
 
  describe("root_state 模块: root_state_accessor 测试 ", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
@@ -37,15 +37,15 @@ let owner_id = ""
             type: cyfs.CyfsStackRequestorType.Http
         }).stack!;
         owner_id = stack.local_device_id().to_base_58();
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -55,23 +55,23 @@ let owner_id = ""
         // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例:${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     })
     describe("## access 初始化方式",async()=>{
         describe("### root_state_access",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -144,7 +144,7 @@ let owner_id = ""
         describe("### root_state_accessor_stub",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -184,7 +184,7 @@ let owner_id = ""
         describe("### local_cache_accessor",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -257,7 +257,7 @@ let owner_id = ""
         describe("### local_cache_accessor_stub",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -299,7 +299,7 @@ let owner_id = ""
         describe("#### Map数据获取",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -340,7 +340,7 @@ let owner_id = ""
         describe("#### Set数据获取",async()=>{
             let op_env : cyfs.PathOpEnvStub
             let my_path = `/qaTest/access/${RandomGenerator.string(10)}`
-            before(async()=>{
+            beforeAll(async()=>{
                 let result= await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();

@@ -10,20 +10,18 @@ const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';
 
 export class UtilTool {
     private m_interface: ServiceClientInterface
-    private m_logger: Logger;
     private cache_kb?: Buffer;
     private cache_mb?: Buffer;
     private cahce_buff?: Buffer; //1000037 大素数
     public cache_path: { file_upload: string, file_download: string };
     private rand_file_running : boolean;
-    constructor(_interface: ServiceClientInterface, logger: Logger, root:string) {
+    constructor(_interface: ServiceClientInterface, root:string) {
         let cache_path = {
             file_upload: path.join(root, "file_upload"),
             file_download: path.join(root, "file_download"),
         }
         fs.mkdirpSync(cache_path.file_upload);
         fs.mkdirpSync(cache_path.file_download);
-        this.m_logger = logger;
         this.m_interface = _interface;
         this.cache_path = cache_path;
         this.rand_file_running = false;
@@ -78,7 +76,7 @@ export class UtilTool {
                 return await this.get_cache_path(command);
             }
         }
-        this.m_logger.info(`#### not found utilRequest req_path `)
+        console.info(`#### not found utilRequest req_path `)
         return { err: ErrorCode.notFound }
     }
     async _createFile(file_path: string, file_size: number) {
@@ -105,12 +103,12 @@ export class UtilTool {
     }
     async create_file(command: BdtLpcCommand): Promise<BdtLpcResp> {
         if (command.json.file_size == undefined) {
-            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            console.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
         while(this.rand_file_running){
             await sleep(100);
-            this.m_logger.info(`rand file is running,wait 100 ms`);
+            console.info(`rand file is running,wait 100 ms`);
         }
         this.rand_file_running = true;
         let file_name = `${this.string(10)}.txt`
@@ -150,7 +148,7 @@ export class UtilTool {
     }
     async create_dir(command: BdtLpcCommand): Promise<BdtLpcResp> {
         if (!command.json.file_size || !command.json.dir_number || !command.json.file_number || !command.json.deep) {
-            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            console.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
         let dir_name = this.string(10);
@@ -175,7 +173,7 @@ export class UtilTool {
     }
     async md5(command: BdtLpcCommand): Promise<BdtLpcResp> {
         if (!command.json.file_path) {
-            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            console.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
         let md5 = await this._md5(command.json.file_path);
@@ -190,7 +188,7 @@ export class UtilTool {
     }
     async get_IP_info(command: BdtLpcCommand): Promise<BdtLpcResp> {
         var interfaces = require('os').networkInterfaces();
-        this.m_logger.info(interfaces)
+        console.info(interfaces)
         var IPv4_list: Array<string> = []
         var IPv6_list: Array<string> = []
         for (var devName in interfaces) {
@@ -215,15 +213,15 @@ export class UtilTool {
         }
     }
     async upload_log(command: BdtLpcCommand): Promise<BdtLpcResp> {
-        this.m_logger.info(`command : ${JSON.stringify(command.json)}`)
+        console.info(`command : ${JSON.stringify(command.json)}`)
         if (!command.json.log_name) {
-            this.m_logger.error(`error command : ${JSON.stringify(command.json)}`)
+            console.error(`error command : ${JSON.stringify(command.json)}`)
             return { err: ErrorCode.unknownCommand }
         }
 
         let zip = await this.m_interface.zip(this.m_interface.getLogger().dir(), command.json.log_name)
         let upload = await this.m_interface.uploadFile(zip.dstPath!, "logs");
-        this.m_logger.info(`upload log to server ,result = ${JSON.stringify(upload)}`)
+        console.info(`upload log to server ,result = ${JSON.stringify(upload)}`)
         return {
             err: ErrorCode.succ, resp: {
                 json: {

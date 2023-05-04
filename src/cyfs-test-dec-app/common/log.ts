@@ -14,3 +14,4 @@ export class Logger {
         return this.m_dir;
     }
 }
+

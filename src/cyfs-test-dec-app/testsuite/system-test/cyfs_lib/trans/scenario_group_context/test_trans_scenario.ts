@@ -5,7 +5,7 @@ import {ActionManager,StackManager} from "../../../../../cyfs-test-util"
 
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../../common';
 import path = require('path');
-import * as addContext from "mochawesome/addContext"
+
 import * as action_api from "../../../../../dec-app-action"
 import { HandlerRequestObject } from "../../../../../dec-app-base"
 import { PrepareTransFileRequest } from '../../../../../dec-app-action';
@@ -29,30 +29,28 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 //  npx mocha .\test_trans_scenario.ts --reporter mochawesome --require ts-node/register
 
 describe("CYFS Stack Trans Integration Testing", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance();
-    let logger : Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
-        logger = stack_manager.logger!;
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
         let dec_app_2_client = await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
         assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
         assert.equal(dec_app_2_client.err,0,dec_app_2_client.log)
-        logger.info(`<------------------------  Test framewaork init finished ------------------------------>`);
+        console.info(`<------------------------  Test framewaork init finished ------------------------------>`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
-        logger.info(`<------------------------  Test framewaork exit ------------------------------>`);
+        data_manager.save_history_to_file("E:\\log");
+        console.info(`<------------------------  Test framewaork exit ------------------------------>`);
     })
     let report_result: {
         title: string;
@@ -60,20 +58,20 @@ describe("CYFS Stack Trans Integration Testing", function () {
     };
     beforeEach(function () {
         // 设置当前用例id 方便日志定位问题
-        let testcase_id = `${this.currentTest?.title}-${cyfs_test_util.get_date()}`;
+        let testcase_id = `${cyfs_test_util.get_date()}`;
         data_manager.update_current_testcase_id(testcase_id);
 
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例: ${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     });
 
     describe("Trans 模块业务流程场景测试", function () {
@@ -90,7 +88,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger);
+            });
             let path_id = RandomGenerator.string(20)
             let result_handler = await action_handler.start({
                 req_path: `/req_path/${path_id}`,
@@ -116,7 +114,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger);
+            });
             let result = await action.start({
                 req_path: `/req_path/${path_id}`,
                 context_path: `/context_path/${path_id}`,
@@ -139,7 +137,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -166,7 +164,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -189,7 +187,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -216,7 +214,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -239,7 +237,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -266,7 +264,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -289,7 +287,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -316,7 +314,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -339,7 +337,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -366,7 +364,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -391,7 +389,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -418,7 +416,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -441,7 +439,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -468,7 +466,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -491,7 +489,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -518,7 +516,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -541,7 +539,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -568,7 +566,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -593,7 +591,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -620,7 +618,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -643,7 +641,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -671,7 +669,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
 
@@ -695,7 +693,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -722,7 +720,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
                         context_path: `/context_path/${path_id}`,
@@ -748,7 +746,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -775,7 +773,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -786,7 +784,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         });
                         assert.equal(result.err, 0, result.log);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         assert.equal(check_state.resp!.state.state, cyfs.TransTaskState.Paused, "任务状态检查不通过")
                         assert.equal(check_state.resp!.group, `${dec_app_1.to_base_58()}/group/${path_id}`)
                     })
@@ -803,7 +801,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -830,7 +828,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -842,12 +840,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.equal(result.err, 0, result.log);
 
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Downloading || check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id}  group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id}  group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -867,7 +865,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -894,7 +892,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -921,12 +919,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Downloading || check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -945,7 +943,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -972,7 +970,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -996,10 +994,10 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
+                        console.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
                         assert.ok(!control_info.err, control_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         assert.equal(check_state.err, 4)
                     })
                     it("新建任务：Paused -> stop_task -> Paused", async () => {
@@ -1015,7 +1013,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1042,7 +1040,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1069,12 +1067,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.equal(start_info.val?.code, 7, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Paused) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1093,7 +1091,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1120,7 +1118,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1144,15 +1142,15 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`start_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
+                        console.info(`start_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
                         assert.ok(!start_info.err, start_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Downloading || check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1171,7 +1169,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1198,7 +1196,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1222,10 +1220,10 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`delete_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
+                        console.info(`delete_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
                         assert.ok(!start_info.err, start_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         assert.equal(check_state.err, 4)
                     })
                     it("新建任务：Downloading-> stop_task -> Paused", async () => {
@@ -1241,7 +1239,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1268,7 +1266,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1292,15 +1290,15 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`start_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
+                        console.info(`start_task ： ${JSON.stringify(JSON.stringify(start_info))}`);
                         assert.ok(!start_info.err, start_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Paused) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1322,7 +1320,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1349,7 +1347,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1377,12 +1375,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Downloading || check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1401,7 +1399,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1428,7 +1426,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1453,10 +1451,10 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
+                        console.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
                         assert.ok(!control_info.err, control_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         assert.equal(check_state.err, 4)
                     })
                     it("任务状态Paused -> stop_task -> Paused", async () => {
@@ -1472,7 +1470,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1499,7 +1497,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1528,12 +1526,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Paused) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1554,7 +1552,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1581,7 +1579,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1608,12 +1606,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Downloading || check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1632,7 +1630,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1659,7 +1657,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1683,10 +1681,10 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
+                        console.info(`control_task result ： ${JSON.stringify(JSON.stringify(control_info))}`);
                         assert.ok(!control_info.err, control_info.val?.msg);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         assert.equal(check_state.err, 4)
                     })
                     it("任务状态Downloading -> stop_task -> Paused", async () => {
@@ -1702,7 +1700,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1729,7 +1727,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1757,12 +1755,12 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Paused) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group ：${check_state.resp!.group}`)
                         } else {
                             assert.ok(false, "错误任务状态")
                         }
@@ -1786,7 +1784,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1814,7 +1812,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1839,15 +1837,15 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         assert.ok(!start_info.err, start_info.val?.msg);
                         await sleep(10 * 1000);
                         // remote 检查 任务状态
-                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! })
+                        let check_state = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! })
                         if (check_state.resp!.state.state == cyfs.TransTaskState.Finished) {
-                            logger.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
-                            logger.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
-                            logger.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
-                            logger.info(`${result.resp!.task_id} group: ${check_state.resp!.group}`)
+                            console.info(`${result.resp!.task_id} 任务状态为：${check_state.resp!.state.state}`)
+                            console.info(`${result.resp!.task_id} 下载进度：${JSON.stringify(check_state.resp!.state.on_air_state)}`)
+                            console.info(`${result.resp!.task_id} 上传速度：${JSON.stringify(check_state.resp!.state.upload_speed)}`)
+                            console.info(`${result.resp!.task_id} group: ${check_state.resp!.group}`)
                         } else {
                             await sleep(2000)
-                            let check_second = await action_api.GetTransTaskState.create_by_parent(action.action, logger).action!.start({ task_id: result.resp!.task_id! });
+                            let check_second = await action_api.GetTransTaskState.create_by_parent(action.action).action!.start({ task_id: result.resp!.task_id! });
                             if (check_second.resp!.state.state != cyfs.TransTaskState.Finished) {
                                 assert.ok(false, "错误任务状态")
                             }
@@ -1867,7 +1865,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1895,7 +1893,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1932,7 +1930,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1960,7 +1958,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
 
@@ -1982,7 +1980,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 flags: 1,
                             }
                         });
-                        logger.info(`delete_task result = ${start_info}`)
+                        console.info(`delete_task result = ${start_info}`)
                         assert.equal(start_info.err, false, start_info.val?.msg);
                     })
                 })
@@ -2023,7 +2021,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger);
+                });
                 let result = await publish_file_action.start({
                     rand_file :true,
                     chunk_size :4*1024*1024,
@@ -2072,7 +2070,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger);
+                });
                 let result = await publish_file_action.start({
                     rand_file :true,
                     chunk_size :4*1024*1024,
@@ -2133,7 +2131,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await trans_file_tree_action.start({
                         root_req_path: `/req_path/${path_id}`,
@@ -2170,7 +2168,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler)}`)
+                    console.info(`${JSON.stringify(result_handler)}`)
                     assert.equal(result_handler.err, 0, result_handler.log);
                     // 查询group 状态
                     let check_state1_action = await new action_api.GetTransGroupState({
@@ -2184,8 +2182,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                    }).start({ group: `/group_path/${path_id}/groupA/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                     //使用dec_app2 WebSocket 请求创建树状结构2
                     let trans_file_tree_action2 = new action_api.BuildTransGroupTreeAsync({
@@ -2208,7 +2206,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id2 = RandomGenerator.string(20)
                     let result_handler2 = await trans_file_tree_action2.start({
                         root_req_path: `/req_path/${path_id2}`,
@@ -2245,7 +2243,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler2)}`)
+                    console.info(`${JSON.stringify(result_handler2)}`)
                     assert.equal(result_handler2.err, 0, result_handler2.log);
                     // 查询group 状态
                     let check_state2_action = await new action_api.GetTransGroupState({
@@ -2259,8 +2257,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                    }).start({ group: `/group_path/${path_id2}/groupB/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                 })
                 //【简单压力测试】
                 it.skip("group 节点挂载5个task - 异步创建", async () => {
@@ -2285,7 +2283,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await trans_file_tree_action.start({
                         root_req_path: `/req_path/${path_id}`,
@@ -2442,7 +2440,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler)}`)
+                    console.info(`${JSON.stringify(result_handler)}`)
                     assert.equal(result_handler.err, 0, result_handler.log);
                     // 查询group 状态
                     let check_state1_action = await new action_api.GetTransGroupState({
@@ -2456,8 +2454,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                    }).start({ group: `/group_path/${path_id}/groupA/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
                     // 等待group传输完成
                     let group_listerner1 = await new action_api.GroupStateListerner({
                         local: {
@@ -2470,8 +2468,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id}/` });
-                    logger.info(`group_listerner1 = ${JSON.stringify(group_listerner1)}`);
+                    }).start({ group: `/group_path/${path_id}/` });
+                    console.info(`group_listerner1 = ${JSON.stringify(group_listerner1)}`);
                     //使用dec_app2 WebSocket 请求创建树状结构2
                     let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
                         local: {
@@ -2493,7 +2491,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id2 = RandomGenerator.string(20)
                     let result_handler2 = await trans_file_tree_action2.start({
                         root_req_path: `/req_path/${path_id2}`,
@@ -2650,7 +2648,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler2)}`)
+                    console.info(`${JSON.stringify(result_handler2)}`)
                     assert.equal(result_handler2.err, 0, result_handler2.log);
                     // 查询group 状态
                     let check_state2_action = await new action_api.GetTransGroupState({
@@ -2664,8 +2662,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                    }).start({ group: `/group_path/${path_id2}/groupB/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                     // 等待group传输完成
                     let group_listerner2 = await new action_api.GroupStateListerner({
                         local: {
@@ -2678,8 +2676,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id2}/` });
-                    logger.info(`group_listerner2 = ${JSON.stringify(group_listerner2)}`);
+                    }).start({ group: `/group_path/${path_id2}/` });
+                    console.info(`group_listerner2 = ${JSON.stringify(group_listerner2)}`);
                 })
             })
             describe("group 任务调度控制-group状态切换", async () => {
@@ -2706,7 +2704,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await trans_file_tree_action.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -2743,7 +2741,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler)}`)
+                        console.info(`${JSON.stringify(result_handler)}`)
                         assert.equal(result_handler.err, 0, result_handler.log);
                         // 查询group 状态
                         let check_state1_action = await new action_api.GetTransGroupState({
@@ -2757,8 +2755,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
                         let stack = stack_manager.get_cyfs_satck({
                             peer_name: "zone1_ood",
                             dec_id: dec_app_1.to_base_58(),
@@ -2777,8 +2775,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({ task_id: task.task_id! });
-                            logger.info(`task ${task.task_id} run finished , result = ${check_task_finished_action}`);
+                            }).start({ task_id: task.task_id! });
+                            console.info(`task ${task.task_id} run finished , result = ${check_task_finished_action}`);
                         }
                         // 查询group 状态
                         let check_state2_action = await new action_api.GetTransGroupState({
@@ -2792,8 +2790,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state2_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state2_action = ${JSON.stringify(check_state2_action)}`);
 
                     })
                 })
@@ -2806,7 +2804,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     let task_list2 = [];// 传输任务列表
                     beforeEach(async () => {
                         // 构造Normal 状态 group
-                        logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                        console.info(`Build DownloadTaskControlState:Normal group tree`);
                         // 使用dec_app1 http 请求创建树状结构1
                         let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                             local: {
@@ -2828,7 +2826,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id = RandomGenerator.string(20)
                         let result_handler1 = await trans_file_tree_action1.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -2866,7 +2864,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler1)}`)
+                        console.info(`${JSON.stringify(result_handler1)}`)
                         assert.equal(result_handler1.err, 0, result_handler1.log);
                         task_list1 = result_handler1.resp!.task_list;
                         // 查询group 状态
@@ -2881,8 +2879,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                         //使用dec_app2 WebSocket 请求创建树状结构2
                         let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
@@ -2905,7 +2903,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id2 = RandomGenerator.string(20)
                         let result_handler2 = await trans_file_tree_action2.start({
                             root_req_path: `/req_path/${path_id2}`,
@@ -2942,7 +2940,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler2)}`)
+                        console.info(`${JSON.stringify(result_handler2)}`)
                         assert.equal(result_handler2.err, 0, result_handler2.log);
                         task_list2 = result_handler2.resp!.task_list;
                         // 查询group 状态
@@ -2957,8 +2955,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id2}/groupB/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                     })
                     it.skip("【Resume BDT未实现】发送控制指令 TransTaskGroupControlAction Resume", async () => {
                         // 下载端指定zone1_ood
@@ -2981,7 +2979,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Resume
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -2991,7 +2989,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3001,7 +2999,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3011,7 +3009,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
                         let check3 = await stack_ws_decapp2.stack!.trans().get_task_group_state({
@@ -3021,7 +3019,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
                     it("发送控制指令 TransTaskGroupControlAction Cancel", async () => {
@@ -3044,7 +3042,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         //     },
                         //     group : `/group_path/${path_id}/groupA/task1`,
                         // })
-                        // logger.info(`check0 get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        // console.info(`check0 get_task_group_state resp = ${JSON.stringify(check0)}`);
                         // assert.equal(check0.err,false,`${check0}`);
                         // assert.equal(check0.unwrap().control_state,cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 操作 `/group_path/${path_id}/groupA/` 发送控制指令 TransTaskGroupControlAction Resume
@@ -3056,7 +3054,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3066,7 +3064,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.err, false, `${check0}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
@@ -3077,7 +3075,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.err, false, `${check1}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
@@ -3088,7 +3086,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.err, true, `${check2}`);
                         if(check2.err){
                             assert.equal(check2.val!.code,4,check2.val!.msg);
@@ -3102,7 +3100,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.err, false, `${check3}`);
        
                     })
@@ -3127,7 +3125,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Pause
                         })
-                        logger.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3137,7 +3135,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3147,7 +3145,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
                         let check3 = await stack_ws_decapp2.stack!.trans().get_task_group_state({
@@ -3157,7 +3155,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
                 })
@@ -3171,7 +3169,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     let task_list2 = [];// 传输任务列表
                     beforeEach(async () => {
                         // 构造Normal 状态 group
-                        logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                        console.info(`Build DownloadTaskControlState:Normal group tree`);
                         // 使用dec_app1 http 请求创建树状结构1
                         let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                             local: {
@@ -3193,7 +3191,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id = RandomGenerator.string(20)
                         let result_handler1 = await trans_file_tree_action1.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -3230,7 +3228,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler1)}`)
+                        console.info(`${JSON.stringify(result_handler1)}`)
                         assert.equal(result_handler1.err, 0, result_handler1.log);
                         task_list1 = result_handler1.resp!.task_list;
                         // 查询group 状态
@@ -3245,8 +3243,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                         //使用dec_app2 WebSocket 请求创建树状结构2
                         let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
@@ -3269,7 +3267,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id2 = RandomGenerator.string(20)
                         let result_handler2 = await trans_file_tree_action2.start({
                             root_req_path: `/req_path/${path_id2}`,
@@ -3306,7 +3304,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler2)}`)
+                        console.info(`${JSON.stringify(result_handler2)}`)
                         assert.equal(result_handler2.err, 0, result_handler2.log);
                         task_list2 = result_handler2.resp!.task_list;
                         // 查询group 状态
@@ -3321,8 +3319,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id2}/groupB/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                         let stack_http_decapp1 = stack_manager.get_cyfs_satck({
                             peer_name: "zone1_ood",
                             dec_id: dec_app_1.to_base_58(),
@@ -3342,7 +3340,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Pause
                         })
-                        logger.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action1)}`);
+                        console.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action1)}`);
                         let control_action2 = await stack_ws_decapp2.stack!.trans().control_task_group({
                             common: {
                                 level: cyfs.NDNAPILevel.NDC,
@@ -3351,7 +3349,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id2}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Pause
                         })
-                        logger.info(`/group_path/${path_id2}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action2)}`);
+                        console.info(`/group_path/${path_id2}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action2)}`);
 
                     })
                     it("发送控制指令 TransTaskGroupControlAction Resume", async () => {
@@ -3375,7 +3373,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Resume
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3385,7 +3383,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3395,7 +3393,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3405,7 +3403,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
                         let check3 = await stack_ws_decapp2.stack!.trans().get_task_group_state({
@@ -3415,7 +3413,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
                     it("发送控制指令 TransTaskGroupControlAction Cancel", async () => {
@@ -3438,7 +3436,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         //     },
                         //     group : `/group_path/${path_id}/groupA/task1`,
                         // })
-                        // logger.info(`check0 get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        // console.info(`check0 get_task_group_state resp = ${JSON.stringify(check0)}`);
                         // assert.equal(check0.err,false,`${check0}`);
                         // assert.equal(check0.unwrap().control_state,cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 操作 `/group_path/${path_id}/groupA/` 发送控制指令 TransTaskGroupControlAction Resume
@@ -3450,7 +3448,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3460,7 +3458,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.err, false, `${check0}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
@@ -3471,7 +3469,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.err, false, `${check1}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
@@ -3482,7 +3480,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.err, false, `${check2}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
@@ -3493,7 +3491,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.err, false, `${check3}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
@@ -3518,7 +3516,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Pause
                         })
-                        logger.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3528,7 +3526,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3538,7 +3536,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
                         let check3 = await stack_ws_decapp2.stack!.trans().get_task_group_state({
@@ -3548,7 +3546,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
                 })
@@ -3561,7 +3559,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     let task_list2 = [];// 传输任务列表
                     beforeEach(async () => {
                         // 构造Normal 状态 group
-                        logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                        console.info(`Build DownloadTaskControlState:Normal group tree`);
                         // 使用dec_app1 http 请求创建树状结构1
                         let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                             local: {
@@ -3583,7 +3581,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id = RandomGenerator.string(20)
                         let result_handler1 = await trans_file_tree_action1.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -3620,7 +3618,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler1)}`)
+                        console.info(`${JSON.stringify(result_handler1)}`)
                         assert.equal(result_handler1.err, 0, result_handler1.log);
                         task_list1 = result_handler1.resp!.task_list;
                         // 查询group 状态
@@ -3635,8 +3633,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                         //使用dec_app2 WebSocket 请求创建树状结构2
                         let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
@@ -3659,7 +3657,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id2 = RandomGenerator.string(20)
                         let result_handler2 = await trans_file_tree_action2.start({
                             root_req_path: `/req_path/${path_id2}`,
@@ -3696,7 +3694,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler2)}`)
+                        console.info(`${JSON.stringify(result_handler2)}`)
                         assert.equal(result_handler2.err, 0, result_handler2.log);
                         task_list2 = result_handler2.resp!.task_list;
                         // 查询group 状态
@@ -3711,8 +3709,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id2}/groupB/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                         let stack_http_decapp1 = stack_manager.get_cyfs_satck({
                             peer_name: "zone1_ood",
                             dec_id: dec_app_1.to_base_58(),
@@ -3732,7 +3730,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Cancel} control_action resp = ${JSON.stringify(control_action1)}`);
+                        console.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Cancel} control_action resp = ${JSON.stringify(control_action1)}`);
                         let control_action2 = await stack_ws_decapp2.stack!.trans().control_task_group({
                             common: {
                                 level: cyfs.NDNAPILevel.NDC,
@@ -3741,7 +3739,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id2}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`/group_path/${path_id2}/groupA/ send ${cyfs.TransTaskGroupControlAction.Cancel} control_action resp = ${JSON.stringify(control_action2)}`);
+                        console.info(`/group_path/${path_id2}/groupA/ send ${cyfs.TransTaskGroupControlAction.Cancel} control_action resp = ${JSON.stringify(control_action2)}`);
 
                     })
                     it.skip("【Resume BDT未实现】发送控制指令 TransTaskGroupControlAction Resume", async () => {
@@ -3765,7 +3763,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Resume
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3775,7 +3773,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3785,7 +3783,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3795,13 +3793,13 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${check2.err}`);
-                        logger.info(`get_task_group_state resp = ${check2}`);
-                        logger.info(`assert.equal begin`);
+                        console.info(`get_task_group_state resp = ${check2.err}`);
+                        console.info(`get_task_group_state resp = ${check2}`);
+                        console.info(`assert.equal begin`);
                         assert.equal(check2.err, true);
-                        logger.info(`assert.equal finished`);
+                        console.info(`assert.equal finished`);
                         if (check2.err) {
-                            logger.info(`get_task_group_state err = ${JSON.stringify(check2)}`);
+                            console.info(`get_task_group_state err = ${JSON.stringify(check2)}`);
                             assert.equal(check2.val.code, 4, check2.val.msg);
                         }
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
@@ -3812,7 +3810,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                     })
                     it("发送控制指令 TransTaskGroupControlAction Cancel", async () => {
@@ -3836,7 +3834,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查兄弟路径 `/group_path/${path_id}/groupB/` 状态
                         let check0 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3846,7 +3844,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupB/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check0)}`);
                         assert.equal(check0.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3856,7 +3854,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态 不存在
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3866,13 +3864,13 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`get_task_group_state resp = ${check2.err}`);
-                        logger.info(`get_task_group_state resp = ${check2}`);
-                        logger.info(`assert.equal begin`);
+                        console.info(`get_task_group_state resp = ${check2.err}`);
+                        console.info(`get_task_group_state resp = ${check2}`);
+                        console.info(`assert.equal begin`);
                         assert.equal(check2.err, true);
-                        logger.info(`assert.equal finished`);
+                        console.info(`assert.equal finished`);
                         if (check2.err) {
-                            logger.info(`get_task_group_state err = ${JSON.stringify(check2)}`);
+                            console.info(`get_task_group_state err = ${JSON.stringify(check2)}`);
                             assert.equal(check2.val.code, 4, check2.val.msg);
                         }
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
@@ -3883,7 +3881,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/`,
                         })
-                        logger.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Canceled);
                     })
                     it.skip("【Pause BDT未实现】发送控制指令 TransTaskGroupControlAction Pause", async () => {
@@ -3907,7 +3905,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Pause
                         })
-                        logger.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`/group_path/${path_id}/groupA/ send ${cyfs.TransTaskGroupControlAction.Pause} control_action resp = ${JSON.stringify(control_action)}`);
                         assert.equal(control_action.err, false, control_action.val.toString());
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/` 状态
                         let check1 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3917,7 +3915,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/`,
                         })
-                        logger.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
+                        console.info(`check1 get_task_group_state resp = ${JSON.stringify(check1)}`);
                         assert.equal(check1.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_http_decapp1 检查 `/group_path/${path_id}/groupA/task1` 状态
                         let check2 = await stack_http_decapp1.stack!.trans().get_task_group_state({
@@ -3927,7 +3925,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id}/groupA/task1`,
                         })
-                        logger.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
+                        console.info(`check2 get_task_group_state resp = ${JSON.stringify(check2)}`);
                         assert.equal(check2.unwrap().control_state, cyfs.DownloadTaskControlState.Paused);
                         // stack_ws_decapp2 检查 `/group_path/${path_id2}/groupA/task1` 状态
                         let check3 = await stack_ws_decapp2.stack!.trans().get_task_group_state({
@@ -3937,7 +3935,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             group: `/group_path/${path_id2}/groupA/task1`,
                         })
-                        logger.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
+                        console.info(`check3 get_task_group_state resp = ${JSON.stringify(check3)}`);
                         assert.equal(check3.unwrap().control_state, cyfs.DownloadTaskControlState.Normal);
                     })
                 })
@@ -3967,7 +3965,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     }> = [];// 传输任务列表
                     beforeEach(async () => {
                         // 构造Normal 状态 group
-                        logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                        console.info(`Build DownloadTaskControlState:Normal group tree`);
                         // 使用dec_app1 http 请求创建树状结构1
                         let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                             local: {
@@ -3989,7 +3987,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id = RandomGenerator.string(20)
                         let result_handler1 = await trans_file_tree_action1.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -4032,7 +4030,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler1)}`)
+                        console.info(`${JSON.stringify(result_handler1)}`)
                         assert.equal(result_handler1.err, 0, result_handler1.log);
                         task_list1 = result_handler1.resp!.task_list;
                         // 查询group 状态
@@ -4047,8 +4045,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                         //使用dec_app2 WebSocket 请求创建树状结构2
                         let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
@@ -4071,7 +4069,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id2 = RandomGenerator.string(20)
                         let result_handler2 = await trans_file_tree_action2.start({
                             root_req_path: `/req_path/${path_id2}`,
@@ -4114,7 +4112,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler2)}`)
+                        console.info(`${JSON.stringify(result_handler2)}`)
                         assert.equal(result_handler2.err, 0, result_handler2.log);
                         task_list2 = result_handler2.resp!.task_list;
                         // 查询group 状态
@@ -4129,8 +4127,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id2}/groupB/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                     })
                     it("group树进行resume 操作/dec_appA/groupA", async () => {
                         // 下载端指定zone1_ood
@@ -4157,7 +4155,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
                                 assert.ok(false, `${task_info.group}任务状态错误: ${check_state.unwrap().state.state}`)
                             } else {
-                                logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
+                                console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
                                 assert.equal(check_state.unwrap().state.state, cyfs.TransTaskState.Paused, `${task_info.group}任务状态错误`)
                             }
                         }
@@ -4170,7 +4168,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Resume
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         // 当前dec_app的任务检查
                         for (let task_info of task_list1) {
                             // 当前group_path、子group_path 传输任收影响
@@ -4184,7 +4182,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 })
                                 assert.equal(check_state.err, false, check_state.val.toString());
                                 if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
-                                    logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
+                                    console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
 
                                 } else {
                                     assert.ok(false, `${task_info.group}任务状态错误 ${check_state.unwrap().state.state}`)
@@ -4202,7 +4200,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
                                     assert.ok(false, `${task_info.group}任务状态错误: ${check_state.unwrap().state.state}`)
                                 } else {
-                                    logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
+                                    console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
                                     assert.equal(check_state.unwrap().state.state, cyfs.TransTaskState.Paused, `${task_info.group}任务状态错误`)
                                 }
                             }
@@ -4221,7 +4219,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
                                 assert.ok(false, `${task_info.group}任务状态错误`)
                             } else {
-                                logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
+                                console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
                                 assert.equal(check_state.unwrap().state.state, cyfs.TransTaskState.Paused, `${task_info.group}任务状态错误`)
                             }
                         }
@@ -4248,7 +4246,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             group: `/group_path/${path_id}/groupA/`,
                             action: cyfs.TransTaskGroupControlAction.Cancel
                         })
-                        logger.info(`control_action resp = ${JSON.stringify(control_action)}`);
+                        console.info(`control_action resp = ${JSON.stringify(control_action)}`);
                         // /dec_appA/groupA 挂载任务受影响
                         // /dec_appA/groupA/task1 挂载任务受影响
                         // /dec_appA/groupA/task2 挂载任务受影响
@@ -4266,11 +4264,11 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     task_id: task_info.task_id!
                                 })
                                 assert.equal(check_state.err, false, check_state.val.toString());
-                                logger.info(`check_state = ${JSON.stringify(check_state)}`)
+                                console.info(`check_state = ${JSON.stringify(check_state)}`)
                                 if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
                                     assert.ok(false, `${task_info.group}任务状态错误 ${check_state.unwrap().state.state}`)
                                 } else {
-                                    logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
+                                    console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
 
                                 }
 
@@ -4284,7 +4282,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 })
                                 assert.equal(check_state.err, false, check_state.val.toString());
                                 if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
-                                    logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
+                                    console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap().state.state}`)
                                 } else {
                                     assert.ok(false, `${task_info.group}任务状态错误: ${check_state.unwrap().state.state}`)
                                 }
@@ -4302,7 +4300,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             })
                             assert.equal(check_state.err, false, check_state.val.toString());
                             if (check_state.unwrap().state.state == cyfs.TransTaskState.Downloading || check_state.unwrap().state.state == cyfs.TransTaskState.Finished) {
-                                logger.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
+                                console.info(`${task_info.group} ${check_state.unwrap().group} check state success ,info = ${check_state.unwrap()}`)
                             } else {
                                 assert.ok(false, `${task_info.group}任务状态错误`)
                             }
@@ -4341,7 +4339,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                     }> = [];// 传输任务列表
                     beforeEach(async () => {
                         // 构造Normal 状态 group
-                        logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                        console.info(`Build DownloadTaskControlState:Normal group tree`);
                         // 使用dec_app1 http 请求创建树状结构1
                         let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                             local: {
@@ -4363,7 +4361,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id = RandomGenerator.string(20)
                         let result_handler1 = await trans_file_tree_action1.start({
                             root_req_path: `/req_path/${path_id}`,
@@ -4400,7 +4398,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler1)}`)
+                        console.info(`${JSON.stringify(result_handler1)}`)
                         assert.equal(result_handler1.err, 0, result_handler1.log);
                         task_list1 = result_handler1.resp!.task_list;
                         // 查询group 状态
@@ -4415,8 +4413,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                        }).start({ group: `/group_path/${path_id}/groupA/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                         //使用dec_app2 WebSocket 请求创建树状结构2
                         let trans_file_tree_action2 = new action_api.BuildTransGroupTree({
@@ -4439,7 +4437,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         path_id2 = RandomGenerator.string(20)
                         let result_handler2 = await trans_file_tree_action2.start({
                             root_req_path: `/req_path/${path_id2}`,
@@ -4476,7 +4474,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                             ]
                         });
-                        logger.info(`${JSON.stringify(result_handler2)}`)
+                        console.info(`${JSON.stringify(result_handler2)}`)
                         assert.equal(result_handler2.err, 0, result_handler2.log);
                         task_list2 = result_handler2.resp!.task_list;
                         // 查询group 状态
@@ -4491,8 +4489,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                        logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                        }).start({ group: `/group_path/${path_id2}/groupB/` });
+                        console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                     })
                     it("group树 Cancel /dec_appA/groupA 对task影响", async () => {
                         // /dec_appA/groupA 挂载任务受影响
@@ -4526,7 +4524,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4553,7 +4551,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4578,7 +4576,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4605,7 +4603,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4630,7 +4628,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4657,7 +4655,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4680,7 +4678,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4707,7 +4705,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4730,7 +4728,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4757,7 +4755,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4782,7 +4780,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4809,7 +4807,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4832,7 +4830,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4859,7 +4857,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4882,7 +4880,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4909,7 +4907,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4934,7 +4932,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -4961,7 +4959,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -4984,7 +4982,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5011,7 +5009,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5034,7 +5032,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5061,7 +5059,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5086,7 +5084,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5113,7 +5111,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5136,7 +5134,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5163,7 +5161,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5188,7 +5186,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5215,7 +5213,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5238,7 +5236,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5265,7 +5263,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5291,7 +5289,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
 
                     }> = []; // 传输任务列表
                     // 构造Normal 状态 group
-                    logger.info(`Build DownloadTaskControlState:Normal group tree`);
+                    console.info(`Build DownloadTaskControlState:Normal group tree`);
                     // 使用dec_app1 http 请求创建树状结构1
                     let trans_file_tree_action1 = new action_api.BuildTransGroupTree({
                         local: {
@@ -5313,7 +5311,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     path_id = RandomGenerator.string(20)
                     let result_handler1 = await trans_file_tree_action1.start({
                         root_req_path: `/req_path/${path_id}`,
@@ -5350,7 +5348,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler1)}`)
+                    console.info(`${JSON.stringify(result_handler1)}`)
                     assert.equal(result_handler1.err, 0, result_handler1.log);
                     task_list1 = result_handler1.resp!.task_list;
                     let running_list = []
@@ -5367,7 +5365,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({ group: trans_task.group })
+                            }).start({ group: trans_task.group })
                         )
                     }
                     for (let check of running_list) {
@@ -5392,7 +5390,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5419,7 +5417,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5444,7 +5442,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5471,7 +5469,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5496,7 +5494,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5523,7 +5521,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5546,7 +5544,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5573,7 +5571,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5596,7 +5594,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5623,7 +5621,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5648,7 +5646,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5675,7 +5673,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5698,7 +5696,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5725,7 +5723,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5748,7 +5746,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5775,7 +5773,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5800,7 +5798,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5827,7 +5825,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5850,7 +5848,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5877,7 +5875,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5900,7 +5898,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5927,7 +5925,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -5952,7 +5950,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -5979,7 +5977,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6002,7 +6000,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -6029,7 +6027,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6054,7 +6052,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -6081,7 +6079,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6104,7 +6102,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let path_id = RandomGenerator.string(20)
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -6131,7 +6129,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6166,7 +6164,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await trans_file_tree_action.start({
                         root_req_path: `/req_path/${path_id}`,
@@ -6203,7 +6201,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler)}`)
+                    console.info(`${JSON.stringify(result_handler)}`)
                     assert.equal(result_handler.err, 0, result_handler.log);
                     // 查询group 状态
                     let check_state1_action = await new action_api.GetTransGroupState({
@@ -6217,8 +6215,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id}/groupA/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
+                    }).start({ group: `/group_path/${path_id}/groupA/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state1_action)}`);
 
                     //使用dec_app2 WebSocket 请求创建树状结构2
                     let trans_file_tree_action2 = new action_api.BuildTransGroupTreeAsync({
@@ -6241,7 +6239,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id2 = RandomGenerator.string(20)
                     let result_handler2 = await trans_file_tree_action2.start({
                         root_req_path: `/req_path/${path_id2}`,
@@ -6278,7 +6276,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                         ]
                     });
-                    logger.info(`${JSON.stringify(result_handler2)}`)
+                    console.info(`${JSON.stringify(result_handler2)}`)
                     assert.equal(result_handler2.err, 0, result_handler2.log);
                     // 查询group 状态
                     let check_state2_action = await new action_api.GetTransGroupState({
@@ -6292,8 +6290,8 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({ group: `/group_path/${path_id2}/groupB/` });
-                    logger.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
+                    }).start({ group: `/group_path/${path_id2}/groupB/` });
+                    console.info(`check_state1_action = ${JSON.stringify(check_state2_action)}`);
                 })
             })
             describe("context 路径间的父子关系", async () => {
@@ -6315,7 +6313,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -6342,7 +6340,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6369,7 +6367,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -6387,7 +6385,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6413,7 +6411,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6434,7 +6432,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, false, check_finished.log)
@@ -6452,7 +6450,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6478,7 +6476,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6499,7 +6497,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, ErrorCode.timeout, check_finished.log)
@@ -6517,7 +6515,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6543,7 +6541,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6570,7 +6568,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, false, check_finished.log)
@@ -6588,7 +6586,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6614,7 +6612,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6641,7 +6639,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, ErrorCode.timeout, check_finished.log)
@@ -6662,7 +6660,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -6689,7 +6687,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6716,7 +6714,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, false, check_finished.log)
@@ -6734,7 +6732,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6760,7 +6758,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6781,7 +6779,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!,
                             check_time : 10
                         })
@@ -6801,7 +6799,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}/task1`,
                             deviceid_list: [
@@ -6826,7 +6824,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -6844,7 +6842,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6870,7 +6868,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6891,7 +6889,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, false, check_finished.log)
@@ -6909,7 +6907,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
                         });
@@ -6935,7 +6933,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -6956,7 +6954,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!,
                             check_time : 5
                         })
@@ -6975,7 +6973,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 timeout: 60 * 1000,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path: `/req_path/${path_id}`,
                             context_path: `/context_path/${path_id}/task3`,
                             deviceid_list: [
@@ -6999,7 +6997,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, ErrorCode.timeout, check_finished.log)
@@ -7020,7 +7018,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -7047,7 +7045,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -7079,7 +7077,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -7106,7 +7104,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -7139,7 +7137,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
-                    }, logger).start({
+                    }).start({
                         req_path: `/req_path/${path_id}`,
                         context_id: result.resp!.context_id!,
                         deviceid_list: [
@@ -7164,7 +7162,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({
+                    }).start({
                         task_id: result.resp!.task_id!
                     })
                     assert.equal(check_finished.err, false, check_finished.log)
@@ -7182,7 +7180,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
                     let path_id = RandomGenerator.string(20)
                     let result_handler = await action_handler.start({
                         req_path: `/req_path/${path_id}`,
@@ -7209,7 +7207,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger);
+                    });
 
                     let result = await action.start({
                         req_path: `/req_path/${path_id}`,
@@ -7242,7 +7240,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             timeout: 60 * 1000,
                         },
                         expect: { err: 0 },
-                    }, logger).start({
+                    }).start({
                         req_path: `/req_path/${path_id}`,
                         context_path: `/context_path/${path_id}/`,
                         deviceid_list: [
@@ -7266,7 +7264,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                         },
                         expect: { err: 0 },
 
-                    }, logger).start({
+                    }).start({
                         task_id: result.resp!.task_id!
                     })
                     assert.equal(check_finished.err, false, check_finished.log)
@@ -7291,7 +7289,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -7318,7 +7316,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -7347,7 +7345,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, false, check_finished.log)
@@ -7368,7 +7366,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             req_path: `/req_path/${path_id}`,
                             file_id: file_info!.file_id
                         });
@@ -7389,7 +7387,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7410,7 +7408,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7439,7 +7437,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7461,7 +7459,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 10, check_finished.log)
@@ -7480,7 +7478,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7501,7 +7499,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7530,7 +7528,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7552,7 +7550,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 0, check_finished.log)
@@ -7570,7 +7568,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7592,7 +7590,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7626,7 +7624,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7648,7 +7646,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 0, check_finished.log)
@@ -7666,7 +7664,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7688,7 +7686,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7722,7 +7720,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7744,7 +7742,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 10, check_finished.log)
@@ -7762,7 +7760,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7784,7 +7782,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7818,7 +7816,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7840,7 +7838,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 0, check_finished.log)
@@ -7858,7 +7856,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7880,7 +7878,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -7914,7 +7912,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -7936,7 +7934,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 0, check_finished.log)
@@ -7957,7 +7955,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -7979,7 +7977,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -8008,7 +8006,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -8037,7 +8035,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -8059,7 +8057,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 10, check_finished.log)
@@ -8078,7 +8076,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger);
+                            });
                             let result_handler = await action_handler.start({
                                 req_path: `/req_path/${path_id}`,
                             });
@@ -8101,7 +8099,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -8130,7 +8128,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 60 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 context_path: `/context_path/${path_id}/`,
                                 deviceid_list: [
@@ -8159,7 +8157,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                     timeout: 200 * 1000,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path: `/req_path/${path_id}`,
                                 target: stack_manager.get_device_id({ peer_name: "zone1_ood", dec_id: dec_app_1.to_base_58(), type: cyfs.CyfsStackRequestorType.Http }).device_id!.object_id.to_base_58(),
                                 context_path: `/context_path/${path_id}/`,
@@ -8181,7 +8179,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                                 },
                                 expect: { err: 0 },
 
-                            }, logger).start({
+                            }).start({
                                 task_id: result.resp!.task_id!
                             })
                             assert.equal(check_finished.err, 0, check_finished.log)
@@ -8205,7 +8203,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -8232,7 +8230,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -8261,7 +8259,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -8280,7 +8278,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -8307,7 +8305,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -8336,7 +8334,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -8355,7 +8353,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -8382,7 +8380,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -8411,7 +8409,7 @@ describe("CYFS Stack Trans Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)

@@ -42,15 +42,15 @@ export class ClientProxy extends Channel {
         try {
             fs.writeFileSync(paramPath, JSON.stringify(param));
         } catch(err) {
-            this.logger.error(`write param failed, err=${err}`);
+            console.error(`write param failed, err=${err}`);
         }
         
         this.m_process = ChildProcess.fork(file, [paramPath], {silent: true});
         this.m_process.on('error',(error)=>{
-            this.logger.error(`###### TASK CLIENT RUN ERROR,${error}`)
+            console.error(`###### TASK CLIENT RUN ERROR,${error}`)
         })
         this.m_process.on('exit', (code: number, signal: string) => {
-            this.logger.error(`###### TASK CLIENT RUN EXIST`)
+            console.error(`###### TASK CLIENT RUN EXIST`)
             this.m_process = undefined;
             if (signal) {
                 code = ClientExitCode.killed;
@@ -79,7 +79,7 @@ export class ClientProxy extends Channel {
     }
 
     async stopProcess(): Promise<ErrorCode> {
-        this.logger.info(`######  CLIENT stopProcess `)
+        console.info(`######  CLIENT stopProcess `)
         if (!this.m_process) {
             return ErrorCode.notExist;
         }

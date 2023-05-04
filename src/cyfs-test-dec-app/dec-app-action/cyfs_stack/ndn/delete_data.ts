@@ -20,14 +20,14 @@ type TestOutput = {
 }
 
 export class DeleteDataAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:DeleteDataAction}{
+    static create_by_parent(action:Action): {err:number,action?:DeleteDataAction}{
         let run =  new DeleteDataAction({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {
@@ -39,7 +39,7 @@ export class DeleteDataAction extends BaseAction implements ActionAbstract {
         // 获取连接池中的cyfs stack
         let stack = this.local!;
         // get_data 失败
-        let get_data = await GetDataAction.create_by_parent(this.action,this.logger).action!.start(req);
+        let get_data = await GetDataAction.create_by_parent(this.action).action!.start(req);
         if(get_data.err){
             return {err:get_data.err,log:get_data.log}
         }

@@ -1,10 +1,9 @@
 import assert  from 'assert';
-import * as cyfs from '@src/cyfs'
-import {ActionManager,StackManager,CyfsTestRunner} from "@src/cyfs-test-util"
-import { ErrorCode, RandomGenerator, sleep,Logger } from '@src/common';
+import * as cyfs from '@/cyfs';
+import {ActionManager,StackManager,CyfsTestRunner} from "@/cyfs-test-util"
+import { ErrorCode, RandomGenerator, sleep,Logger, DirHelper } from '@/common';
 import path = require('path');
-import * as addContext from "mochawesome/addContext";
-import * as action_api from "dec-app-action";
+import * as action_api from "@/dec-app-action";
 
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
@@ -18,37 +17,60 @@ const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2
 //Smoke testing
 //Regression testing
 //Integration Testing
-//  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
-//  npx mocha .\test_ndn_scenario.ts --reporter mochawesome --require ts-node/register
-// npx mocha .\testsuite\system-test\cyfs_lib\ndn\scenario_group_context\test_ndn_scenario.ts --reporter mochawesome --require ts-node/register
 
+
+// npm run test ./testsuite/system-test/cyfs_lib/ndn/scenario_group_context/test_ndn_scenario.ts
 // Development not implemented
 // Waiting issuse# to fix
+// cyfs.clog.enable_file_log({
+//     name: "cyfs_stack",
+//     dir: path.join(DirHelper.getLogDir(),"test_ndn_scenario"),
+//     file_max_size: 1024 * 1024 * 10,
+//     file_max_count: 10,
+// });
+
+
 
 describe("CYFS Stack NDN Integration Testing", function () {
-    this.timeout(0);
+    
     let test_runner =  CyfsTestRunner.createInstance();
     const stack_manager = test_runner.stack_manager;
     let logger : Logger;
-    this.beforeAll(async function () {
-        await test_runner.before_all_common();
-        logger = test_runner.logger!;
-    })
-    this.afterAll(async function () {
-        await test_runner.after_all_common();
-    })
-    this.beforeEach(async function () {
-        let testcase_id =this.currentTest!.title;
-        await test_runner.before_each_common(testcase_id);
-    })
-    this.afterEach(async function () {
-        let report_result = await test_runner.after_each_common();
-        addContext.default(this, report_result);
-    })
+    beforeAll(async function () {
+        await new Promise(async resolve => {
+            console.info("beforeAll start")
+            await test_runner.before_all_common();
+            
+            console.info("beforeAll finished")
+            resolve("finished");
+        })
+       
+    },60*1000)
+    afterAll(async function () {
+        await new Promise(async resolve => {
+            await test_runner.after_all_common();
+            resolve("finished");
+        })
+        
+    },60*1000)
+    beforeEach(async function () {
+        await new Promise(async resolve => {
+            let testcase_id = `${Date.now()}`//this.currentTest.title
+            await test_runner.before_each_common(testcase_id);
+            resolve("finished");
+        })
+    },60*1000)
+    afterEach(async function () {
+        await new Promise(async resolve => {
+            let report_result = await test_runner.after_each_common();
+            // addContext.default(this, report_result);
+            resolve("finished");
+        })
+    },60*1000)
     
-    describe("System Testing: stack.ndn_service().put_data() ",async()=>{
-        describe(`put_data CyfsStackRequestorType: HTTP/WebSocket`,async()=>{    
-            it(" NDC put_data chunk data by WebSocket Requestor,Auto use Http Requestor",async()=>{
+    describe.only("System Testing: stack.ndn_service().put_data() ",()=>{
+        describe.only(`put_data CyfsStackRequestorType: HTTP/WebSocket`,()=>{    
+            test.only(" NDC put_data chunk data by WebSocket Requestor,Auto use Http Requestor",async()=>{
                 // Create test Action
                 let action =await new action_api.PutDataAction({
                     local: {
@@ -66,15 +88,15 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
-            it("NDC put_data chunk data by Http Requestor",async()=>{
+            it("NDC put_data chunk data by Http Requestor",async ()=>{
                 // Create test Action
-                let action =await new action_api.PutDataAction({
+                let action = await new action_api.PutDataAction({
                     local: {
                         peer_name: "zone1_device1",
                         dec_id: dec_app_1.to_base_58(),
@@ -90,14 +112,14 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe(`put_data data type : Chunk/File/Dir+inner_path`,async()=>{
+        describe(`put_data data type : Chunk/File/Dir+inner_path`,()=>{
             it("put_data send Chunk",async()=>{
                 // 创建测试任务
                 let action =await new action_api.PutDataAction({
@@ -116,13 +138,13 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
-            it.only("put_data send File",async()=>{
+            it("put_data send File",async()=>{
                 // 创建测试任务
                 let action =await new action_api.PutDataAction({
                     local: {
@@ -140,7 +162,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "file",
                     chunk_size: 4*1024*1024,
                     file_size : 10*1024*1024,
@@ -148,8 +170,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,1,action.log)
             })
         })
-        describe(`NDN put_data 发送数据大小测试 【不支持Stream形式，内存有限制】`,async()=>{
-            describe(`Chunk 数据大小测试`,async()=>{
+        describe(`NDN put_data 发送数据大小测试 【不支持Stream形式，内存有限制】`,()=>{
+            describe(`Chunk 数据大小测试`,()=>{
                 it("本地NDC put_data 发送Chunk 50MB",async()=>{
                     // 创建测试任务
                     let action =await new action_api.PutDataAction({
@@ -168,7 +190,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 50*1024*1024,
                     });
@@ -192,7 +214,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 100*1024*1024,
                     });
@@ -216,7 +238,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 500*1024*1024,
                     });
@@ -240,7 +262,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 1*1024*1024*1024,
                     });
@@ -252,8 +274,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
         
 
     })
-    describe("System Testing: stack.ndn_service().get_data()",async()=>{
-        describe(`NDN get_data 基本流程HTTP+WebSocket`,async()=>{
+    describe("System Testing: stack.ndn_service().get_data()",()=>{
+        describe(`NDN get_data 基本流程HTTP+WebSocket`,()=>{
             it("本地NDC get_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -275,7 +297,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -305,7 +327,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -315,7 +337,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe("get_data + group集成测试 ",async()=>{
+        describe("get_data + group集成测试 ",()=>{
             it("get_data 设置group",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -337,7 +359,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -367,7 +389,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     object_type: "chunk",
@@ -376,7 +398,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe("get_data + context集成测试 ",async()=>{
+        describe("get_data + context集成测试 ",()=>{
             it("get_data 设置context",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -398,7 +420,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -428,7 +450,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     group:`/group_path/${path_id}`,
                     object_type: "chunk",
@@ -436,10 +458,10 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
-            describe("context 路径间的父子关系", async () => {
+            describe("context 路径间的父子关系", () => {
                 //  通过 context_path 路径树 每十秒向上匹配context对象   /a/b/c -> /a/b/ -> /a -> /
                 //  一个周期内 通过 context 对象 中的下载源 下载文件
-                describe("context_path  子路径继承父路径context对象 规则校验", async () => {
+                describe("context_path  子路径继承父路径context对象 规则校验",() => {
                     
                     it("路径/context_path/${path_id}/ 关联有效context，创建下载任务下载文件成功 ", async () => {
                         let path_id = RandomGenerator.string(20);
@@ -456,7 +478,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -485,7 +507,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}`, 
@@ -510,7 +532,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -539,7 +561,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}`, 
@@ -564,7 +586,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -593,7 +615,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task1`, 
@@ -618,7 +640,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -647,7 +669,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task2`, 
@@ -672,7 +694,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -695,7 +717,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}/task3`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -724,7 +746,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task3`, 
@@ -752,7 +774,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -775,7 +797,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}/task3`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -804,7 +826,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task3`, 
@@ -818,7 +840,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         assert.equal(action_get.err,4,action_get.log)      
                     })
                 })
-                describe("通过 context_path 子路径更新 ，覆盖原有 父路径context 下载源", async () => {
+                describe("通过 context_path 子路径更新 ，覆盖原有 父路径context 下载源", () => {
                     
                     it("【不支持更新】子路径/context_path/${path_id}/task1 未设置context 继承父context_path 创建下载任务下载文件失败 -> 子路径添加有效context -> task通过子路径context下载成功", async () => {
                         let path_id = RandomGenerator.string(20);
@@ -835,7 +857,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -864,7 +886,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task3`, 
@@ -885,7 +907,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}/task3`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -914,7 +936,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -943,7 +965,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}/task3`, 
@@ -964,7 +986,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}/task3`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -979,7 +1001,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     })
                 })
             })
-            describe("context_path下关联的context 对象", async () => {
+            describe("context_path下关联的context 对象", () => {
                 it("异常场景：context_path 未关联context 对象，创建传输任务", async () => {
                     let path_id = RandomGenerator.string(20);
                     // 先设置context
@@ -1001,7 +1023,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             non_level : cyfs.NONAPILevel.Router,
                         },
                         expect: { err: 0 },
-                    }, logger).start({
+                    }).start({
                         req_path:`/req_path/${path_id}`,
                         group:`/group_path/${path_id}`,
                         context : `/context_path/${path_id}`, 
@@ -1026,7 +1048,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -1055,7 +1077,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}`, 
@@ -1076,7 +1098,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -1091,7 +1113,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         assert.equal(action_get.err,4,action_get.log) 
                 })
 
-                describe("context_path下关联多个context对象复合场景", async () => {
+                describe("context_path下关联多个context对象复合场景", () => {
                     // 前置条件准备： zone1_device1 zone1_ood 可提供下载
                     let path_id = RandomGenerator.string(20)
                     let chunk_info : {object_id:cyfs.ObjectId,md5:string}
@@ -1112,7 +1134,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             context_path : `/context_path/${path_id}`, 
                             chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                             deviceid_list: [
@@ -1141,7 +1163,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 non_level : cyfs.NONAPILevel.Router,
                             },
                             expect: { err: 0 },
-                        }, logger).start({
+                        }).start({
                             req_path:`/req_path/${path_id}`,
                             group:`/group_path/${path_id}`,
                             context : `/context_path/${path_id}`, 
@@ -1152,7 +1174,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         assert.equal(action.err,0,action.log)
                         chunk_info = {object_id :action.resp?.object_id!,md5:action.resp?.md5!}
                     })
-                    describe("【NDN 目前只支持一个Device】单个context对象内device_list 配置", async () => {
+                    describe("【NDN 目前只支持一个Device】单个context对象内device_list 配置", () => {
 
                         it("device_list 包含一个下载源 无效", async () => {
                             let child_id = RandomGenerator.string(20);
@@ -1168,7 +1190,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1197,7 +1219,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1224,7 +1246,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1253,7 +1275,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1279,7 +1301,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1313,7 +1335,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1339,7 +1361,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1373,7 +1395,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1399,7 +1421,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1433,7 +1455,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1459,7 +1481,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 context_path : `/context_path/${path_id}/${child_id}`, 
                                 chunk_codec_desc: cyfs.ChunkCodecDesc.Stream(),
                                 deviceid_list: [
@@ -1493,7 +1515,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                     non_level : cyfs.NONAPILevel.Router,
                                 },
                                 expect: { err: 0 },
-                            }, logger).start({
+                            }).start({
                                 req_path:`/req_path/${path_id}`,
                                 group:`/group_path/${path_id}`,
                                 context : `/context_path/${path_id}/${child_id}`, 
@@ -1511,7 +1533,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     
 
                 })
-                describe("context_path 下关联context chunk_codec_desc 类型", async () => {
+                describe("context_path 下关联context chunk_codec_desc 类型",  () => {
                     it("chunk_codec_desc 类型为stream", async () => {
                         // 创建监听器
                         let path_id = RandomGenerator.string(20)
@@ -1526,7 +1548,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1553,7 +1575,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -1582,7 +1604,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -1601,7 +1623,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1628,7 +1650,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -1657,7 +1679,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -1676,7 +1698,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result_handler = await action_handler.start({
                             req_path: `/req_path/${path_id}`,
@@ -1703,7 +1725,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger);
+                        });
 
                         let result = await action.start({
                             req_path: `/req_path/${path_id}`,
@@ -1732,7 +1754,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                             },
                             expect: { err: 0 },
 
-                        }, logger).start({
+                        }).start({
                             task_id: result.resp!.task_id!
                         })
                         assert.equal(check_finished.err, 0, check_finished.log)
@@ -1741,7 +1763,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
 
             })
         })
-        describe("get_data 构建context_path 和 group_path树 ",async()=>{
+        describe("get_data 构建context_path 和 group_path树 ",()=>{
             it("构建树结构，同步执行 HTTP",async()=>{
                 // 
                 let path_id = RandomGenerator.string(20)
@@ -1765,7 +1787,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id}`,
                     task_list: [
                         {
@@ -1834,7 +1856,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id_ws}`,
                     task_list: [
                         {
@@ -1905,7 +1927,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id_ws}`,
                     task_list: [
                         {
@@ -1976,7 +1998,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id}`,
                     task_list: [
                         {
@@ -2047,7 +2069,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id_ws}`,
                     task_list: [
                         {
@@ -2097,7 +2119,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(trans_file_tree_action_ws.err,0,trans_file_tree_action_ws.log);
             })
         })
-        describe("NDN get_data Zone权限控制",async()=>{
+        describe("NDN get_data Zone权限控制",()=>{
             it("本地NOC: zone1_device1 从本地下载",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2119,7 +2141,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2150,7 +2172,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                      },
                      expect: { err: 0 },
      
-                 }, logger).start({
+                 }).start({
                      req_path:`/req_path/${path_id}`,
                      context:`/context_path/${path_id}`,
                      group:`/group_path/${path_id}`,
@@ -2181,7 +2203,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                    },
                    expect: { err: 0 },
    
-               }, logger).start({
+               }).start({
                    req_path:`/req_path/${path_id}`,
                    context:`/context_path/${path_id}`,
                    group:`/group_path/${path_id}`,
@@ -2192,7 +2214,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                assert.equal(action.err,ErrorCode.succ,action.log) 
             })
         })
-        describe("get_data 获取数据类型",async()=>{
+        describe("get_data 获取数据类型",()=>{
             it(`get_data 获取 chunk`,async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2214,7 +2236,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2244,7 +2266,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2275,7 +2297,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2287,8 +2309,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
             })
         }) 
     })
-    describe.skip("[Development not implemented] System Testing: stack.ndn_service().delete_data() ",async()=>{
-        describe(`NDN delete_data 基本流程HTTP+WebSocket`,async()=>{
+    describe.skip("[Development not implemented] System Testing: stack.ndn_service().delete_data() ",()=>{
+        describe(`NDN delete_data 基本流程HTTP+WebSocket`,()=>{
             it.skip("协议栈未实现】本地NDC delete_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2310,7 +2332,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2321,8 +2343,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
             })
         }) 
     })
-    describe.skip("[Development not implemented] System Testing: stack.ndn_service().put_shared_data()",async()=>{
-        describe(`NDN put_shared_data 基本流程HTTP+WebSocket`,async()=>{
+    describe.skip("[Development not implemented] System Testing: stack.ndn_service().put_shared_data()",()=>{
+        describe(`NDN put_shared_data 基本流程HTTP+WebSocket`,()=>{
             
             it("【大数据会出现异常 BUG未解决】 本地NDC put_shared_data chunk数据 - WebSocket",async()=>{
                 // 创建测试任务
@@ -2342,7 +2364,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
@@ -2366,14 +2388,14 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe(`NDN put_shared_data 发送数据类型`,async()=>{
+        describe(`NDN put_shared_data 发送数据类型`,()=>{
             it("本地NDC put_shared_data 发送Chunk",async()=>{
                 // 创建测试任务
                 let action =await new action_api.PutSharedDataAction({
@@ -2392,7 +2414,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "chunk",
                     chunk_size: 10*1024*1024,
                 });
@@ -2416,7 +2438,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     object_type: "file",
                     chunk_size: 10*1024*1024,
                     file_size : 50*1024*1024,
@@ -2424,8 +2446,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,27,action.log)
             })
         })
-        describe(`NDN put_shared_data 发送数据大小测试 【不支持Stream形式，内存有限制】`,async()=>{
-            describe(`Chunk 数据大小测试`,async()=>{
+        describe(`NDN put_shared_data 发送数据大小测试 【不支持Stream形式，内存有限制】`,()=>{
+            describe(`Chunk 数据大小测试`,()=>{
                 it("本地NDC put_shared_data 发送Chunk 50MB",async()=>{
                     // 创建测试任务
                     let action =await new action_api.PutSharedDataAction({
@@ -2444,7 +2466,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 50*1024*1024,
                     });
@@ -2468,7 +2490,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 100*1024*1024,
                     });
@@ -2492,7 +2514,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 500*1024*1024,
                     });
@@ -2516,7 +2538,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                         },
                         expect: { err: 0 },
         
-                    }, logger).start({
+                    }).start({
                         object_type: "chunk",
                         chunk_size: 1*1024*1024*1024,
                     });
@@ -2526,8 +2548,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
             
         })
     })
-    describe.skip("[Waiting issuse# to fix] System Testing: stack.ndn_service().get_shared_data()",async()=>{
-        describe(`NDN get_shared_data 基本流程HTTP+WebSocket`,async()=>{
+    describe.skip("[Waiting issuse# to fix] System Testing: stack.ndn_service().get_shared_data()",()=>{
+        describe(`NDN get_shared_data 基本流程HTTP+WebSocket`,()=>{
             it("本地NDC get_shared_data chunk数据 - HTTP",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2549,7 +2571,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2579,7 +2601,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2589,7 +2611,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe("get_shared_data + group集成测试 ",async()=>{
+        describe("get_shared_data + group集成测试 ",()=>{
             it("get_shared_data 设置group",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2611,7 +2633,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2641,7 +2663,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     object_type: "chunk",
@@ -2650,7 +2672,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe("get_shared_data + context集成测试 ",async()=>{
+        describe("get_shared_data + context集成测试 ",()=>{
             it("get_shared_data 设置context",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -2672,7 +2694,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -2702,7 +2724,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     group:`/group_path/${path_id}`,
                     object_type: "chunk",
@@ -2711,7 +2733,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(action.err,ErrorCode.succ,action.log)
             })
         })
-        describe("get_shared_data 构建context_path 和 group_path树 ",async()=>{
+        describe("get_shared_data 构建context_path 和 group_path树 ",()=>{
             it("构建树结构，同步执行 HTTP",async()=>{
                 // 
                 let path_id = RandomGenerator.string(20)
@@ -2735,7 +2757,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id}`,
                     task_list: [
                         {
@@ -2808,7 +2830,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id_ws}`,
                     task_list: [
                         {
@@ -2879,7 +2901,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id}`,
                     task_list: [
                         {
@@ -2951,7 +2973,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
 
-                }, logger).start({
+                }).start({
                     root_req_path: `/req_path/${path_id_ws}`,
                     task_list: [
                         {
@@ -3001,7 +3023,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 assert.equal(trans_file_tree_action_ws.err,0,trans_file_tree_action_ws.log);
             })
         })
-        describe("NDN get_shared_data Zone权限控制",async()=>{
+        describe("NDN get_shared_data Zone权限控制",()=>{
             it("本地NOC: zone1_device1 从本地下载",async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -3023,7 +3045,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -3053,7 +3075,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                      },
                      expect: { err: 0 },
      
-                 }, logger).start({
+                 }).start({
                      req_path:`/req_path/${path_id}`,
                      context:`/context_path/${path_id}`,
                      group:`/group_path/${path_id}`,
@@ -3083,7 +3105,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                    },
                    expect: { err: 0 },
    
-               }, logger).start({
+               }).start({
                    req_path:`/req_path/${path_id}`,
                    context:`/context_path/${path_id}`,
                    group:`/group_path/${path_id}`,
@@ -3093,7 +3115,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                assert.equal(action.err,ErrorCode.succ,action.log) 
             })
         })
-        describe("get_shared_data 获取数据类型",async()=>{
+        describe("get_shared_data 获取数据类型",()=>{
             it(`get_shared_data 获取 chunk`,async()=>{
                 // 创建测试任务
                 let path_id = RandomGenerator.string(20);
@@ -3115,7 +3137,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -3145,7 +3167,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -3176,7 +3198,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     },
                     expect: { err: 0 },
     
-                }, logger).start({
+                }).start({
                     req_path:`/req_path/${path_id}`,
                     context:`/context_path/${path_id}`,
                     group:`/group_path/${path_id}`,
@@ -3188,7 +3210,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
             })
         }) 
     })
-    describe("System Testing: stack.ndn_service().query_file()",async()=>{
+    describe("System Testing: stack.ndn_service().query_file()",()=>{
 
         it(`get_data 获取 File`,async()=>{
             // 创建测试任务
@@ -3211,7 +3233,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger).start({
+            }).start({
                 req_path:`/req_path/${path_id}`,
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
@@ -3242,7 +3264,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger).start({
+            }).start({
                 req_path:`/req_path/${path_id}`,
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
@@ -3274,7 +3296,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger).start({
+            }).start({
                 req_path:`/req_path/${path_id}`,
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
@@ -3296,7 +3318,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     non_level : cyfs.NONAPILevel.Router,
                 },
                 expect: { err: 0 },
-            },logger).start({
+            } ).start({
                 type : cyfs.NDNQueryFileParamType.File,
                 file_id : object_id!
             })
@@ -3323,7 +3345,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger).start({
+            }).start({
                 req_path:`/req_path/${path_id}`,
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
@@ -3344,7 +3366,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     non_level : cyfs.NONAPILevel.Router,
                 },
                 expect: { err: 0 },
-            },logger).start({
+            } ).start({
                 type : cyfs.NDNQueryFileParamType.Hash,
                 hash : hash
                 
@@ -3375,7 +3397,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                 },
                 expect: { err: 0 },
 
-            }, logger).start({
+            }).start({
                 req_path:`/req_path/${path_id}`,
                 context:`/context_path/${path_id}`,
                 group:`/group_path/${path_id}`,
@@ -3396,7 +3418,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                     non_level : cyfs.NONAPILevel.Router,
                 },
                 expect: { err: 0 },
-            },logger).start({
+            } ).start({
                 type : cyfs.NDNQueryFileParamType.Chunk,
                 chunk_id : cyfs.ChunkId.from_base_58(object_id).unwrap()
             })

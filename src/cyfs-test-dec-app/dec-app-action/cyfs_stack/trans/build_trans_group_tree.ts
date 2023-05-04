@@ -60,17 +60,17 @@ export class BuildTransGroupTree extends BaseAction implements ActionAbstract {
     async run(req: TestInput): Promise<{ err: ErrorCode, log: string,resp?: TestOutput }> {
         let local = this.local!;
 
-        let action_handler = await RegisterCommonHandler.create_by_parent(this.action,this.logger!).action!.start({
+        let action_handler = await RegisterCommonHandler.create_by_parent(this.action!).action!.start({
             req_path: req.root_req_path,
         });
-        this.logger.info(`add handler : ${action_handler}`);
+        console.info(`add handler : ${action_handler}`);
         let task_result_list = []
         let task_running_list = []
         for(let task of req.task_list){
             if(task.auto_start == undefined){
                 task.auto_start = true;
             }
-            task_running_list.push(PrepareFileTask.create_by_parent(this.action,this.logger!).action!.start({
+            task_running_list.push(PrepareFileTask.create_by_parent(this.action!).action!.start({
                 req_path: task.req_path,
                 context_path: task.context_path,
                 group: task.group,

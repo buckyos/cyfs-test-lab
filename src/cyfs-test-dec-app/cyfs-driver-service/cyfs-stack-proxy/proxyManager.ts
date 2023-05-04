@@ -51,7 +51,7 @@ export class ProxyManager extends EventEmitter {
         this.state = 0;
         this.socket_list = [];
         this.root = path.join(this.log.dir(), `../${this.cache_name}_cache`)
-        this.util_tool = new UtilTool(_interface, this.log,this.root);
+        this.util_tool = new UtilTool(_interface,this.root);
         
     }
     init(stack_type: string): { err: ErrorCode, log?: string, cache_name: string } {

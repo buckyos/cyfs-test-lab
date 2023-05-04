@@ -20,7 +20,7 @@ export class WriteFIleHandler extends BaseHandler {
         let request = req.OS_IO_WriteFileReq;
         try {
             let result = fs.writeFileSync(request.file_path,request.data);
-            this.logger.error(`write file ${request.file_path} success`);
+            console.error(`write file ${request.file_path} success`);
             return {
                 OS_IO_WriteFileResp: {
                     result: 0,
@@ -28,7 +28,7 @@ export class WriteFIleHandler extends BaseHandler {
                 }
             }
         } catch (error) {
-            this.logger.error(`write file ${request.file_path} error:${error}`);
+            console.error(`write file ${request.file_path} error:${error}`);
             return {
                 OS_IO_WriteFileResp: {
                     result: 1,

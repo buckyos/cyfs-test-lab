@@ -1,23 +1,26 @@
 {
   "compilerOptions": {
-    "strict": false,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "target": "ES2019",  
     "jsx": "react",
-    "baseUrl": ".",
-    "paths": {
-        "@src/*": ["./*"],
-        "@www/*": ["./www/*"]
-    },
     "module": "commonjs",
+    "declaration": true, 
+    "forceConsistentCasingInFileNames": true, 
+    "useUnknownInCatchVariables": false ,
+    "strict": true,   
+    "noEmitOnError": true, 
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["*"],
+    },
     "moduleResolution": "node",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
+    "skipLibCheck" : true,
     "noImplicitThis": true,
-    "strictNullChecks": true,
-    "sourceMap": false,
+    "strictNullChecks": false,
     "outDir": "./dist",
-    "skipLibCheck": true,
-    "target": "esnext"
+
   },
   "include": ["./", "typing.d.ts"],
   "exclude": ["deploy", "node_modules"]

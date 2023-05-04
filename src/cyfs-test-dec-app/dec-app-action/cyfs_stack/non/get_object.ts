@@ -13,34 +13,34 @@ type TestOutput = {
 }
 
 export class GetObjectAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GetObjectAction}{
+    static create_by_parent(action:Action): {err:number,action?:GetObjectAction}{
         let run =  new GetObjectAction({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
-    static create_by_parent_local_noc(action:Action,logger:Logger): {err:number,action?:GetObjectAction}{
+    static create_by_parent_local_noc(action:Action): {err:number,action?:GetObjectAction}{
         let run =  new GetObjectAction({
             local : action.local,
             remote : action.local,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
-    static create_by_parent_remote_noc(action:Action,logger:Logger): {err:number,action?:GetObjectAction}{
+    static create_by_parent_remote_noc(action:Action): {err:number,action?:GetObjectAction}{
         let run =  new GetObjectAction({
             local : action.remote!,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {

@@ -7,12 +7,10 @@ import * as fs from 'fs-extra';
  * 
  */
 export class LocalStorageJson {
-    private m_logger: Logger;
     private m_file: string;
     private m_values: any;
-    constructor(options: {file: string, logger: Logger}) {
+    constructor(options: {file: string}) {
         this.m_file = options.file;
-        this.m_logger = options.logger;
     }
 
     async load(): Promise<ErrorCode> {
@@ -28,7 +26,7 @@ export class LocalStorageJson {
         } catch (err) {
             this.m_values = {};
             await this.save();
-            this.m_logger.error(`load '${this.m_file}' exception, err=${err}`);
+            console.error(`load '${this.m_file}' exception, err=${err}`);
             return ErrorCode.exception;
         }
     }
@@ -38,7 +36,7 @@ export class LocalStorageJson {
             fs.writeFileSync(this.m_file, JSON.stringify(this.m_values));
             return ErrorCode.succ;
         } catch (err) {
-            this.m_logger.error(`save '${this.m_file}' exception, err=${err}`);
+            console.error(`save '${this.m_file}' exception, err=${err}`);
             return ErrorCode.exception;
         }
     }

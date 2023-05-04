@@ -99,4 +99,5 @@ If you need to build a cyfs-test-lab testing environment, you can refer to the f
 + [CYFS Stack test case design and implementation](./doc/zh-CN/CYFS协议栈测试/测试用例/CYFS协议栈测试用例设计.md)
 
 ## Test result statistics
-+ [cyfs-test-lab](http://bdttest.tinyappcloud.com/) 
+
++ [cyfs-test-lab](http://cyfs-test-lab/) 

@@ -52,18 +52,18 @@ export class RandomSingleOpEnv extends BaseAction implements ActionAbstract {
                 return reject({ err: err.code, log: err.msg });
             }).unwrap();
 
-            let test1_object = await PutObjectAction.create_random_text_object(this.action.local, this.logger);
+            let test1_object = await PutObjectAction.create_random_text_object(this.action.local);
             let insert_ket = await op_env.insert_with_key( test1_object.calculate_id().to_base_58(),test1_object.calculate_id());
             let check =  (await op_env.get_by_key(test1_object.calculate_id().to_base_58())).mapErr(err => {
                 return reject({ err: err.code, log: err.msg });
             }).unwrap();
-            this.logger.info(`get_by_key success: ${check}`)
+            console.info(`get_by_key success: ${check}`)
             let commit = (await op_env.commit()).mapErr(err => {
                 return reject({ err: err.code, log: err.msg });
             }).unwrap();
-            this.logger.info(`dec_root = ${commit.dec_root}`)
-            this.logger.info(`root = ${commit.root}`)
-            this.logger.info(`revision = ${commit.revision}`)
+            console.info(`dec_root = ${commit.dec_root}`)
+            console.info(`root = ${commit.root}`)
+            console.info(`revision = ${commit.revision}`)
             resolve({
                 err: ErrorCode.succ, log: "success", resp: {
                     dec_root: commit.dec_root,

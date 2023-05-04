@@ -66,7 +66,7 @@ export class LocalMaster extends ClientStack {
             rpc.initFromListener(socket);
 
             rpc.once('command', (r: Rpc, c: Command) => {
-                this.m_logger.debug(`---------------------------------new connection first command,${stringifyComand(c)}`);
+                console.debug(`---------------------------------new connection first command,${stringifyComand(c)}`);
                 if (c.name !== SysCommandName.sys_ping_req) {
                     return;
                 }
@@ -80,12 +80,12 @@ export class LocalMaster extends ClientStack {
             });
 
             rpc.once('close', () => {
-                this.logger.info(`local master close net Socket`)
+                console.info(`local master close net Socket`)
                 rpc.removeAllListeners();
             });
 
             rpc.once('error', () => {
-                this.logger.info(`local master net Socket error`)
+                console.info(`local master net Socket error`)
                 rpc.removeAllListeners();
             });
         });
@@ -189,7 +189,7 @@ export class LocalMaster extends ClientStack {
         this.m_clients.push(client);
 
         client.on('timeout', async () => {
-            this.m_logger.info(`===============client exit,namespace=${JSON.stringify(client.namespace)}`);
+            console.info(`===============client exit,namespace=${JSON.stringify(client.namespace)}`);
             
             if (!client.isService && !(client as TaskProxy).isLocalTest) {
                 this._reportTaskExecuteResult(client as TaskProxy);
@@ -276,7 +276,7 @@ export class LocalMaster extends ClientStack {
                 //task和service再同一个机器上面
                 let taskClients: ClientProxy[] = this._findClientByNamespace(c.from);
                 if (taskClients.length === 0) {
-                    this.m_logger.error(`error, when start service, command from task at the same agent with servie, but task not exist`);
+                    console.error(`error, when start service, command from task at the same agent with servie, but task not exist`);
                     err = ErrorCode.exception;
                     break;
                 }
@@ -465,7 +465,7 @@ export class LocalMaster extends ClientStack {
                 };
                 taskClient.forkProcess(entryfile, param);
             } catch (e) {
-                this.m_logger.error(`start task exception err=${e}`);
+                console.error(`start task exception err=${e}`);
                 err = ErrorCode.exception;
             }
         } while (false);
@@ -500,7 +500,7 @@ export class LocalMaster extends ClientStack {
                 };
                 taskClient.forkProcess(entryfile, param);
             } catch (e) {
-                this.m_logger.error(`start task exception err=${e}`);
+                console.error(`start task exception err=${e}`);
                 err = ErrorCode.exception;
             }
         } while (false);
@@ -576,7 +576,7 @@ export class LocalMaster extends ClientStack {
                     DirHelper.emptyDir(dir);
                     fs.rmdirSync(dir);
                 } catch (err) {
-                    this.m_logger.error(`failed when remove service dir,name=${info.servicename}, err=${err}`);
+                    console.error(`failed when remove service dir,name=${info.servicename}, err=${err}`);
                 }
             }
             
@@ -641,13 +641,13 @@ export class LocalMaster extends ClientStack {
             let ops = [];
             ops.push(this._doUploadLog(channel.namespace, channel, false));
             let services: PrivateChannel[] = (channel as TaskProxy).getServices();
-            this.logger.info(`===============master on task finish services count=${services.length}`);
+            console.info(`===============master on task finish services count=${services.length}`);
             for (let s of services) {
                 ops.push(this._doUploadLog(channel.namespace, s, true));
             }
 
             let infos = await Promise.all(ops);
-            this.logger.info(`===============master on task finish uploadlog ret=${JSON.stringify(infos)}`);
+            console.info(`===============master on task finish uploadlog ret=${JSON.stringify(infos)}`);
             intervalAction.end();
 
             for (let info of infos) {

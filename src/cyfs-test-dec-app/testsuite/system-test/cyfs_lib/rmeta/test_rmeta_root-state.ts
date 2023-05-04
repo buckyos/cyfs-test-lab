@@ -14,8 +14,8 @@ let stack: cyfs.SharedCyfsStack;
 
 // TO_FIX : rmeta 连接协议栈需要使用标准连接池
 describe("#op-env 初始化方式", function () {
-    this.timeout(0);
-    this.beforeAll(async function () {
+    
+    beforeAll(async function () {
         //测试前置条件,连接测试模拟器设备
         console.info(`##########用例执开始执行`);
 
@@ -24,7 +24,7 @@ describe("#op-env 初始化方式", function () {
         //await ZoneSimulator.init();
         //stack = ZoneSimulator.zone1_device1_stack!;;
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         //每个函数执行前,清除所有handler
         console.info(`#########用例执行完成`);
         //ZoneSimulator.stopZoneSimulator();

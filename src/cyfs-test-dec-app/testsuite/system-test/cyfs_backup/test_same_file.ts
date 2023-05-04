@@ -4,12 +4,6 @@ import { CyfsStackDriverManager} from "../../../cyfs-driver-client"
 import {CyfsDriverType} from "../../../cyfs-test-base"
 import {ActionManager,StackManager} from "../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
-
-import * as addContext from "mochawesome/addContext"
-import * as action_api from "../../../dec-app-action"
-import { HandlerRequestObject,HandlerRequestObjectDecoder, HandlerType } from "../../../dec-app-base"
-import { PrepareTransFileRequest } from '../../../dec-app-action';
-
 import * as fs from "fs-extra";
 import path  from "path";
 
@@ -77,7 +71,7 @@ const test_device = stack_list.zone4_ood;
 
 
 describe("cyfs-back-up数据恢复测试",function(){
-    this.timeout(0);
+    
     let logger: Logger;
     const stack_manager = StackManager.createInstance(CyfsDriverType.other, [{
         peer_name: "zone3_ood",
@@ -99,20 +93,20 @@ describe("cyfs-back-up数据恢复测试",function(){
     
     const driver_manager = CyfsStackDriverManager.createInstance();
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         // 使用代理 或者nginx 转发
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
         //let test = await stack.wait_online();
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -122,11 +116,11 @@ describe("cyfs-back-up数据恢复测试",function(){
         // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     // afterEach(function () {
     //     // 将当前用例执行记录到history
-    //     addContext.default(this, report_result);
+    //     // addContext.default(this, report_result);
     // });
 
     let json_name = Date.now().toString(); 
@@ -142,7 +136,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let begin = Date.now();
                             let tool = stack_manager.driver!.get_client(test_device.peer_name).client!.get_util_tool();
                             let random_file =await tool.create_file(10*1024*1024);
-                            logger.info(`random file success ${random_file.file_name}`)
+                            console.info(`random file success ${random_file.file_name}`)
                             assert.ok(!random_file.err);
                             let create_time = Date.now() - begin;
                             let result = await stack.trans().publish_file({
@@ -159,7 +153,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = result.unwrap().file_id
-                            logger.info(`task ${i} publish file success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} publish file success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             object_list.push({
                                 object_id,
                                 file_name : random_file.file_name,
@@ -205,7 +199,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                                 auto_start : true,
                              })
                              if(get_data.err){
-                                //logger.error(`${info.object_id} get failed`)
+                                //console.error(`${info.object_id} get failed`)
                             }
                              assert.ok(!get_data.err)
                              let check = 10
@@ -219,10 +213,10 @@ describe("cyfs-back-up数据恢复测试",function(){
                                 })
 
                                 if(check_result.err || check_result.unwrap().state.state == cyfs.TransTaskState.Finished){
-                                    logger.info(check_result);
+                                    console.info(check_result);
                                     let get_time = Date.now() - get_begin;
                                     //info.get_time = get_time
-                                    //logger.info(`${info.object_id} download success time = ${get_time}`)
+                                    //console.info(`${info.object_id} download success time = ${get_time}`)
                                     check = 0;
                                 }else{
                                     check = check - 1;

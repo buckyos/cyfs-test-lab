@@ -8,14 +8,14 @@ import {HandlerApi,HandlerRequestObject,HandlerRequestObjectDecoder,HandlerType,
 */
 
 export class UpdateContextRequest extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:UpdateContextRequest}{
+    static create_by_parent(action:Action): {err:number,action?:UpdateContextRequest}{
         let run =  new UpdateContextRequest({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:UpdateContextHandlerReq): Promise<{ err: number; log: string; resp?: UpdateContextHandlerResp }> {
@@ -45,7 +45,7 @@ export class UpdateContextRequest extends BaseAction implements ActionAbstract {
         }
         let response = result.unwrap();
         let response_object = new HandlerRequestObjectDecoder().from_raw( response.object!.object_raw).unwrap();
-        this.logger.info(`post_object resp = ${JSON.stringify(response_object.request_json)}`);
+        console.info(`post_object resp = ${JSON.stringify(response_object.request_json)}`);
         let resp : HandlerApi  = JSON.parse(response_object.request_json);
         if(!resp.UpdateContextHandlerResp){
             return { err: ErrorCode.invalidParam, log: "error response data",resp:resp.UpdateContextHandlerResp}

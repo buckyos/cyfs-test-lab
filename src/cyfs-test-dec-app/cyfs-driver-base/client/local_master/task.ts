@@ -68,7 +68,7 @@ export class TaskProxy extends ClientProxy {
     }
 
     addService(channel: PrivateChannel): ErrorCode {
-        this.logger.info(`=================add service namespace=${JSON.stringify(channel.namespace)}`);
+        console.info(`=================add service namespace=${JSON.stringify(channel.namespace)}`);
         let exist = this._findChannel(channel.namespace);
         if (exist) {
             return ErrorCode.exist;
@@ -96,7 +96,7 @@ export class TaskProxy extends ClientProxy {
     getServices(): PrivateChannel[] {
         let channels: PrivateChannel[] = [];
         for (let bridge of this.m_bridges) {
-            this.logger.info(`=================getServices bridage v1=${JSON.stringify(bridge.channels[0].namespace)}, v2=${JSON.stringify(bridge.channels[1].namespace)}`);
+            console.info(`=================getServices bridage v1=${JSON.stringify(bridge.channels[0].namespace)}, v2=${JSON.stringify(bridge.channels[1].namespace)}`);
             if (!NamespaceHelper.isNamespaceEqual(bridge.channels[0].namespace, this.namespace)) {
                 channels.push(bridge.channels[0]);
                 continue;

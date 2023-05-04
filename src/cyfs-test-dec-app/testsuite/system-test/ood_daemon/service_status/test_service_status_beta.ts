@@ -1,7 +1,6 @@
 import assert = require('assert');
 import * as cyfs from '../../../../cyfs'
 import { ErrorCode, RandomGenerator, sleep ,Logger} from '../../../../common';
-import * as addContext from "mochawesome/addContext"
 import {request,ContentType} from "./request"
 import {ActionManager} from "../../../../cyfs-test-util"
 //Interface
@@ -16,13 +15,12 @@ import {ActionManager} from "../../../../cyfs-test-util"
 //  npx mocha .\test_service_status_beta.ts --reporter mochawesome --require ts-node/register
 
 describe("ood-daemon 本地1330服务测试", function () {
-    this.timeout(0);
-   
+    
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         await sleep(5000);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         // 保存测试记录
 
@@ -38,7 +36,7 @@ describe("ood-daemon 本地1330服务测试", function () {
     })
     afterEach(function () {
         // 将当前用例执行记录到history
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     });
 
     describe("获取OOD service数据",async()=>{

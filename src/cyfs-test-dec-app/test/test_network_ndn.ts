@@ -27,7 +27,7 @@ async function main() {
         },
         expect: { err: 0 },
 
-    }, stack_manager.logger!).start({
+    }, ).start({
         object_type: "chunk",
         chunk_size: 1*1024*1024,
     });

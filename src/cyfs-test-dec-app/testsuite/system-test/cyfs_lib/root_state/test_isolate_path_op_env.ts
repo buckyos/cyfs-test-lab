@@ -1,7 +1,7 @@
 import assert  from 'assert'; 
 import * as cyfs from '../../../../cyfs';
 import {RandomGenerator,Logger,sleep, ErrorCode} from "../../../../common";
-import * as addContext from "mochawesome/addContext"
+
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
@@ -22,27 +22,27 @@ const test_agent = {
 // 
 
  describe("IsolatePathOpEnvStub 功能测试", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
         assert.equal(dec_app_1_client.err,0,dec_app_1_client.log)
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -52,17 +52,17 @@ const test_agent = {
         // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例:${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     })
     describe("IsolatePathOpEnvStub 接口测试 create_isolate_path_op_env",async()=>{
         describe("IsolatePathOpEnvStub 创建方式",async()=>{
@@ -73,10 +73,10 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_key = (await op_env.insert_with_key(test1_path,test1_object.calculate_id().toString(),test1_object.calculate_id())).mapErr((err)=>{
-                            logger.error(`insert_key err = ${err}`)
+                            console.error(`insert_key err = ${err}`)
                         });
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -88,7 +88,7 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -101,7 +101,7 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.DiffMap)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -114,7 +114,7 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.DiffSet)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -131,10 +131,10 @@ const test_agent = {
                         let create_new = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let create_result = (await op_env.create_new_with_path(root_path,cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_key = (await op_env.insert_with_key(test1_path,test1_object.calculate_id().toString(),test1_object.calculate_id())).mapErr((err)=>{
-                            logger.error(`insert_key err = ${err}`)
+                            console.error(`insert_key err = ${err}`)
                         });
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -150,10 +150,10 @@ const test_agent = {
                         let create_new = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let create_result = (await op_env.create_new_with_key(root_path,RandomGenerator.string(10),cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_key = (await op_env.insert_with_key(test1_path,test1_object.calculate_id().toString(),test1_object.calculate_id())).mapErr((err)=>{
-                            logger.error(`insert_key err = ${err}`)
+                            console.error(`insert_key err = ${err}`)
                         });
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -168,7 +168,7 @@ const test_agent = {
                         assert.equal(rand_stub.err,ErrorCode.succ,rand_stub.log);
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         let create_result = (await op_env.load(rand_stub.resp!.dec_root)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `${rand_stub.resp!.root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -198,9 +198,9 @@ const test_agent = {
                         // 通过 load + inner_path 加载 Object_map1
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         ///${rand_stub1.resp!.dec_root.to_base_58()}
-                        logger.info(`op_env will load ${link_stub3.resp!.root} inner_path = ${root_path}`);
+                        console.info(`op_env will load ${link_stub3.resp!.root} inner_path = ${root_path}`);
                         let create_result = (await op_env.load(link_stub3.resp!.root,root_path)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let root  = (await op_env.get_current_root()).unwrap();
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -227,9 +227,9 @@ const test_agent = {
                         // 通过 load + inner_path 加载 Object_map1
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env()).unwrap();
                         ///${rand_stub1.resp!.root.to_base_58()}
-                        logger.info(`op_env will load_by_path /${root_path1}/${rand_stub1.resp!.root.to_base_58()}`);
+                        console.info(`op_env will load_by_path /${root_path1}/${rand_stub1.resp!.root.to_base_58()}`);
                         let create_result = (await op_env.load_by_path(`${root_path1}/${rand_stub1.resp!.root.to_base_58()}`)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let root  = (await op_env.get_current_root()).unwrap();
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -250,7 +250,7 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -267,7 +267,7 @@ const test_agent = {
                         }
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -284,7 +284,7 @@ const test_agent = {
                         }
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.DiffMap)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -301,7 +301,7 @@ const test_agent = {
                         }
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         let create_result = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.DiffSet)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -321,7 +321,7 @@ const test_agent = {
                         }
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         let create_result = (await op_env.load(rand_stub.resp!.dec_root)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `${rand_stub.resp!.root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_ket = await op_env.insert_with_path(test1_path,test1_object.calculate_id());
                         let commit = (await op_env.commit()).unwrap();
@@ -356,9 +356,9 @@ const test_agent = {
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         
                         ///${rand_stub1.resp!.dec_root.to_base_58()}
-                        logger.info(`op_env will load ${link_stub3.resp!.root} inner_path = ${root_path}`);
+                        console.info(`op_env will load ${link_stub3.resp!.root} inner_path = ${root_path}`);
                         let create_result = (await op_env.load(link_stub3.resp!.root,root_path)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let root  = (await op_env.get_current_root()).unwrap();
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -378,10 +378,10 @@ const test_agent = {
                         let create_new = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let create_result = (await op_env.create_new_with_path(root_path,cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_key = (await op_env.insert_with_key(test1_path,test1_object.calculate_id().toString(),test1_object.calculate_id())).mapErr((err)=>{
-                            logger.error(`insert_key err = ${err}`)
+                            console.error(`insert_key err = ${err}`)
                         });
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -401,10 +401,10 @@ const test_agent = {
                         let create_new = (await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let create_result = (await op_env.create_new_with_key(root_path,RandomGenerator.string(10),cyfs.ObjectMapSimpleContentType.Map)).unwrap();
                         let test_root_path = RandomGenerator.string(10);
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let test1_path = `/${test_root_path}/${test1_object.desc().object_id().to_base_58()}`;
                         let insert_key = (await op_env.insert_with_key(test1_path,test1_object.calculate_id().toString(),test1_object.calculate_id())).mapErr((err)=>{
-                            logger.error(`insert_key err = ${err}`)
+                            console.error(`insert_key err = ${err}`)
                         });
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -435,9 +435,9 @@ const test_agent = {
                         }
                         let op_env =  (await stack.root_state_stub().create_isolate_path_op_env_with_access(access)).unwrap();
                         ///${rand_stub1.resp!.root.to_base_58()}
-                        logger.info(`op_env will load_by_path /${root_path1}/${rand_stub1.resp!.root.to_base_58()}`);
+                        console.info(`op_env will load_by_path /${root_path1}/${rand_stub1.resp!.root.to_base_58()}`);
                         let create_result = (await op_env.load_by_path(`${root_path1}/${rand_stub1.resp!.root.to_base_58()}`)).unwrap();
-                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test1_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let root  = (await op_env.get_current_root()).unwrap();
                         let commit = (await op_env.commit()).unwrap();
                         console.info(`dec_root = ${commit.dec_root}`)
@@ -460,7 +460,7 @@ const test_agent = {
                 })
                 let object1 : cyfs.ObjectId;
                 it("insert_with_key 接口插入 object1 ",async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_key(root_path,"object1",test_object.calculate_id())).unwrap();
                     object1 = test_object.calculate_id();
                 })
@@ -470,7 +470,7 @@ const test_agent = {
                 })
                 let object2 : cyfs.ObjectId;
                 it(`insert_with_path 接口插入 ${root_path}/object2 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_path(`${root_path}/object2`,test_object.calculate_id())).unwrap();
                     object2 = test_object.calculate_id();
                 })
@@ -480,18 +480,18 @@ const test_agent = {
                 })
                 let object_update3 : cyfs.ObjectId
                 it(`insert_with_path 接口插入 ${root_path}/object_update3 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_path(`${root_path}/object_update3`,test_object.calculate_id())).unwrap();
                     object_update3 = test_object.calculate_id();
                 })
                 it(`set_with_path 接口更新 ${root_path}/object_update3 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.set_with_path(`${root_path}/object_update3`,test_object.calculate_id())).unwrap();
                     object_update3 = test_object.calculate_id();
                 })
                 let object_remove4 : cyfs.ObjectId
                 it(`insert_with_path 接口插入 ${root_path}/object_remove4 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_path(`${root_path}/object_remove4`,test_object.calculate_id())).unwrap();
                     object_remove4 = test_object.calculate_id();
                 })
@@ -501,18 +501,18 @@ const test_agent = {
 
                 let object_update5 : cyfs.ObjectId
                 it(`insert_with_key 接口插入 ${root_path} object_update5 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_key(root_path,"object_update5",test_object.calculate_id())).unwrap();
                     object_update5 = test_object.calculate_id();
                 })
                 it(`set_with_key 接口更新 ${root_path} object_update5 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.set_with_key(root_path,"object_update5",test_object.calculate_id())).unwrap();
                     object_update5 = test_object.calculate_id();
                 })
                 let object_remove6 : cyfs.ObjectId
                 it(`insert_with_key 接口插入 ${root_path} object_remove6 `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_key(root_path,"object_remove6",test_object.calculate_id())).unwrap();
                     object_remove6 = test_object.calculate_id();
                 })
@@ -523,13 +523,13 @@ const test_agent = {
                 let set_path1 = `${root_path}/set1`;
                 let object4 : cyfs.ObjectId;
                 it(`insert  插入值${set_path1} `,async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert(set_path1,test_object.calculate_id())).unwrap();
                     object4 = test_object.calculate_id()
                 })
                 it(`insert 循环插入${set_path1} 10个值`,async()=>{
                     for(let i =0 ;i<10;i++){
-                        let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                        let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                         let result =  (await op_env.insert(set_path1,test_object.calculate_id())).unwrap();
                     }
                 })
@@ -561,15 +561,15 @@ const test_agent = {
                 })
                 it(`get_current_root 接口获取当前root 信息`,async()=>{
                     let result =  (await op_env.get_current_root()).unwrap();
-                    logger.info(`dec_root = ${result.dec_root}`)
-                    logger.info(`root = ${result.root}`)
-                    logger.info(`revision = ${result.revision}`)
+                    console.info(`dec_root = ${result.dec_root}`)
+                    console.info(`root = ${result.root}`)
+                    console.info(`revision = ${result.revision}`)
                 })
                 it(`update 接口 暂时将当前操作数据保存到NOC中`,async()=>{
                     let result =  (await op_env.update()).unwrap();
-                    logger.info(`dec_root = ${result.dec_root}`)
-                    logger.info(`root = ${result.root}`)
-                    logger.info(`revision = ${result.revision}`)
+                    console.info(`dec_root = ${result.dec_root}`)
+                    console.info(`root = ${result.root}`)
+                    console.info(`revision = ${result.revision}`)
                     op_env1_id = result.root;
                 })
                 
@@ -594,7 +594,7 @@ const test_agent = {
                 })
                 let object3 : cyfs.ObjectId;
                 it("insert_with_key 接口插入 object3 ",async()=>{
-                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1,logger);
+                    let test_object = await action_api.PutObjectAction.create_random_text_object(test_agent.zone1_ood_app1 );
                     let result =  (await op_env.insert_with_key(root_path,"object3",test_object.calculate_id())).unwrap();
                     object3 = test_object.calculate_id();
                 })

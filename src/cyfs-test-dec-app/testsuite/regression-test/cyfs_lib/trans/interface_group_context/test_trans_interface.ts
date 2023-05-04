@@ -16,17 +16,17 @@ const dec_app_0 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1ood2dec
 //  npx mocha .\test*.ts --reporter mochawesome --require ts-node/register
 
 describe("CYFS Stack Tans 模块测试", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance(CyfsDriverType.simulator);
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        stack_manager.logger!.info(`##########用例执开始执行`);
+        console.info(`##########用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         //await sleep(10*1000)
@@ -49,7 +49,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -60,7 +60,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     context_id: input.context!.desc().calculate_id(),
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
             })
             it("get_context 接口-传入必填参数-通过context_path获取", async () => {
                 // 连接测试协议栈
@@ -78,7 +78,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -89,7 +89,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     context_path,
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
             })
             it("get_context 接口-传入所有参数", async () => {
                 // 连接测试协议栈
@@ -107,7 +107,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -120,7 +120,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     context_id: input.context!.desc().calculate_id(),
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
             })
             it("异常用例-get_context 接口-传入必填参数，校验context_id 和context_path必须二选一", async () => {
                 // 连接测试协议栈
@@ -137,7 +137,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -197,7 +197,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -210,7 +210,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     context_id: input.context!.desc().calculate_id(),
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
             })
             it("异常用例-get_context 接口- 同时输入context_id/context_path,context_id 不存在,context_path存在", async () => {
                 // 连接测试协议栈
@@ -228,7 +228,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         deviceid_list: deviceid_list
                     },
                     zone1_device1,
-                    stack_manager.logger!
+                    
                 );
                 // 测试 get_context 接口
                 let info_context = await zone1_device1_stack.trans().get_context({
@@ -259,7 +259,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                             deviceid_list: deviceid_list
                         },
                         zone1_device1,
-                        stack_manager.logger!
+                        
                     );
                     // 测试 get_context 接口
                     let info_context = await zone1_device1_stack.trans().get_context({
@@ -272,7 +272,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         context_id: input.context!.desc().calculate_id(),
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                    console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
                 })
                 it("NDNOutputRequestCommon 验证NDN 同Zone device1 从 OOD 获取", async () => {
                     // 连接测试协议栈
@@ -290,7 +290,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                             deviceid_list: deviceid_list
                         },
                         zone1_device1,
-                        stack_manager.logger!
+                        
                     );
                     // 测试 get_context 接口
                     let info_context = await zone1_ood_satck.trans().get_context({
@@ -304,7 +304,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         context_id: input.context!.desc().calculate_id(),
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                    console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
                 })
                 it.skip("NDNOutputRequestCommon 验证NDN 跨Zone OOD2 从 OOD1 获取", async () => {
                     // 连接测试协议栈
@@ -324,7 +324,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                             deviceid_list: deviceid_list
                         },
                         zone1_ood,
-                        stack_manager.logger!
+                        
                     );
                     // 测试 get_context 接口
                     let info_context = await zone2_ood_satck.trans().get_context({
@@ -338,7 +338,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                         context_id: input.context!.desc().calculate_id(),
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
+                    console.info(`get context success : ${info_context.unwrap().context.calculate_id()}`);
                 })
             })
         })
@@ -352,13 +352,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                 // 构造测试数据
                 let context_path = `/test_context/${RandomGenerator.string(10)}`;
                 let context = cyfs.TransContext.new(dec_app_1, context_path);
-                stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                 let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                 for (let device of deviceid_list) {
                     context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                 }
                 // 发送请求
-                stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                console.info(`${JSON.stringify(context.device_list())}`)
                 let info_context = await zone1_ood_satck.trans().put_context({
                     common: {
                         level: cyfs.NDNAPILevel.NDC,
@@ -370,7 +370,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                 });
 
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
             })
             it("put_context 接口-传入所有参数", async () => {
                 // 连接测试协议栈
@@ -381,13 +381,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                 // 构造测试数据
                 let context_path = `/test_context/${RandomGenerator.string(10)}`;
                 let context = cyfs.TransContext.new(dec_app_1, context_path);
-                stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                 let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                 for (let device of deviceid_list) {
                     context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                 }
                 // 发送请求
-                stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                console.info(`${JSON.stringify(context.device_list())}`)
                 let info_context = await zone1_ood_satck.trans().put_context({
                     common: {
                         level: cyfs.NDNAPILevel.NDC,
@@ -398,7 +398,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
             })
             it("put_context 接口-同一context_path 进行两次put 不同 context进行覆盖操作", async () => {
                 // 连接测试协议栈
@@ -410,13 +410,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                 let context_path = `/test_context/${RandomGenerator.string(10)}`;
                 let context = cyfs.TransContext.new(dec_app_1, context_path);
                 let context2 = cyfs.TransContext.new(dec_app_2, context_path);
-                stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                 let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                 for (let device of deviceid_list) {
                     context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                 }
                 // 发送请求
-                stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                console.info(`${JSON.stringify(context.device_list())}`)
                 let info_context = await zone1_ood_satck.trans().put_context({
                     common: {
                         level: cyfs.NDNAPILevel.NDC,
@@ -427,7 +427,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                 });
                 assert.equal(info_context.err, false, `${info_context.toString()}`);
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
                 let info_context2 = await zone1_ood_satck.trans().put_context({
                     common: {
                         level: cyfs.NDNAPILevel.NDC,
@@ -438,7 +438,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                 });
                 assert.equal(info_context2.err, false, `${info_context2.toString()}`);
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context2.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(info_context2.unwrap())}`);
 
             })
 
@@ -447,7 +447,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     //编解码
                     let ucontext = context.to_vec().unwrap()
                     let [o, u8] = new cyfs.TransContextDecoder().raw_decode(ucontext).unwrap()
@@ -467,7 +467,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid1 = zone1_ood_satck.local_device_id();
                     let deviceid2 = zone1_device1_stack.local_device_id();
                     let device1 = new cyfs.TransContextDevice(deviceid1, cyfs.ChunkCodecDesc.Stream())
@@ -498,7 +498,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid1 = zone1_ood_satck.local_device_id();
                     let deviceid2 = zone1_device1_stack.local_device_id();
                     let device1 = new cyfs.TransContextDevice(deviceid1, cyfs.ChunkCodecDesc.Unknown())
@@ -529,7 +529,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid1 = zone1_ood_satck.local_device_id();
                     let deviceid2 = zone1_device1_stack.local_device_id();
                     let device1 = new cyfs.TransContextDevice(deviceid1, cyfs.ChunkCodecDesc.Raptor())
@@ -560,7 +560,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid1 = zone1_ood_satck.local_device_id();
                     let deviceid2 = zone1_device1_stack.local_device_id();
                     let device1 = new cyfs.TransContextDevice(deviceid1, cyfs.ChunkCodecDesc.Raptor())
@@ -593,13 +593,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                     for (let device of deviceid_list) {
                         context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                     }
                     // 发送请求
-                    stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                    console.info(`${JSON.stringify(context.device_list())}`)
                     let info_context = await zone1_ood_satck.trans().put_context({
                         common: {
                             target: zone1_ood_satck.local_device_id().object_id,
@@ -611,7 +611,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                    console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
                 })
                 it("NDNOutputRequestCommon 验证NDN 同Zone device1 -> OOD", async () => {
                     // 连接测试协议栈
@@ -622,13 +622,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                     for (let device of deviceid_list) {
                         context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                     }
                     // 发送请求
-                    stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                    console.info(`${JSON.stringify(context.device_list())}`)
                     let info_context = await zone1_device1_stack.trans().put_context({
                         common: {
                             target: zone1_ood_satck.local_device_id().object_id,
@@ -640,7 +640,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                    console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
                 })
                 it.skip("NDNOutputRequestCommon 验证NDN 跨Zone OOD1 -> OOD2", async () => {
                     // 连接测试协议栈
@@ -653,13 +653,13 @@ describe("CYFS Stack Tans 模块测试", function () {
                     // 构造测试数据
                     let context_path = `/test_context/${RandomGenerator.string(10)}`;
                     let context = cyfs.TransContext.new(dec_app_1, context_path);
-                    stack_manager.logger!.info(`create context ${context.desc().calculate_id().to_base_58()}`);
+                    console.info(`create context ${context.desc().calculate_id().to_base_58()}`);
                     let deviceid_list = [zone1_ood_satck.local_device_id(), zone1_device1_stack.local_device_id()];
                     for (let device of deviceid_list) {
                         context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, cyfs.ChunkCodecDesc.Stream()));
                     }
                     // 发送请求
-                    stack_manager.logger!.info(`${JSON.stringify(context.device_list())}`)
+                    console.info(`${JSON.stringify(context.device_list())}`)
                     let info_context = await zone1_ood_satck.trans().put_context({
                         common: {
                             target: zone2_ood_satck.local_device_id().object_id,
@@ -671,7 +671,7 @@ describe("CYFS Stack Tans 模块测试", function () {
 
                     });
                     assert.equal(info_context.err, false, `${info_context.toString()}`);
-                    stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
+                    console.info(`put_context  =  ${JSON.stringify(info_context.unwrap())}`);
                 })
             })
         })
@@ -711,7 +711,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                 publish_file_time = Date.now() - publish_file_time;
                 console.info(`addDir publish_file 耗时：${publish_file_time}`)
                 assert(!pubres.err, `publish_file 失败`)
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
             })
             it("publish_file 接口-传入所有参数", async () => {
                 // 连接测试协议栈
@@ -753,7 +753,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                 publish_file_time = Date.now() - publish_file_time;
                 console.info(`publish_file 耗时：${publish_file_time}`)
                 assert(!pubres.err, `publish_file 失败`)
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
             })
             it("publish_file 接口-上传文件夹", async () => {
                 // 连接测试协议栈
@@ -795,7 +795,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                 publish_file_time = Date.now() - publish_file_time;
                 console.info(`publish_file 耗时：${publish_file_time}`)
                 assert(!pubres.err, `publish_file 失败`)
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
             })
             it("publish_file 接口-通过设置file_id上传文件", async () => {
                 // 连接测试协议栈
@@ -838,7 +838,7 @@ describe("CYFS Stack Tans 模块测试", function () {
                 publish_file_time = Date.now() - publish_file_time;
                 console.info(`publish_file 耗时：${publish_file_time}`)
                 assert(!pubres.err, `publish_file 失败`)
-                stack_manager.logger!.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
+                console.info(`put_context  =  ${JSON.stringify(pubres.unwrap())}`);
             })
             it("publish_file 接口-通过设置dir关联对象", async () => {
 

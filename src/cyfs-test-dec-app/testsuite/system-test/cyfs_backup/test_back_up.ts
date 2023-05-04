@@ -5,7 +5,7 @@ import {CyfsDriverType} from "cyfs-test-base"
 import {ActionManager,StackManager} from "../../../cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
 
-import * as addContext from "mochawesome/addContext"
+
 import * as action_api from "../../../dec-app-action"
 import { HandlerRequestObject,HandlerRequestObjectDecoder, HandlerType } from "../../../dec-app-base"
 import { PrepareTransFileRequest } from '../../../dec-app-action';
@@ -82,7 +82,7 @@ let stack = cyfs.SharedCyfsStack.open(stack_param) ;
 
 
 describe("cyfs-back-up数据恢复测试",function(){
-    this.timeout(0);
+    
     let logger: Logger;
     const stack_manager = StackManager.createInstance(CyfsDriverType.other, [
     //     {
@@ -106,20 +106,20 @@ describe("cyfs-back-up数据恢复测试",function(){
     
     const driver_manager = CyfsStackDriverManager.createInstance();
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         let make_dirver = await stack_manager.init();
         // 使用代理 或者nginx 转发
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
         let test = await stack.wait_online();
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -129,11 +129,11 @@ describe("cyfs-back-up数据恢复测试",function(){
         // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     // afterEach(function () {
     //     // 将当前用例执行记录到history
-    //     addContext.default(this, report_result);
+    //     // addContext.default(this, report_result);
     // });
 
     let json_name = Date.now().toString(); 
@@ -164,7 +164,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             object_list.push({
                                 object_id,
                                 id,
@@ -226,7 +226,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key({
                                 common: {
@@ -300,7 +300,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             assert.ok(!result.err)
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key(object_path,
                                 object_id,
@@ -365,7 +365,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key(
                                 object_id,
@@ -435,7 +435,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key({
                                 common: {
@@ -509,7 +509,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             assert.ok(!result.err)
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key(object_path,
                                 object_id,
@@ -574,7 +574,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = save_object.calculate_id().to_base_58()
-                            logger.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put object success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             let object_path =  `${env_path}/${object_id}`;
                             let insert_root =await op_env.insert_with_key(
                                 object_id,
@@ -616,7 +616,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let begin = Date.now();
                             let tool = stack_manager.driver!.get_client(test_device.peer_name).client!.get_util_tool();
                             let random_chunk =await tool.rand_cyfs_chunk_cache(10*1024*1024);
-                            logger.info(`random chunk success ${random_chunk.chunk_id}`)
+                            console.info(`random chunk success ${random_chunk.chunk_id}`)
                             assert.ok(!random_chunk.err);
                             let create_time = Date.now() - begin;
                             let result = await stack.ndn_service().put_data({
@@ -632,7 +632,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = random_chunk.chunk_id.calculate_id().to_base_58()
-                            logger.info(`task ${i} put chunk success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} put chunk success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             object_list.push({
                                 object_id,
                                 size : 10*1024*1024,
@@ -658,7 +658,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let begin = Date.now();
                             let tool = stack_manager.driver!.get_client(test_device.peer_name).client!.get_util_tool();
                             let random_file =await tool.create_file(10*1024*1024);
-                            logger.info(`random file success ${random_file.file_name}`)
+                            console.info(`random file success ${random_file.file_name}`)
                             assert.ok(!random_file.err);
                             let create_time = Date.now() - begin;
                             let result = await stack.trans().publish_file({
@@ -674,7 +674,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let put_time = Date.now() - begin - create_time;
                             assert.ok(!result.err)
                             let object_id = result.unwrap().file_id
-                            logger.info(`task ${i} publish file success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
+                            console.info(`task ${i} publish file success ${object_id} ,create_time = ${create_time} put_time = ${put_time}`)
                             object_list.push({
                                 object_id,
                                 file_name : random_file.file_name,
@@ -723,7 +723,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify({nameobject:object_list}))
@@ -784,7 +784,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -835,7 +835,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -873,7 +873,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let get_time = Date.now() - begin;
                             assert.ok(!result1.err);
                             let object_id =  result1.unwrap();
-                            logger.info(`${info.key} link object_id = ${object_id}`)
+                            console.info(`${info.key} link object_id = ${object_id}`)
                             let result = await stack.non_service().get_object({
                                 common: {
                                     flags: 1,
@@ -889,7 +889,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -948,7 +948,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -999,7 +999,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -1051,7 +1051,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                             let object_id1 = handler_object.calculate_id();
                             assert.equal(handler_object.id,info.id) 
                             assert.equal(handler_object.request_json,info.request_json) 
-                            logger.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
+                            console.info(`task ${i} get object success ${object_id} ,get_time = ${get_time} decode_time = ${decode_time}`)
        
                         }
                         fs.writeFileSync(json_path,JSON.stringify(object_info))
@@ -1082,7 +1082,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                                 object_id: cyfs.ObjectId.from_base_58(info.object_id).unwrap(),
                             })
                             if(get_data.err){
-                                logger.error(`${info.object_id} get failed`)
+                                console.error(`${info.object_id} get failed`)
                             }
                             assert.ok(!get_data.err)
                         }
@@ -1120,7 +1120,7 @@ describe("cyfs-back-up数据恢复测试",function(){
                                 auto_start : true,
                              })
                              if(get_data.err){
-                                logger.error(`${info.object_id} get failed`)
+                                console.error(`${info.object_id} get failed`)
                             }
                              assert.ok(!get_data.err)
                              let check = 10
@@ -1134,10 +1134,10 @@ describe("cyfs-back-up数据恢复测试",function(){
                                 })
 
                                 if(check_result.err || check_result.unwrap().state.state == cyfs.TransTaskState.Finished){
-                                    logger.info(check_result);
+                                    console.info(check_result);
                                     let get_time = Date.now() - get_begin;
                                     info.get_time = get_time
-                                    logger.info(`${info.object_id} download success time = ${get_time}`)
+                                    console.info(`${info.object_id} download success time = ${get_time}`)
                                     check = 0;
                                 }else{
                                     check = check - 1;

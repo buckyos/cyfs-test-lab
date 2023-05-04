@@ -57,7 +57,6 @@ async function main() {
 
     let storage: LocalStorageJson = new LocalStorageJson({
         file: path.join(DirHelper.getConfigDir(), `task_${param.namespace.taskid}.json`),
-        logger,
     });
 
     let task: TaskClient = new TaskClient({

@@ -38,7 +38,7 @@ type TestOutput = TransFileHandlerResp
  */
 
 export class TransFileAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:TransFileAction}{
+    static create_by_parent(action:Action): {err:number,action?:TransFileAction}{
         let run =  new TransFileAction({
             local :  action.local,
             remote : action.remote!,
@@ -46,7 +46,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
@@ -58,7 +58,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         let local = this.local!;
         // 发布文件子任务
         let publish_begin =  Date.now();
-        let info1 = await PublishFileAction.create_by_parent(this.action, this.logger).action!.start({
+        let info1 = await PublishFileAction.create_by_parent(this.action).action!.start({
             rand_file : true,
             file_size : this.action.input.file_size!,
             chunk_size: this.action.input.chunk_size!,
@@ -72,7 +72,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         }         
         let file_id: cyfs.ObjectId = info1.resp!.file_id;
         // 将文件对象挂载在root_state
-        let link_file = await LinkObjectAction.create_by_parent(this.action,this.logger).action!.start({
+        let link_file = await LinkObjectAction.create_by_parent(this.action).action!.start({
             object_id : file_id,
             req_path : req.req_path! , // + `/${RandomGenerator.string(10)}`
             access : cyfs.AccessString.full()
@@ -80,7 +80,7 @@ export class TransFileAction extends BaseAction implements ActionAbstract {
         if (link_file.err) {
             return {err:link_file.err,log:link_file.log};
         }  
-        let result  = await TransFileRequest.create_by_parent(this.action,this.logger).action!.start({
+        let result  = await TransFileRequest.create_by_parent(this.action).action!.start({
             req_path: req.req_path!,
             target : local.local_device_id().to_base_58(),
             context_path : req.context_path, 

@@ -1,0 +1,48 @@
+{
+  "name": "cyfs-test-base",
+  "version": "1.0.0",
+  "description": "cyfs-test-base",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "author": "lizhihong",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buckyos/cyfs-test-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/buckyos/cyfs-test-lab/issues"
+  },
+  "keywords": [
+    "typescript",
+    "cyfs"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest "
+  },
+  "type": "module",
+  "devDependencies": {
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "ttypescript": "^1.5.15",
+    "webpack": "^5.80.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.6.0"
+  },
+  "dependencies": {
+    "async-mutex": "^0.4.0",
+    "chai": "^4.3.7",
+    "commander": "^10.0.1",
+    "compressing": "^1.9.0",
+    "crypto": "^1.0.1",
+    "encoding": "^0.1.13",
+    "fs-extra": "^11.1.1",
+    "keypair": "^1.0.4",
+    "node-fetch": "^3.3.1",
+    "puppeteer": "^19.9.1",
+    "silly-datetime": "^0.1.2",
+    "toml": "^3.0.0",
+    "xmlhttprequest": "^1.8.0"
+  }
+}

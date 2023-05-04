@@ -1,11 +1,10 @@
-import { ErrorCode, Logger } from '../../common';
+import { ErrorCode, Logger,sleep } from '../../common';
 import { UtilTool } from "../cyfs_driver";
-import { string_to_Uint8Array } from "../../dec-app-base"
 import * as fs from "fs-extra";
 import * as crypto from 'crypto';
 import path from 'path';
 import * as cyfs from "../../cyfs"
-import { sleep } from 'cyfs-sdk';
+
 
 const CHAR_SET: string = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz0123456789';
 export class LocalUtilTool implements UtilTool {
@@ -15,10 +14,8 @@ export class LocalUtilTool implements UtilTool {
     private cache_10mb?: Buffer;
     private cahce_buff?: Buffer; //1000037 大素数
     private cache_path: { file_upload: string, file_download: string };
-    private logger: Logger;
     private rand_file_running? : boolean;
-    constructor(logger: Logger, root: string) {
-        this.logger = logger;
+    constructor(root: string) {
         this.cache_path = {
             file_upload: path.join(root, "file_upload"),
             file_download: path.join(root, "file_download"),
@@ -90,7 +87,7 @@ export class LocalUtilTool implements UtilTool {
             }
             await fs.appendFileSync(file_path, Buffer.from(this.string(file_size)))
         } catch (error) {
-            this.logger!.error(`create random file err = ${JSON.stringify(error)}`);
+            console.error(`create random file err = ${JSON.stringify(error)}`);
             return { err: error }
         }
 
@@ -102,17 +99,17 @@ export class LocalUtilTool implements UtilTool {
             let fileInfo = fs.readFileSync(file_path)
             fsHash.update(fileInfo)
             let md5 = fsHash.digest('hex')
-            this.logger.info(`${file_path} md5 =${md5}`)
+            console.info(`${file_path} md5 =${md5}`)
             return md5;
         } catch (error) {
-            this.logger!.error(`md5 file err = ${JSON.stringify(error)}`);
+            console.error(`md5 file err = ${JSON.stringify(error)}`);
             return JSON.stringify(error)
         }
 
     }
     async create_file(file_size: number, dir_path?: string): Promise<{ err: ErrorCode, log?: string, file_name?: string, file_path?: string, md5?: string }> {
         while(this.rand_file_running ){
-            this.logger.info(`wait 100 ms`)
+            console.info(`wait 100 ms`)
             await sleep(100)
         }
         this.rand_file_running =  true;
@@ -128,7 +125,7 @@ export class LocalUtilTool implements UtilTool {
         //生成文件
         await this._createFile(file_path, file_size);
         let md5 = await this._md5(file_path);
-        this.logger.info(`create file ${file_path} success`);
+        console.info(`create file ${file_path} success`);
         this.rand_file_running =  false;
         return {
             err: ErrorCode.succ,
@@ -183,7 +180,7 @@ export class LocalUtilTool implements UtilTool {
         }
     }
     async rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }> {
-        this.logger.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
+        console.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
 
         await this.init_cache();
         let chunk_data: Buffer = Buffer.from("");
@@ -219,7 +216,7 @@ export class LocalUtilTool implements UtilTool {
     }
 
     async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {
-        this.logger.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
+        console.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
         let chunk_list: Array<cyfs.ChunkId> = []
         let file_data: Buffer = Buffer.from("");
         while (file_size > chunk_size) {

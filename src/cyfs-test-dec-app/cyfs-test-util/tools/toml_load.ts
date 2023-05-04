@@ -46,6 +46,56 @@ export function load_cyfs_driver_client_conf(){
 
 }
 
+
+export function load_driver_machine_conf(){
+    let cyfs_driver_client_conf = path.join(DirHelper.getConfigDir(),"driver_machine.toml")
+    let config = load_toml(cyfs_driver_client_conf).config;
+    let simulator :Array<{
+        peer_name: string,
+        zone_tag: string,
+        stack_type: string,
+        bdt_port: number,
+        http_port: number,
+        ws_port: number,
+        ood_daemon_status_port?:number,
+    }> = [];
+    let real_machine:Array<{
+        peer_name: string,
+        zone_tag: string,
+        stack_type: string,
+        bdt_port: number,
+        http_port: number,
+        ws_port: number,
+        ood_daemon_status_port?:number,
+    }> = [];
+    for(let agent in config.simulator){
+        for(let device in config.simulator[agent]){
+            if(config.simulator[agent][device].peer_name){
+                simulator.push(config.simulator[agent][device])
+            }
+            
+        }
+       
+    }
+    for(let agent in config.real_machine){
+        for(let device in config.real_machine[agent]){
+            if(config.real_machine[agent][device].peer_name){
+                real_machine.push(config.real_machine[agent][device])
+            }
+            
+        }
+       
+    }
+    return {
+        simulator,
+        real_machine,
+        DRIVER_TYPE:config.DRIVER_TYPE
+    }
+
+}
+
+
+
 export const GlobalConfig = ()=>{
     let conf = path.join(DirHelper.getConfigDir(),"cyfs_driver_client.toml")
     let config = load_toml(conf);

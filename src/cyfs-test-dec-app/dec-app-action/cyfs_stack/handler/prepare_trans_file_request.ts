@@ -8,14 +8,14 @@ import {HandlerApi,HandlerRequestObject,HandlerRequestObjectDecoder,PrepareTrans
 */
 
 export class PrepareTransFileRequest extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PrepareTransFileRequest}{
+    static create_by_parent(action:Action): {err:number,action?:PrepareTransFileRequest}{
         let run =  new PrepareTransFileRequest({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:PrepareTransFileHandlerReq): Promise<{ err: number; log: string; resp?: PrepareTransFileHandlerResp }> {
@@ -45,7 +45,7 @@ export class PrepareTransFileRequest extends BaseAction implements ActionAbstrac
         }
         let response = result.unwrap();
         let response_object = new HandlerRequestObjectDecoder().from_raw( response.object!.object_raw).unwrap();
-        this.logger.info(`post_object resp = ${JSON.stringify(response_object.request_json)}`);
+        console.info(`post_object resp = ${JSON.stringify(response_object.request_json)}`);
         return { err: ErrorCode.succ, log: "success",resp:JSON.parse(response_object.request_json).PrepareTransFileHandlerResp!}
        
     }

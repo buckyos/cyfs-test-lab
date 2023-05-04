@@ -45,10 +45,7 @@ function save_desc_and_sec(object:cyfs.StandardObject,private_key: cyfs.PrivateK
 
 
 describe("TS meta_client 接口测试",function(){
-    this.timeout(0)
-    before(async()=>{
-        //await stackInfo.init();
-    })
+    
     describe("meta接口测试测试",async()=>{
         describe("get_meta_miner_host 接口",async()=>{
             it("target 为Dev 链",async()=>{

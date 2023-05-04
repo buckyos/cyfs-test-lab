@@ -3,7 +3,7 @@
 describe("Set Title1",function(){
    
     beforeEach ( async function (){
-        console.info(`beforeEach: ${this.currentTest!.title}`)
+        //console.info(`beforeEach: ${this.currentTest!.title}`)
     })
     describe("Get Title2",async function(){
         it("Get Title3",async function (){
@@ -16,7 +16,7 @@ describe("Set Title1",function(){
             // for(let suit_info of this.tests){
             //     console.info("test:",suit_info)
             // }
-            console.info(`it: ${this.title}`)
+            //console.info(`it: ${this.title}`)
         })
     })
     describe("Set Title2",async function(){

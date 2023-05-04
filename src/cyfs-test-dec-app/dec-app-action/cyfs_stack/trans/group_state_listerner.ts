@@ -24,7 +24,7 @@ type TestOutput = Array<{
  * 
  */
 export class GroupStateListerner extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:GroupStateListerner}{
+    static create_by_parent(action:Action): {err:number,action?:GroupStateListerner}{
         /**
          * 父任务下载端 remote 查询任务状态
          */
@@ -37,7 +37,7 @@ export class GroupStateListerner extends BaseAction implements ActionAbstract {
             parent_action : action.action_id!,
             expect : {err:0},
 
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string, resp?: TestOutput}> {
@@ -60,7 +60,7 @@ export class GroupStateListerner extends BaseAction implements ActionAbstract {
                 group: req.group,
                 //speed_when,
             });
-            this.logger.info(`get_task_group_state : ${JSON.stringify(info_check)}`);
+            console.info(`get_task_group_state : ${JSON.stringify(info_check)}`);
             if(info_check.err){
                 return {err: info_check.val.code, log: info_check.val.msg}
             }else{

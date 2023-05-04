@@ -15,7 +15,7 @@ import {request,ContentType} from "./request"
 //  npx mocha .\test_service_status_nginx.ts --reporter mochawesome --require ts-node/register
 
 describe("ood-daemon 本地1330服务测试", function () {
-    this.timeout(0);
+    
     describe("GET 获取OOD service 和 app-manager 数据",async()=>{
         it("get_status",async()=>{
             let get_data = await request("http://192.168.100.205:11330","GET","service_status");

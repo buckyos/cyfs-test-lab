@@ -44,7 +44,7 @@ export class BuildGetDataGroupTree extends BaseAction implements ActionAbstract 
         let task_result_list = []
         let task_running_list = []
         for(let task of req.task_list){
-            task_running_list.push(GetDataAction.create_by_parent(this.action,this.logger).action!.start({
+            task_running_list.push(GetDataAction.create_by_parent(this.action).action!.start({
                 req_path:task.req_path,
                 context:task.context_path,
                 group:task.group,

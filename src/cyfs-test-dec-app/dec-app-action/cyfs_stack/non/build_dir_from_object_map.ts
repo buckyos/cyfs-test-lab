@@ -13,24 +13,24 @@ type TestOutput = {
 }
 
 export class BuildDirFromObjectMapAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:BuildDirFromObjectMapAction}{
+    static create_by_parent(action:Action): {err:number,action?:BuildDirFromObjectMapAction}{
         let run =  new BuildDirFromObjectMapAction({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
-    static create_by_parent_remote_noc(action:Action,logger:Logger): {err:number,action?:BuildDirFromObjectMapAction}{
+    static create_by_parent_remote_noc(action:Action): {err:number,action?:BuildDirFromObjectMapAction}{
         let run =  new BuildDirFromObjectMapAction({
             local : action.remote!,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {

@@ -2,9 +2,9 @@ import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../common";
 import * as path from 'path';
-import { before } from 'mocha';
+
 let encoding = require('encoding');
-import * as addContext from "mochawesome/addContext"
+
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
@@ -12,14 +12,14 @@ let stack_a: cyfs.SharedCyfsStack;
 let stack_b: cyfs.SharedCyfsStack;
 
 describe("#Beta版 AccessPermissions 功能测试 ", function () {
-    this.timeout(0);
-    this.beforeAll(async () => {
+    
+    beforeAll(async () => {
         //测试前置条件，连接测试模拟器设备
         console.info(`##########用例执开始执行`);
 
         
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         //每个函数执行前，清除所有handler
         console.info(`#########用例执行完成`);
         //ZoneSimulator.stopZoneSimulator();
@@ -1354,8 +1354,8 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteOnly-AccessString.make()权限组设定",async() => {})
                 it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteOnly-AccessString.constructor()权限组初始化",async() => {})     
             })
-            describe("正常流程AccessPermissions-WirteAndCall", async () => {
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.dec_default()权限组", async () => {
+            describe("正常流程AccessPermissions-WriteAndCall", async () => {
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.dec_default()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -1403,7 +1403,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
     
                     
@@ -1439,7 +1439,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
     
                 })
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.default()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.default()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -1485,7 +1485,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
     
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                     
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -1519,7 +1519,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
     
                 })
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.full()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.full()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -1565,7 +1565,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                         
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -1600,7 +1600,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
     
                 })
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.full_except_write()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.full_except_write()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -1646,7 +1646,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                        
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -1681,10 +1681,10 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
     
                 })
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permissions()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.make()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.constructor()权限组初始化",async() => {})     
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permissions()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.make()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.constructor()权限组初始化",async() => {})     
 
             })
             describe("正常流程AccessPermissions-ReadAndCall", async () => {
@@ -3825,8 +3825,8 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteOnly-AccessString.make()权限组设定",async() => {})
                 it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteOnly-AccessString.constructor()权限组初始化",async() => {})
             })
-            describe("正常流程AccessPermissions-WirteAndCall", async () => {
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.dec_default()权限组", async () => {
+            describe("正常流程AccessPermissions-WriteAndCall", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.dec_default()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -3874,7 +3874,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
     
                     
@@ -3909,7 +3909,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.default()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.default()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -3955,7 +3955,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
     
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                     
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -3989,7 +3989,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.full()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.full()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -4035,7 +4035,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                         
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -4070,7 +4070,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
     
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.full_except_write()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.full_except_write()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -4116,7 +4116,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
 
                     let access: cyfs.RootStateOpEnvAccess = {
                         path: path1,
-                        access: cyfs.AccessPermissions.WirteAndCall
+                        access: cyfs.AccessPermissions.WriteAndCall
                     }
                        
                     let op_env =  (await b_a_stub.create_path_op_env_with_access(access)).unwrap();
@@ -4150,10 +4150,10 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permissions()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.make()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.constructor()权限组初始化",async() => {})
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permissions()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.make()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.constructor()权限组初始化",async() => {})
 
             })
             describe("正常流程AccessPermissions-ReadOnly", async () => {
@@ -4255,7 +4255,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     
     
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.default()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.default()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -4340,7 +4340,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
     
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.full()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.full()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -4424,7 +4424,7 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                     assert.ok(!commit_result0 .err)
                     console.info(`####commit_result0 ${JSON.stringify(commit_result0)}`)
                 })
-                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WirteAndCall-AccessString.full_except_write()权限组", async () => {
+                it("create_path_op_env root-state的同zone单节点多dec,AccessPermissions-WriteAndCall-AccessString.full_except_write()权限组", async () => {
                     const decid_a = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT5ze").unwrap();
                     const decid_b = cyfs.ObjectId.from_base_58("9tGpLNnErEbyzuMgRLcRX6An1Sn8ZyimNXBdLDTgT6ze").unwrap();
                     const param_a = cyfs.SharedCyfsStackParam.new_with_ws_event_ports(21002, 21003, decid_a).unwrap();
@@ -5899,15 +5899,15 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteOnly-AccessString.set_group_permission()权限组设定",async() => {})
                 it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteOnly-AccessString.set_group_permission()权限组设定",async() => {})
             })
-            describe("正常流程AccessPermissions-WirteAndCall", async () => {
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+            describe("正常流程AccessPermissions-WriteAndCall", async () => {
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
             })
             describe("正常流程AccessPermissions-ReadAndCall", async () => {
                 it("create_path_op_env root-state的同zone多节点多dec,AccessPermissions-ReadAndCall-AccessString.set_group_permission()权限组设定",async() => {})
@@ -6303,15 +6303,15 @@ describe("#Beta版 AccessPermissions 功能测试 ", function () {
                 it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteOnly-AccessString.set_group_permission()权限组设定",async() => {})
                 it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteOnly-AccessString.set_group_permission()权限组设定",async() => {})
             })
-            describe("正常流程AccessPermissions-WirteAndCall", async () => {
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
-                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WirteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+            describe("正常流程AccessPermissions-WriteAndCall", async () => {
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
+                it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-WriteAndCall-AccessString.set_group_permission()权限组设定",async() => {})
             })
             describe("正常流程AccessPermissions-ReadAndCall", async () => {
                 it("create_path_op_env local_cache的同zone单节点单dec,AccessPermissions-ReadAndCall-AccessString.set_group_permission()权限组设定",async() => {})

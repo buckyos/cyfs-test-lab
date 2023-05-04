@@ -1,4 +1,3 @@
-import * as cyfs from '../cyfs';
 let encoding = require('encoding');
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -292,64 +291,8 @@ export class RandomGenerator {
         RandomGenerator.cache_100mb = Buffer.concat([RandomGenerator.cache_100mb, Buffer.from(RandomGenerator.string(size))]);
     }
 
-    static async rand_cyfs_chunk_cache(chunk_size: number): Promise<{ err: ErrorCode, chunk_id: cyfs.ChunkId, chunk_data: Uint8Array }> {
-        console.info(`rand_cyfs_chunk_cache in memory data_size = ${chunk_size}`)
-        await RandomGenerator.init_cache();
-        let chunk_data: Buffer = Buffer.from("");
-        //let chunk_data =  string_to_Uint8Array(RandomGenerator.string(chunk_size));
-        if (chunk_size > 100 * 1024 * 1024) {
-            await RandomGenerator.init_cache_100mb();
-            let length = RandomGenerator.cache_100mb!.length;
-            while (chunk_size > length) {
-                console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
-                chunk_data = Buffer.concat([chunk_data, RandomGenerator.cache_100mb!]);
-                chunk_size = chunk_size - length;
-            }
-        }
-        if (chunk_size > 10 * 1024 * 1024) {
-            await RandomGenerator.init_cache_10mb();
-            let length = RandomGenerator.cache_10mb!.length;
-            while (chunk_size > length) {
-                console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
-                chunk_data = Buffer.concat([chunk_data, RandomGenerator.cache_10mb!]);
-                chunk_size = chunk_size - length;
-            }
-        }
-        let length = RandomGenerator.cache_mb!.length;
-        while (chunk_size > length) {
-            chunk_data = Buffer.concat([chunk_data, RandomGenerator.cache_mb!]);
-            chunk_size = chunk_size - length;
-            console.info(`rand_cyfs_chunk_cache in memory add need chunk_size = ${chunk_size}`)
-        }
-        chunk_data = Buffer.concat([chunk_data, Buffer.from(RandomGenerator.string(chunk_size))]);
-        console.info(`rand_cyfs_chunk_cache in memory success`)
-        let chunk_calculate = cyfs.ChunkId.calculate(chunk_data);
-        return { err: ErrorCode.succ, chunk_data, chunk_id: chunk_calculate }
-    }
 
-    async rand_cyfs_file_cache(owner: cyfs.ObjectId, file_size: number, chunk_size: number): Promise<{ err: ErrorCode, file: cyfs.File, file_data: Buffer, md5: string }> {
-        console.info(`rand_cyfs_file_cache in memory file_size = ${file_size}`)
-        let chunk_list: Array<cyfs.ChunkId> = []
-        let file_data: Buffer = Buffer.from("");
-        while (file_size > chunk_size) {
-            let chunk_info = await RandomGenerator.rand_cyfs_chunk_cache(chunk_size);
-            chunk_list.push(chunk_info.chunk_id);
-            file_data = Buffer.concat([file_data, chunk_info.chunk_data]);
-            file_size = file_size - chunk_size;
-        }
-        if (file_size > 0) {
-            let chunk_info = await RandomGenerator.rand_cyfs_chunk_cache(file_size);
-            chunk_list.push(chunk_info.chunk_id);
-            file_data = Buffer.concat([file_data, chunk_info.chunk_data]);
-        }
-        let hash_value = cyfs.HashValue.hash_data(file_data);
-        let chunkList = new cyfs.ChunkList(chunk_list);
-        let file = cyfs.File.create(owner, cyfs.JSBI.BigInt(file_size), hash_value, chunkList)
-        let fsHash = crypto.createHash('md5')
-        fsHash.update(file_data)
-        let md5 = fsHash.digest('hex')
-        return { err: ErrorCode.succ, file, file_data, md5 }
-    }
+
     async md5_buffer(file_data: Buffer): Promise<string> {
         let fsHash = crypto.createHash('md5')
         fsHash.update(file_data)
@@ -460,7 +403,7 @@ export class RandomGenerator {
      */
     static async create_random_dir(root: string, dirNumber: number, fileNumber: number, fileSize: number, deep: number = 1) {
         let dirNameList = [root]
-        let fileNameList = []
+        let fileNameList : Array<string> = []
         // 先生成文件夹列表，文件名列表
         console.info(`开始生成随机文件夹列表`)
         for (let i = 0; i < dirNumber; i++) {
@@ -478,7 +421,6 @@ export class RandomGenerator {
         let len = dirNameList.length
         for (let i in fileNameList) {
             await RandomGenerator.create_random_file(dirNameList[RandomGenerator.integer(len - 1)], fileNameList[i], RandomGenerator.integer(fileSize))
-            await cyfs.sleep(100);
         }
 
 

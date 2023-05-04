@@ -20,7 +20,7 @@ export class ReadFIleHandler extends BaseHandler {
         let request = req.OS_IO_ReadFileReq;
         try {
             let data = fs.readFileSync(request.file_path);
-            this.logger.error(`read file ${request.file_path} success`);
+            console.error(`read file ${request.file_path} success`);
             return {
                 OS_IO_ReadFileResp: {
                     result: 0,
@@ -29,7 +29,7 @@ export class ReadFIleHandler extends BaseHandler {
                 }
             }
         } catch (error) {
-            this.logger.error(`read file ${request.file_path} error:${error}`);
+            console.error(`read file ${request.file_path} error:${error}`);
             return {
                 OS_IO_ReadFileResp: {
                     result: 1,

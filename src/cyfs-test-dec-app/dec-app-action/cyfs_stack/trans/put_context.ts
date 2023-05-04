@@ -18,7 +18,7 @@ type TestOutput = {
 }
 
 export class PutContextAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action: Action, logger: Logger): { err: number, action?: PutContextAction } {
+    static create_by_parent(action: Action): { err: number, action?: PutContextAction } {
         let run = new PutContextAction({
             local: action.local!,
             remote: action.local,
@@ -26,10 +26,10 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
             parent_action: action.action_id!,
             expect: { err: 0 },
 
-        }, logger)
+        })
         return { err: ErrorCode.succ, action: run }
     }
-    static create_by_parent_for_remote(action: Action, logger: Logger): { err: number, action?: PutContextAction } {
+    static create_by_parent_for_remote(action: Action): { err: number, action?: PutContextAction } {
         let run = new PutContextAction({
             local: action.remote!,
             remote: action.remote,
@@ -37,10 +37,10 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
             parent_action: action.action_id!,
             expect: { err: 0 },
 
-        }, logger)
+        })
         return { err: ErrorCode.succ, action: run }
     }
-    static async put_noc_random_context(req: TestInput,local: { peer_name: string; dec_id?: string | undefined; type?: cyfs.CyfsStackRequestorType | undefined; }, logger: Logger): Promise<{ err: number,log:string,action?: PutContextAction, context?: cyfs.TransContext }>  {
+    static async put_noc_random_context(req: TestInput,local: { peer_name: string; dec_id?: string | undefined; type?: cyfs.CyfsStackRequestorType | undefined; }): Promise<{ err: number,log:string,action?: PutContextAction, context?: cyfs.TransContext }>  {
         let action = new PutContextAction({
             local: local,
             remote: local,
@@ -49,7 +49,7 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
                 ndn_level : cyfs.NDNAPILevel.NDC
             },
             expect: { err: 0 },
-        }, logger);
+        });
         let put_local = await action.start(req);
         return {err:put_local.err,log:put_local.log,action,context:put_local.resp!.context}
 
@@ -65,12 +65,12 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
         // 推送context
         let begin_time = Date.now();
         let context = cyfs.TransContext.new(local.dec_id, req!.context_path!)
-        this.logger.info(`create context ${context.desc().calculate_id().to_base_58()}`)
+        console.info(`create context ${context.desc().calculate_id().to_base_58()}`)
         for (let device of req.deviceid_list) {
             context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device, req.chunk_codec_desc));
         }
 
-        this.logger.info(`${JSON.stringify(context.device_list())}`)
+        console.info(`${JSON.stringify(context.device_list())}`)
         let info_context = await local.trans().put_context({
             common: {
                 level: this.action.input.ndn_level!,
@@ -80,7 +80,7 @@ export class PutContextAction extends BaseAction implements ActionAbstract {
             access: cyfs.AccessString.full()
 
         });
-        this.logger.info(`put_context err =  ${JSON.stringify(info_context.err)}`);
+        console.info(`put_context err =  ${JSON.stringify(info_context.err)}`);
 
         this.action.output! = {
             total_time: Date.now() - begin_time

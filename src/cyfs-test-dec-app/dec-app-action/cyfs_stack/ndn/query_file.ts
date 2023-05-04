@@ -18,14 +18,14 @@ type TestOutput = {
 }
 
 export class QueryFileAction extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:QueryFileAction}{
+    static create_by_parent(action:Action): {err:number,action?:QueryFileAction}{
         let run =  new QueryFileAction({
             local : action.remote!,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: TestOutput }> {
@@ -53,12 +53,12 @@ export class QueryFileAction extends BaseAction implements ActionAbstract {
         });
       
         let send_time = Date.now() - begin_send;
-        this.logger.info(`query_file send_time = ${send_time} result =  ${query_result.err}`)
+        console.info(`query_file send_time = ${send_time} result =  ${query_result.err}`)
         if(query_result.err){
-            this.logger.error(`query_file error, result =  ${query_result}`)
+            console.error(`query_file error, result =  ${query_result}`)
             return {err:query_result.val.code,log:query_result.val.msg}
         }
-        this.logger.info(`query_file send_time = ${send_time} result =  ${JSON.stringify(query_result.unwrap())}`)
+        console.info(`query_file send_time = ${send_time} result =  ${JSON.stringify(query_result.unwrap())}`)
         return { err: ErrorCode.succ, log: "success",resp:{list:query_result.unwrap().list}}
        
     }

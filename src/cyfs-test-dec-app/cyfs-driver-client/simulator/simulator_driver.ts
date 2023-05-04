@@ -5,7 +5,7 @@ import { CyfsStackSimulatorClient } from "./simulator_client"
 import * as ChildProcess from 'child_process';
 import path from "path";
 import * as fs from "fs-extra";
-const Base = require('../../common/base.js');
+//const Base = require('../../common/base.js');
 export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     private stack_client_map: Map<string, CyfsStackSimulatorClient>
     private log_path: string;
@@ -13,20 +13,14 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     private simulator_path : string;
     private pid: number;
     private process?: ChildProcess.ChildProcess;
-    private logger: Logger;
+
     
     constructor(log_path:string) {
         this.log_path = log_path;
         this.cache_path = path.join(this.log_path,"../cache");
         this.simulator_path = path.join(__dirname,"../../cyfs/zone-simulator.exe")
         this.stack_client_map = new Map();
-        this.pid = 0;
-        DirHelper.setRootDir(path.join(__dirname, "../../"));
-        Base.BX_SetLogLevel(Base.BLOG_LEVEL_DEBUG);
-        Base.BX_EnableFileLog(log_path, `cyfs_stack_simulator_driver_${Date.now()}`, '.log');
-        Base.blog.enableConsoleTarget(false);
-        this.logger = new Logger(Base.blog.info, Base.blog.debug, Base.blog.error, log_path);
-        
+        this.pid = 0;    
     }
     async init(): Promise<{ err: ErrorCode, log: string }> {
         // 加载配置文件中
@@ -35,7 +29,7 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     async start(debug:boolean=false): Promise<{ err: ErrorCode, log: string }> {
         if(debug){
             return new Promise(async (v) => {
-                this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
+                console.info(`####### start Zone Simulator ${this.simulator_path}`)
                 while (!this.pid) {
                     await this.initPid();
                 }
@@ -43,32 +37,33 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
             })
         }else{
             await this.stop();
-            return new Promise(async (v) => {
-                this.logger.info(`####### start Zone Simulator ${this.simulator_path}`)
+            return new Promise(async (resolve) => {
+                console.info(`####### start Zone Simulator ${this.simulator_path}`)
                 if(!fs.pathExistsSync(this.simulator_path)){
-                    v({err:ErrorCode.succ,log:`${this.simulator_path} mot found, please run ./cyfs/build_zone_simulator.bat init Simulator`})
+                    resolve({err:ErrorCode.succ,log:`${this.simulator_path} mot found, please run ./cyfs/build_zone_simulator.bat init Simulator`})
                 }
                 this.process =  ChildProcess.spawn(this.simulator_path, [], { windowsHide: false, detached: false, stdio: 'ignore', cwd: path.dirname(this.simulator_path) })
                 this.process.unref();
                 while (!this.pid) {
                     await this.initPid();
+                    await sleep(10);
                 }
-                v({err:ErrorCode.succ,log:"start Zone Simulator success"})
+                resolve({err:ErrorCode.succ,log:"start Zone Simulator success"})
             })
         }
         
     }
     async initPid() {
-        this.logger.info(`begin initPid ${this.pid}`)
+        console.info(`begin initPid ${this.pid}`)
         return new Promise(async (v) => {
             let process = ChildProcess.exec(`tasklist|findstr /c:zone-simulator.exe`)
             process!.on('exit', (code: number, singal: any) => {
-                this.logger.info(`check finished,pid = ${this.pid}`);
+                console.info(`check finished,pid = ${this.pid}`);
                 v(this.pid)
             });
             process.stdout?.on('data', (data) => {
                 let pid_data: string = `${data.toString()}`;
-                this.logger.info(`check result = ${pid_data}`)
+                console.info(`check result = ${pid_data}`)
                 let str = "0";
                 if(pid_data.includes("Console")){
                     str = pid_data.split('Console')[0].split(`zone-simulator.exe`)[1];
@@ -76,8 +71,8 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
                 if(pid_data.includes("RDP-Tcp")){
                     str =  pid_data.split('RDP-Tcp')[0].split(`zone-simulator.exe`)[1];
                 }
-                this.logger.info(`cehck result split = ${str}`)
-                this.logger.info(str);
+                console.info(`cehck result split = ${str}`)
+                console.info(str);
                 if (str) {
                     this.pid = Number(str)
                     v(this.pid)
@@ -86,7 +81,7 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
                 }
             });
             process.on("error", (err) => {
-                this.logger.info(`initPid failed,err=${err}`)
+                console.info(`initPid failed,err=${err}`)
                 v(false)
             })
         })
@@ -95,10 +90,10 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     async stop(): Promise<{ err: ErrorCode, log: string }> {
         this.process = undefined;
         return new Promise(async (v) => {
-            this.logger.info(`####### run stopZoneSimulator`)
+            console.info(`####### run stopZoneSimulator`)
             let process = ChildProcess.exec(`taskkill /f /t /im zone-simulator.exe`)
             process.on('exit', (code: number, singal: any) => {
-                this.logger.info(`stopZoneSimulator exist`)
+                console.info(`stopZoneSimulator exist`)
                 v({err:ErrorCode.succ,log:`stop success`});
             });
             process.stdout?.on('data', (data) => {
@@ -117,13 +112,17 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     }
     async load_config(agent_list : Array<CyfsStackClientConfig>): Promise<{ err: ErrorCode, log: string }> {
         let run_list: Array<Promise<{ err: ErrorCode, log: string }>> = [];
+        if(agent_list.length==0){
+            console.error(`agent_list is empty`);
+            return { err: ErrorCode.noMoreData, log: "empty agent_list" }
+        }
         for (let agent of agent_list) {
             run_list.push(new Promise(async (V) => {
-                this.logger.info(`load CyfsStackSimulatorClient ${agent.peer_name}`)
-                let client = new CyfsStackSimulatorClient(agent,this.logger,this.cache_path)
+                console.info(`load CyfsStackSimulatorClient ${agent.peer_name}`)
+                let client = new CyfsStackSimulatorClient(agent,this.cache_path)
                 let result = await client.init();
                 if (result.err) {
-                    this.logger.error(`${agent.peer_name} start CyfsStackProxyClient fialed `)
+                    console.error(`${agent.peer_name} start CyfsStackProxyClient fialed `)
                     V(result);
                 }
                 this.stack_client_map.set(agent.peer_name, client)
@@ -141,9 +140,9 @@ export class CyfsStackSimulatorDriver implements CyfsStackDriver {
     }
     get_client(name: string): { err: ErrorCode, log: string, client?: CyfsStackSimulatorClient } {
         if (!this.stack_client_map.has(name)) {
-            return { err: ErrorCode.notFound, log: "cleint not found" }
+            return { err: ErrorCode.notFound, log: "client not found" }
         }
-        this.logger.info(`CyfsStackSimulatorDriver get_client ${name} success`)
+        console.info(`CyfsStackSimulatorDriver get_client ${name} success`)
         return { err: ErrorCode.succ, log: "init success", client: this.stack_client_map.get(name)! }
     }
     add_client(name: string, client: CyfsStackSimulatorClient): { err: ErrorCode, log: string } {

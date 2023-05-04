@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import AbortError from 'node-fetch';
+
 
 export const ContentType = {
     urlencoded : 'application/x-www-form-urlencoded',
@@ -22,7 +22,6 @@ export async function request(host:string,method:string,route:string,postData?:a
         method: method,
         body: JSON.stringify(postData),
         headers: {'Content-Type': psotType!},
-        timeout : 5*60*100
     });
     sendResp = true;
     if(response.status !=200){

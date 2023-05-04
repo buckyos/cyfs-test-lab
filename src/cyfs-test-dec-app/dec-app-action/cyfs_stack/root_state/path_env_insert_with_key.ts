@@ -62,13 +62,13 @@ export class PathEnvInsertWithKey extends BaseAction implements ActionAbstract {
             let check =  (await op_env.get_by_key(req.root_path,req.key)).mapErr(err => {
                 return reject({ err: err.code, log: err.msg });
             }).unwrap();
-            this.logger.info(`get_by_path success: ${check}`)
+            console.info(`get_by_path success: ${check}`)
             let commit = (await op_env.commit()).mapErr(err => {
                 return reject({ err: err.code, log: err.msg });
             }).unwrap();
-            this.logger.info(`dec_root = ${commit.dec_root}`)
-            this.logger.info(`root = ${commit.root}`)
-            this.logger.info(`revision = ${commit.revision}`)
+            console.info(`dec_root = ${commit.dec_root}`)
+            console.info(`root = ${commit.root}`)
+            console.info(`revision = ${commit.revision}`)
             resolve({
                 err: ErrorCode.succ, log: "success", resp: {
                     dec_root: commit.dec_root,

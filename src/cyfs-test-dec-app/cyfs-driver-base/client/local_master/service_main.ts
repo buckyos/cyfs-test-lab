@@ -46,7 +46,6 @@ async function main() {
 
     let storage: LocalStorageJson = new LocalStorageJson({
         file: path.join(DirHelper.getConfigDir(), `service_${param.servicename}.json`),
-        logger,
     });
 
     let service: ServiceClient = new ServiceClient({

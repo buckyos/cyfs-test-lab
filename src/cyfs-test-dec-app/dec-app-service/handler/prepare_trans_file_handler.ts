@@ -50,10 +50,10 @@ export class PrePareTransFileHandler extends BaseHandler {
                 }
             }
         }
-        this.logger.info(`get file object resp : ${get_file.unwrap().object.object_id}`)
+        console.info(`get file object resp : ${get_file.unwrap().object.object_id}`)
         // 构建下载context
         let context = cyfs.TransContext.new(this.stack.dec_id, param!.context_path!)
-        this.logger.info(`create context ${context.desc().calculate_id().to_base_58()}`)
+        console.info(`create context ${context.desc().calculate_id().to_base_58()}`)
         if(!param.not_set_context){
             // 设置context 的源列表,具体编码方式 TO DO
             for (let device of param.deviceid_list!) {
@@ -69,7 +69,7 @@ export class PrePareTransFileHandler extends BaseHandler {
                     chunk_codec_desc = cyfs.ChunkCodecDesc.Unknown();
                 }
                 let  device_id = cyfs.DeviceId.from_base_58(device.toString()).unwrap();
-                this.logger.info(`${context.desc().calculate_id().to_base_58()} context add device source ${device_id} ${JSON.stringify(chunk_codec_desc)}`)
+                console.info(`${context.desc().calculate_id().to_base_58()} context add device source ${device_id} ${JSON.stringify(chunk_codec_desc)}`)
                 context.body_expect().content().device_list.push(new cyfs.TransContextDevice(device_id,chunk_codec_desc!));
             }
             context.body_expect().increase_update_time(cyfs.bucky_time_now());
@@ -95,7 +95,7 @@ export class PrePareTransFileHandler extends BaseHandler {
                     }
                 }
             }
-            this.logger.info(`put_context object resp : ${JSON.stringify(put_context.unwrap())}`)
+            console.info(`put_context object resp : ${JSON.stringify(put_context.unwrap())}`)
         }
         // 创建文件传输任务
         let stack_manager = StackManager.createInstance();
@@ -133,7 +133,7 @@ export class PrePareTransFileHandler extends BaseHandler {
             }
         }
         let task_id  = create_task.unwrap().task_id
-        this.logger.info(`create_task : ${JSON.stringify(create_task)}`);
+        console.info(`create_task : ${JSON.stringify(create_task)}`);
         if(param.action_wait){
             await sleep(param.action_wait)
         }

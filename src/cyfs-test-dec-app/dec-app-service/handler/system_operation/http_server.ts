@@ -53,7 +53,7 @@ export class HttpServerHandler extends BaseHandler {
             app.listen(request.port, () => {
                 console.log(`Server running on port ${request.port}`);
             });
-            this.logger.error(`start http server success port = ${request.port}`);
+            console.error(`start http server success port = ${request.port}`);
             return {
                 OS_Network_HttpListernResp: {
                     result: 0,
@@ -62,7 +62,7 @@ export class HttpServerHandler extends BaseHandler {
                 }
             }
         } catch (error) {
-            this.logger.error(`start http server error = ${error}`);
+            console.error(`start http server error = ${error}`);
             return {
                 OS_Network_HttpListernResp: {
                     result: 1,

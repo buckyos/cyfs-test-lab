@@ -1,4 +1,23 @@
-## 测试dec_app 整体架构
 
-+ cyfs : 控制使用cyfs-sdk 版本，目前可以选择 cyfs-ts-sdk源码、cyfs-sdk-nightly、cyfs-sdk(beta)
-+ 
+
+# cyfs-test-framework
+ 
+Typescript： 
+
++ Jest(单元测试) 
++ Webpack(打包) 
++ Babel(转码器)
++ ESLint(代码规范)
++ Puppeteer(浏览器运行容器) 
++ istanbul(代码覆盖率)
++ Allure(测试报告)# cyfs-test-framework
+ 
+Typescript： 
+
++ Jest(单元测试) 
++ Webpack(打包) 
++ Babel(转码器)
++ ESLint(代码规范)
++ Puppeteer(浏览器运行容器) 
++ istanbul(代码覆盖率)
++ Allure(测试报告)

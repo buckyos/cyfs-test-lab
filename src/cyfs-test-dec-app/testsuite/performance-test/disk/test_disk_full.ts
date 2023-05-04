@@ -4,7 +4,7 @@ import {ActionManager,StackManager} from "../../../cyfs-test-util"
 import {CyfsDriverType } from "cyfs-test-base"
 import { ErrorCode, RandomGenerator, sleep, Logger } from '../../../common';
 import path = require('path');
-import * as addContext from "mochawesome/addContext"
+
 
 const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
 const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
@@ -53,7 +53,7 @@ async function addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack
     });
     assert(!info.err, `publish_file 失败`)
     test_file = info.unwrap().file_id
-    stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info.unwrap())}`);
+    console.info(`put_context  =  ${JSON.stringify(info.unwrap())}`);
 
     let pub_resp = info.unwrap();
 
@@ -196,7 +196,7 @@ async function addDir(source: cyfs.SharedCyfsStack, target: cyfs.SharedCyfsStack
 }
 
 describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance(CyfsDriverType.other,[{
         peer_name: "zone4_ood",
         zone_tag: "zone1",
@@ -209,23 +209,23 @@ describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
 
     let logger: Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         let make_dirver = await stack_manager.init();
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
         await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.WebSocket, dec_app_2);
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -236,17 +236,17 @@ describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
 
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例: ${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     });
 
 
@@ -421,7 +421,7 @@ describe("CYFS Stack 磁盘满后noc、ndc、tracker读写测试", function () {
             });
             assert(!info.err, `publish_file 失败`)
             test_file = info.unwrap().file_id
-            stack_manager.logger!.info(`put_context  =  ${JSON.stringify(info.unwrap())}`);
+            console.info(`put_context  =  ${JSON.stringify(info.unwrap())}`);
             console.log(`-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=createtask need param fileid is ${test_file}`)
             console.log(`-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=createtask need param taskfile is ${taskfile}`)
             console.log(`-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=createtask need param filename is ${file_name}`)

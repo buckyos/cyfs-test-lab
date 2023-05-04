@@ -1,4 +1,0 @@
-{
-    "extension": ["ts", "js"],
-    "require": ["@babel/register", "esm", "ts-node/register"]
-  }

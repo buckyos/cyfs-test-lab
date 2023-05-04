@@ -2,9 +2,9 @@ import assert  from 'assert';
 import * as cyfs from '../../../../cyfs';
 import {RandomGenerator,testLanguage,ESC_char,encodeType,Logger,sleep} from "../../../../common";
 import * as path from 'path';
-import { before } from 'mocha';
+
 let encoding = require('encoding');
-import * as addContext from "mochawesome/addContext"
+
 import { StackManager,ActionManager} from "../../../../cyfs-test-util"
 import * as action_api from "../../../../dec-app-action"
 
@@ -22,14 +22,14 @@ let zone2_device2_stack : cyfs.SharedCyfsStack;
 // npx mocha .\test_opt_object_map.ts --reporter mochawesome --require ts-node/register
 describe("#op-env 操作object_map", function () {
 
-    this.timeout(0);
+    
     const stack_manager = StackManager.createInstance();
     let logger : Logger;
     const data_manager = ActionManager.createInstance();
-    this.beforeAll(async function () {
+    beforeAll(async function () {
         //测试前置条件，连接测试模拟器设备
         await stack_manager.init();
-        logger = stack_manager.logger!;
+        
         await sleep(5000);
         // 所有节点 实例化一个 Http Requestor dec_app_1 协议栈
         let dec_app_1_client =  await stack_manager.load_config_stack(cyfs.CyfsStackRequestorType.Http, dec_app_1);
@@ -70,15 +70,15 @@ describe("#op-env 操作object_map", function () {
             type: cyfs.CyfsStackRequestorType.Http
         }).stack!;
         owner_id = stack.local_device_id().to_base_58();
-        logger.info(`############用例执开始执行`);
+        console.info(`############用例执开始执行`);
     })
-    this.afterAll(async () => {
+    afterAll(async () => {
         // 停止测试模拟器
         stack_manager.destory();
         // 停止测试驱动
         await stack_manager.driver!.stop();
         // 保存测试记录
-        data_manager.save_history_to_file(logger.dir());
+        data_manager.save_history_to_file("E:\\log");
     })
     let report_result: {
         title: string;
@@ -88,28 +88,28 @@ describe("#op-env 操作object_map", function () {
         // 设置当前用例id 方便日志定位问题
         let testcase_id = `Testcase-${RandomGenerator.string(10)}-${Date.now()}`;
         data_manager.update_current_testcase_id(testcase_id);
-        logger.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
+        console.info(`\n\n########### ${testcase_id} 开始运行###########\n\n`)
     })
     afterEach(function () {
         // 将当前用例执行记录到history
         let current_actions = data_manager.report_current_actions();
-        logger.info(`########### ${current_actions.testcase_id} 运行结束`)
+        console.info(`########### ${current_actions.testcase_id} 运行结束`)
         report_result = {
             title: `用例:${current_actions.testcase_id}`,
             value: current_actions.action_list
         };
-        addContext.default(this, report_result);
+        // addContext.default(this, report_result);
     })
     describe("##PathOpEnvStub", async () => {
         describe("### Map相关接口操作", async () => {
             let op_env: cyfs.PathOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
             })
-            after(async () => {
+            afterAll(async () => {
 
             })
             let insert_key = `ABC${RandomGenerator.string(10)}`
@@ -197,12 +197,12 @@ describe("#op-env 操作object_map", function () {
         describe("### Set相关接口操作", async () => {
             let op_env: cyfs.PathOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
             })
-            after(async () => {
+            afterAll(async () => {
 
             })
             let set_path = `/qaTest/set${RandomGenerator.string(10)}`
@@ -288,7 +288,7 @@ describe("#op-env 操作object_map", function () {
         describe("### 通过path操作object_map", async () => {
             let op_env: cyfs.PathOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_path_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -361,14 +361,14 @@ describe("#op-env 操作object_map", function () {
         describe("### Map相关接口操作", async () => {
             let op_env: cyfs.SingleOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Map)
                 assert.ok(!create.err);
             })
-            after(async () => {
+            afterAll(async () => {
 
             })
             let insert_key = `ABC${RandomGenerator.string(10)}`
@@ -436,15 +436,12 @@ describe("#op-env 操作object_map", function () {
         describe("### Set相关接口操作", async () => {
             let op_env: cyfs.SingleOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
                 let create = await op_env.create_new(cyfs.ObjectMapSimpleContentType.Set)
                 assert.ok(!create.err);
-            })
-            after(async () => {
-
             })
             let insert_obj: cyfs.ObjectId
             describe("#### insert 接口", async () => {
@@ -495,7 +492,7 @@ describe("#op-env 操作object_map", function () {
             let op_env: cyfs.SingleOpEnvStub
             let obj_map_root: cyfs.ObjectId
             let obj_map_dec: cyfs.ObjectId
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -513,7 +510,7 @@ describe("#op-env 操作object_map", function () {
                 obj_map_root = result3.unwrap().root
                 obj_map_dec = result3.unwrap().dec_root
             })
-            after(async () => {
+            afterAll(async () => {
 
             })
             it("正常调用流程 obj_map_root 加载", async () => {
@@ -543,7 +540,7 @@ describe("#op-env 操作object_map", function () {
         describe("### load_by_path() 加载object_map", async () => {
             let op_env: cyfs.SingleOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -558,9 +555,6 @@ describe("#op-env 操作object_map", function () {
                 let result3 = await op_env.commit();
                 console.info(JSON.stringify(result3))
                 assert.ok(!result3.err)
-            })
-            after(async () => {
-
             })
             it("正常调用流程", async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
@@ -577,7 +571,7 @@ describe("#op-env 操作object_map", function () {
         describe("### next遍历object_map", async () => {
             let op_env: cyfs.SingleOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -592,7 +586,7 @@ describe("#op-env 操作object_map", function () {
                 }
 
             })
-            after(async () => {
+            afterAll(async () => {
                 let result3 = await op_env.commit();
                 console.info(JSON.stringify(result3))
                 assert.ok(!result3.err)
@@ -608,7 +602,7 @@ describe("#op-env 操作object_map", function () {
         describe("### metadata 遍历object_map", async () => {
             let op_env: cyfs.SingleOpEnvStub
             let sid: cyfs.JSBI
-            before(async () => {
+            beforeAll(async () => {
                 let result = await stack.root_state_stub().create_single_op_env();
                 assert.ok(!result.err);
                 op_env = result.unwrap();
@@ -623,7 +617,7 @@ describe("#op-env 操作object_map", function () {
                 }
 
             })
-            after(async () => {
+            afterAll(async () => {
                 let result3 = await op_env.commit();
                 console.info(JSON.stringify(result3))
                 assert.ok(!result3.err)

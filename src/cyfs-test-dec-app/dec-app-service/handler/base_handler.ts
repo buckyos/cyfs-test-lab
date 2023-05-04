@@ -19,13 +19,11 @@ export type HandlerInfo ={
 export class BaseHandler {
     public stack : cyfs.SharedCyfsStack;
     public handler_info:HandlerInfo;
-    public logger: Logger;
-    constructor(stack : cyfs.SharedCyfsStack,local:PeerInfo,logger: Logger){
+    constructor(stack : cyfs.SharedCyfsStack,local:PeerInfo){
         this.stack = stack
         this.handler_info = {
             local
         }
-        this.logger = logger
     }
     async start(req:HandlerRequestObject):Promise<HandlerRequestObject>{
         // 封装一些操作
@@ -40,7 +38,7 @@ export class BaseHandler {
             let total_time = Date.now() - begin_run;
             return HandlerRequestObject.create(this.stack.local_device_id().object_id,req.request_type,req.id,JSON.stringify(result),Buffer.from(""));
         } catch (err) {
-            this.logger.error(`${JSON.stringify(err)}`)
+            console.error(`${JSON.stringify(err)}`)
             let result : HandlerApi = {
                 InvalidParam :{
                     result : ErrorCode.invalidParam,

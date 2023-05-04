@@ -16,14 +16,14 @@ import {HandlerRequestObject,HandlerRequestObjectDecoder} from "../../../dec-app
  * 
  */
 export class PostHandlerRequestObject extends BaseAction implements ActionAbstract {
-    static create_by_parent(action:Action,logger:Logger): {err:number,action?:PostHandlerRequestObject}{
+    static create_by_parent(action:Action): {err:number,action?:PostHandlerRequestObject}{
         let run =  new PostHandlerRequestObject({
             local : action.local,
             remote : action.remote,
             input : action.input,
             parent_action : action.action_id!,
             expect : {err:0},
-        },logger)
+        })
         return {err:ErrorCode.succ,action:run}
     }
     async start(req:TestInput): Promise<{ err: number; log: string; resp?: any; }> {

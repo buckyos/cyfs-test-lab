@@ -13,7 +13,7 @@ type TestOutput = {
 
 export class PutObjectAction extends BaseAction implements ActionAbstract {
 
-    static async create_random_text_object(peer:PeerInfo,logger:Logger):Promise<cyfs.TextObject>{
+    static async create_random_text_object(peer:PeerInfo):Promise<cyfs.TextObject>{
         let action =  new PutObjectAction({
             local : peer,
             remote : peer,
@@ -22,7 +22,7 @@ export class PutObjectAction extends BaseAction implements ActionAbstract {
                 non_level : cyfs.NONAPILevel.NOC
             },
             expect : {err:0},
-        },logger)
+        })
         let test_object = cyfs.TextObject.create(cyfs.ObjectId.default(),RandomGenerator.string(100),RandomGenerator.string(100),RandomGenerator.string(100));
         let object_raw = test_object.to_vec().unwrap()
         let create_result  = await action.start({object_raw});
@@ -50,7 +50,7 @@ export class PutObjectAction extends BaseAction implements ActionAbstract {
         if(put_result.err){
             return {err:put_result.val.code,log:put_result.val.msg}
         }
-        this.logger.info(`put object result = ${put_result.unwrap()}`);
+        console.info(`put object result = ${put_result.unwrap()}`);
         return { err: ErrorCode.succ, log: "success",resp:{opt_time}}
        
     }

@@ -9,9 +9,7 @@ export class CommonPostObjectHandler implements cyfs.RouterHandlerPostObjectRout
 
     public stack: cyfs.SharedCyfsStack;
     public local: PeerInfo
-    public logger: Logger;
-    constructor( stack: cyfs.SharedCyfsStack,local: PeerInfo, logger: Logger) {
-        this.logger = logger;
+    constructor( stack: cyfs.SharedCyfsStack,local: PeerInfo) {
         this.local = local;
         this.stack = stack;
     }
@@ -32,40 +30,40 @@ export class CommonPostObjectHandler implements cyfs.RouterHandlerPostObjectRout
     async handler_request(request: HandlerRequestObject): Promise<HandlerRequestObject> {
         switch (request.request_type) {
             case HandlerType.TransFile : {
-                return await (new HandlerListenr.TransFileHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.TransFileHandler(this.stack,this.local).start(request));
             }
             case HandlerType.PrepareTransFile: {
-                return await (new HandlerListenr.PrePareTransFileHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.PrePareTransFileHandler(this.stack,this.local).start(request));
             }
             case HandlerType.UpdateContext: {
-                return await (new HandlerListenr.UpdateContextHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.UpdateContextHandler(this.stack,this.local).start(request));
             }
             case HandlerType.AddContext: {
-                return await (new HandlerListenr.AddContextHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.AddContextHandler(this.stack,this.local).start(request));
             }
             case HandlerType.ShareFileAddAccess:{
-                return await (new HandlerListenr.ShareFileAddAccessHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.ShareFileAddAccessHandler(this.stack,this.local).start(request));
             }
             case HandlerType.PutObject:{
-                return await (new HandlerListenr.PutObjectHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.PutObjectHandler(this.stack,this.local).start(request));
             }
             // docker 权限隔离简单测试
             // 磁盘相关操作
             case HandlerType.OS_IO_ReadFile:{
-                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local).start(request));
             }
             case HandlerType.OS_IO_WriteFile:{
-                return await (new HandlerListenr.WriteFIleHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.WriteFIleHandler(this.stack,this.local).start(request));
             }
             case HandlerType.OS_IO_RunFile:{
-                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.ReadFIleHandler(this.stack,this.local).start(request));
             }
             // 网络相关操作
             case HandlerType.OS_Network_HttpListern:{
-                return await (new HandlerListenr.HttpServerHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.HttpServerHandler(this.stack,this.local).start(request));
             }
             case HandlerType.OS_Network_HttpRequest:{
-                return await (new HandlerListenr.HttpRequestHandler(this.stack,this.local,this.logger).start(request));
+                return await (new HandlerListenr.HttpRequestHandler(this.stack,this.local).start(request));
             }
             default: {
                 let result = NotFoundError
