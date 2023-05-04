@@ -52,7 +52,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
         this.agentid = info.value!;
         this.namespace.agentid = this.agentid;
         // 初始化测试框架服务
-        console.info(`$$$$$$    LocalMaster : ${JSON.stringify(this.agentid)}`);
+        console.info(`$$$$$$    LocalMaster : ${JSON.stringify(this.agentid)} GlobalConfig = ${JSON.stringify(GlobalConfig)}`);
         let local_master: LocalMaster = new LocalMaster({
             agentid: this.agentid!,
             version: GlobalConfig.version,
@@ -62,7 +62,7 @@ export class CyfsStackProxyDriver implements CyfsStackDriver {
             platform: this.platform,
         });
         this.local_master = local_master;
-        let err = this.local_master!.init(GlobalConfig.ip, GlobalConfig.port);
+        let err = this.local_master!.init(GlobalConfig.agentServer.host, GlobalConfig.agentServer.port);
         if (err) {
             console.error(`CyfsStackProxyDriver init server failed, err=${err}`);
             return { err: ErrorCode.connectProxyClientFailed, log: "local_master init failed" };

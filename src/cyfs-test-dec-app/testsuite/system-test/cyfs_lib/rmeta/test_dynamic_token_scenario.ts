@@ -633,7 +633,7 @@ describe("Scenario Testing: Dynamic token ",()=>{
             })
 
         })
-        describe("Testing parameter filter[Unknown the filter rules?] : Only the handlers that meet the filter rules will take effect",()=>{
+        describe("Testing parameter filter: Only the handlers that meet the filter rules will take effect",()=>{
             test("Normal Case: set filter match success",async()=>{
                 // zone1_ood_app1_http share object with token
                 let prepare_obj =await new ShareObjectWithTokenAction({

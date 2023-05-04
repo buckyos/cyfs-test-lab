@@ -1,5 +1,7 @@
-import {StackManager} from "./stack_manager"
+import {StackManager,} from "./stack_manager"
 import {Logger,sleep } from "../../common";
+import {CyfsDriverType} from "../../cyfs-test-base"
+import {CyfsStackClientConfig} from "../../cyfs-driver-client"
 import * as cyfs from "../../cyfs"
 import {ActionManager}from "./action_manager"
 import path from "path";
@@ -11,14 +13,14 @@ export class CyfsTestRunner{
     static runner?: CyfsTestRunner;
     public stack_manager : StackManager;
     public data_manager : ActionManager;
-    static createInstance(): CyfsTestRunner {
+    static createInstance(driver_type?: CyfsDriverType, agent_list?: CyfsStackClientConfig[]): CyfsTestRunner {
         if (!CyfsTestRunner.runner) {
-            CyfsTestRunner.runner = new CyfsTestRunner();
+            CyfsTestRunner.runner = new CyfsTestRunner(driver_type,agent_list);
         }
         return CyfsTestRunner.runner;
     }
-    constructor(){
-       this.stack_manager = StackManager.createInstance();
+    constructor(driver_type?: CyfsDriverType, agent_list?: CyfsStackClientConfig[]){
+       this.stack_manager = StackManager.createInstance(driver_type,agent_list);
        this.data_manager = ActionManager.createInstance();
        console.info(`init CyfsTestRunner frist`) 
     }

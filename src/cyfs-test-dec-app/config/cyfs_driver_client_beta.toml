@@ -5,18 +5,18 @@ removeLog = false
 heartbeatIntervalTime = 60000
 
 [config.agentServer]
-host="192.168.100.205"
+host="bdttest.tinyappcloud.com"
 port = 11080
 
 [config.updateServer]
-host="192.168.100.205"
+host="bdttest.tinyappcloud.com"
 port = 9012
 
 [config.reportServer]
-host="192.168.100.205"
+host="bdttest.tinyappcloud.com"
 port = 11000
 
 [config.fileUploadServer]
-host="192.168.100.205"
+host="bdttest.tinyappcloud.com"
 port = 11000
 

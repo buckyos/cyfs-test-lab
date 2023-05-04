@@ -15,6 +15,7 @@ export function load_toml(file_path:string){
 export function load_cyfs_driver_client_conf(){
     let cyfs_driver_client_conf = path.join(__dirname,"../../../config/cyfs_driver_client.toml")
     let config = load_toml(cyfs_driver_client_conf);
+    console.info(`load cyfs_driver_client.toml = ${cyfs_driver_client_conf}`)
     if(config == undefined){
         console.info("load cyfs_driver_client.toml failed, use default")
         return {
