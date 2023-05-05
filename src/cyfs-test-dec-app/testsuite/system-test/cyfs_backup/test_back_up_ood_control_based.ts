@@ -620,7 +620,7 @@ const remote_restore_ood_host = "http://192.168.100.205:1320";
 
 describe("Restore ood data by ood-daemon",()=>{
 
-    describe("Create restore task 001",()=>{
+    describe("Create restore task 001 and cancel it",()=>{
         test("Use must params create restore task",async()=>{
             let response : Response = await fetch("http://192.168.100.205:1320/restore", {
                 method: "POST",
@@ -635,7 +635,50 @@ describe("Restore ood data by ood-daemon",()=>{
             assert.equal(response.status,200,`${resp_json}`);
             
         })
-        test("Get restore task status check task finished",async()=>{
+        test("Get restore task status,check it is beging",async()=>{
+            let finished = false;
+            while(!finished){
+                let response : Response = await fetch("http://192.168.100.205:1320/restore/001", {
+                    method: "GET",
+                    headers: {'Content-Type': 'application/json'},
+                });
+                const resp_json = await response.json();
+                console.info(`Get restore task status: ${JSON.stringify(resp_json)}`);
+                await cyfs.sleep(2000);
+                if(resp_json.phase == "Download"){
+                    break;
+                }
+            }
+
+        })
+        test("Cancel restore task 001",async()=>{
+            let response : Response = await fetch("http://192.168.100.205:1320/restore/001", {
+                method: "DELETE",
+                headers: {'Content-Type': 'application/json'},
+            });
+           
+            const resp_json = await response.json();
+            console.info(`Cancel restore task : ${JSON.stringify(resp_json)}`);
+            assert.equal(response.status,200,`${JSON.stringify(resp_json)}`);
+        })
+
+    })
+    describe("Create restore task 001 ,and wait finished",()=>{
+        test("Use must params create restore task",async()=>{
+            let response : Response = await fetch("http://192.168.100.205:1320/restore", {
+                method: "POST",
+                body: JSON.stringify({
+                    id : "001",
+                    remote_archive : "http://192.168.200.151/001/data.zip"
+                }),
+                headers: {'Content-Type': 'application/json'},
+            });
+            const resp_json = await response.text();
+            console.info(`Create restore task : ${JSON.stringify(resp_json)}`);
+            assert.equal(response.status,200,`${resp_json}`);
+            
+        })
+        test("Get restore task status,check it is beging",async()=>{
             let finished = false;
             while(!finished){
                 let response : Response = await fetch("http://192.168.100.205:1320/restore/001", {
@@ -663,7 +706,90 @@ describe("Restore ood data by ood-daemon",()=>{
         })
 
     })
-    describe("Create restore task 002",()=>{
+    // restore ood success ,need to clear ood data
+    describe("Create restore task 002 set error password",()=>{
+        test("Create restore task 002 set error password,it will run async,begin create restore task",async()=>{
+            let response : Response = await fetch("http://192.168.100.205:1320/restore", {
+                method: "POST",
+                body: JSON.stringify({
+                    id : "002",
+                    remote_archive : "http://192.168.200.151/002/${filename}",
+                    cyfs_root : "/cyfs",
+                    password : "error-dhjfkfsfsaf"
+                }),
+                headers: {'Content-Type': 'application/json'},
+            });
+           
+            const resp_json = await response.text();
+            console.info(`Create restore task : ${JSON.stringify(resp_json)}`);
+            assert.equal(response.status,200,`${resp_json}`);
+            
+        })
+        test("Get restore task status check task is error",async()=>{
+            let finished = false;
+            while(!finished){
+                let response : Response = await fetch("http://192.168.100.205:1320/restore/002/", {
+                    method: "GET",
+                    headers: {'Content-Type': 'application/json'},
+                });
+                const resp_json = await response.json();
+                console.info(`Get restore task status: ${JSON.stringify(resp_json)}`);
+                await cyfs.sleep(2000);
+                if(resp_json.phase == "Complete"){
+                    break;
+                }
+            }
+
+        })
+        test("Cancel error restore task 002",async()=>{
+            let response : Response = await fetch("http://192.168.100.205:1320/restore/002", {
+                method: "DELETE",
+                headers: {'Content-Type': 'application/json'},
+            });
+           
+            const resp_json = await response.json();
+            console.info(`Cancel restore task : ${JSON.stringify(resp_json)}`);
+            assert.equal(response.status,200,`${JSON.stringify(resp_json)}`);
+        })
+
+    })
+    describe("Create restore task 002 set custome cyfs_root,and wait finished",()=>{
+        test("Create restore task 002 set custome cyfs_root : /test_root",async()=>{
+            let response : Response = await fetch("http://192.168.100.205:1320/restore", {
+                method: "POST",
+                body: JSON.stringify({
+                    id : "002",
+                    remote_archive : "http://192.168.200.151/002/${filename}",
+                    cyfs_root : "/test_root",
+                    password : "error-dhjfkfsfsaf"
+                }),
+                headers: {'Content-Type': 'application/json'},
+            });
+           
+            const resp_json = await response.text();
+            console.info(`Create restore task : ${JSON.stringify(resp_json)}`);
+            assert.equal(response.status,200,`${resp_json}`);
+            
+        })
+        test("Get restore task status.set task cancle when state = Download",async()=>{
+            let finished = false;
+            while(!finished){
+                let response : Response = await fetch("http://192.168.100.205:1320/restore/002/", {
+                    method: "GET",
+                    headers: {'Content-Type': 'application/json'},
+                });
+                const resp_json = await response.json();
+                console.info(`Get restore task status: ${JSON.stringify(resp_json)}`);
+                await cyfs.sleep(2000);
+                if(resp_json.phase == "Complete"){
+                    break;
+                }
+            }
+
+        })
+    })
+    // restore ood success ,need to clear ood data
+    describe.only("Create restore task 002,and wait finished",()=>{
         test("Use all params create restore task",async()=>{
             let response : Response = await fetch("http://192.168.100.205:1320/restore", {
                 method: "POST",
@@ -697,41 +823,9 @@ describe("Restore ood data by ood-daemon",()=>{
             }
 
         })
-        test("Cancel restore task 002",async()=>{
-            let response : Response = await fetch("http://192.168.100.205:1320/restore/002", {
-                method: "DELETE",
-                headers: {'Content-Type': 'application/json'},
-            });
-           
-            const resp_json = await response.json();
-            console.info(`Cancel restore task : ${JSON.stringify(resp_json)}`);
-            assert.equal(response.status,200,`${JSON.stringify(resp_json)}`);
-        })
 
     })
-    describe("Cancel restore task",()=>{
-        test("Cancel restore task 001",async()=>{
-            let response : Response = await fetch("http://192.168.100.205:1320/restore/001", {
-                method: "DELETE",
-                headers: {'Content-Type': 'application/json'},
-            });
-           
-            const resp_json = await response.json();
-            console.info(`Cancel restore task : ${JSON.stringify(resp_json)}`);
-            assert.equal(response.status,200,`${JSON.stringify(resp_json)}`);
-        })
-        test("Cancel restore task 002",async()=>{
-            let response : Response = await fetch("http://192.168.100.205:1320/restore/002", {
-                method: "DELETE",
-                headers: {'Content-Type': 'application/json'},
-            });
-           
-            const resp_json = await response.json();
-            console.info(`Cancel restore task : ${JSON.stringify(resp_json)}`);
-            assert.equal(response.status,200,`${JSON.stringify(resp_json)}`);
-        })
-    })
-    describe("Query current restore task",()=>{
+    describe.only("Query current restore task",()=>{
         test("Query the current restore task",async()=>{
             let response : Response = await fetch("http://192.168.100.205:1320/restore/tasks", {
                 method: "GET",
