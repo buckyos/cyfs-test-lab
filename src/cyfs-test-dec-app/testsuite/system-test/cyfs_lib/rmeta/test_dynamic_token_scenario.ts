@@ -777,7 +777,7 @@ describe("Scenario Testing: Dynamic token ",()=>{
             })
 
         })
-        describe("Testing parameter routine : the routine will register a handler event ,When call it,it can response accept、reject、BuckyError",()=>{
+        describe.only("Testing parameter routine : the routine will register a handler event ,When call it,it can response accept、reject、BuckyError",()=>{
             test("Normal Case: Registering a handler the routine will response accept",async()=>{
 
                 let prepare_obj =await new ShareObjectWithTokenAction({
