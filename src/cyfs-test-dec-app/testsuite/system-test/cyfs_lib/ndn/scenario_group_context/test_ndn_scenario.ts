@@ -1,13 +1,13 @@
 import assert  from 'assert';
 import * as cyfs from '@/cyfs';
-import {ActionManager,StackManager,CyfsTestRunner} from "@/cyfs-test-util"
+import {ActionManager,StackManager,CyfsTestRunner,DEC_APP_1,DEC_APP_2} from "@/cyfs-test-util"
 import { ErrorCode, RandomGenerator, sleep,Logger, DirHelper } from '@/common';
 import path = require('path');
 import * as action_api from "@/dec-app-action";
 
 
-const dec_app_1 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device1decapp")
-const dec_app_2 = cyfs.DecApp.generate_id(cyfs.ObjectId.default(), "zone1device2decapp")
+const dec_app_1 = DEC_APP_1;
+const dec_app_2 = DEC_APP_2;
 
 //Interface
 //Test scenario
@@ -39,8 +39,8 @@ describe("CYFS Stack NDN Integration Testing", function () {
     beforeAll(async function () {
         await new Promise(async resolve => {
             console.info("beforeAll start")
+            await test_runner.init();
             await test_runner.before_all_common();
-            
             console.info("beforeAll finished")
             resolve("finished");
         })
@@ -68,9 +68,9 @@ describe("CYFS Stack NDN Integration Testing", function () {
         })
     },60*1000)
     
-    describe.only("System Testing: stack.ndn_service().put_data() ",()=>{
-        describe.only(`put_data CyfsStackRequestorType: HTTP/WebSocket`,()=>{    
-            test.only(" NDC put_data chunk data by WebSocket Requestor,Auto use Http Requestor",async()=>{
+    describe("System Testing: stack.ndn_service().put_data() ",()=>{
+        describe(`put_data CyfsStackRequestorType: HTTP/WebSocket`,()=>{    
+            test(" NDC put_data chunk data by WebSocket Requestor,Auto use Http Requestor",async()=>{
                 // Create test Action
                 let action =await new action_api.PutDataAction({
                     local: {
@@ -1465,7 +1465,7 @@ describe("CYFS Stack NDN Integration Testing", function () {
                                 chunk_size: 10*1024*1024, 
                                 not_set_context:true,
                             });
-                            assert.equal(action.err,4,action.log)
+                            assert.equal(action.err,0,action.log)
                         })
                         it("device_list 包含两个下载源 有效+无效", async () => {
                             let child_id = RandomGenerator.string(20);

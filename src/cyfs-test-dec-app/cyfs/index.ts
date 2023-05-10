@@ -36,4 +36,4 @@ export let DEC_APP = NIGHTLY_CYFS_TEST_DEC_APP;
 // export default getCyfsPackage(packageName);
 
 //export * from '../../../cyfs-ts-sdk/src/sdk';
-export * from './cyfs_node';
+export * from 'cyfs-sdk';

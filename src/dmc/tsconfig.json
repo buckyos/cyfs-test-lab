@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "ES2019",  
+    "jsx": "react",
+    "module": "commonjs",
+    "declaration": true, 
+    "forceConsistentCasingInFileNames": true, 
+    "useUnknownInCatchVariables": false ,
+    "strict": true,   
+    "noEmitOnError": true, 
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["*"],
+    },
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "skipLibCheck" : true,
+    "noImplicitThis": true,
+    "strictNullChecks": false,
+    "outDir": "./dist",
+
+  },
+  "include": ["./", "typing.d.ts"],
+  "exclude": ["deploy", "node_modules"]
+}
