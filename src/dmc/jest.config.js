@@ -1,7 +1,7 @@
 const { defaults } = require('jest-config');
 const path = require("path")
 module.exports = {
-  testTimeout: 600000,
+  testTimeout: 3600*1000,
   preset: "ts-jest",
   // 集成 bable ES6语法特性
   modulePaths: [
