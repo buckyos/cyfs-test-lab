@@ -1,6 +1,7 @@
 /blog/
 /dist/
 /my-web/
+/config/deviceId.json 
 !/cyfs
 /*mochawesome-report*
 report
