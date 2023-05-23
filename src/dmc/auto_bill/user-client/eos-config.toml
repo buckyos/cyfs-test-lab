@@ -1,0 +1,12 @@
+host = "explorer.dmctech.io"
+chain_id = "4d1fb981dd562d2827447dafa89645622bdcd4e29185d60eeb45539f25d2d85d"
+account = ["gen111111111", "5KQ8j2R83GNUqvdDdazCHv9b4az2XgKoTgHHpDcMa4tW7seu3gv"]
+piece_size = 1024
+
+[retry_rpc_interval]
+secs = 1
+nanos = 0
+
+[trans_expire]
+secs = 600
+nanos = 0

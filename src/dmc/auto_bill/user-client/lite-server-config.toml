@@ -1,0 +1,9 @@
+[journal]
+port=7233
+[source]
+port=7234
+[contract]
+port=7235
+[account]
+port=7236
+spv_client={host="https://dmc.dmc.tbudr.top/spv"}

@@ -348,10 +348,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+               
             })
             test("Linux OS: backup/restore process use case with must input params ,file_size = 1000MB",async()=>{
                 let client = driver.get_client("linux_server").client!;
@@ -383,10 +384,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
             test("Linux OS: backup/restore process use case with must input params ,file_size = 1100MB",async()=>{
                 let client = driver.get_client("linux_server").client!;
@@ -418,10 +420,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
         })
         describe("Linux OS: backup/restore process use case with must all params,path type = dir",()=>{
@@ -458,10 +461,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}/${file_info.dir_name}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list --page-index 0 --page-size 10`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
             test("Linux OS: backup/restore process use case with all input params , Dir = dir_number5*dir_depth2*10file*1MBsize",async()=>{
                 //step1 : Create a random file 100MB
@@ -494,10 +498,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}/${file_info.dir_name}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list --page-index 0 --page-size 10`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
         })
         describe("Windows OS: backup/restore process use case with must input params,path type = file",()=>{
@@ -532,10 +537,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
             test("Windows OS: backup/restore process use case with must input params ,file_size = 1000MB",async()=>{
                 //step1 : Create a random file 100MB
@@ -567,10 +573,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
             test("Windows OS: backup/restore process use case with must input params ,file_size = 1100MB",async()=>{
                 //step1 : Create a random file 100MB
@@ -602,10 +609,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+               
             })
         })
         describe("Windows OS: backup/restore process use case with must all params,path type = dir",()=>{
@@ -640,10 +648,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}\\${file_info.dir_name}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list --page-index 0 --page-size 10`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
             test("Windows OS: backup/restore process use case with all input params , Dir = dir_number5*dir_depth2*10file*1MBsize",async()=>{
                 //step1 : Create a random file 100MB
@@ -676,10 +685,11 @@ describe("Testcase: dmc-user-lite tool ",()=>{
                 let restore_path = (await client.get_util_tool().get_cache_path()).cache_path!.file_download
                 result = await client.excute_cmd(`restore --sector-id ${sector_id} --path ${restore_path}\\${file_info.dir_name}`,300*1000);
                 assert.equal(result.code,0,result.print_data);
+                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
                 //step6 : List all backup progress,And check it
                 result = await client.excute_cmd(`list --page-index 0 --page-size 10`,30*1000);
                 assert.equal(result.code,0,result.print_data);
-                assert.ok(result.print_data.includes("restored to local"),result.print_data) 
+                
             })
         })
     })

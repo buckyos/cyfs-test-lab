@@ -1,30 +1,7 @@
-use cyfs_base::*;
-use bytes::Bytes;
-use cyfs_util::cache::*;
-use cyfs_bdt::*;
-use rand::Rng;
-use std::{
-    str::FromStr, 
-    path::{Path, PathBuf}, 
-    io::{Read, Write}, 
-    sync::{Mutex}, 
-    time::{Duration, Instant},
-    collections::{HashMap,hash_map,BTreeSet},
-    convert::TryFrom,
-    borrow::Cow,
-    
-};
-use async_std::{
-    sync::Arc, 
-    task, 
-    fs::File, 
-    io::prelude::*,
-    future, stream::StreamExt, 
-};
-use actix_rt;
+
 use std::*;
 use std::sync::Once; 
-use std::fs::OpenOptions;
+
 
 static INIT: Once = Once::new();
 static INIT_END: Once = Once::new();
@@ -47,7 +24,6 @@ pub async fn setup(testcaseName:&str) -> () {
         cyfs_debug::PanicBuilder::new("bdt-unittest", "bdt-unittest")
             .exit_on_panic(true)
             .build()
-            .http_bug_report(url)
             .start();
         log::info!("########################## Before all testcase init ##########################");
         

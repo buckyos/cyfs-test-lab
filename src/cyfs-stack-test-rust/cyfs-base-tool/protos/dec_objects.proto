@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message StableSortDescContent {
+  string name = 1;
+  uint64 create_time = 2;
+  repeated string vec_list = 3;
+  repeated string hash_set = 4;
+  map<string, string> hash_map = 5;
+  map<string, string> btree_map = 6;
+  repeated string btree_set = 7;
+
+}
+message StableSortBodyContent {
+  string name = 1;
+  uint64 create_time = 2;
+  repeated string vec_list = 3;
+  repeated string hash_set = 4;
+  map<string, string> hash_map = 5;
+  map<string, string> btree_map = 6;
+  repeated string btree_set = 7;
+}

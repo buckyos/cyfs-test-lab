@@ -10,6 +10,7 @@ members=[
     "perf-report-tool",
     "cyfs-tools",
     "cyfs-stack-test-rust/unittest_nameobject",
+    "cyfs-stack-test-rust/cyfs-base-tool",
     "cyfs-stack-test-rust/profile",
     "stack-tool", 
     "ndn-demos/sync-lib",

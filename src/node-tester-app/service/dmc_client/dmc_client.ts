@@ -58,6 +58,12 @@ export class DMCClient  extends EventEmitter{
             this.m_logger.info(error)
         })
     }
+    async stop_server(){
+        if(this.server){
+            this.server.emit("exit")
+            return
+        }
+    }
     async excute_cmd(cmd:string,timeout:number=60*1000):Promise<{code:number,print_data:string,error_stack?:string,error_msg?:string}>{
         return new Promise(async(resolve)=>{
             let child_process = ChildProcess.exec(`${this.client_path} ${cmd}`);

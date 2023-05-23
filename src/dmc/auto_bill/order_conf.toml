@@ -1,0 +1,17 @@
+[order]
+
+
+[miner]
+method = "http://82.156.177.89:14450"
+cache_dir = ""
+chunk_size = [10]
+capacity = 1
+duration = 24
+price = 0.003
+node = 1
+
+[user]
+backup_cache = ""
+restore_cahce = ""
+duration = 24
+miner = ""

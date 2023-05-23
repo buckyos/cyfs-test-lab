@@ -12,6 +12,11 @@ export async function ServiceMain(_interface: ServiceClientInterface) {
         let result = await client.start_server()
         return { err: ErrorCode.succ, bytes: Buffer.from(''), value:{log:"success"} };
     });
+    _interface.registerApi('stop-server', async (from: Namespace, bytes: Buffer, param: any): Promise<any> => {
+        _interface.getLogger().info(`remote call stop-server,${JSON.stringify(param)}`);
+        let result = await client.stop_server()
+        return { err: ErrorCode.succ, bytes: Buffer.from(''), value:{log:"success"} };
+    });
     _interface.registerApi('excute-cmd', async (from: Namespace, bytes: Buffer, param: {cmd:string,timeout?:number}): Promise<any> => {
         _interface.getLogger().info(`remote call start-server,${JSON.stringify(param)}`);
         let result = await client.excute_cmd(param.cmd,param.timeout);
