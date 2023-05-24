@@ -70,6 +70,10 @@ pub struct StableSortDescContent {
     btree_set: BTreeSet<String>,
 }
 impl  StableSortDescContent {
+    pub fn show_info(&self) {
+        log::info!("Desc name:{}",self.name.clone());
+        log::info!("Desc create_time:{}",self.create_time.clone());
+    }
     pub fn show_vec_list(&self) {
         log::info!("Desc vec_list:");
         for item in &self.vec_list {
@@ -156,6 +160,10 @@ pub struct StableSortBodyContent {
     btree_set: BTreeSet<String>,
 }
 impl  StableSortBodyContent {
+    pub fn show_info(&self) {
+        log::info!("Body name:{}",self.name.clone());
+        log::info!("Body create_time:{}",self.create_time.clone());
+    }
     pub fn show_vec_list(&self) {
         log::info!("Body vec_list:");
         for item in &self.vec_list {
@@ -277,17 +285,18 @@ impl StableSort for StableSortObject {
     }
 
     fn show(&self)->BuckyResult<()> {
+        let _ = self.desc().content().show_info();
         let _ = self.desc().content().show_btree_map();
         let _ = self.desc().content().show_btree_set();
         let _ = self.desc().content().show_hash_map();
         let _ = self.desc().content().show_hash_set();
         let _ = self.desc().content().show_vec_list();
-
-        let _ = self.body_expect("body_info").content().show_btree_map();
-        let _ = self.body_expect("body_info").content().show_btree_set();
-        let _ = self.body_expect("body_info").content().show_hash_map();
-        let _ = self.body_expect("body_info").content().show_hash_set();
-        let _ = self.body_expect("body_info").content().show_vec_list();
+        let _ = self.body_expect("xx").content().show_info();
+        let _ = self.body_expect("xx").content().show_btree_map();
+        let _ = self.body_expect("xx").content().show_btree_set();
+        let _ = self.body_expect("xx").content().show_hash_map();
+        let _ = self.body_expect("xx").content().show_hash_set();
+        let _ = self.body_expect("xx").content().show_vec_list();
         Ok(())
     }
 }

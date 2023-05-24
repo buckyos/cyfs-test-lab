@@ -23,6 +23,7 @@ pub async fn setup(testcaseName:&str) -> () {
         //panic异常捕获
         cyfs_debug::PanicBuilder::new("cyfs-unittest", "cyfs-unittest")
             .exit_on_panic(true)
+            .dingtalk_bug_report(url)
             .build()
             .start();
         log::info!("----------------------------------- Before all testcase init ----------------------------------- ");
