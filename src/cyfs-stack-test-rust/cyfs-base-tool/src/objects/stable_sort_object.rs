@@ -1,6 +1,7 @@
 use cyfs_base::*;
 use std::collections::{HashMap,HashSet,BTreeMap,BTreeSet};
 use crate::{ObjType};
+use crate::protos::HashMapData;
 
 #[derive(Clone)]
 pub struct StableSortData {
@@ -28,26 +29,25 @@ impl StableSortData {
 }
 
 pub fn vec_to_hashset(vec: Vec<String>) -> HashSet<String> {
+    let mut vec = vec;
+    let _ = vec.sort();
     let hashset: HashSet<String> = vec.into_iter().collect();
     hashset
 }
-
-fn hashmap_to_btreemap(map: HashMap<String, String>) -> BTreeMap<String, String> {
-    let tree_map: BTreeMap<String, String> = map.into_iter().collect();
-    tree_map
+fn hashset_to_vec(hashset: HashSet<String>) -> Vec<String> {
+    let mut vec: Vec<String> = hashset.into_iter().collect();
+    let _ = vec.sort();
+    vec
 }
+
+
 
 fn vec_to_btreeset(vec: Vec<String>) -> BTreeSet<String> {
     let btreeset: BTreeSet<String> = vec.into_iter().collect();
     btreeset
 }
 
-fn hashset_to_vec(hashset: HashSet<String>) -> Vec<String> {
-    let mut vec: Vec<String> = hashset.into_iter().collect();
-    vec.sort(); // 可选，按字典顺序排序
-    vec.dedup(); // 可选，去重
-    vec
-}
+
 fn btreeset_to_vec(btreeset: BTreeSet<String>) -> Vec<String> {
     let vec: Vec<String> = btreeset.into_iter().collect();
     vec
@@ -56,18 +56,37 @@ fn btreemap_to_hashmap(map: BTreeMap<String, String>) -> HashMap<String, String>
     let hashmap: HashMap<String, String> = map.into_iter().collect();
     hashmap
 }
+fn hashmap_to_btreemap(map: HashMap<String, String>) -> BTreeMap<String, String> {
+    let tree_map: BTreeMap<String, String> = map.into_iter().collect();
+    tree_map
+}
+fn vec_to_hashmap(vec: Vec<HashMapData>) -> HashMap<String, String> {
+    vec.iter()
+        .map(|hashmap| (hashmap.key.to_owned(), hashmap.value.to_owned()))
+        .collect()
+}
+
+fn hashmap_to_vec(hashmap: HashMap<String, String>) -> Vec<HashMapData> {
+    hashmap
+        .iter()
+        .map(|(k, v)| HashMapData {
+            key : k.to_owned(), 
+            value : v.to_owned()
+        })
+        .collect()
+}
 
 
 #[derive(ProtobufEncode, ProtobufDecode, Clone, ProtobufTransformType)]
 #[cyfs_protobuf_type(crate::protos::StableSortDescContent)]
 pub struct StableSortDescContent {
-    name: String,
-    create_time: u64,
-    vec_list: Vec<String>,
-    hash_set: HashSet<String>,
-    hash_map: HashMap<String,String>,
-    btree_map: BTreeMap<String,String>,
-    btree_set: BTreeSet<String>,
+    pub name: String,
+    pub create_time: u64,
+    pub vec_list: Vec<String>,
+    pub hash_set: HashSet<String>,
+    pub hash_map: HashMap<String,String>,
+    pub btree_map: BTreeMap<String,String>,
+    pub btree_set: BTreeSet<String>,
 }
 impl  StableSortDescContent {
     pub fn show_info(&self) {
@@ -117,7 +136,7 @@ impl ProtobufTransform<crate::protos::StableSortDescContent> for StableSortDescC
             create_time: value.create_time,
             vec_list: value.vec_list,
             hash_set: vec_to_hashset(value.hash_set),
-            hash_map: value.hash_map,
+            hash_map:vec_to_hashmap(value.hash_map.clone()),
             btree_map: hashmap_to_btreemap(value.btree_map),
             btree_set: vec_to_btreeset(value.btree_set),
         })
@@ -131,7 +150,7 @@ impl ProtobufTransform<&StableSortDescContent> for crate::protos::StableSortDesc
             create_time: value.create_time,
             vec_list: value.vec_list.clone(),
             hash_set: hashset_to_vec(value.hash_set.clone()),
-            hash_map: value.hash_map.clone(),
+            hash_map:hashmap_to_vec(value.hash_map.clone()),
             btree_map: btreemap_to_hashmap(value.btree_map.clone()),
             btree_set: btreeset_to_vec(value.btree_set.clone()),
         })
@@ -151,13 +170,13 @@ impl DescContent for StableSortDescContent {
 
 #[derive(Default, ProtobufEmptyEncode, ProtobufEmptyDecode, Clone)]
 pub struct StableSortBodyContent {
-    name: String,
-    create_time: u64,
-    vec_list: Vec<String>,
-    hash_set: HashSet<String>,
-    hash_map: HashMap<String,String>,
-    btree_map: BTreeMap<String,String>,
-    btree_set: BTreeSet<String>,
+    pub name: String,
+    pub create_time: u64,
+    pub vec_list: Vec<String>,
+    pub hash_set: HashSet<String>,
+    pub hash_map: HashMap<String,String>,
+    pub btree_map: BTreeMap<String,String>,
+    pub btree_set: BTreeSet<String>,
 }
 impl  StableSortBodyContent {
     pub fn show_info(&self) {
@@ -205,9 +224,9 @@ impl ProtobufTransform<crate::protos::StableSortBodyContent> for StableSortBodyC
         Ok(Self {
             name: value.name,
             create_time: value.create_time,
-            vec_list: value.vec_list,
+            vec_list: value.vec_list, 
             hash_set: vec_to_hashset(value.hash_set),
-            hash_map: value.hash_map,
+            hash_map: vec_to_hashmap(value.hash_map),
             btree_map: hashmap_to_btreemap(value.btree_map),
             btree_set: vec_to_btreeset(value.btree_set),
         })
@@ -221,7 +240,7 @@ impl ProtobufTransform<&StableSortBodyContent> for crate::protos::StableSortBody
             create_time: value.create_time,
             vec_list: value.vec_list.clone(),
             hash_set: hashset_to_vec(value.hash_set.clone()),
-            hash_map: value.hash_map.clone(),
+            hash_map:hashmap_to_vec(value.hash_map.clone()),
             btree_map: btreemap_to_hashmap(value.btree_map.clone()),
             btree_set: btreeset_to_vec(value.btree_set.clone()),
         })

@@ -17,11 +17,11 @@ mod tests {
             }
             let mut btreeset = BTreeSet::new();
             for i in 0..10{
-                btreeset.insert(format!("value{}",i));
+                btreeset.insert(format!("btreeset_value{}",i));
             }
             let mut hashset = HashSet::new();
             for i in 0..10{
-                hashset.insert(format!("value{}",i));
+                hashset.insert(format!("hashset_value{}",i));
             }
             let mut hashmap = HashMap::new();
             for i in 0..10{
@@ -42,7 +42,23 @@ mod tests {
             let _  = test_obj_proto.show();
             let object_decode :StableSortObject = StableSortObject::raw_decode(&test_obj_proto.to_vec().unwrap()).unwrap().0;
             log::info!("decode object {} id :{}",object_decode.name(),object_decode.desc().calculate_id());
-            let _  = object_decode.show();            
+            let _  = object_decode.show(); 
+            assert_eq!(test_obj_proto.desc().calculate_id(),object_decode.desc().calculate_id());
+            assert_eq!(test_obj_proto.desc().content().name,object_decode.desc().content().name);
+            assert_eq!(test_obj_proto.desc().content().create_time,object_decode.desc().content().create_time);
+            assert_eq!(test_obj_proto.desc().content().vec_list,object_decode.desc().content().vec_list);  
+            assert_eq!(test_obj_proto.desc().content().hash_set,object_decode.desc().content().hash_set);  
+            assert_eq!(test_obj_proto.desc().content().hash_map,object_decode.desc().content().hash_map);
+            assert_eq!(test_obj_proto.desc().content().btree_map,object_decode.desc().content().btree_map);  
+            assert_eq!(test_obj_proto.desc().content().btree_set,object_decode.desc().content().btree_set);  
+
+            assert_eq!(test_obj_proto.body_expect("xx").content().name,object_decode.body_expect("xx").content().name);
+            assert_eq!(test_obj_proto.body_expect("xx").content().create_time,object_decode.body_expect("xx").content().create_time);
+            assert_eq!(test_obj_proto.body_expect("xx").content().vec_list,object_decode.body_expect("xx").content().vec_list);  
+            assert_eq!(test_obj_proto.body_expect("xx").content().hash_set,object_decode.body_expect("xx").content().hash_set);  
+            assert_eq!(test_obj_proto.body_expect("xx").content().hash_map,object_decode.body_expect("xx").content().hash_map);
+            assert_eq!(test_obj_proto.body_expect("xx").content().btree_map,object_decode.body_expect("xx").content().btree_map);  
+            assert_eq!(test_obj_proto.body_expect("xx").content().btree_set,object_decode.body_expect("xx").content().btree_set);               
         }).await    
         
     }
@@ -99,6 +115,24 @@ mod tests {
         }).await    
         
     }
+
+
+    #[tokio::test]
+    async fn test_base_object_group() {
+        run_test_async("Test Base NameObject  group", async{
+            let mut member_list : Vec<GroupMember> =vec![GroupMember::new( ObjectId::default(), format!("title_test"))];
+            for i in 0..10{
+                member_list.insert(i, GroupMember::new( ObjectId::default(), format!("title{}",i)));
+            }
+            let group_object : Group = Group::new_simple_group(None, member_list, Area::default()).build();  
+            log::info!("group_object id = {}",group_object.desc().calculate_id());
+            let object_decode :Group = Group::raw_decode(&group_object.to_vec().unwrap()).unwrap().0;
+            log::info!("decode object  id = {}",object_decode.desc().calculate_id());        
+        }).await    
+        
+    }
+
+
 }
 
 
